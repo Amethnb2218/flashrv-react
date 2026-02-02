@@ -12,6 +12,9 @@ import PaymentSuccess from './pages/Payment/PaymentSuccess'
 import ClientDashboard from './pages/Dashboard/ClientDashboard'
 import CoiffeurDashboard from './pages/Dashboard/CoiffeurDashboard'
 import Profile from './pages/Profile/Profile'
+import QRCodes from './pages/Marketing/QRCodes'
+import ProPending from './pages/Pro/ProPending'
+import AdminDashboard from './pages/Admin/AdminDashboard'
 import NotFound from './pages/NotFound'
 import ProtectedRoute from './components/Auth/ProtectedRoute'
 
@@ -26,6 +29,7 @@ function App() {
         <Route path="forgot-password" element={<ForgotPassword />} />
         <Route path="salons" element={<Salons />} />
         <Route path="salon/:id" element={<SalonDetail />} />
+        <Route path="qr-codes" element={<QRCodes />} />
         
         {/* Protected routes - Client */}
         <Route path="booking/:salonId" element={
@@ -54,10 +58,22 @@ function App() {
           </ProtectedRoute>
         } />
         
-        {/* Protected routes - Coiffeur */}
-        <Route path="coiffeur/dashboard" element={
-          <ProtectedRoute requiredRole="coiffeur">
+        {/* Protected routes - PRO */}
+        <Route path="pro/pending" element={
+          <ProtectedRoute requiredRole="PRO">
+            <ProPending />
+          </ProtectedRoute>
+        } />
+        <Route path="pro/dashboard" element={
+          <ProtectedRoute requiredRole="PRO" requireApproved>
             <CoiffeurDashboard />
+          </ProtectedRoute>
+        } />
+        
+        {/* Protected routes - ADMIN */}
+        <Route path="admin/*" element={
+          <ProtectedRoute adminOnly>
+            <AdminDashboard />
           </ProtectedRoute>
         } />
         

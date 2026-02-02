@@ -40,8 +40,12 @@ function Login() {
       const user = await login({ identifier: formData.identifier, password: formData.password })
       toast.success(`Bienvenue, ${user.name} !`)
       
-      if (user.role === 'coiffeur') {
-        navigate('/coiffeur/dashboard')
+      if (user.role === 'PRO' && user.status === 'PENDING') {
+        navigate('/pro/pending')
+      } else if (user.role === 'PRO' || user.role === 'pro') {
+        navigate('/pro/dashboard')
+      } else if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
+        navigate('/admin')
       } else {
         navigate(from, { replace: true })
       }
@@ -61,10 +65,12 @@ function Login() {
       
       toast.success(`Bienvenue, ${user.name || user.email} !`)
       
-      if (user.role === 'COIFFEUR' || user.role === 'coiffeur') {
-        navigate('/coiffeur/dashboard')
-      } else if (user.role === 'SALON_OWNER') {
-        navigate('/salon/dashboard')
+      if (user.role === 'PRO' && user.status === 'PENDING') {
+        navigate('/pro/pending')
+      } else if (user.role === 'PRO') {
+        navigate('/pro/dashboard')
+      } else if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
+        navigate('/admin')
       } else {
         navigate(from, { replace: true })
       }

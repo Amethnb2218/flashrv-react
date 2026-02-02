@@ -172,16 +172,17 @@ export function AuthProvider({ children }) {
   }
 
   // Google OAuth login
-  const loginWithGoogle = async (credential, customName = null) => {
+  const loginWithGoogle = async (credential, accountType = 'CLIENT') => {
     try {
       console.log('🔄 Sending Google credential to backend...')
       console.log('URL:', 'http://localhost:4000/api/auth/google')
+      console.log('Account Type:', accountType)
       
       const response = await fetch('http://localhost:4000/api/auth/google', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include', // Important for cookies
-        body: JSON.stringify({ credential, customName }),
+        body: JSON.stringify({ credential, accountType }),
       })
 
       console.log('📡 Response status:', response.status)

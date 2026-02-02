@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { GoogleLogin } from '@react-oauth/google'
-import { motion, AnimatePresence } from 'framer-motion'
-import { FiUser, FiMail, FiPhone, FiLock, FiEye, FiEyeOff, FiArrowRight, FiX } from 'react-icons/fi'
+import { motion } from 'framer-motion'
+import { FiUser, FiMail, FiPhone, FiLock, FiEye, FiEyeOff, FiArrowRight } from 'react-icons/fi'
 import toast from 'react-hot-toast'
 import { isValidEmail, isValidPhone } from '../../utils/helpers'
 
@@ -24,12 +24,7 @@ function Register() {
   const [errors, setErrors] = useState({})
 
   // Google profile completion state
-  const [showProfileModal, setShowProfileModal] = useState(false)
   const [googleCredential, setGoogleCredential] = useState(null)
-  const [profileData, setProfileData] = useState({
-    firstName: '',
-    lastName: ''
-  })
 
   const { register, loginWithGoogle } = useAuth()
   const navigate = useNavigate()
@@ -66,8 +61,8 @@ function Register() {
       const user = await register(formData)
       toast.success('Compte créé avec succès !')
       
-      if (user.role === 'coiffeur') {
-        navigate('/coiffeur/dashboard')
+      if (user.role === 'pro' || user.role === 'PRO') {
+        navigate('/pro/dashboard')
       } else {
         navigate('/salons')
       }
@@ -85,35 +80,28 @@ function Register() {
     }
   }
 
-  // Handle Google Login Success
+  // Handle Google Login Success - Direct registration with Google data
   const handleGoogleSuccess = async (credentialResponse) => {
     console.log('✅ Google Register Success!')
-    // Sauvegarder le credential et afficher le modal pour nom/prénom
-    setGoogleCredential(credentialResponse.credential)
-    setShowProfileModal(true)
-  }
-
-  // Submit profile completion after Google register
-  const handleProfileSubmit = async (e) => {
-    e.preventDefault()
-    
-    if (!profileData.firstName.trim() || !profileData.lastName.trim()) {
-      toast.error('Veuillez entrer votre nom et prénom')
-      return
-    }
-
+    console.log('Selected role:', formData.role)
     setIsLoading(true)
     try {
-      // Envoyer le credential au backend avec nom/prénom
-      const fullName = `${profileData.firstName.trim()} ${profileData.lastName.trim()}`
-      const user = await loginWithGoogle(googleCredential, fullName)
+      // Convertir le rôle frontend en format backend
+      const accountType = formData.role === 'pro' ? 'PRO' : 'CLIENT'
+      console.log('Account type to send:', accountType)
       
-      setShowProfileModal(false)
-      toast.success(`Bienvenue, ${user.name || fullName} !`)
+      // Google fournit déjà le nom complet, pas besoin de le demander
+      const user = await loginWithGoogle(credentialResponse.credential, accountType)
       
-      // Redirect based on role
-      if (user.role === 'COIFFEUR' || user.role === 'coiffeur') {
-        navigate('/coiffeur/dashboard')
+      toast.success(`Bienvenue, ${user.name || user.email} !`)
+      
+      // Redirect based on role and status
+      if (user.role === 'PRO' && user.status === 'PENDING') {
+        navigate('/pro/pending')
+      } else if (user.role === 'PRO') {
+        navigate('/pro/dashboard')
+      } else if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
+        navigate('/admin')
       } else {
         navigate('/salons')
       }
@@ -132,89 +120,6 @@ function Register() {
   }
 
   return (
-    <>
-      {/* Profile Completion Modal */}
-      <AnimatePresence>
-        {showProfileModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative"
-            >
-              <button
-                onClick={() => setShowProfileModal(false)}
-                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-              >
-                <FiX className="w-6 h-6" />
-              </button>
-
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-accent-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <FiUser className="w-8 h-8 text-white" />
-                </div>
-                <h2 className="text-2xl font-bold text-gray-900">Complétez votre profil</h2>
-                <p className="text-gray-600 mt-2">Entrez votre nom et prénom pour continuer</p>
-              </div>
-
-              <form onSubmit={handleProfileSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Prénom *
-                  </label>
-                  <input
-                    type="text"
-                    value={profileData.firstName}
-                    onChange={(e) => setProfileData({ ...profileData, firstName: e.target.value })}
-                    className="input-field"
-                    placeholder="Votre prénom"
-                    autoFocus
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Nom *
-                  </label>
-                  <input
-                    type="text"
-                    value={profileData.lastName}
-                    onChange={(e) => setProfileData({ ...profileData, lastName: e.target.value })}
-                    className="input-field"
-                    placeholder="Votre nom de famille"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full btn-primary flex items-center justify-center space-x-2 mt-6"
-                >
-                  {isLoading ? (
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      <span>Créer mon compte</span>
-                      <FiArrowRight className="w-5 h-5" />
-                    </>
-                  )}
-                </button>
-              </form>
-
-              <p className="text-xs text-gray-500 text-center mt-4">
-                Vous pourrez ajouter une photo de profil plus tard
-              </p>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       <div className="min-h-screen flex">
         {/* Left side - Image */}
         <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
@@ -231,13 +136,13 @@ function Register() {
             <div className="text-center text-white">
               <h2 className="text-4xl font-bold mb-4">Rejoignez FlashRV'</h2>
               <p className="text-xl text-primary-100 mb-8">
-              {formData.role === 'coiffeur' 
+              {formData.role === 'pro' 
                 ? 'Développez votre activité et gagnez en visibilité'
                 : 'Réservez facilement vos rendez-vous beauté'
               }
             </p>
             <ul className="text-left text-primary-100 space-y-3 max-w-sm mx-auto">
-              {formData.role === 'coiffeur' ? (
+              {formData.role === 'pro' ? (
                 <>
                   <li className="flex items-center space-x-2">
                     <span className="text-green-400">✓</span>
@@ -313,14 +218,14 @@ function Register() {
             </button>
             <button
               type="button"
-              onClick={() => handleChange('role', 'coiffeur')}
+              onClick={() => handleChange('role', 'pro')}
               className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${
-                formData.role === 'coiffeur'
+                formData.role === 'pro'
                   ? 'bg-white shadow text-primary-600'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              Je suis coiffeur
+              Je suis pro
             </button>
           </div>
 
@@ -479,7 +384,6 @@ function Register() {
         </motion.div>
       </div>
     </div>
-    </>
   )
 }
 

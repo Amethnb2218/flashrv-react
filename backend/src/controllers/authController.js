@@ -1,17 +1,18 @@
 const { PrismaClient } = require('@prisma/client');
 const { verifyGoogleToken } = require('../services/googleAuth');
 const { generateToken, setTokenCookie, clearTokenCookie } = require('../utils/jwt');
+const { ROLES, STATUS } = require('../middleware/auth');
 
 const prisma = new PrismaClient();
 
 /**
  * Google OAuth login/register
  * POST /api/auth/google
- * Body: { credential: "google-id-token", customName: "Prénom Nom" (optional) }
+ * Body: { credential: "google-id-token", customName: "Prénom Nom" (optional), accountType: "CLIENT" | "PRO" (optional) }
  */
 async function googleAuth(req, res, next) {
   try {
-    const { credential, customName } = req.body;
+    const { credential, customName, accountType } = req.body;
 
     if (!credential) {
       return res.status(400).json({
@@ -26,10 +27,16 @@ async function googleAuth(req, res, next) {
     // Use custom name if provided, otherwise use Google name
     const userName = customName || googleUser.name;
 
+    // Determine role and status based on account type
+    const role = accountType === 'PRO' ? ROLES.PRO : ROLES.CLIENT;
+    const status = role === ROLES.PRO ? STATUS.PENDING : STATUS.APPROVED;
+
     // Check if user exists
     let user = await prisma.user.findUnique({
       where: { googleSub: googleUser.googleSub },
     });
+
+    let isNewUser = false;
 
     if (user) {
       // Update existing user - keep custom name if already set, use new custom name if provided
@@ -41,19 +48,21 @@ async function googleAuth(req, res, next) {
           email: googleUser.email,
         },
       });
-      console.log(`✅ User logged in: ${user.email}`);
+      console.log(`✅ User logged in: ${user.email} (role: ${user.role}, status: ${user.status})`);
     } else {
       // Create new user with custom name (no picture by default)
+      isNewUser = true;
       user = await prisma.user.create({
         data: {
           email: googleUser.email,
           googleSub: googleUser.googleSub,
           name: userName,
           picture: null, // User will add photo later if they want
-          role: 'CLIENT',
+          role: role,
+          status: status,
         },
       });
-      console.log(`✅ New user registered: ${user.email} (${userName})`);
+      console.log(`✅ New ${role} registered: ${user.email} (${userName}) - Status: ${status}`);
     }
 
     // Generate JWT token
@@ -69,7 +78,7 @@ async function googleAuth(req, res, next) {
     // Return user info (without sensitive data)
     res.status(200).json({
       status: 'success',
-      message: user.createdAt === user.updatedAt ? 'Account created successfully' : 'Logged in successfully',
+      message: isNewUser ? 'Account created successfully' : 'Logged in successfully',
       data: {
         user: {
           id: user.id,
@@ -78,8 +87,10 @@ async function googleAuth(req, res, next) {
           name: user.name,
           picture: user.picture,
           role: user.role,
+          status: user.status,
           phoneNumber: user.phoneNumber,
         },
+        isNewUser,
       },
     });
   } catch (error) {

@@ -21,7 +21,12 @@ model User {
   googleSub   String   @unique // Google OAuth subject ID
   name        String?
   picture     String?
-  role        String   @default("CLIENT") // CLIENT, COIFFEUR, SALON_OWNER, ADMIN
+  
+  // Role & Status management
+  role        String   @default("CLIENT") // CLIENT, PRO, ADMIN, SUPER_ADMIN
+  status      String   @default("APPROVED") // PENDING, APPROVED, REJECTED, SUSPENDED
+  // Note: CLIENT = APPROVED par défaut, PRO = PENDING par défaut à l'inscription
+  
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -35,7 +40,8 @@ model User {
   @@map("users")
 }
 
-// Role values: CLIENT, COIFFEUR, SALON_OWNER, ADMIN
+// Role values: CLIENT, PRO, ADMIN, SUPER_ADMIN
+// Status values: PENDING, APPROVED, REJECTED, SUSPENDED
 
 // ============================================
 // SALON MODEL

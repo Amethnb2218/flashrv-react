@@ -288,14 +288,14 @@ function Home() {
               Pour les professionnels
             </span>
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-              Vous êtes coiffeur ou gérant de salon ?
+              Vous êtes professionnel de la beauté ?
             </h2>
             <p className="text-gray-400 max-w-xl mx-auto mb-8 leading-relaxed">
-              Rejoignez FlashRV' et développez votre activité. Plus de visibilité, 
-              gestion simplifiée, clients fidélisés.
+              Coiffeur, esthéticien(ne), salon de beauté... Rejoignez FlashRV' et développez votre activité. 
+              Plus de visibilité, gestion simplifiée, clients fidélisés.
             </p>
             <Link
-              to="/register?role=coiffeur"
+              to="/register?role=pro"
               className="inline-flex items-center space-x-2 bg-amber-500 hover:bg-amber-400 text-gray-900 font-bold py-4 px-8 rounded-full transition-all hover:shadow-lg"
             >
               <span>Devenir partenaire</span>

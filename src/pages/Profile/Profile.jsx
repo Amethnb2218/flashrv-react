@@ -236,7 +236,9 @@ function Profile() {
                   )}
                 </div>
                 <h3 className="font-bold text-gray-900 mt-3">{user?.name}</h3>
-                <p className="text-sm text-gray-500 capitalize">{user?.role === 'coiffeur' ? 'Professionnel' : 'Client'}</p>
+                <p className="text-sm text-gray-500 capitalize">
+                  {user?.role === 'PRO' || user?.role === 'pro' ? 'Professionnel' : 'Client'}
+                </p>
               </div>
 
               {/* Navigation */}
