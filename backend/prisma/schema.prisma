@@ -1,0 +1,272 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// ============================================
+// USER MODEL
+// ============================================
+model User {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  username    String?  @unique
+  phoneNumber String?
+  googleSub   String   @unique // Google OAuth subject ID
+  name        String?
+  picture     String?
+  role        String   @default("CLIENT") // CLIENT, COIFFEUR, SALON_OWNER, ADMIN
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  appointments    Appointment[]  @relation("ClientAppointments")
+  salon           Salon?         @relation("SalonOwner")
+  coiffeurProfile Coiffeur?
+  reviews         Review[]
+  payments        Payment[]
+
+  @@map("users")
+}
+
+// Role values: CLIENT, COIFFEUR, SALON_OWNER, ADMIN
+
+// ============================================
+// SALON MODEL
+// ============================================
+model Salon {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  address     String
+  city        String
+  postalCode  String
+  phone       String?
+  email       String?
+  image       String?
+  rating      Float    @default(0)
+  reviewCount Int      @default(0)
+  salonType   String   @default("mixte") // homme, femme, mixte
+  isOpen      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Owner relation
+  ownerId String? @unique
+  owner   User?   @relation("SalonOwner", fields: [ownerId], references: [id])
+
+  // Relations
+  coiffeurs    Coiffeur[]
+  services     Service[]
+  appointments Appointment[]
+  reviews      Review[]
+  openingHours OpeningHour[]
+  gallery      GalleryImage[]
+
+  @@map("salons")
+}
+
+// ============================================
+// COIFFEUR MODEL
+// ============================================
+model Coiffeur {
+  id          String   @id @default(uuid())
+  bio         String?
+  specialties String?  // JSON string of specialties (SQLite doesn't support arrays)
+  rating      Float    @default(0)
+  reviewCount Int      @default(0)
+  isAvailable Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // User relation
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Salon relation
+  salonId String
+  salon   Salon  @relation(fields: [salonId], references: [id], onDelete: Cascade)
+
+  // Relations
+  appointments Appointment[]
+  services     Service[] @relation("CoiffeurServices")
+  availability Availability[]
+
+  @@map("coiffeurs")
+}
+
+// ============================================
+// SERVICE MODEL
+// ============================================
+model Service {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  price       Float
+  duration    Int      // Duration in minutes
+  category    String   // coupe, coloration, soin, etc.
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Salon relation
+  salonId String
+  salon   Salon  @relation(fields: [salonId], references: [id], onDelete: Cascade)
+
+  // Coiffeurs who can perform this service
+  coiffeurs Coiffeur[] @relation("CoiffeurServices")
+
+  // Relations
+  appointments Appointment[]
+
+  @@map("services")
+}
+
+// ============================================
+// APPOINTMENT MODEL
+// ============================================
+model Appointment {
+  id        String            @id @default(uuid())
+  date      DateTime
+  startTime String            // Format: "HH:mm"
+  endTime   String            // Format: "HH:mm"
+  status    String            @default("PENDING") // PENDING, PENDING_ASSIGNMENT, CONFIRMED, IN_PROGRESS, COMPLETED, CANCELLED, NO_SHOW
+  notes     String?
+  totalPrice Float
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  // Client relation
+  clientId String
+  client   User   @relation("ClientAppointments", fields: [clientId], references: [id])
+
+  // Salon relation
+  salonId String
+  salon   Salon  @relation(fields: [salonId], references: [id])
+
+  // Coiffeur relation (nullable - assigned by salon owner)
+  coiffeurId String?
+  coiffeur   Coiffeur? @relation(fields: [coiffeurId], references: [id])
+
+  // Service relation
+  serviceId String
+  service   Service @relation(fields: [serviceId], references: [id])
+
+  // Payment relation
+  payment Payment?
+
+  @@map("appointments")
+}
+
+// AppointmentStatus values: PENDING, PENDING_ASSIGNMENT, CONFIRMED, IN_PROGRESS, COMPLETED, CANCELLED, NO_SHOW
+
+// ============================================
+// PAYMENT MODEL
+// ============================================
+model Payment {
+  id            String    @id @default(uuid())
+  transactionId String?   // External payment provider ID (Wave, Orange Money, etc.)
+  amount        Float     // Montant de base
+  fees          Float     @default(0) // Frais de transaction
+  totalAmount   Float     // Montant total (amount + fees)
+  currency      String    @default("XOF") // Franc CFA
+  status        String    @default("PENDING") // PENDING, PENDING_CASH, COMPLETED, FAILED, REFUNDED
+  method        String?   // WAVE, ORANGE_MONEY, FREE_MONEY, CARD, CASH
+  reference     String?   @unique // Référence interne unique
+  phoneNumber   String?   // Numéro de téléphone pour paiements mobiles
+  completedAt   DateTime? // Date de confirmation du paiement
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Appointment relation (optional)
+  appointmentId String?     @unique
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
+
+  // User relation
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@map("payments")
+}
+
+// PaymentStatus values: PENDING, COMPLETED, FAILED, REFUNDED
+
+// ============================================
+// REVIEW MODEL
+// ============================================
+model Review {
+  id        String   @id @default(uuid())
+  rating    Int      // 1-5
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // User relation
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  // Salon relation
+  salonId String
+  salon   Salon  @relation(fields: [salonId], references: [id])
+
+  @@unique([userId, salonId]) // One review per user per salon
+  @@map("reviews")
+}
+
+// ============================================
+// OPENING HOURS MODEL
+// ============================================
+model OpeningHour {
+  id        String  @id @default(uuid())
+  dayOfWeek Int     // 0 = Sunday, 1 = Monday, etc.
+  openTime  String  // Format: "HH:mm"
+  closeTime String  // Format: "HH:mm"
+  isClosed  Boolean @default(false)
+
+  // Salon relation
+  salonId String
+  salon   Salon  @relation(fields: [salonId], references: [id], onDelete: Cascade)
+
+  @@unique([salonId, dayOfWeek])
+  @@map("opening_hours")
+}
+
+// ============================================
+// AVAILABILITY MODEL
+// ============================================
+model Availability {
+  id        String   @id @default(uuid())
+  date      DateTime
+  startTime String   // Format: "HH:mm"
+  endTime   String   // Format: "HH:mm"
+  isBooked  Boolean  @default(false)
+
+  // Coiffeur relation
+  coiffeurId String
+  coiffeur   Coiffeur @relation(fields: [coiffeurId], references: [id], onDelete: Cascade)
+
+  @@map("availabilities")
+}
+
+// ============================================
+// GALLERY IMAGE MODEL
+// ============================================
+model GalleryImage {
+  id        String   @id @default(uuid())
+  url       String
+  caption   String?
+  category  String?  // coupe, coloration, etc.
+  createdAt DateTime @default(now())
+
+  // Salon relation
+  salonId String
+  salon   Salon  @relation(fields: [salonId], references: [id], onDelete: Cascade)
+
+  @@map("gallery_images")
+}

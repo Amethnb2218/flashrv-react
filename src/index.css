@@ -1,0 +1,276 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   FLASHRV' DESIGN SYSTEM 2026 - Palette Élégante Universelle ✨
+   Noir • Blanc • Or Doré • Rose Subtil
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Import Google Fonts - Poppins + Inter */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BASE STYLES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #111827;
+  line-height: 1.6;
+  background: #ffffff;
+  min-height: 100vh;
+}
+
+/* Titres avec Poppins */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Poppins', 'Inter', sans-serif;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SCROLLBAR - Minimaliste
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f5f5f5;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FLASHRV' DESIGN UTILITIES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@layer utilities {
+  
+  /* ─────────────────────────────────────────────────────────────────────────
+     GRADIENTS TEXT - Dégradés Or Doré Élégant
+     ───────────────────────────────────────────────────────────────────────── */
+  
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #171717 0%, #eab308 50%, #171717 100%);
+  }
+  
+  .text-gradient-light {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #eab308 0%, #facc15 50%, #fde047 100%);
+  }
+  
+  .text-gradient-warm {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #facc15 0%, #eab308 50%, #f472b6 100%);
+  }
+  
+  /* ─────────────────────────────────────────────────────────────────────────
+     BUTTONS - Boutons Élégants Or & Noir ✨
+     ───────────────────────────────────────────────────────────────────────── */
+  
+  .btn-primary {
+    @apply text-white font-semibold py-3 px-6 rounded-full transform hover:scale-105 transition-all duration-300;
+    background: linear-gradient(135deg, #171717 0%, #262626 50%, #404040 100%);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2), 0 0 40px rgba(234, 179, 8, 0.15);
+  }
+  
+  .btn-primary:hover {
+    background: linear-gradient(135deg, #262626 0%, #404040 50%, #525252 100%);
+    box-shadow: 0 6px 30px rgba(0, 0, 0, 0.25), 0 0 60px rgba(234, 179, 8, 0.25);
+  }
+  
+  .btn-secondary {
+    @apply font-semibold py-3 px-6 rounded-full border-2 transform hover:scale-105 transition-all duration-300;
+    background: rgba(255, 255, 255, 0.98);
+    border-color: #eab308;
+    color: #171717;
+  }
+  
+  .btn-secondary:hover {
+    background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%);
+    border-color: #facc15;
+    box-shadow: 0 4px 20px rgba(234, 179, 8, 0.25);
+  }
+  
+  .btn-glass {
+    @apply font-semibold py-3 px-6 rounded-full transform hover:scale-105 transition-all duration-300;
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    color: white;
+  }
+  
+  .btn-glass:hover {
+    background: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 4px 20px rgba(255, 255, 255, 0.25);
+  }
+  
+  /* ─────────────────────────────────────────────────────────────────────────
+     CARDS - Cartes Élégantes Blanc & Or
+     ───────────────────────────────────────────────────────────────────────── */
+  
+  .card {
+    @apply rounded-2xl transition-all duration-300;
+    background: linear-gradient(145deg, #ffffff 0%, #fafafa 50%, #fefce8 100%);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06), 0 0 40px rgba(234, 179, 8, 0.05);
+  }
+  
+  .card:hover {
+    box-shadow: 0 8px 40px rgba(234, 179, 8, 0.2), 0 0 60px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+  }
+  
+  .card-glass {
+    @apply rounded-2xl transition-all duration-300;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(234, 179, 8, 0.15);
+  }
+  
+  /* ─────────────────────────────────────────────────────────────────────────
+     INPUTS - Champs Élégants Focus Or
+     ───────────────────────────────────────────────────────────────────────── */
+  
+  .input-field {
+    @apply w-full px-4 py-3 rounded-xl transition-all duration-200 outline-none text-gray-800;
+    background: rgba(255, 255, 255, 0.98);
+    border: 2px solid #e5e5e5;
+  }
+  
+  .input-field:focus {
+    border-color: #eab308;
+    box-shadow: 0 0 0 4px rgba(234, 179, 8, 0.1), 0 0 20px rgba(234, 179, 8, 0.08);
+  }
+  
+  .input-field::placeholder {
+    color: #a3a3a3;
+  }
+  
+  /* ─────────────────────────────────────────────────────────────────────────
+     BACKGROUNDS - Fonds Élégants
+     ───────────────────────────────────────────────────────────────────────── */
+  
+  .bg-gradient-flashrv {
+    background: linear-gradient(135deg, #ffffff 0%, #fafafa 50%, #fefce8 100%);
+  }
+  
+  .bg-gradient-hero {
+    background: linear-gradient(135deg, #171717 0%, #262626 40%, #404040 100%);
+  }
+  
+  .bg-gradient-light {
+    background: linear-gradient(180deg, #ffffff 0%, #fafafa 50%, #fefce8 100%);
+  }
+  
+  .bg-gradient-soft {
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.03) 0%, rgba(250, 204, 21, 0.03) 50%, rgba(244, 63, 94, 0.02) 100%);
+  }
+  
+  .bg-mesh {
+    background-color: #fefefe;
+    background-image: 
+      radial-gradient(at 40% 20%, rgba(234, 179, 8, 0.12) 0px, transparent 50%),
+      radial-gradient(at 80% 0%, rgba(250, 204, 21, 0.1) 0px, transparent 50%),
+      radial-gradient(at 0% 50%, rgba(244, 114, 182, 0.06) 0px, transparent 50%),
+      radial-gradient(at 80% 50%, rgba(254, 249, 195, 0.2) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, rgba(234, 179, 8, 0.08) 0px, transparent 50%);
+  }
+  
+  /* ─────────────────────────────────────────────────────────────────────────
+     GLOW EFFECTS - Effets Lumineux Or Doré
+     ───────────────────────────────────────────────────────────────────────── */
+  
+  .glow {
+    box-shadow: 0 0 30px rgba(234, 179, 8, 0.25);
+  }
+  
+  .glow-lg {
+    box-shadow: 0 0 50px rgba(234, 179, 8, 0.35), 0 0 100px rgba(250, 204, 21, 0.2);
+  }
+  
+  .glow-text {
+    text-shadow: 0 0 20px rgba(234, 179, 8, 0.4), 0 0 40px rgba(250, 204, 21, 0.3);
+  }
+  
+  /* ─────────────────────────────────────────────────────────────────────────
+     SPECIAL EFFECTS - Effets Spéciaux Élégants
+     ───────────────────────────────────────────────────────────────────────── */
+  
+  .glass {
+    background: rgba(255, 255, 255, 0.97);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(234, 179, 8, 0.12);
+  }
+  
+  .shimmer {
+    background: linear-gradient(90deg, transparent, rgba(234, 179, 8, 0.3), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+  
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  
+  /* Bordure dégradée or */
+  .border-gradient {
+    border: 2px solid transparent;
+    background: linear-gradient(white, white) padding-box, 
+                linear-gradient(135deg, #eab308, #facc15, #f472b6) border-box;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ANIMATIONS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+.delay-500 { animation-delay: 500ms; }
+
+/* Page transitions */
+.page-enter {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms, transform 300ms;
+}
+
+.page-exit {
+  opacity: 1;
+}
+
+.page-exit-active {
+  opacity: 0;
+  transition: opacity 300ms;
+}

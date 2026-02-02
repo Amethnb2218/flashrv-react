@@ -1,0 +1,487 @@
+import { useState } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
+import { GoogleLogin } from '@react-oauth/google'
+import { motion, AnimatePresence } from 'framer-motion'
+import { FiUser, FiMail, FiPhone, FiLock, FiEye, FiEyeOff, FiArrowRight, FiX } from 'react-icons/fi'
+import toast from 'react-hot-toast'
+import { isValidEmail, isValidPhone } from '../../utils/helpers'
+
+function Register() {
+  const [searchParams] = useSearchParams()
+  const defaultRole = searchParams.get('role') || 'client'
+
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    password: '',
+    confirmPassword: '',
+    role: defaultRole
+  })
+  const [showPassword, setShowPassword] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [errors, setErrors] = useState({})
+
+  // Google profile completion state
+  const [showProfileModal, setShowProfileModal] = useState(false)
+  const [googleCredential, setGoogleCredential] = useState(null)
+  const [profileData, setProfileData] = useState({
+    firstName: '',
+    lastName: ''
+  })
+
+  const { register, loginWithGoogle } = useAuth()
+  const navigate = useNavigate()
+
+  const validate = () => {
+    const newErrors = {}
+    
+    if (!formData.name.trim()) newErrors.name = 'Le nom est requis'
+    else if (formData.name.trim().length < 2) newErrors.name = 'Le nom doit avoir au moins 2 caractères'
+    
+    if (!formData.email) newErrors.email = 'L\'email est requis'
+    else if (!isValidEmail(formData.email)) newErrors.email = 'Email invalide'
+    
+    if (!formData.phone) newErrors.phone = 'Le téléphone est requis'
+    else if (!isValidPhone(formData.phone)) newErrors.phone = 'Numéro de téléphone invalide'
+    
+    if (!formData.password) newErrors.password = 'Le mot de passe est requis'
+    else if (formData.password.length < 6) newErrors.password = 'Le mot de passe doit avoir au moins 6 caractères'
+    
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Les mots de passe ne correspondent pas'
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!validate()) return
+
+    setIsLoading(true)
+    try {
+      const user = await register(formData)
+      toast.success('Compte créé avec succès !')
+      
+      if (user.role === 'coiffeur') {
+        navigate('/coiffeur/dashboard')
+      } else {
+        navigate('/salons')
+      }
+    } catch (error) {
+      toast.error(error.message || 'Erreur lors de l\'inscription')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: null }))
+    }
+  }
+
+  // Handle Google Login Success
+  const handleGoogleSuccess = async (credentialResponse) => {
+    console.log('✅ Google Register Success!')
+    // Sauvegarder le credential et afficher le modal pour nom/prénom
+    setGoogleCredential(credentialResponse.credential)
+    setShowProfileModal(true)
+  }
+
+  // Submit profile completion after Google register
+  const handleProfileSubmit = async (e) => {
+    e.preventDefault()
+    
+    if (!profileData.firstName.trim() || !profileData.lastName.trim()) {
+      toast.error('Veuillez entrer votre nom et prénom')
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      // Envoyer le credential au backend avec nom/prénom
+      const fullName = `${profileData.firstName.trim()} ${profileData.lastName.trim()}`
+      const user = await loginWithGoogle(googleCredential, fullName)
+      
+      setShowProfileModal(false)
+      toast.success(`Bienvenue, ${user.name || fullName} !`)
+      
+      // Redirect based on role
+      if (user.role === 'COIFFEUR' || user.role === 'coiffeur') {
+        navigate('/coiffeur/dashboard')
+      } else {
+        navigate('/salons')
+      }
+    } catch (error) {
+      console.error('Erreur Google Register:', error)
+      toast.error(error.message || 'Erreur lors de l\'inscription avec Google')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Handle Google Login Error
+  const handleGoogleError = () => {
+    console.error('❌ Google Register Failed')
+    toast.error('Échec de l\'inscription avec Google')
+  }
+
+  return (
+    <>
+      {/* Profile Completion Modal */}
+      <AnimatePresence>
+        {showProfileModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative"
+            >
+              <button
+                onClick={() => setShowProfileModal(false)}
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+              >
+                <FiX className="w-6 h-6" />
+              </button>
+
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-accent-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <FiUser className="w-8 h-8 text-white" />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900">Complétez votre profil</h2>
+                <p className="text-gray-600 mt-2">Entrez votre nom et prénom pour continuer</p>
+              </div>
+
+              <form onSubmit={handleProfileSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Prénom *
+                  </label>
+                  <input
+                    type="text"
+                    value={profileData.firstName}
+                    onChange={(e) => setProfileData({ ...profileData, firstName: e.target.value })}
+                    className="input-field"
+                    placeholder="Votre prénom"
+                    autoFocus
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Nom *
+                  </label>
+                  <input
+                    type="text"
+                    value={profileData.lastName}
+                    onChange={(e) => setProfileData({ ...profileData, lastName: e.target.value })}
+                    className="input-field"
+                    placeholder="Votre nom de famille"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full btn-primary flex items-center justify-center space-x-2 mt-6"
+                >
+                  {isLoading ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <span>Créer mon compte</span>
+                      <FiArrowRight className="w-5 h-5" />
+                    </>
+                  )}
+                </button>
+              </form>
+
+              <p className="text-xs text-gray-500 text-center mt-4">
+                Vous pourrez ajouter une photo de profil plus tard
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="min-h-screen flex">
+        {/* Left side - Image */}
+        <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
+          <img
+            src="https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=1000"
+            alt="Salon"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-900/80 via-gray-800/70 to-amber-900/60" />
+          {/* Decorative blobs */}
+          <div className="absolute top-20 left-20 w-64 h-64 bg-amber-400/20 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-20 right-20 w-80 h-80 bg-yellow-300/15 rounded-full blur-3xl"></div>
+          <div className="absolute inset-0 flex items-center justify-center p-12">
+            <div className="text-center text-white">
+              <h2 className="text-4xl font-bold mb-4">Rejoignez FlashRV'</h2>
+              <p className="text-xl text-primary-100 mb-8">
+              {formData.role === 'coiffeur' 
+                ? 'Développez votre activité et gagnez en visibilité'
+                : 'Réservez facilement vos rendez-vous beauté'
+              }
+            </p>
+            <ul className="text-left text-primary-100 space-y-3 max-w-sm mx-auto">
+              {formData.role === 'coiffeur' ? (
+                <>
+                  <li className="flex items-center space-x-2">
+                    <span className="text-green-400">✓</span>
+                    <span>Gérez vos rendez-vous en ligne</span>
+                  </li>
+                  <li className="flex items-center space-x-2">
+                    <span className="text-green-400">✓</span>
+                    <span>Recevez des paiements sécurisés</span>
+                  </li>
+                  <li className="flex items-center space-x-2">
+                    <span className="text-green-400">✓</span>
+                    <span>Fidélisez votre clientèle</span>
+                  </li>
+                </>
+              ) : (
+                <>
+                  <li className="flex items-center space-x-2">
+                    <span className="text-green-400">✓</span>
+                    <span>Trouvez les meilleurs salons</span>
+                  </li>
+                  <li className="flex items-center space-x-2">
+                    <span className="text-green-400">✓</span>
+                    <span>Réservez en quelques clics</span>
+                  </li>
+                  <li className="flex items-center space-x-2">
+                    <span className="text-green-400">✓</span>
+                    <span>Payez en toute sécurité</span>
+                  </li>
+                </>
+              )}
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* Right side - Form */}
+      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-8 relative overflow-hidden">
+        {/* Background decorations */}
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-white to-amber-50/30"></div>
+        <div className="absolute top-0 left-0 w-80 h-80 bg-amber-100/40 rounded-full blur-3xl -translate-y-1/2 -translate-x-1/2"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-yellow-100/50 rounded-full blur-3xl translate-y-1/2 translate-x-1/2"></div>
+        <div className="absolute top-1/3 right-1/4 w-48 h-48 bg-orange-50/40 rounded-full blur-2xl"></div>
+        
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-md w-full relative z-10"
+        >
+          <div className="text-center mb-8">
+            <Link to="/" className="inline-flex items-center space-x-2 mb-6">
+              <div className="w-12 h-12 bg-gradient-to-br from-primary-600 to-accent-500 rounded-full flex items-center justify-center">
+                <span className="text-white font-bold text-2xl">F</span>
+              </div>
+            </Link>
+            <h1 className="text-3xl font-bold text-gray-900">Créer un compte</h1>
+            <p className="mt-2 text-gray-600">
+              Rejoignez la communauté FlashRV'
+            </p>
+          </div>
+
+          {/* Role Toggle */}
+          <div className="flex bg-gray-100 rounded-xl p-1 mb-8">
+            <button
+              type="button"
+              onClick={() => handleChange('role', 'client')}
+              className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${
+                formData.role === 'client'
+                  ? 'bg-white shadow text-primary-600'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Je suis client
+            </button>
+            <button
+              type="button"
+              onClick={() => handleChange('role', 'coiffeur')}
+              className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${
+                formData.role === 'coiffeur'
+                  ? 'bg-white shadow text-primary-600'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Je suis coiffeur
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Name */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nom complet
+              </label>
+              <input
+                type="text"
+                value={formData.name}
+                onChange={(e) => handleChange('name', e.target.value)}
+                className={`input-field ${errors.name ? 'border-red-500' : ''}`}
+                placeholder="Votre nom complet"
+                autoComplete="off"
+              />
+              {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
+            </div>
+
+            {/* Email */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Email
+              </label>
+              <input
+                type="email"
+                value={formData.email}
+                onChange={(e) => handleChange('email', e.target.value)}
+                className={`input-field ${errors.email ? 'border-red-500' : ''}`}
+                placeholder="votre@email.com"
+                autoComplete="off"
+              />
+              {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email}</p>}
+            </div>
+
+            {/* Phone */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Téléphone
+              </label>
+              <input
+                type="tel"
+                value={formData.phone}
+                onChange={(e) => handleChange('phone', e.target.value)}
+                className={`input-field ${errors.phone ? 'border-red-500' : ''}`}
+                placeholder="77 123 45 67"
+                autoComplete="off"
+              />
+              {errors.phone && <p className="mt-1 text-sm text-red-500">{errors.phone}</p>}
+            </div>
+
+            {/* Password */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Mot de passe
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={formData.password}
+                  onChange={(e) => handleChange('password', e.target.value)}
+                  className={`input-field pr-12 ${errors.password ? 'border-red-500' : ''}`}
+                  placeholder="Minimum 6 caractères"
+                  autoComplete="off"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {showPassword ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
+                </button>
+              </div>
+              {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password}</p>}
+            </div>
+
+            {/* Confirm Password */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Confirmer le mot de passe
+              </label>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={formData.confirmPassword}
+                onChange={(e) => handleChange('confirmPassword', e.target.value)}
+                className={`input-field ${errors.confirmPassword ? 'border-red-500' : ''}`}
+                placeholder="Confirmez votre mot de passe"
+                autoComplete="off"
+              />
+              {errors.confirmPassword && <p className="mt-1 text-sm text-red-500">{errors.confirmPassword}</p>}
+            </div>
+
+            {/* Terms */}
+            <div className="flex items-start">
+              <input
+                type="checkbox"
+                required
+                className="mt-1 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+              />
+              <span className="ml-2 text-sm text-gray-600">
+                J'accepte les{' '}
+                <a href="#" className="text-primary-600 hover:text-primary-700">conditions d'utilisation</a>
+                {' '}et la{' '}
+                <a href="#" className="text-primary-600 hover:text-primary-700">politique de confidentialité</a>
+              </span>
+            </div>
+
+            {/* Submit */}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full btn-primary flex items-center justify-center space-x-2"
+            >
+              {isLoading ? (
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <span>Créer mon compte</span>
+                  <FiArrowRight className="w-5 h-5" />
+                </>
+              )}
+            </button>
+
+            {/* Divider */}
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-4 bg-white text-gray-500">Ou s'inscrire avec</span>
+              </div>
+            </div>
+
+            {/* Google Login Button */}
+            <div className="flex justify-center">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+                theme="outline"
+                size="large"
+                text="signup_with"
+                shape="rectangular"
+                locale="fr"
+              />
+            </div>
+          </form>
+
+          {/* Login link */}
+          <p className="mt-8 text-center text-gray-600">
+            Déjà un compte ?{' '}
+            <Link to="/login" className="text-primary-600 font-medium hover:text-primary-700">
+              Se connecter
+            </Link>
+          </p>
+        </motion.div>
+      </div>
+    </div>
+    </>
+  )
+}
+
+export default Register
+
