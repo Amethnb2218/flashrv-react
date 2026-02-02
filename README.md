@@ -4,7 +4,9 @@
 ![React](https://img.shields.io/badge/React-18.2.0-61dafb.svg)
 ![Vite](https://img.shields.io/badge/Vite-7.3.1-646CFF.svg)
 ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4.0-38B2AC.svg)
-![License](https://img.shields.io/badge/License-MIT-green.svg)
+![License](https://img.shields.io/badge/License-Proprietary-red.svg)
+
+> ⚠️ **AVERTISSEMENT** : Ce projet est protégé par le droit d'auteur. Toute copie, modification ou distribution non autorisée est interdite. Voir [LICENSE](LICENSE) pour plus de détails.
 
 ## 📋 Description
 
@@ -182,12 +184,32 @@ Les contributions sont les bienvenues !
 
 ## 📄 License
 
-Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
+**⚠️ LICENCE PROPRIÉTAIRE - TOUS DROITS RÉSERVÉS**
 
-## 👥 Équipe
+Ce projet est la propriété exclusive de **Mouhamed Sall**. 
 
-Développé avec ❤️ pour le marché sénégalais.
+❌ **Interdit :**
+- Copier ou reproduire le code
+- Modifier ou créer des œuvres dérivées
+- Distribuer ou partager le projet
+- Utiliser à des fins commerciales sans autorisation
+
+✅ **Autorisé :**
+- Consulter le code à des fins éducatives
+- Examiner dans le cadre d'un processus de recrutement
+
+Pour toute demande de licence : **amethsl2218@gmail.com**
+
+Voir le fichier [LICENSE](LICENSE) pour les détails complets.
+
+## 👥 Auteur
+
+**Mouhamed Sall** - Développeur Full Stack
+- 📧 Email : amethsl2218@gmail.com
+- 🐙 GitHub : [@Amethnb2218](https://github.com/Amethnb2218)
 
 ---
 
 **FlashRV** - Réservez votre coiffeur en un flash ⚡
+
+© 2026 Mouhamed Sall. Tous droits réservés.
