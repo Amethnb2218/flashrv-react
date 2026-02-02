@@ -186,15 +186,17 @@ Les contributions sont les bienvenues !
 
 **⚠️ LICENCE PROPRIÉTAIRE - TOUS DROITS RÉSERVÉS**
 
-Ce projet est la propriété exclusive de **Mouhamed Sall**. 
+Ce projet est la propriété exclusive de **Mouhamed Sall**.
 
 ❌ **Interdit :**
+
 - Copier ou reproduire le code
 - Modifier ou créer des œuvres dérivées
 - Distribuer ou partager le projet
 - Utiliser à des fins commerciales sans autorisation
 
 ✅ **Autorisé :**
+
 - Consulter le code à des fins éducatives
 - Examiner dans le cadre d'un processus de recrutement
 
@@ -205,6 +207,7 @@ Voir le fichier [LICENSE](LICENSE) pour les détails complets.
 ## 👥 Auteur
 
 **Mouhamed Sall** - Développeur Full Stack
+
 - 📧 Email : amethsl2218@gmail.com
 - 🐙 GitHub : [@Amethnb2218](https://github.com/Amethnb2218)
 
