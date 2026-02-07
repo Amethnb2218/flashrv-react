@@ -11,38 +11,93 @@ const salonRoutes = require('./routes/salonRoutes');
 const appointmentRoutes = require('./routes/appointmentRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const compatRoutes = require('./routes/compatRoutes');
+const salonPaymentMethodsRoute = require('./routes/salon/paymentMethods');
 
 const app = express();
 
 // ===========================================
-// CORS CONFIGURATION - MUST BE FIRST
+// CORS CONFIGURATION - CRITIQUE POUR GOOGLE AUTH
 // ===========================================
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://localhost:5173',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:3001',
+  'http://127.0.0.1:5173',
+];
+
+// Middleware global pour forcer Access-Control-Allow-Origin et Credentials sur toutes les réponses
+app.use((req, res, next) => {
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:5173',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:3001',
+    'http://127.0.0.1:5173',
+  ];
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+  res.header('Access-Control-Allow-Credentials', 'true');
+  next();
+});
+
 const corsOptions = {
-  origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173', 'http://127.0.0.1:3000', 'http://127.0.0.1:3001'],
-  credentials: true,
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true, // ABSOLUMENT ESSENTIEL pour les cookies
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'Cookie',
+    'X-Requested-With',
+    'Accept'
+  ],
+  exposedHeaders: ['Set-Cookie'],
+  maxAge: 86400, // Cache préflight 24h
   optionsSuccessStatus: 200
 };
+
+// Appliquer CORS à TOUTES les routes
 app.use(cors(corsOptions));
 
-// ===========================================
-// SECURITY MIDDLEWARE (disabled for dev)
-// ===========================================
-// app.use(helmet());
+// Gérer explicitement TOUTES les préflights OPTIONS
+app.options('*', cors(corsOptions));
 
 // ===========================================
-// PARSING MIDDLEWARE
+// AUTRES MIDDLEWARES
 // ===========================================
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 app.use(cookieParser());
 
 // ===========================================
-// LOGGING MIDDLEWARE
+// LOGGING (développement uniquement)
 // ===========================================
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
+  
+  // Middleware de debug CORS (optionnel)
+  app.use((req, res, next) => {
+    if (req.method === 'OPTIONS') {
+      console.log('🔍 OPTIONS Preflight Request:', {
+        url: req.url,
+        origin: req.headers.origin,
+        'access-control-request-method': req.headers['access-control-request-method']
+      });
+    }
+    next();
+  });
 }
 
 // ===========================================
@@ -50,14 +105,15 @@ if (process.env.NODE_ENV === 'development') {
 // ===========================================
 app.get('/health', (req, res) => {
   res.status(200).json({
-    status: 'ok',
+    status: 'success',
     message: 'FlashRV Backend is running',
     timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
   });
 });
 
 // ===========================================
-// API ROUTES
+// ROUTES API
 // ===========================================
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
@@ -65,6 +121,8 @@ app.use('/api/salons', salonRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api', compatRoutes);
+app.use('/api/salon/payment-methods', salonPaymentMethodsRoute);
 
 // ===========================================
 // 404 HANDLER
@@ -80,11 +138,24 @@ app.use((req, res, next) => {
 // GLOBAL ERROR HANDLER
 // ===========================================
 app.use((err, req, res, next) => {
-  console.error('❌ Error:', err);
+  console.error('❌ Server Error:', {
+    message: err.message,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
+    url: req.originalUrl,
+    method: req.method
+  });
+
+  // Gestion des erreurs CORS
+  if (err.message === 'Not allowed by CORS') {
+    return res.status(403).json({
+      status: 'error',
+      message: 'CORS policy: Origin not allowed',
+    });
+  }
 
   // Prisma errors
   if (err.code === 'P2002') {
-    return res.status(400).json({
+    return res.status(409).json({
       status: 'error',
       message: 'A record with this value already exists',
     });

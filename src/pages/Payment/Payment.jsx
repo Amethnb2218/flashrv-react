@@ -223,7 +223,6 @@ function Payment() {
       id: paymentData.reference || paymentData.transactionId || paymentData.paymentId,
       ...bookingState,
       user: user,
-      paymentMethod: selectedMethod,
       paymentData: paymentData,
       status: selectedMethod === 'pay_on_site' ? 'confirmed_on_site' : 'confirmed',
       createdAt: new Date().toISOString(),

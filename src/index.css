@@ -1,10 +1,35 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800;900&display=swap');
+/* Premium glowing effect for table headers and menus */
+.drop-shadow-glow {
+  filter: drop-shadow(0 0 8px #facc15) drop-shadow(0 0 2px #38bdf8);
+}
+
+.font-poppins {
+  font-family: 'Poppins', sans-serif;
+}
+.font-inter {
+  font-family: 'Inter', sans-serif;
+}
+/* Animations custom pour dashboard futuriste */
+@keyframes tilt {
+  0%, 100% { transform: rotate(-2deg); }
+  50% { transform: rotate(2deg); }
+}
+.animate-tilt {
+  animation: tilt 3.5s infinite linear alternate;
+}
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+.animate-pulse-slow {
+  animation: pulse-slow 2.5s infinite;
+}
 /* ═══════════════════════════════════════════════════════════════════════════
    FLASHRV' DESIGN SYSTEM 2026 - Palette Élégante Universelle ✨
    Noir • Blanc • Or Doré • Rose Subtil
    ═══════════════════════════════════════════════════════════════════════════ */
-
-/* Import Google Fonts - Poppins + Inter */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -46,16 +71,17 @@ h1, h2, h3, h4, h5, h6 {
    ═══════════════════════════════════════════════════════════════════════════ */
 
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 10px;
+  background: transparent;
 }
-
-::-webkit-scrollbar-track {
-  background: #f5f5f5;
-}
-
 ::-webkit-scrollbar-thumb {
-  background: #d1d5db;
-  border-radius: 4px;
+  background: linear-gradient(120deg, #23272f 0%, #facc15 100%);
+  border-radius: 8px;
+  min-height: 40px;
+  border: 2px solid #18181b;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb:hover {

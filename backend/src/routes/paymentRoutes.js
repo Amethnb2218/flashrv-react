@@ -1,9 +1,33 @@
 const express = require('express');
-const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const { authenticate } = require('../middleware/auth');
-
+const router = express.Router();
 const prisma = new PrismaClient();
+
+/**
+ * GET /api/payments
+ * Retourne tous les paiements (pour compatibilité frontend)
+ */
+router.get('/', async (req, res, next) => {
+  try {
+    const payments = await prisma.payment.findMany();
+    res.status(200).json(payments);
+  } catch (error) {
+    next(error);
+  }
+});
+/**
+ * GET /api/payments
+ * Retourne tous les paiements (pour compatibilité frontend)
+ */
+router.get('/', async (req, res, next) => {
+  try {
+    const payments = await prisma.payment.findMany();
+    res.status(200).json(payments);
+  } catch (error) {
+    next(error);
+  }
+});
 
 // Mode de paiement : TEST ou PRODUCTION
 const PAYMENTS_MODE = process.env.PAYMENTS_MODE || 'TEST';

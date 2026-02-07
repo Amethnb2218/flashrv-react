@@ -169,14 +169,30 @@ function requireApprovedPro(req, res, next) {
   }
 
   // PRO must be approved
-  if (req.user.role === ROLES.PRO && req.user.status !== STATUS.APPROVED) {
-    return res.status(403).json({
-      status: 'error',
-      message: 'Your PRO account is pending approval. Please wait for validation.',
-      code: 'PRO_PENDING',
-    });
+  if (req.user.role === ROLES.PRO) {
+    if (req.user.status !== STATUS.APPROVED) {
+      return res.status(403).json({
+        status: 'error',
+        message: 'Your PRO account is pending approval. Please wait for validation.',
+        code: 'PRO_PENDING',
+      });
+    }
+    // Restriction: canCreateService, canBook, isPublic
+    if (req.user.canCreateService === false) {
+      return res.status(403).json({
+        status: 'error',
+        message: 'You are not allowed to create services. Contact admin.',
+        code: 'PRO_RESTRICTED_SERVICE',
+      });
+    }
+    if (req.user.canBook === false) {
+      return res.status(403).json({
+        status: 'error',
+        message: 'You are not allowed to accept bookings. Contact admin.',
+        code: 'PRO_RESTRICTED_BOOK',
+      });
+    }
   }
-
   next();
 }
 
@@ -198,7 +214,14 @@ function requireAdmin(req, res, next) {
       message: 'Admin access required',
     });
   }
-
+  // Restriction: isRestricted
+  if (req.user.role === ROLES.ADMIN && req.user.isRestricted === true) {
+    return res.status(403).json({
+      status: 'error',
+      message: 'Your ADMIN account is restricted. Contact SUPER_ADMIN.',
+      code: 'ADMIN_RESTRICTED',
+    });
+  }
   next();
 }
 

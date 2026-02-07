@@ -1,3 +1,89 @@
+// ============================================
+// SALON PAYMENT METHOD MODEL
+// ============================================
+model SalonPaymentMethod {
+  id        String   @id @default(uuid())
+  salonId   String
+  salon     Salon    @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  method    String   // WAVE, ORANGE_MONEY, FREE_MONEY, CASH, CARD
+  enabled   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([salonId, method])
+  @@map("salon_payment_methods")
+}
+// ============================================
+// PLANNING BREAK MODEL
+// ============================================
+model PlanningBreak {
+  id        String   @id @default(uuid())
+  start     DateTime
+  end       DateTime
+  label     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("planning_breaks")
+}
+
+// ============================================
+// PLANNING EXCEPTION MODEL
+// ============================================
+model PlanningException {
+  id        String   @id @default(uuid())
+  date      DateTime
+  reason    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("planning_exceptions")
+}
+
+// ============================================
+// PLANNING HOLIDAY MODEL
+// ============================================
+model PlanningHoliday {
+  id        String   @id @default(uuid())
+  date      DateTime
+  label     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("planning_holidays")
+}
+// ============================================
+// STAFF MEMBER MODEL
+// ============================================
+model StaffMember {
+  id        String   @id @default(uuid())
+  name      String
+  role      String
+  email     String?
+  phone     String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("staff_members")
+}
+// ============================================
+// PROMO CODE MODEL
+// ============================================
+model PromoCode {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  description String?
+  discount    Float    // Pourcentage ou montant fixe
+  type        String   // "percent" ou "fixed"
+  isActive    Boolean  @default(true)
+  validFrom   DateTime?
+  validTo     DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("promo_codes")
+}
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
@@ -26,6 +112,13 @@ model User {
   role        String   @default("CLIENT") // CLIENT, PRO, ADMIN, SUPER_ADMIN
   status      String   @default("APPROVED") // PENDING, APPROVED, REJECTED, SUSPENDED
   // Note: CLIENT = APPROVED par défaut, PRO = PENDING par défaut à l'inscription
+
+  // Restriction flags (for PRO/ADMIN management)
+  canCreateService Boolean @default(true) // PRO: can create services
+  canBook          Boolean @default(true) // PRO: can accept bookings
+  isPublic         Boolean @default(true) // PRO: visible in public listings
+  adminType        String? // ADMIN: type (VALIDATION, SUPPORT, etc)
+  isRestricted     Boolean @default(false) // ADMIN: restricted rights
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -36,6 +129,7 @@ model User {
   coiffeurProfile Coiffeur?
   reviews         Review[]
   payments        Payment[]
+  loyalty         Loyalty?
 
   @@map("users")
 }
@@ -67,6 +161,7 @@ model Salon {
   ownerId String? @unique
   owner   User?   @relation("SalonOwner", fields: [ownerId], references: [id])
 
+
   // Relations
   coiffeurs    Coiffeur[]
   services     Service[]
@@ -74,6 +169,7 @@ model Salon {
   reviews      Review[]
   openingHours OpeningHour[]
   gallery      GalleryImage[]
+  paymentMethods SalonPaymentMethod[]
 
   @@map("salons")
 }
@@ -258,6 +354,24 @@ model Availability {
   coiffeur   Coiffeur @relation(fields: [coiffeurId], references: [id], onDelete: Cascade)
 
   @@map("availabilities")
+}
+
+
+// ============================================
+// LOYALTY MODEL
+// ============================================
+model Loyalty {
+  id        String   @id @default(uuid())
+  points    Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Client relation
+  clientId String
+  client   User   @relation(fields: [clientId], references: [id])
+
+  @@unique([clientId])
+  @@map("loyalty")
 }
 
 // ============================================

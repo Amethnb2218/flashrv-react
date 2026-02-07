@@ -1,9 +1,75 @@
+
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const { authenticate, requireAdmin, requireSuperAdmin, ROLES, STATUS } = require('../middleware/auth');
 
 const router = express.Router();
 const prisma = new PrismaClient();
+
+// ============================================
+// SUPER_ADMIN ROUTES - Restriction PRO/ADMIN
+// ============================================
+
+/**
+ * PATCH /admin/pro/:id/restrict
+ * Restreindre les droits d'un PRO (SUPER_ADMIN only)
+ */
+router.patch('/pro/:id/restrict', authenticate, requireSuperAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { canCreateService, canBook, isPublic } = req.body;
+
+    const user = await prisma.user.findUnique({ where: { id } });
+    if (!user || user.role !== ROLES.PRO) {
+      return res.status(404).json({ status: 'error', message: 'PRO not found' });
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: {
+        canCreateService: typeof canCreateService === 'boolean' ? canCreateService : user.canCreateService,
+        canBook: typeof canBook === 'boolean' ? canBook : user.canBook,
+        isPublic: typeof isPublic === 'boolean' ? isPublic : user.isPublic,
+      },
+      select: { id: true, email: true, name: true, role: true, canCreateService: true, canBook: true, isPublic: true },
+    });
+    console.log(`🔒 PRO restricted: ${updatedUser.email} by ${req.user.email}`);
+    res.status(200).json({ status: 'success', data: { user: updatedUser } });
+  } catch (error) {
+    console.error('Error restricting PRO:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to restrict PRO' });
+  }
+});
+
+/**
+ * PATCH /admin/admins/:id/restrict
+ * Restreindre les droits d'un ADMIN (SUPER_ADMIN only)
+ */
+router.patch('/admins/:id/restrict', authenticate, requireSuperAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { adminType, isRestricted } = req.body;
+
+    const user = await prisma.user.findUnique({ where: { id } });
+    if (!user || user.role !== ROLES.ADMIN) {
+      return res.status(404).json({ status: 'error', message: 'ADMIN not found' });
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id },
+      data: {
+        adminType: adminType || user.adminType,
+        isRestricted: typeof isRestricted === 'boolean' ? isRestricted : user.isRestricted,
+      },
+      select: { id: true, email: true, name: true, role: true, adminType: true, isRestricted: true },
+    });
+    console.log(`🔒 ADMIN restricted: ${updatedUser.email} by ${req.user.email}`);
+    res.status(200).json({ status: 'success', data: { user: updatedUser } });
+  } catch (error) {
+    console.error('Error restricting ADMIN:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to restrict ADMIN' });
+  }
+});
 
 // ============================================
 // ADMIN ROUTES - PRO Management
@@ -27,6 +93,7 @@ router.get('/pro/pending', authenticate, requireAdmin, async (req, res) => {
         name: true,
         phoneNumber: true,
         picture: true,
+        status: true,
         createdAt: true,
         salon: {
           select: {
@@ -396,6 +463,7 @@ router.get('/stats', authenticate, requireAdmin, async (req, res) => {
       prisma.salon.count(),
     ]);
 
+    console.log('[STATS] totalClients:', totalClients, 'totalPros:', totalPros, 'pendingPros:', pendingPros, 'approvedPros:', approvedPros, 'totalAppointments:', totalAppointments, 'totalSalons:', totalSalons);
     res.status(200).json({
       status: 'success',
       data: {
@@ -411,9 +479,10 @@ router.get('/stats', authenticate, requireAdmin, async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching stats:', error);
-    res.status(500).json({
-      status: 'error',
-      message: 'Failed to fetch statistics',
+    console.log('[PRO PENDING] count:', pendingPros.length);
+    res.status(200).json({
+      status: 'success',
+      data: { pros: pendingPros, count: pendingPros.length },
     });
   }
 });
@@ -446,9 +515,10 @@ router.get('/admins', authenticate, requireSuperAdmin, async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching admins:', error);
-    res.status(500).json({
-      status: 'error',
-      message: 'Failed to fetch admin accounts',
+    console.log('[PRO ALL] count:', pros.length);
+    res.status(200).json({
+      status: 'success',
+      data: { pros, count: pros.length },
     });
   }
 });
@@ -507,9 +577,10 @@ router.post('/admins/create', authenticate, requireSuperAdmin, async (req, res) 
     });
   } catch (error) {
     console.error('Error creating admin:', error);
-    res.status(500).json({
-      status: 'error',
-      message: 'Failed to create admin',
+    console.log('[CLIENTS] count:', clients.length);
+    res.status(200).json({
+      status: 'success',
+      data: { clients, count: clients.length },
     });
   }
 });
@@ -561,9 +632,10 @@ router.delete('/admins/:id', authenticate, requireSuperAdmin, async (req, res) =
     });
   } catch (error) {
     console.error('Error removing admin:', error);
-    res.status(500).json({
-      status: 'error',
-      message: 'Failed to remove admin',
+    console.log('[ADMINS] count:', admins.length);
+    res.status(200).json({
+      status: 'success',
+      data: { admins, count: admins.length },
     });
   }
 });
