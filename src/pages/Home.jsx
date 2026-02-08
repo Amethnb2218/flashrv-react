@@ -92,7 +92,7 @@ function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
+              <h1 className="text-3xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 leading-tight">
                 Réservez votre
                 <span className="block text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 via-amber-500 to-yellow-600">
                   moment beauté
@@ -216,7 +216,7 @@ function Home() {
             <span className="inline-block px-4 py-2 bg-amber-100 text-amber-700 rounded-full text-sm font-medium mb-4">
               Simple & Rapide
             </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
+            <h2 className="text-2xl md:text-4xl font-extrabold text-gray-900">
               Comment ça marche ?
             </h2>
           </motion.div>
@@ -287,11 +287,11 @@ function Home() {
             <span className="inline-block px-4 py-2 bg-amber-500/20 text-amber-400 rounded-full text-sm font-medium mb-6">
               Pour les professionnels
             </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+            <h2 className="text-2xl md:text-4xl font-extrabold text-white mb-6">
               Vous êtes professionnel de la beauté ?
             </h2>
             <p className="text-gray-400 max-w-xl mx-auto mb-8 leading-relaxed">
-              Coiffeur, esthéticien(ne), salon de beauté... Rejoignez FlashRV' et développez votre activité. 
+              Coiffeur, esthéticien(ne), salon de beauté... Rejoignez Ｓｔｙｌｅ Ｆｌｏｗ et développez votre activité. 
               Plus de visibilité, gestion simplifiée, clients fidélisés.
             </p>
             <Link
@@ -371,7 +371,7 @@ function FeedbackWidget() {
         </div>
         <h3 className="text-2xl font-bold text-gray-800 mb-2">Merci beaucoup !</h3>
         <p className="text-gray-600 mb-6">
-          Votre avis nous aide à améliorer FlashRV' pour tous nos utilisateurs.
+          Votre avis nous aide à améliorer Ｓｔｙｌｅ Ｆｌｏｗ pour tous nos utilisateurs.
         </p>
         <button
           onClick={() => {
@@ -397,7 +397,7 @@ function FeedbackWidget() {
       {/* Type selector tabs */}
       <div className="flex border-b border-gray-100">
         {[
-          { id: 'rating', label: '⭐ Noter FlashRV', icon: '⭐' },
+          { id: 'rating', label: '⭐ Noter Ｓｔｙｌｅ Ｆｌｏｗ', icon: '⭐' },
           { id: 'suggestion', label: '💡 Suggestion', icon: '💡' },
           { id: 'problem', label: '🐛 Signaler un problème', icon: '🐛' }
         ].map(type => (
@@ -454,7 +454,7 @@ function FeedbackWidget() {
 
         {feedbackType === 'suggestion' && (
           <div className="text-center mb-6">
-            <p className="text-gray-700 font-medium">💡 Vous avez une idée pour améliorer FlashRV' ?</p>
+            <p className="text-gray-700 font-medium">💡 Vous avez une idée pour améliorer Ｓｔｙｌｅ Ｆｌｏｗ ?</p>
             <p className="text-gray-500 text-sm mt-1">Nouvelle fonctionnalité, amélioration, etc.</p>
           </div>
         )}
@@ -471,7 +471,7 @@ function FeedbackWidget() {
             onChange={(e) => setFeedback(e.target.value)}
             placeholder={
               feedbackType === 'rating'
-                ? 'Partagez votre expérience avec FlashRV\' (optionnel)...'
+                ? 'Partagez votre expérience avec Ｓｔｙｌｅ Ｆｌｏｗ (optionnel)...'
                 : feedbackType === 'suggestion'
                 ? 'Décrivez votre suggestion en détail...'
                 : 'Décrivez le problème rencontré...'

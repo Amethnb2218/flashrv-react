@@ -134,8 +134,8 @@ function Register() {
           <div className="absolute bottom-20 right-20 w-80 h-80 bg-yellow-300/15 rounded-full blur-3xl"></div>
           <div className="absolute inset-0 flex items-center justify-center p-12">
             <div className="text-center text-white">
-              <h2 className="text-4xl font-bold mb-4">Rejoignez FlashRV'</h2>
-              <p className="text-xl text-primary-100 mb-8">
+              <h2 className="text-3xl md:text-5xl font-extrabold mb-4">Rejoignez Ｓｔｙｌｅ Ｆｌｏｗ</h2>
+              <p className="text-lg md:text-2xl text-primary-100 mb-8">
               {formData.role === 'pro' 
                 ? 'Développez votre activité et gagnez en visibilité'
                 : 'Réservez facilement vos rendez-vous beauté'
@@ -199,7 +199,7 @@ function Register() {
             </Link>
             <h1 className="text-3xl font-bold text-gray-900">Créer un compte</h1>
             <p className="mt-2 text-gray-600">
-              Rejoignez la communauté FlashRV'
+              Rejoignez la communauté Ｓｔｙｌｅ Ｆｌｏｗ
             </p>
           </div>
 

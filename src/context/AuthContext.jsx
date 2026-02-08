@@ -45,11 +45,14 @@ function authReducer(state, action) {
 export function AuthProvider({ children }) {
   const [state, dispatch] = useReducer(authReducer, initialState)
 
-  // Check for saved auth on mount
+  // Check for saved auth on mount et synchronise le cookie "token"
   useEffect(() => {
     const savedUser = localStorage.getItem('flashrv_user')
     const savedToken = localStorage.getItem('flashrv_token')
-    
+    // Synchronise le token dans un cookie pour Express backend
+    if (savedToken) {
+      document.cookie = `token=${savedToken}; path=/`;
+    }
     if (savedUser && savedToken) {
       try {
         const user = JSON.parse(savedUser)
@@ -68,65 +71,65 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
-  const login = async (credentials) => {
-    // API call simulation - Replace with actual backend API
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        // Production test accounts (hidden from UI)
-        const registeredUsers = [
-          {
-            id: 1,
-            email: 'amethsl2218@gmail.com',
-            username: 'coiffeur_flash',
-            phone: '+221776762784',
-            password: 'Amethnb2218',
-            name: 'Aminata Coiffeuse Pro',
-            role: 'coiffeur',
-            salonId: 1,
-            avatar: null
-          },
-          {
-            id: 2,
-            email: 'meth19momo@gmail.com',
-            username: 'client_flash',
-            phone: '+221771234567',
-            password: 'Amethnb2218',
-            name: 'Mouhamed Client',
-            role: 'client',
-            avatar: null
-          }
-        ]
+  // Login via backend API (vrai login, pose le cookie httpOnly)
+  const login = async ({ identifier, password }) => {
+    try {
+      const res = await fetch('http://localhost:4000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ identifier, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Identifiants incorrects');
+      }
+      const user = data.data?.user;
+      const token = data.data?.token || null;
+      if (user && token) {
+        localStorage.setItem('flashrv_user', JSON.stringify(user));
+        localStorage.setItem('flashrv_token', token);
+        document.cookie = `token=${token}; path=/`;
+        dispatch({
+          type: 'LOGIN',
+          payload: { user, token }
+        });
+        return user;
+      } else {
+        throw new Error('Utilisateur ou token manquant');
+      }
+    } catch (err) {
+      throw err;
+    }
+  };
 
-        // Normalize phone number for comparison
-        const normalizePhone = (phone) => phone?.replace(/[\s\-\.]/g, '')
-        const identifier = credentials.identifier || credentials.email
-        const normalizedIdentifier = normalizePhone(identifier)
-
-        // Find user by email, phone, or username
-        const user = registeredUsers.find(u => {
-          const matchEmail = u.email?.toLowerCase() === identifier?.toLowerCase()
-          const matchPhone = normalizePhone(u.phone) === normalizedIdentifier
-          const matchUsername = u.username?.toLowerCase() === identifier?.toLowerCase()
-          return (matchEmail || matchPhone || matchUsername) && u.password === credentials.password
-        })
-
-        if (user) {
-          const { password, ...userWithoutPassword } = user
-          const token = 'demo_token_' + Date.now()
-          
-          localStorage.setItem('flashrv_user', JSON.stringify(userWithoutPassword))
-          localStorage.setItem('flashrv_token', token)
-          
-          dispatch({
-            type: 'LOGIN',
-            payload: { user: userWithoutPassword, token }
-          })
-          resolve(userWithoutPassword)
-        } else {
-          reject(new Error('Email ou mot de passe incorrect'))
-        }
-      }, 1000)
-    })
+  // Login via Google OAuth uniquement (backend /api/auth/google)
+  const loginGoogle = async ({ credential, customName, accountType }) => {
+    try {
+      const res = await fetch('http://localhost:4000/api/auth/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ credential, customName, accountType }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Erreur de connexion Google');
+      }
+      const user = data.data?.user;
+      if (user) {
+        localStorage.setItem('flashrv_user', JSON.stringify(user));
+        dispatch({
+          type: 'LOGIN',
+          payload: { user, token: null }
+        });
+        return user;
+      } else {
+        throw new Error('Utilisateur Google non trouvé');
+      }
+    } catch (err) {
+      throw err;
+    }
   }
 
   const register = async (userData) => {
@@ -145,6 +148,7 @@ export function AuthProvider({ children }) {
         
         localStorage.setItem('flashrv_user', JSON.stringify(newUser))
         localStorage.setItem('flashrv_token', token)
+        document.cookie = `token=${token}; path=/`;
         
         dispatch({
           type: 'LOGIN',
@@ -174,69 +178,40 @@ export function AuthProvider({ children }) {
   // Google OAuth login
   const loginWithGoogle = async (credential, accountType = 'CLIENT') => {
     try {
-      console.log('🔄 Sending Google credential to backend...')
-      console.log('URL:', 'http://localhost:4000/api/auth/google')
-      console.log('Account Type:', accountType)
-      
+      const body = accountType ? { credential, accountType } : { credential };
       const response = await fetch('http://localhost:4000/api/auth/google', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', // Important for cookies
-        body: JSON.stringify({ credential, accountType }),
-      })
-
-      console.log('📡 Response status:', response.status)
-      const data = await response.json()
-      console.log('📦 Response data:', data)
-
+        credentials: 'include',
+        body: JSON.stringify(body),
+      });
+      const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.message || 'Erreur de connexion Google')
+        throw new Error(data.message || 'Erreur de connexion Google');
       }
-
-      const user = data.data.user
-      const token = 'google_auth_' + Date.now() // Token is in httpOnly cookie
-
-      localStorage.setItem('flashrv_user', JSON.stringify(user))
-      localStorage.setItem('flashrv_token', token)
-
+      const user = data.data.user;
+      const token = 'google_auth_' + Date.now();
+      localStorage.setItem('flashrv_user', JSON.stringify(user));
+      localStorage.setItem('flashrv_token', token);
+      document.cookie = `token=${token}; path=/`;
       dispatch({
         type: 'LOGIN',
-        payload: { user, token }
-      })
-
-      return user
+        payload: { user, token },
+      });
+      return user;
     } catch (error) {
-      console.error('Google login error:', error)
-      throw error
+      console.error('Google login error:', error);
+      throw error;
     }
-  }
+  };
 
-  // Check auth status with backend
-  const checkAuth = async () => {
-    try {
-      const response = await fetch('http://localhost:4000/api/auth/me', {
-        credentials: 'include',
-      })
 
-      if (response.ok) {
-        const data = await response.json()
-        const user = data.data.user
-        const token = 'auth_' + Date.now()
-
-        localStorage.setItem('flashrv_user', JSON.stringify(user))
-        localStorage.setItem('flashrv_token', token)
-
-        dispatch({
-          type: 'LOGIN',
-          payload: { user, token }
-        })
-        return user
-      }
-    } catch (error) {
-      console.error('Check auth error:', error)
-    }
-    return null
-  }
+  // Basic checkAuth implementation
+  const checkAuth = () => {
+    const user = localStorage.getItem('flashrv_user');
+    const token = localStorage.getItem('flashrv_token');
+    return !!(user && token);
+  };
 
   const updateUser = (userData) => {
     const updatedUser = { ...state.user, ...userData }
@@ -268,6 +243,3 @@ export function useAuth() {
   }
   return context
 }
-
-export default AuthContext
-

@@ -38,7 +38,7 @@ router.get('/', authenticate, async (req, res, next) => {
 
     // Add filters
     if (status) {
-      where.status = status;
+          where.status = status;
     }
 
     if (from || to) {
@@ -71,11 +71,7 @@ router.get('/', authenticate, async (req, res, next) => {
       orderBy: { date: 'desc' },
     });
 
-    res.status(200).json({
-      status: 'success',
-      results: appointments.length,
-      data: { appointments },
-    });
+    res.status(200).json({ data: appointments });
   } catch (error) {
     next(error);
   }

@@ -99,7 +99,7 @@ export default function ProPending() {
 
           {/* Contact Support */}
           <a
-            href="mailto:support@flashrv.sn"
+            href="mailto:support@styleflow.sn"
             className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-6"
           >
             <FiMail className="w-4 h-4" />

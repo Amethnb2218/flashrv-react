@@ -1,139 +1,54 @@
-import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import React, { useState, useEffect } from 'react';
+import AddAdminForm from './AddAdminForm';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FiUsers, FiUserCheck, FiUserX, FiClock, 
   FiBarChart2, FiSearch, FiFilter, FiRefreshCw,
   FiCheck, FiX, FiAlertTriangle, FiShield,
   FiMail, FiPhone, FiCalendar, FiMoreVertical
-} from 'react-icons/fi'
-import { useAuth } from '../../context/AuthContext'
+} from 'react-icons/fi';
+import { useAuth } from '../../context/AuthContext';
+import StatCard from '../../components/UI/StatCard';
+import PendingProsSection from './PendingProsSection';
+import ClientsSection from './ClientsSection';
+import AdminsSection from './AdminsSection';
+import StatsSection from './StatsSection';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api'
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
-// Composant Stat Card
-function StatCard({ icon: Icon, label, value, color, trend }) {
-  const colorClasses = {
-    blue: 'bg-blue-50 text-blue-600',
-    green: 'bg-green-50 text-green-600',
-    yellow: 'bg-yellow-50 text-yellow-600',
-    red: 'bg-red-50 text-red-600',
-    purple: 'bg-purple-50 text-purple-600',
-  }
-
+// Composant Client Row avec menu d'actions
+export function ClientRow({ client }) {
+  const [showMenu, setShowMenu] = useState(false);
   return (
-    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-      <div className="flex items-center justify-between">
+    <tr className="group border-b border-blue-100 hover:bg-blue-50 transition-all duration-150">
+      <td className="py-4 px-6">
         <div>
-          <p className="text-sm text-gray-500">{label}</p>
-          <p className="text-3xl font-bold text-gray-900 mt-1">{value}</p>
-          {trend && (
-            <p className={`text-sm mt-1 ${trend > 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {trend > 0 ? '+' : ''}{trend}% ce mois
-            </p>
-          )}
-        </div>
-        <div className={`p-4 rounded-full ${colorClasses[color]}`}>
-          <Icon className="w-6 h-6" />
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// Composant User Row
-function UserRow({ user, onAction, isLoading }) {
-  const [showMenu, setShowMenu] = useState(false)
-
-  const statusConfig = {
-    PENDING: { label: 'En attente', color: 'bg-yellow-100 text-yellow-700' },
-    APPROVED: { label: 'Approuvé', color: 'bg-green-100 text-green-700' },
-    REJECTED: { label: 'Refusé', color: 'bg-red-100 text-red-700' },
-    SUSPENDED: { label: 'Suspendu', color: 'bg-orange-100 text-orange-700' },
-  }
-
-  const status = statusConfig[user.status] || statusConfig.PENDING
-
-  return (
-    <tr className="border-b border-gray-100 hover:bg-gray-50">
-      <td className="py-4 px-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold">
-            {user.name?.charAt(0).toUpperCase() || '?'}
-          </div>
-          <div>
-            <p className="font-medium text-gray-900">{user.name}</p>
-            <p className="text-sm text-gray-500">{user.email}</p>
-          </div>
+          <p className="text-xs font-extrabold tracking-widest uppercase text-blue-700 font-poppins">{client.name}</p>
+          <p className="text-xs font-extrabold tracking-widest lowercase text-blue-700 font-poppins">{client.email?.toLowerCase()}</p>
         </div>
       </td>
-      <td className="py-4 px-4">
-        <span className="text-sm text-gray-600">{user.phone || '-'}</span>
-      </td>
-      <td className="py-4 px-4">
-        <span className={`px-3 py-1 rounded-full text-xs font-medium ${status.color}`}>
-          {status.label}
-        </span>
-      </td>
-      <td className="py-4 px-4">
-        <span className="text-sm text-gray-500">
-          {new Date(user.createdAt).toLocaleDateString('fr-FR')}
-        </span>
-      </td>
-      <td className="py-4 px-4">
-        <div className="relative">
+      <td className="py-4 px-6 text-xs font-extrabold tracking-widest uppercase text-blue-700 font-poppins">{client.phoneNumber || '-'}</td>
+      <td className="py-4 px-6 text-xs font-extrabold tracking-widest uppercase text-blue-700 font-poppins">{new Date(client.createdAt).toLocaleDateString('fr-FR')}</td>
+      <td className="py-4 px-6 relative">
+        <div className="relative flex items-center gap-2">
           <button
             onClick={() => setShowMenu(!showMenu)}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            disabled={isLoading}
+            className="p-2 rounded-full bg-white/10 hover:bg-blue-800/40 shadow-lg hover:shadow-yellow-400/40 transition-all duration-200 border border-white/10 backdrop-blur-xl focus:outline-none focus:ring-2 focus:ring-yellow-400"
           >
-            <FiMoreVertical className="w-4 h-4 text-gray-500" />
+            <FiMoreVertical className="w-5 h-5 text-blue-200 group-hover:text-yellow-400 transition-colors duration-200 drop-shadow-glow" />
           </button>
-          
           <AnimatePresence>
             {showMenu && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 z-10"
+                className="absolute right-0 mt-2 w-44 bg-white/10 backdrop-blur-2xl rounded-2xl shadow-2xl border border-white/10 z-10 animate-fade-in"
+                style={{ boxShadow: '0 8px 32px 0 rgba(255, 255, 0, 0.10)' }}
                 onClick={() => setShowMenu(false)}
               >
-                {user.status === 'PENDING' && (
-                  <>
-                    <button
-                      onClick={() => onAction(user.id, 'approve')}
-                      className="w-full flex items-center gap-2 px-4 py-3 text-sm text-green-600 hover:bg-green-50"
-                    >
-                      <FiCheck className="w-4 h-4" />
-                      Approuver
-                    </button>
-                    <button
-                      onClick={() => onAction(user.id, 'reject')}
-                      className="w-full flex items-center gap-2 px-4 py-3 text-sm text-red-600 hover:bg-red-50"
-                    >
-                      <FiX className="w-4 h-4" />
-                      Refuser
-                    </button>
-                  </>
-                )}
-                {user.status === 'APPROVED' && (
-                  <button
-                    onClick={() => onAction(user.id, 'suspend')}
-                    className="w-full flex items-center gap-2 px-4 py-3 text-sm text-orange-600 hover:bg-orange-50"
-                  >
-                    <FiAlertTriangle className="w-4 h-4" />
-                    Suspendre
-                  </button>
-                )}
-                {(user.status === 'SUSPENDED' || user.status === 'REJECTED') && (
-                  <button
-                    onClick={() => onAction(user.id, 'reactivate')}
-                    className="w-full flex items-center gap-2 px-4 py-3 text-sm text-blue-600 hover:bg-blue-50"
-                  >
-                    <FiRefreshCw className="w-4 h-4" />
-                    Réactiver
-                  </button>
-                )}
+                <button className="w-full flex items-center gap-2 px-5 py-3 text-sm text-red-200 hover:bg-red-900/30 font-poppins tracking-wide transition-all duration-150 rounded-xl"><FiX className="w-4 h-4" />Supprimer</button>
+                <button className="w-full flex items-center gap-2 px-5 py-3 text-sm text-orange-200 hover:bg-orange-900/30 font-poppins tracking-wide transition-all duration-150 rounded-xl"><FiShield className="w-4 h-4" />Restreindre</button>
               </motion.div>
             )}
           </AnimatePresence>
@@ -143,6 +58,111 @@ function UserRow({ user, onAction, isLoading }) {
   )
 }
 
+// Composant Admin Row
+export function AdminRow({ admin, onRestrict }) {
+  const [showMenu, setShowMenu] = useState(false);
+  const [showRestrictModal, setShowRestrictModal] = useState(false);
+  const isRestricted = admin.isRestricted === true;
+
+  return (
+    <tr className="group border-b border-blue-100 hover:bg-blue-50 transition-all duration-150">
+      <td className="py-4 px-6">
+        <div>
+          <p className="font-bold text-[#1E293B] text-lg md:text-xl font-poppins tracking-wide">{admin.name}</p>
+          <p className="text-sm text-[#334155] font-semibold font-inter tracking-wide">{admin.email}</p>
+          {isRestricted && (
+            <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-xs bg-orange-400/20 text-orange-200 font-semibold shadow">Restreint</span>
+          )}
+        </div>
+      </td>
+      <td className="py-4 px-6 text-xs font-extrabold tracking-widest uppercase text-blue-700 font-poppins">{admin.createdAt ? new Date(admin.createdAt).toLocaleDateString('fr-FR') : '-'}</td>
+      <td className="py-4 px-6">
+        <span className="inline-block px-4 py-1 rounded-full text-xs font-bold font-poppins tracking-wider border bg-white text-blue-900">{admin.adminType || '-'}</span>
+      </td>
+      <td className="py-4 px-6 text-xs font-extrabold tracking-widest uppercase text-blue-700 font-poppins">{admin.adminType || '-'}</td>
+      <td className="py-4 px-6 relative">
+        <div className="relative flex items-center gap-2">
+          <button
+            onClick={() => setShowMenu(!showMenu)}
+            className="p-2 rounded-full bg-white/10 hover:bg-blue-800/40 shadow-lg hover:shadow-yellow-400/40 transition-all duration-200 border border-white/10 backdrop-blur-xl focus:outline-none focus:ring-2 focus:ring-yellow-400"
+          >
+            <FiMoreVertical className="w-5 h-5 text-blue-200 group-hover:text-yellow-400 transition-colors duration-200 drop-shadow-glow" />
+          </button>
+          <AnimatePresence>
+            {showMenu && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow-lg border border-gray-100 z-10"
+                onClick={() => setShowMenu(false)}
+              >
+                <button className="w-full flex items-center gap-2 px-4 py-3 text-sm text-orange-700 hover:bg-orange-50" onClick={() => setShowRestrictModal(true)}>Restreindre</button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </td>
+    </tr>
+  );
+}
+// Composant User Row
+export function UserRow({ user, onAction, isLoading, onRestrict, isSuperAdmin }) {
+  const [showMenu, setShowMenu] = useState(false);
+  const [showRestrictModal, setShowRestrictModal] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null); // { type: 'approve'|'reject'|'suspend'|'reactivate', userId }
+
+  const statusConfig = {
+    PENDING: { label: 'En attente', color: 'bg-gradient-to-r from-yellow-400/30 to-yellow-200/20 text-yellow-200 border border-yellow-300/30 shadow-yellow-400/20' },
+    APPROVED: { label: 'Approuvé', color: 'bg-gradient-to-r from-green-400/30 to-green-200/20 text-green-200 border border-green-300/30 shadow-green-400/20' },
+    REJECTED: { label: 'Refusé', color: 'bg-gradient-to-r from-red-400/30 to-red-200/20 text-red-200 border border-red-300/30 shadow-red-400/20' },
+    SUSPENDED: { label: 'Suspendu', color: 'bg-gradient-to-r from-gray-400/30 to-gray-200/20 text-gray-200 border border-gray-300/30 shadow-gray-400/20' },
+  };
+  const status = statusConfig[user.status] || statusConfig.PENDING;
+  const isRestricted = user.canCreateService === false || user.canBook === false || user.isPublic === false;
+
+  return (
+    <tr className="group border-b border-blue-100 hover:bg-blue-50 transition-all duration-150 text-blue-600">
+      <td className="py-3 px-4">
+        <div>
+          <p className="font-bold text-blue-800 text-base md:text-lg font-montserrat tracking-wide uppercase">{user.name}</p>
+          <p className="text-xs md:text-sm text-blue-500 font-inter tracking-wide lowercase">{user.email?.toLowerCase()}</p>
+          {isRestricted && (
+            <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-xs bg-yellow-100 text-yellow-700 font-semibold font-inter shadow">Restreint</span>
+          )}
+        </div>
+      </td>
+      <td className="py-3 px-4 text-xs md:text-sm font-semibold tracking-widest uppercase text-blue-500 font-inter">{user.phoneNumber || '-'}</td>
+      <td className="py-3 px-4">
+        <span className={`inline-block px-3 py-0.5 rounded-full text-xs md:text-sm font-bold font-montserrat tracking-wider border text-blue-600 bg-blue-50 ${status.color}`}>{status.label}</span>
+      </td>
+      <td className="py-3 px-4 text-xs md:text-sm font-semibold tracking-widest uppercase text-blue-500 font-inter">{user.createdAt ? new Date(user.createdAt).toLocaleDateString('fr-FR') : '-'}</td>
+      <td className="py-3 px-4 relative">
+        <div className="relative flex items-center gap-2">
+          <button
+            onClick={() => setShowMenu(!showMenu)}
+            className="p-2 rounded-full bg-white/10 hover:bg-blue-200/40 shadow-lg hover:shadow-blue-400/40 transition-all duration-200 border border-white/10 backdrop-blur-xl focus:outline-none focus:ring-2 focus:ring-blue-400"
+          >
+            <FiMoreVertical className="w-5 h-5 text-blue-600 group-hover:text-blue-800 transition-colors duration-200 drop-shadow-glow" />
+          </button>
+          <AnimatePresence>
+            {showMenu && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow-lg border border-gray-100 z-10"
+                onClick={() => setShowMenu(false)}
+              >
+                <button className="w-full flex items-center gap-2 px-4 py-2 text-xs md:text-sm text-blue-700 hover:bg-blue-100 font-montserrat" onClick={() => setShowRestrictModal(true)}>Restreindre</button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </td>
+    </tr>
+  );
+}
 export default function AdminDashboard() {
   const { user } = useAuth()
   const [activeTab, setActiveTab] = useState('pending')
@@ -152,67 +172,167 @@ export default function AdminDashboard() {
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [actionLoading, setActionLoading] = useState(false)
+  const [clients, setClients] = useState([])
+  const [clientsLoading, setClientsLoading] = useState(false)
+  const [clientSearch, setClientSearch] = useState('')
 
   const isSuperAdmin = user?.role === 'SUPER_ADMIN'
 
-  // Charger les données
-  useEffect(() => {
-    fetchData()
-  }, [activeTab])
-
-  const fetchData = async () => {
-    setIsLoading(true)
+  // Action réelle pour approuver ou refuser un PRO
+  const handleAction = async (userId, actionType) => {
+    let url = '';
+    let method = 'PATCH';
+    if (actionType === 'approve') {
+      url = `${API_URL}/admin/pro/${userId}/approve`;
+    } else if (actionType === 'reject') {
+      url = `${API_URL}/admin/pro/${userId}/reject`;
+    } else {
+      alert(`Action inconnue: ${actionType}`);
+      return;
+    }
+    setActionLoading(true);
     try {
-      // Charger les stats
-      const statsRes = await fetch(`${API_URL}/admin/stats`, {
+      const res = await fetch(url, {
+        method,
         credentials: 'include',
-      })
-      if (statsRes.ok) {
-        const statsData = await statsRes.json()
-        setStats(statsData)
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        alert(data.message || 'Erreur lors de la mise à jour du statut');
+      } else {
+        fetchData();
       }
-
-      // Charger les PROs selon l'onglet
-      let endpoint = activeTab === 'pending' 
-        ? '/admin/pro/pending' 
-        : '/admin/pro/all'
-      
-      const prosRes = await fetch(`${API_URL}${endpoint}`, {
-        credentials: 'include',
-      })
-      if (prosRes.ok) {
-        const prosData = await prosRes.json()
-        setPros(prosData.pros || prosData)
-      }
-    } catch (error) {
-      console.error('Erreur lors du chargement:', error)
+    } catch (e) {
+      alert('Erreur réseau lors de la validation/refus');
     } finally {
-      setIsLoading(false)
+      setActionLoading(false);
     }
   }
 
-  // Actions sur un PRO
-  const handleAction = async (userId, action) => {
-    setActionLoading(true)
+  // Log temporaire pour debug
+  useEffect(() => {
+    if (pros && Array.isArray(pros)) {
+      console.log('[DEBUG] PROS chargés:', pros);
+    }
+  }, [pros]);
+
+  // Charger les données à chaque changement d'onglet PROs/pending ou stats
+  useEffect(() => {
+    if (["all", "pending", "stats"].includes(activeTab)) {
+      fetchData();
+    }
+  }, [activeTab]);
+
+  const fetchData = async () => {
+    setIsLoading(true);
     try {
-      const res = await fetch(`${API_URL}/admin/pro/${userId}/${action}`, {
+      let pros = [];
+      let stats = null;
+      // Charger les stats toujours
+      try {
+        const statsRes = await fetch(`${API_URL}/admin/stats`, { credentials: 'include' });
+        if (statsRes.ok) {
+          const statsData = await statsRes.json();
+          stats = statsData.data || null;
+        }
+      } catch {}
+      setStats(stats);
+
+      // Charger les PROs selon l'onglet
+      if (activeTab === 'pending') {
+        try {
+          const pendingRes = await fetch(`${API_URL}/admin/pro/pending`, { credentials: 'include' });
+          if (pendingRes.ok) {
+            const pendingData = await pendingRes.json();
+            pros = pendingData.data?.pros || [];
+          }
+        } catch {}
+      } else if (activeTab === 'all') {
+        try {
+          const allRes = await fetch(`${API_URL}/admin/pro/all`, { credentials: 'include' });
+          if (allRes.ok) {
+            const allData = await allRes.json();
+            pros = allData.data?.pros || [];
+          }
+        } catch {}
+      }
+      setPros(pros);
+    } catch (e) {
+      setPros([]);
+      setStats(null);
+    } finally {
+      setIsLoading(false);
+    }
+  } 
+
+  // Gestion de restriction PRO
+  const handleRestrict = async (userId, flags) => {
+    try {
+      await fetch(`${API_URL}/admin/pro/${userId}/restrict`, {
         method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
+        body: JSON.stringify(flags),
       })
-      
+      fetchData()
+    } catch (error) {
+      alert('Erreur lors de la restriction')
+    }
+  }
+
+  // Gestion des admins (onglet superadmin)
+  const [admins, setAdmins] = useState([])
+  useEffect(() => {
+    if (activeTab === 'admins' && isSuperAdmin) {
+      fetchAdmins()
+    }
+  }, [activeTab])
+  const fetchAdmins = async () => {
+    try {
+      const res = await fetch(`${API_URL}/admin/admins`, { credentials: 'include' })
       if (res.ok) {
-        // Recharger les données
-        fetchData()
+        const data = await res.json()
+        setAdmins(data.data.admins || [])
       } else {
-        const error = await res.json()
-        alert(error.message || 'Erreur lors de l\'action')
+        setAdmins([])
       }
     } catch (error) {
-      console.error('Erreur:', error)
-      alert('Erreur de connexion')
-    } finally {
-      setActionLoading(false)
+      setAdmins([])
     }
+  }
+  const handleRestrictAdmin = async (adminId, flags) => {
+    try {
+      await fetch(`${API_URL}/admin/admins/${adminId}/restrict`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(flags),
+      })
+      fetchAdmins()
+    } catch (error) {
+      alert('Erreur lors de la restriction admin')
+    }
+  }
+
+  // Charger les clients quand l'onglet est actif
+  useEffect(() => {
+    if (activeTab === 'clients') fetchClients()
+  }, [activeTab])
+  const fetchClients = async () => {
+    setClientsLoading(true)
+    try {
+      const res = await fetch(`${API_URL}/admin/clients`, { credentials: 'include' })
+      if (res.ok) {
+        const data = await res.json()
+        setClients(data.data.clients || [])
+      } else {
+        setClients([])
+      }
+    } catch (e) {
+      setClients([])
+    }
+    setClientsLoading(false)
   }
 
   // Filtrer les PROs
@@ -224,83 +344,89 @@ export default function AdminDashboard() {
   })
 
   const tabs = [
-    { id: 'pending', label: 'En attente', icon: FiClock, count: stats?.pendingPros || 0 },
-    { id: 'all', label: 'Tous les PROs', icon: FiUsers, count: stats?.totalPros || 0 },
+    { id: 'pending', label: 'En attente', icon: FiClock, count: stats?.pros?.pending || 0 },
+    { id: 'all', label: 'Tous les PROs', icon: FiUsers, count: stats?.pros?.total || 0 },
+    { id: 'clients', label: 'Clients', icon: FiUserCheck, count: stats?.clients || 0 },
     { id: 'stats', label: 'Statistiques', icon: FiBarChart2 },
   ]
-
   if (isSuperAdmin) {
     tabs.push({ id: 'admins', label: 'Administrateurs', icon: FiShield })
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-[#F7FAFC] overflow-x-hidden">
+      <div className="max-w-7xl mx-auto px-4">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">
-            Tableau de bord Admin
-          </h1>
-          <p className="text-gray-600 mt-1">
-            Gérez les professionnels et surveillez la plateforme
-          </p>
-          {isSuperAdmin && (
-            <span className="inline-flex items-center gap-1 mt-2 px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">
-              <FiShield className="w-4 h-4" />
-              Super Admin
-            </span>
-          )}
-        </div>
+        <header className="sticky top-0 z-20 flex flex-col gap-2 py-8 mb-8 bg-white rounded-2xl shadow-md border border-gray-200">
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-[#1E293B] font-poppins">
+              <span className="">Dashboard</span>{' '}
+              <span className="text-2xl md:text-3xl align-middle font-bold tracking-normal">Ｓｔｙｌｅ Ｆｌｏｗ</span>
+            </h1>
+            {isSuperAdmin && (
+              <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold border border-blue-300">
+                <FiShield className="w-5 h-5 text-blue-500" />
+                Super Admin
+              </span>
+            )}
+            {!isSuperAdmin && (
+              <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-green-100 text-green-700 rounded-full text-sm font-semibold border border-green-200">
+                Admin
+              </span>
+            )}
+          </div>
+          <p className="text-base text-[#64748B] font-normal mt-2 ml-1">Plateforme de gestion intelligente et monitoring temps réel</p>
+        </header>
 
         {/* Stats Cards */}
         {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
             <StatCard
               icon={FiClock}
               label="En attente"
-              value={stats.pendingPros || 0}
+              value={stats.pros?.pending || 0}
               color="yellow"
             />
             <StatCard
               icon={FiUserCheck}
               label="PROs approuvés"
-              value={stats.approvedPros || 0}
+              value={stats.pros?.approved || 0}
               color="green"
             />
             <StatCard
               icon={FiUsers}
               label="Total clients"
-              value={stats.totalClients || 0}
+              value={stats.clients || 0}
               color="blue"
             />
             <StatCard
               icon={FiCalendar}
               label="Réservations"
-              value={stats.totalAppointments || 0}
+              value={stats.appointments || 0}
               color="purple"
             />
           </div>
         )}
 
         {/* Tabs */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-6">
-          <div className="flex border-b border-gray-100 overflow-x-auto">
+        <div className="bg-white rounded-xl shadow border border-gray-200 mb-6">
+          <div className="flex border-b border-gray-200 overflow-x-auto">
             {tabs.map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-6 py-4 text-sm font-medium whitespace-nowrap transition-colors ${
+                className={`flex items-center gap-2 px-6 py-4 text-base font-semibold whitespace-nowrap transition-colors ${
                   activeTab === tab.id
-                    ? 'text-blue-600 border-b-2 border-blue-600'
-                    : 'text-gray-500 hover:text-gray-700'
+                    ? 'text-blue-700 border-b-2 border-blue-700 bg-blue-50'
+                    : 'text-gray-500 hover:text-blue-700 hover:bg-blue-50'
                 }`}
               >
-                <tab.icon className="w-4 h-4" />
+                <tab.icon className="w-5 h-5" />
                 {tab.label}
                 {tab.count !== undefined && (
-                  <span className={`px-2 py-0.5 rounded-full text-xs ${
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
                     activeTab === tab.id
-                      ? 'bg-blue-100 text-blue-600'
+                      ? 'bg-blue-200 text-blue-800'
                       : 'bg-gray-100 text-gray-600'
                   }`}>
                     {tab.count}
@@ -311,165 +437,42 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Content */}
-        {activeTab !== 'stats' && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-            {/* Filters */}
-            <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row gap-4">
-              <div className="relative flex-1">
-                <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Rechercher par nom ou email..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              {activeTab === 'all' && (
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="all">Tous les statuts</option>
-                  <option value="PENDING">En attente</option>
-                  <option value="APPROVED">Approuvés</option>
-                  <option value="REJECTED">Refusés</option>
-                  <option value="SUSPENDED">Suspendus</option>
-                </select>
-              )}
-              <button
-                onClick={fetchData}
-                className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <FiRefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-                Actualiser
-              </button>
-            </div>
-
-            {/* Table */}
-            <div className="overflow-x-auto">
-              {isLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent"></div>
-                </div>
-              ) : filteredPros.length === 0 ? (
-                <div className="text-center py-12">
-                  <FiUsers className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500">Aucun professionnel trouvé</p>
-                </div>
-              ) : (
-                <table className="w-full">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase">
-                        Professionnel
-                      </th>
-                      <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase">
-                        Téléphone
-                      </th>
-                      <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase">
-                        Statut
-                      </th>
-                      <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase">
-                        Inscription
-                      </th>
-                      <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredPros.map(pro => (
-                      <UserRow
-                        key={pro.id}
-                        user={pro}
-                        onAction={handleAction}
-                        isLoading={actionLoading}
-                      />
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          </div>
+        {activeTab === 'pending' && (
+          <PendingProsSection
+            pros={pros}
+            loading={isLoading}
+            onRefresh={fetchData}
+            onApprove={user => handleAction(user.id, 'approve')}
+            onReject={user => handleAction(user.id, 'reject')}
+            onRestrict={user => handleRestrict(user.id, { canCreateService: false, canBook: false, isPublic: false })}
+          />
+        )}
+        {activeTab === 'all' && (
+          <PendingProsSection
+            pros={pros}
+            loading={isLoading}
+            onRefresh={fetchData}
+            onApprove={user => handleAction(user.id, 'approve')}
+            onReject={user => handleAction(user.id, 'reject')}
+            onRestrict={user => handleRestrict(user.id, { canCreateService: false, canBook: false, isPublic: false })}
+          />
+        )}
+        {activeTab === 'clients' && (
+          <ClientsSection
+            clients={clients}
+            loading={clientsLoading}
+            onRefresh={fetchClients}
+          />
         )}
 
-        {/* Stats Tab Content */}
         {activeTab === 'stats' && stats && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="grid grid-cols-1 md:grid-cols-2 gap-6"
-          >
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-              <h3 className="font-semibold text-gray-900 mb-4">Répartition des utilisateurs</h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Clients</span>
-                  <span className="font-semibold">{stats.totalClients || 0}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Professionnels approuvés</span>
-                  <span className="font-semibold text-green-600">{stats.approvedPros || 0}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">En attente de validation</span>
-                  <span className="font-semibold text-yellow-600">{stats.pendingPros || 0}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Comptes suspendus</span>
-                  <span className="font-semibold text-red-600">{stats.suspendedUsers || 0}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-              <h3 className="font-semibold text-gray-900 mb-4">Activité récente</h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Réservations totales</span>
-                  <span className="font-semibold">{stats.totalAppointments || 0}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Réservations ce mois</span>
-                  <span className="font-semibold">{stats.monthlyAppointments || 0}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Revenus estimés</span>
-                  <span className="font-semibold text-green-600">
-                    {(stats.totalRevenue || 0).toLocaleString('fr-FR')} FCFA
-                  </span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
+          <StatsSection stats={stats} />
         )}
 
-        {/* Admins Tab (Super Admin Only) */}
         {activeTab === 'admins' && isSuperAdmin && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="bg-white rounded-xl shadow-sm border border-gray-100 p-6"
-          >
-            <h3 className="font-semibold text-gray-900 mb-4">
-              Gestion des Administrateurs
-            </h3>
-            <p className="text-gray-600 mb-6">
-              En tant que Super Admin, vous pouvez promouvoir des utilisateurs en Admin ou révoquer leurs droits.
-            </p>
-            {/* Admin management UI would go here */}
-            <div className="bg-gray-50 rounded-xl p-8 text-center">
-              <FiShield className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">
-                Fonctionnalité de gestion des admins à implémenter
-              </p>
-            </div>
-          </motion.div>
+          <AdminsSection admins={admins} loading={false} onRefresh={fetchAdmins} />
         )}
       </div>
     </div>
-  )
+  );
 }

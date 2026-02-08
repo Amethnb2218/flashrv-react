@@ -7,6 +7,8 @@ import { FiEye, FiEyeOff, FiArrowRight } from 'react-icons/fi'
 import toast from 'react-hot-toast'
 
 function Login() {
+    // Ajout d'un état pour le type de compte Google
+    const [googleAccountType, setGoogleAccountType] = useState('CLIENT')
   const [formData, setFormData] = useState({
     identifier: '',
     password: ''
@@ -61,10 +63,9 @@ function Login() {
     setIsLoading(true)
     try {
       console.log('✅ Google Login Success!')
-      const user = await loginWithGoogle(credentialResponse.credential)
-      
+      // Passe le type de compte sélectionné à loginWithGoogle
+      const user = await loginWithGoogle(credentialResponse.credential, googleAccountType)
       toast.success(`Bienvenue, ${user.name || user.email} !`)
-      
       if (user.role === 'PRO' && user.status === 'PENDING') {
         navigate('/pro/pending')
       } else if (user.role === 'PRO') {
@@ -193,6 +194,8 @@ function Login() {
                 </div>
               </div>
 
+              {/* Sélection du type de compte Google */}
+              {/* ...removed Google account type selection... */}
               {/* Google Login Button */}
               <div className="flex justify-center">
                 <GoogleLogin
@@ -228,8 +231,8 @@ function Login() {
         <div className="absolute inset-0 bg-gradient-to-br from-dark-900/80 to-accent-700/80" />
         <div className="absolute inset-0 flex items-center justify-center p-12">
           <div className="text-center text-white">
-            <h2 className="text-4xl font-bold mb-4">FlashRV'</h2>
-            <p className="text-xl text-primary-100">
+            <h2 className="text-3xl md:text-5xl font-extrabold mb-4">Ｓｔｙｌｅ Ｆｌｏｗ</h2>
+            <p className="text-lg md:text-2xl text-primary-100">
               La beauté à portée de clic
             </p>
           </div>

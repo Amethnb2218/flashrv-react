@@ -13,14 +13,15 @@ function Logo({ variant = 'default', size = 'md', showTagline = true }) {
   const isLight = variant === 'light'
 
   return (
-    <Link to="/" className="flex items-center space-x-3 group">
+    <Link to="/" className="flex items-center space-x-3 group select-none">
       {/* Logo Icon - F stylisé avec éclair lumineux */}
       <div className="relative">
         <svg 
-          className={`${s.logo} transition-all duration-300 group-hover:scale-110 drop-shadow-lg`}
+          className={`${s.logo} transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_16px_#facc15] drop-shadow-lg`}
           viewBox="0 0 48 48" 
           fill="none" 
           xmlns="http://www.w3.org/2000/svg"
+          aria-label="Logo Ｓｔｙｌｅ Ｆｌｏｗ"
         >
           {/* Dégradés Black & Gold Élégant */}
           <defs>
@@ -76,21 +77,17 @@ function Logo({ variant = 'default', size = 'md', showTagline = true }) {
       {/* Brand text */}
       <div className="flex flex-col">
         <span 
-          className={`font-extrabold ${s.text} tracking-tight leading-none`}
-          style={{ fontFamily: "'Poppins', sans-serif" }}
+          className={`font-extrabold ${s.text} tracking-tight leading-none font-poppins`}
+          style={{ fontFamily: "'Poppins', sans-serif", letterSpacing: '-0.01em' }}
         >
-          <span className={isLight ? 'text-white' : 'text-gray-800'}>Flash</span>
-          <span className="bg-gradient-to-r from-yellow-500 via-yellow-400 to-amber-300 bg-clip-text text-transparent">
-            RV
-          </span>
-          <span className="text-yellow-400 drop-shadow-sm">'</span>
+          Ｓｔｙｌｅ Ｆｌｏｗ
         </span>
-        
         {showTagline && (
           <span 
-            className={`${s.tagline} font-medium tracking-[0.2em] uppercase ${
-              isLight ? 'text-white/80' : 'text-gray-500'
-            }`}
+            className={`${s.tagline} font-semibold tracking-[0.22em] uppercase font-inter transition-all duration-300
+              ${isLight ? 'text-yellow-100/90 drop-shadow-[0_0_8px_#facc15] animate-pulse' : 'text-yellow-700/80 drop-shadow-[0_0_8px_#fde047]'}
+            `}
+            style={{ letterSpacing: '0.22em', textShadow: '0 0 8px #fde047, 0 1px 2px #0002' }}
           >
             Réservez. Brillez.
           </span>

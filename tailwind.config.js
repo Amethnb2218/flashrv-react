@@ -8,7 +8,7 @@ export default {
     extend: {
       colors: {
         // ═══════════════════════════════════════════════════════════
-        // FLASHRV' DESIGN SYSTEM - Palette Black & Gold Luxe 2026
+        // Ｓｔｙｌｅ Ｆｌｏｗ DESIGN SYSTEM - Palette Black & Gold Luxe 2026
         // ═══════════════════════════════════════════════════════════
         
         // Couleur Principale - Noir Élégant
@@ -70,8 +70,8 @@ export default {
         display: ['Poppins', 'Inter', 'sans-serif'],
       },
       backgroundImage: {
-        // Dégradés FlashRV' Black & Gold Luxe
-        'gradient-flashrv': 'linear-gradient(135deg, #fafafa 0%, #f5f5f5 50%, #fefce8 100%)',
+        // Dégradés Ｓｔｙｌｅ Ｆｌｏｗ Black & Gold Luxe
+        'gradient-styleflow': 'linear-gradient(135deg, #fafafa 0%, #f5f5f5 50%, #fefce8 100%)',
         'gradient-hero': 'linear-gradient(135deg, #171717 0%, #262626 40%, #404040 100%)',
         'gradient-light': 'linear-gradient(180deg, #ffffff 0%, #fafafa 50%, #fefce8 100%)',
         'gradient-card': 'linear-gradient(145deg, #ffffff 0%, #fafafa 50%, #fefce8 100%)',

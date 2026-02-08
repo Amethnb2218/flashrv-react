@@ -295,7 +295,7 @@ function Profile() {
                         name="name"
                         value={formData.name}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        className="w-full px-4 py-3 border border-blue-800 bg-blue-900/80 text-blue-100 placeholder:text-blue-300 rounded-xl focus:bg-blue-900/90 focus:text-blue-100 focus:border-blue-700 transition-colors duration-200"
                       />
                     </div>
 
@@ -309,7 +309,7 @@ function Profile() {
                         name="email"
                         value={formData.email}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        className="w-full px-4 py-3 border border-blue-800 bg-blue-900/80 text-blue-100 placeholder:text-blue-300 rounded-xl focus:bg-blue-900/90 focus:text-blue-100 focus:border-blue-700 transition-colors duration-200"
                       />
                     </div>
 
@@ -323,7 +323,7 @@ function Profile() {
                         name="phone"
                         value={formData.phone}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        className="w-full px-4 py-3 border border-blue-800 bg-blue-900/80 text-blue-100 placeholder:text-blue-300 rounded-xl focus:bg-blue-900/90 focus:text-blue-100 focus:border-blue-700 transition-colors duration-200"
                       />
                     </div>
 
@@ -338,7 +338,7 @@ function Profile() {
                         value={formData.address}
                         onChange={handleInputChange}
                         placeholder="Quartier, ville"
-                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        className="w-full px-4 py-3 border border-blue-800 bg-blue-900/80 text-blue-100 placeholder:text-blue-300 rounded-xl focus:bg-blue-900/90 focus:text-blue-100 focus:border-blue-700 transition-colors duration-200"
                       />
                     </div>
                   </div>
@@ -373,7 +373,7 @@ function Profile() {
                         name="currentPassword"
                         value={passwordData.currentPassword}
                         onChange={handlePasswordChange}
-                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        className="w-full px-4 py-3 border border-blue-800 bg-blue-900/80 text-blue-100 placeholder:text-blue-300 rounded-xl focus:bg-blue-900/90 focus:text-blue-100 focus:border-blue-700 transition-colors duration-200"
                       />
                     </div>
 
@@ -386,7 +386,7 @@ function Profile() {
                         name="newPassword"
                         value={passwordData.newPassword}
                         onChange={handlePasswordChange}
-                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        className="w-full px-4 py-3 border border-blue-800 bg-blue-900/80 text-blue-100 placeholder:text-blue-300 rounded-xl focus:bg-blue-900/90 focus:text-blue-100 focus:border-blue-700 transition-colors duration-200"
                       />
                     </div>
 
