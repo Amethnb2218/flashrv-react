@@ -210,7 +210,7 @@ function SiteAssistantWidget() {
           className="fixed bottom-6 right-6 z-50 inline-flex items-center gap-2 rounded-full border border-cyan-200/60 bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-[0_14px_40px_rgba(37,99,235,0.45)] transition hover:scale-[1.02]"
         >
           <FiHelpCircle className="h-4 w-4" />
-          Assistant IA
+          Chat IA
         </button>
       ) : null}
 
@@ -218,7 +218,7 @@ function SiteAssistantWidget() {
         <div className="fixed bottom-6 right-6 z-[60] w-[min(92vw,390px)] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
           <div className="flex items-center justify-between bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 px-4 py-3 text-white">
             <div>
-              <p className="text-sm font-semibold">Assistant Client</p>
+              <p className="text-sm font-semibold">Chat IA Client</p>
               <p className="text-xs text-cyan-50">FR + Wolof vocal</p>
             </div>
             <button type="button" onClick={() => setIsOpen(false)} className="rounded-lg p-2 hover:bg-white/15">
