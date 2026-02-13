@@ -108,7 +108,7 @@ function Booking() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-amber-50/20 py-8 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-amber-50/20 py-8 relative overflow-x-hidden">
       {/* Decorative background elements */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-amber-100/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
       <div className="absolute bottom-0 left-0 w-80 h-80 bg-yellow-100/30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4"></div>
@@ -350,7 +350,7 @@ function Booking() {
             </AnimatePresence>
 
             {/* Navigation Buttons */}
-            <div className="flex flex-col-reverse sm:flex-row justify-between gap-3 mt-6">
+            <div className="sticky bottom-2 z-20 mt-6 flex flex-col-reverse sm:flex-row justify-between gap-3 rounded-2xl border border-gray-200 bg-white/95 p-2 backdrop-blur sm:static sm:border-0 sm:bg-transparent sm:p-0">
               <button
                 onClick={handleBack}
                 className="w-full sm:w-auto px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors flex items-center justify-center"
