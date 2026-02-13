@@ -57,7 +57,7 @@ function ProtectedRoute({
   // Vérifier si un PRO est en attente de validation
   if (user?.role === ROLES.PRO && user?.status === STATUS.PENDING) {
     // Autoriser seulement certaines pages pour les PRO en attente
-    const allowedPaths = ['/pro/pending', '/profile', '/logout']
+    const allowedPaths = ['/pro/pending', '/pro/onboarding', '/profile', '/logout']
     if (!allowedPaths.some(path => location.pathname.startsWith(path))) {
       return <Navigate to="/pro/pending" replace />
     }

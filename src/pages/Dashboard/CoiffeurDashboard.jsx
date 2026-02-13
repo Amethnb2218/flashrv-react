@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
 import apiFetch from "@/api/client";
 import { useAuth } from "../../context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
+import { resolveMediaUrl } from "../../utils/media";
+import { connectRealtime, subscribeRealtime } from "../../utils/realtime";
 import {
 FiCalendar,
 FiClock,
@@ -33,7 +35,9 @@ FiCamera,
 FiTag,
 FiEdit3,
 FiCreditCard,
+FiMessageCircle,
 } from "react-icons/fi";
+import AppointmentChatModal from "../../components/Chat/AppointmentChatModal";
 
 /* ----------------------------
 Constants
@@ -60,6 +64,11 @@ const weekDays = [
 ["Dimanche", "sunday"],
 ];
 
+const dayKeyByIndex = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+const dayKeyToIndex = dayKeyByIndex.reduce((acc, key, idx) => {
+  acc[key] = idx;
+  return acc;
+}, {});
 const pageAnim = {
 initial: { opacity: 0, y: 14 },
 animate: { opacity: 1, y: 0 },
@@ -69,16 +78,29 @@ transition: { duration: 0.2 },
 
 // Traduction statuts (rendez-vous, paiement, avis, etc.)
 const statusLabels = {
-upcoming: "À venir",
-completed: "Terminé",
-cancelled: "Annulé",
-paid: "Payé",
-deposit_paid: "Acompte payé",
-refunded: "Remboursé",
-unpaid: "Impayé",
-pending: "En attente",
-approved: "Approuvé",
-rejected: "Rejeté",
+  upcoming: "À venir",
+  completed: "Terminé",
+  cancelled: "Annulé",
+  confirmed: "Confirmé",
+  confirmed_on_site: "Confirmé (sur place)",
+  in_progress: "En cours",
+  pending: "En attente",
+  pending_assignment: "En attente d'assignation",
+  pending_cash: "En attente (sur place)",
+  paid: "Payé",
+  deposit_paid: "Acompte payé",
+  refunded: "Remboursé",
+  failed: "Échec paiement",
+  on_site: "Sur place",
+  unpaid: "Impayé",
+  no_show: "Absence",
+  approved: "Approuvé",
+  rejected: "Rejeté",
+};
+
+const getStatusLabel = (value) => {
+  const key = String(value || "").toLowerCase();
+  return statusLabels[key] || value || "—";
 };
 
 const modalAnim = {
@@ -89,6 +111,7 @@ transition: { duration: 0.18 },
 };
 
 const MAX_MEDIA_MB = 6;
+const MAX_SERVICE_MEDIA = 6;
 
 /* ----------------------------
 Small utils
@@ -98,27 +121,93 @@ const cx = (...arr) => arr.filter(Boolean).join(" ");
 const formatMoney = (n) =>
 Number(n || 0).toLocaleString("fr-FR", { maximumFractionDigits: 0 }) + " F";
 
-const isImage = (src) => String(src || "").startsWith("data:image");
-const isVideo = (src) => String(src || "").startsWith("data:video");
+const IMAGE_EXT_RE = /\.(png|jpe?g|gif|webp|bmp|svg|avif|tiff?)(\?|#|$)/i;
+const VIDEO_EXT_RE = /\.(mp4|webm|ogg|mov|m4v|avi|mkv)(\?|#|$)/i;
+
+const isImage = (src) => {
+  const s = String(src || "");
+  if (!s) return false;
+  if (s.startsWith("data:image")) return true;
+  if (IMAGE_EXT_RE.test(s)) return true;
+  if (s.startsWith("http") || s.startsWith("blob:")) return !VIDEO_EXT_RE.test(s);
+  return false;
+};
+
+const isVideo = (src) => {
+  const s = String(src || "");
+  if (!s) return false;
+  if (s.startsWith("data:video")) return true;
+  return VIDEO_EXT_RE.test(s);
+};
 
 function clampNumber(value, min, max) {
-const n = Number(value);
-if (Number.isNaN(n)) return min;
-return Math.max(min, Math.min(max, n));
+  const n = Number(value);
+  if (Number.isNaN(n)) return min;
+  return Math.max(min, Math.min(max, n));
 }
 
 function uuid(prefix = "id") {
-return `${prefix}_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+  return `${prefix}_${Date.now()}_${Math.random().toString(16).slice(2)}`;
 }
 
-function formatDate(d) {
-try {
-return new Date(d).toLocaleDateString("fr-FR");
-} catch {
-return String(d);
-}
+function getInitials(name = "") {
+  const parts = String(name).trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  return parts.slice(0, 2).map((p) => p[0].toUpperCase()).join("");
 }
 
+function formatDate(value) {
+  try {
+    if (!value) return "";
+    const date = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    return date.toLocaleDateString("fr-FR");
+  } catch {
+    return "";
+  }
+}
+
+function formatPeriodLabel(period) {
+  const now = new Date();
+  const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
+  const endOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
+  let start = startOfDay(now);
+  let end = endOfDay(now);
+  if (period === "week") {
+    const day = now.getDay(); // 0=Sun
+    const diff = day === 0 ? 6 : day - 1; // Monday start
+    start = startOfDay(new Date(now.getFullYear(), now.getMonth(), now.getDate() - diff));
+    end = endOfDay(new Date(start.getFullYear(), start.getMonth(), start.getDate() + 6));
+  } else if (period === "month") {
+    start = startOfDay(new Date(now.getFullYear(), now.getMonth(), 1));
+    end = endOfDay(new Date(now.getFullYear(), now.getMonth() + 1, 0));
+  } else if (period === "year") {
+    start = startOfDay(new Date(now.getFullYear(), 0, 1));
+    end = endOfDay(new Date(now.getFullYear(), 11, 31));
+  }
+  return `${start.toLocaleDateString("fr-FR")} – ${end.toLocaleDateString("fr-FR")}`;
+}
+
+function toYmd(d) {
+  if (!d) return "";
+  if (typeof d === "string" && /^\d{4}-\d{2}-\d{2}/.test(d)) return d.slice(0, 10);
+  const dt = new Date(d);
+  if (Number.isNaN(dt.getTime())) return "";
+  const y = dt.getFullYear();
+  const m = String(dt.getMonth() + 1).padStart(2, "0");
+  const day = String(dt.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function toTime(d) {
+  if (!d) return "";
+  if (typeof d === "string" && /^\d{2}:\d{2}/.test(d)) return d.slice(0, 5);
+  const dt = new Date(d);
+  if (Number.isNaN(dt.getTime())) return "";
+  const h = String(dt.getHours()).padStart(2, "0");
+  const m = String(dt.getMinutes()).padStart(2, "0");
+  return `${h}:${m}`;
+}
 function downloadInvoiceLikeFile(invoice) {
 const content = `
 Facture ${invoice.ref}
@@ -427,7 +516,7 @@ className={cx(
 Main Component
 ----------------------------- */
 export default function CoiffeurDashboard() {
-const { isAuthenticated, checkAuth } = useAuth();
+const { isAuthenticated, checkAuth, user } = useAuth();
 
 // IMPORTANT: on garde l'onglet "portfolio" MAIS le label est "Salon".
 // Donc activeTab doit toujours être "portfolio" (et surtout PAS "salon").
@@ -437,11 +526,17 @@ const [activeTab, setActiveTab] = useState("appointments");
 const [appointments, setAppointments] = useState([]);
 const [services, setServices] = useState([]);
 const [loading, setLoading] = useState(true);
+const [notifications, setNotifications] = useState([]);
+const [unreadNotifications, setUnreadNotifications] = useState(0);
+const [chatAppointment, setChatAppointment] = useState(null);
+const [showChatModal, setShowChatModal] = useState(false);
 
 // Payment methods
 const [paymentMethods, setPaymentMethods] = useState([]); // {id, method, enabled}
 const [loadingPaymentMethods, setLoadingPaymentMethods] = useState(false);
 const [showPaymentMethodModal, setShowPaymentMethodModal] = useState(false);
+const [confirmPaymentMethod, setConfirmPaymentMethod] = useState(null);
+const [deletingPaymentMethod, setDeletingPaymentMethod] = useState(false);
 const [newPaymentMethod, setNewPaymentMethod] = useState({
 method: "",
 enabled: true,
@@ -497,8 +592,11 @@ const [portfolioForm, setPortfolioForm] = useState({
 type: "gallery",
 title: "",
 media: "",
+mediaFile: null,
 beforeMedia: "",
+beforeFile: null,
 afterMedia: "",
+afterFile: null,
 });
 
 // Reviews
@@ -527,6 +625,8 @@ rewardLabel: "10% de réduction",
 const [clients, setClients] = useState([]);
 const [clientQuery, setClientQuery] = useState("");
 const [selectedClient, setSelectedClient] = useState(null);
+const [clientAddressDraft, setClientAddressDraft] = useState("");
+const [savingClientAddress, setSavingClientAddress] = useState(false);
 
 // stats
 const [statsPeriod, setStatsPeriod] = useState("month");
@@ -546,6 +646,7 @@ phone: "",
 whatsapp: "",
 address: "",
 description: "",
+image: "",
 openingHours: {
 monday: { open: "09:00", close: "18:00" },
 tuesday: { open: "09:00", close: "18:00" },
@@ -557,6 +658,7 @@ sunday: null,
 },
 });
 
+const [savingSettings, setSavingSettings] = useState(false);
 // services modal state
 const [showServiceModal, setShowServiceModal] = useState(false);
 const [editingService, setEditingService] = useState(null);
@@ -570,6 +672,8 @@ price: "",
 duration: 30,
 depositPercentage: 30,
 media: "",
+mediaList: [],
+mediaFiles: [],
 });
 
 // services filters
@@ -587,7 +691,7 @@ const tabs = useMemo(
 { id: "planning", label: "Planning", icon: FiClock },
 { id: "payments", label: "Paiements", icon: FiDollarSign },
 { id: "paymentMethods", label: "Moyens de paiement", icon: FiCreditCard },
-// ✅ on garde l'id "portfolio", mais le label affiché = "Salon"
+// ? on garde l'id "portfolio", mais le label affiché = "Salon"
 { id: "portfolio", label: "Salon", icon: FiCamera },
 { id: "reviews", label: "Avis", icon: FiStar },
 { id: "promos", label: "Promos & Fidélité", icon: FiGift },
@@ -598,6 +702,282 @@ const tabs = useMemo(
 []
 );
 
+const asArray = (res) => (Array.isArray(res) ? res : res?.data ?? []);
+const normalizeService = (service) => {
+  const rawImages = Array.isArray(service?.images) ? service.images : [];
+  const images = rawImages
+    .map((img) => img?.url || img?.media || img?.imageUrl || img)
+    .filter(Boolean);
+  const media =
+    service?.media ||
+    service?.imageUrl ||
+    service?.image ||
+    service?.photo ||
+    service?.picture ||
+    images[0] ||
+    "";
+  return {
+    ...service,
+    media,
+    images,
+  };
+};
+const normalizePortfolioItem = (item) => {
+  if (!item) return item;
+  if (item.media || item.beforeMedia || item.afterMedia) return item;
+  const beforeMedia = item.beforeMedia || item.beforeUrl || item.before || "";
+  const afterMedia = item.afterMedia || item.afterUrl || item.after || "";
+  const media = item.media || item.url || item.imageUrl || item.image || "";
+  const type = item.type || (beforeMedia || afterMedia ? "beforeAfter" : "gallery");
+  const title = item.title || item.caption || (media ? "Photo" : "Salon");
+  return { ...item, type, title, media, beforeMedia, afterMedia };
+};
+const normalizePortfolioList = (items = []) => {
+  const list = Array.isArray(items) ? items : [];
+  const grouped = new Map();
+  const out = [];
+  list.forEach((raw) => {
+    const item = normalizePortfolioItem(raw);
+    const category = String(item.category || "").toLowerCase();
+    const caption = String(item.caption || item.title || "");
+    let title = caption;
+    let groupId = "";
+    if (caption.includes("||")) {
+      const parts = caption.split("||");
+      title = parts[0] || title;
+      groupId = parts[1] || "";
+    }
+    if ((category === "before" || category === "after") && groupId) {
+      const existing = grouped.get(groupId) || {
+        id: groupId,
+        type: "beforeAfter",
+        title: title || "Avant/Après",
+        beforeMedia: "",
+        afterMedia: "",
+        ids: [],
+        createdAt: item.createdAt,
+      };
+      if (category === "before") existing.beforeMedia = item.url || item.media || "";
+      if (category === "after") existing.afterMedia = item.url || item.media || "";
+      existing.ids = [...new Set([...(existing.ids || []), item.id])];
+      if (!existing.createdAt && item.createdAt) existing.createdAt = item.createdAt;
+      grouped.set(groupId, existing);
+      return;
+    }
+    out.push({
+      ...item,
+      type: "gallery",
+      title: item.title || item.caption || "Photo",
+      media: item.media || item.url || "",
+      ids: [item.id],
+    });
+  });
+  grouped.forEach((v) => out.push(v));
+  return out.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+};
+const normalizeReview = (r) => {
+  if (!r) return r;
+  const status = String(r.status || "approved").toLowerCase();
+  return {
+    ...r,
+    clientName: r.clientName || r.user?.name || r.user?.username || r.user?.email || "Client",
+    status,
+  };
+};
+const normalizePromo = (promo) => {
+  if (!promo) return promo;
+  const typeRaw = promo.type || "percent";
+  const type = typeRaw === "fixed" ? "amount" : typeRaw;
+  return {
+    ...promo,
+    code: String(promo.code || "").toUpperCase(),
+    type,
+    value: promo.value ?? promo.discount ?? 0,
+    active: promo.active ?? promo.isActive ?? false,
+    expiresAt: promo.expiresAt || (promo.validTo ? toYmd(promo.validTo) : ""),
+  };
+};
+const normalizeClient = (client) => {
+  if (!client) return client;
+  return {
+    ...client,
+    name: client.name || client.username || "Client",
+    phone: client.phone || client.phoneNumber || "",
+    address: client.address || "",
+    noShowCount: client.noShowCount || 0,
+    history: client.history || [],
+    preferences: client.preferences || "",
+    notes: client.notes || "",
+  };
+};
+const normalizeAppointment = (appt) => {
+  if (!appt) return appt;
+  const statusMap = {
+    PENDING: "pending",
+    PENDING_ASSIGNMENT: "pending_assignment",
+    CONFIRMED: "confirmed",
+    CONFIRMED_ON_SITE: "confirmed_on_site",
+    IN_PROGRESS: "in_progress",
+    COMPLETED: "completed",
+    CANCELLED: "cancelled",
+    NO_SHOW: "no_show",
+  };
+  const paymentMap = {
+    PENDING: "pending",
+    PENDING_CASH: "pending_cash",
+    ON_SITE: "on_site",
+    COMPLETED: "paid",
+    FAILED: "failed",
+    REFUNDED: "refunded",
+  };
+  const statusRaw = String(appt.status || "").toUpperCase();
+  const paymentRaw = String(appt.payment?.status || appt.paymentStatus || "").toUpperCase();
+  const statusKey = statusMap[statusRaw] || String(appt.status || "").toLowerCase();
+  const paymentKey = paymentMap[paymentRaw] || String(appt.paymentStatus || "").toLowerCase();
+  const clientName = appt.client?.name || appt.client?.username || appt.clientName || "Client";
+  const clientAddress = appt.client?.address || appt.clientAddress || "";
+  const serviceName = appt.service?.name || appt.serviceName || "Service";
+  const staffName = appt.coiffeur?.user?.name || appt.staffName || appt.employeeName || "";
+  const date = appt.date || appt.startDate || appt.day || "";
+  const time = appt.startTime || appt.time || "";
+  const amount = appt.totalPrice ?? appt.amount ?? appt.service?.price ?? 0;
+
+  return {
+    ...appt,
+    clientName,
+    clientAddress,
+    serviceName,
+    staffName,
+    date,
+    time,
+    amount,
+    status: statusKey,
+    paymentStatus: paymentKey || (appt.depositPaid ? "deposit_paid" : paymentKey),
+  };
+};
+const normalizeBreak = (b) => {
+  if (!b) return b;
+  const date = toYmd(b.date || b.start || b.end);
+  return {
+    ...b,
+    date,
+    start: b.start ? toTime(b.start) : b.startTime ? toTime(b.startTime) : toTime(b.start),
+    end: b.end ? toTime(b.end) : b.endTime ? toTime(b.endTime) : toTime(b.end),
+    label: b.label || "Pause",
+  };
+};
+const normalizeException = (ex) => {
+  if (!ex) return ex;
+  let closed = !!ex.closed;
+  let open = ex.open || "";
+  let close = ex.close || "";
+  if (!open && !close && typeof ex.reason === "string") {
+    if (ex.reason.includes("closed")) closed = true;
+    const openMatch = ex.reason.match(/open:([^;]+)/);
+    const closeMatch = ex.reason.match(/close:([^;]+)/);
+    open = openMatch ? openMatch[1] : "";
+    close = closeMatch ? closeMatch[1] : "";
+  }
+  return {
+    ...ex,
+    date: toYmd(ex.date),
+    closed,
+    open: toTime(open),
+    close: toTime(close),
+  };
+};
+const normalizeHoliday = (h) => {
+  if (!h) return h;
+  const rawName = h?.name || h?.label || "";
+  let safeName = String(rawName || "Jour férié");
+  if (safeName.includes("Ã") || safeName.includes("ï¿½")) {
+    try {
+      safeName = decodeURIComponent(escape(safeName));
+    } catch {
+      // ignore
+    }
+  }
+  return {
+    ...h,
+    date: toYmd(h?.date),
+    name: safeName.includes("�") || safeName.includes("ï¿½") ? "Jour férié" : safeName,
+  };
+};
+
+const normalizePayment = (p) => {
+  if (!p) return p;
+  const appt = p.appointment || p.booking || p.reservation || {};
+  const client = appt.client || p.client || p.user || {};
+  const service = appt.service || p.service || {};
+  const amount = p.totalAmount ?? p.amount ?? appt.totalPrice ?? service.price ?? 0;
+  const depositPct = appt.depositPercentage ?? service.depositPercentage ?? p.depositPercentage ?? 0;
+  const paymentRaw = String(p.status || p.paymentStatus || "").toUpperCase();
+  const paymentMap = {
+    PENDING: "pending",
+    PENDING_CASH: "pending_cash",
+    ON_SITE: "on_site",
+    COMPLETED: "paid",
+    FAILED: "failed",
+    REFUNDED: "refunded",
+  };
+  const paymentKey = paymentMap[paymentRaw] || String(p.status || p.paymentStatus || "").toLowerCase();
+  const baseDepositPaid = p.depositPaid ?? appt.depositPaid;
+  const depositPaid = baseDepositPaid ?? (paymentKey === "paid" || paymentKey === "on_site");
+  return {
+    ...p,
+    appointmentId: appt.id || p.appointmentId,
+    clientName: client.name || client.username || client.email || "Client",
+    serviceName: service.name || appt.serviceName || "Service",
+    amount,
+    depositPct,
+    depositPaid,
+    paymentStatus: paymentKey,
+  };
+};
+
+const parseSalonPreferences = (prefs) => {
+  if (!prefs) return {};
+  if (typeof prefs === "object") return prefs;
+  try {
+    return JSON.parse(prefs);
+  } catch (e) {
+    return {};
+  }
+};
+
+const openingHoursFromApi = (list) => {
+  const base = {
+    monday: null,
+    tuesday: null,
+    wednesday: null,
+    thursday: null,
+    friday: null,
+    saturday: null,
+    sunday: null,
+  };
+  (Array.isArray(list) ? list : []).forEach((h) => {
+    const key = dayKeyByIndex[h.dayOfWeek];
+    if (!key) return;
+    base[key] = h.isClosed
+      ? null
+      : {
+          open: h.openTime || "09:00",
+          close: h.closeTime || "18:00",
+        };
+  });
+  return base;
+};
+
+const openingHoursToApi = (openingHours) =>
+  weekDays.map(([, key]) => {
+    const h = openingHours?.[key];
+    return {
+      dayOfWeek: dayKeyToIndex[key],
+      openTime: h?.open || "09:00",
+      closeTime: h?.close || "18:00",
+      isClosed: !h,
+    };
+  });
 /* ----------------------------
 Payment methods (API)
 ----------------------------- */
@@ -611,12 +991,28 @@ const res = await apiFetch("/salon/payment-methods", {
 method: "POST",
 body: newPaymentMethod,
 });
-setPaymentMethods((prev) => [res.data, ...prev]);
+const createdPaymentMethod = res?.data ?? res;
+setPaymentMethods((prev) => [createdPaymentMethod, ...prev]);
 setShowPaymentMethodModal(false);
 setNewPaymentMethod({ method: "", enabled: true });
 toast.success("Moyen de paiement ajouté !");
 } catch (e) {
 toast.error(e.message || "Erreur lors de l'ajout");
+}
+};
+
+const handleDeletePaymentMethod = async (id) => {
+if (!id) return;
+try {
+setDeletingPaymentMethod(true);
+await apiFetch(`/salon/payment-methods/${id}`, { method: "DELETE" });
+setPaymentMethods((prev) => prev.filter((pm) => pm.id !== id));
+toast.success("Moyen de paiement supprimé.");
+} catch (e) {
+toast.error(e.message || "Erreur lors de la suppression");
+} finally {
+setDeletingPaymentMethod(false);
+setConfirmPaymentMethod(null);
 }
 };
 
@@ -636,7 +1032,7 @@ window.location.reload();
 return;
 }
 const res = await apiFetch("/salon/payment-methods");
-setPaymentMethods(res.data || []);
+setPaymentMethods(asArray(res));
 } catch (err) {
 toast.error("Erreur chargement moyens de paiement: " + (err.message || err));
 } finally {
@@ -667,6 +1063,7 @@ apiFetch("/planning/exceptions"),
 apiFetch("/planning/holidays"),
 apiFetch("/payments"),
 apiFetch("/loyalty"),
+apiFetch("/notifications"),
 ])
 .then(
 ([
@@ -682,21 +1079,26 @@ exceptionsRes,
 holidaysRes,
 paymentsRes,
 loyaltyRes,
+notificationsRes,
 ]) => {
-setServices(servicesRes.data || []);
-setTeam(teamRes.data || []);
-setAppointments(appointmentsRes.data || []);
-setClients(clientsRes.data || []);
-setReviews(reviewsRes.data || []);
-setPromos(promosRes.data || []);
-setPortfolio(portfolioRes.data || []);
+setServices(asArray(servicesRes).map(normalizeService));
+setTeam(asArray(teamRes));
+setAppointments(asArray(appointmentsRes).map(normalizeAppointment));
+setClients(asArray(clientsRes).map(normalizeClient));
+setReviews(asArray(reviewsRes).map(normalizeReview));
+setPromos(asArray(promosRes).map(normalizePromo));
+setPortfolio(normalizePortfolioList(asArray(portfolioRes)));
 setPlanning({
-breaks: breaksRes.data || [],
-exceptions: exceptionsRes.data || [],
-holidays: holidaysRes.data || [],
+breaks: asArray(breaksRes).map(normalizeBreak),
+exceptions: asArray(exceptionsRes).map(normalizeException),
+holidays: asArray(holidaysRes).map(normalizeHoliday),
 });
-setPayments(paymentsRes.data || []);
-if (loyaltyRes.data && loyaltyRes.data.settings) setLoyalty(loyaltyRes.data.settings);
+setPayments(asArray(paymentsRes).map(normalizePayment));
+const loyaltySettings = loyaltyRes?.settings || loyaltyRes?.data?.settings;
+if (loyaltySettings) setLoyalty(loyaltySettings);
+const notificationList = notificationsRes?.data?.notifications || [];
+setNotifications(notificationList);
+setUnreadNotifications(notificationsRes?.data?.unreadCount || 0);
 }
 )
 .catch((err) => {
@@ -708,8 +1110,60 @@ toast.error(msg);
 }, []);
 
 useEffect(() => {
+fetchSalonSettings();
+}, []);
+
+useEffect(() => {
+  const loadNotifications = async () => {
+    try {
+      const res = await apiFetch("/notifications");
+      setNotifications(res?.data?.notifications || []);
+      setUnreadNotifications(res?.data?.unreadCount || 0);
+    } catch (e) {
+      // no-op
+    }
+  };
+  loadNotifications();
+
+  const token = localStorage.getItem("flashrv_token");
+  if (token) {
+    connectRealtime(token);
+  }
+  const unsubscribe = subscribeRealtime((event) => {
+    if (event?.type === "notification:new" && event?.payload) {
+      const incoming = event.payload;
+      setNotifications((prev) => {
+        if (prev.some((n) => n.id === incoming.id)) return prev;
+        return [incoming, ...prev].slice(0, 50);
+      });
+      if (!incoming.isRead) {
+        setUnreadNotifications((prev) => prev + 1);
+      }
+    }
+  });
+
+  return unsubscribe;
+}, []);
+
+useEffect(() => {
 // TODO: refetch stats by period
 }, [statsPeriod]);
+
+useEffect(() => {
+if (selectedClient) {
+setClientAddressDraft(selectedClient.address || "");
+}
+}, [selectedClient]);
+
+const markAllNotificationsRead = async () => {
+  try {
+    await apiFetch("/notifications/read-all", { method: "PATCH" });
+    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    setUnreadNotifications(0);
+  } catch (e) {
+    toast.error("Erreur lecture notifications");
+  }
+};
 
 /* ----------------------------
 Media handling
@@ -718,6 +1172,22 @@ const readMediaAsDataUrl = (file, cb) => {
 const reader = new FileReader();
 reader.onload = (event) => cb(String(event.target?.result || ""));
 reader.readAsDataURL(file);
+};
+
+const readMediaAsDataUrlAsync = (file) =>
+new Promise((resolve, reject) => {
+const reader = new FileReader();
+reader.onload = (event) => resolve(String(event.target?.result || ""));
+reader.onerror = reject;
+reader.readAsDataURL(file);
+});
+
+const uploadSalonImage = async (file) => {
+  const formData = new FormData();
+  formData.append("image", file);
+  const res = await apiFetch("/salons/me/image", { method: "POST", body: formData });
+  const data = res?.data ?? res;
+  return data?.image || data?.url || "";
 };
 
 const validateMedia = (file) => {
@@ -732,6 +1202,58 @@ toast.error("Format non supporté. (image/* ou video/*)");
 return false;
 }
 return true;
+};
+
+const appendServiceMedia = async (files, setter) => {
+const list = Array.from(files || []);
+const valid = list.filter((file) => validateMedia(file));
+if (!valid.length) return;
+const previews = await Promise.all(valid.map((file) => readMediaAsDataUrlAsync(file)));
+setter((prev) => {
+  const prevList = Array.isArray(prev.mediaList) ? prev.mediaList : [];
+  const prevFiles = Array.isArray(prev.mediaFiles) ? prev.mediaFiles : [];
+  const nextList = [...prevList, ...previews].slice(0, MAX_SERVICE_MEDIA);
+  const nextFiles = [...prevFiles, ...valid].slice(0, MAX_SERVICE_MEDIA);
+  return {
+    ...prev,
+    mediaList: nextList,
+    mediaFiles: nextFiles,
+    media: nextList[0] || "",
+  };
+});
+};
+
+const removeServiceMediaAt = (index, setter) => {
+setter((prev) => {
+  const prevList = Array.isArray(prev.mediaList) ? prev.mediaList : [];
+  const prevFiles = Array.isArray(prev.mediaFiles) ? prev.mediaFiles : [];
+  const nextList = prevList.filter((_, i) => i !== index);
+  const nextFiles = prevFiles.filter((_, i) => i !== index);
+  return {
+    ...prev,
+    mediaList: nextList,
+    mediaFiles: nextFiles,
+    media: nextList[0] || "",
+  };
+});
+};
+
+const setServiceCover = (index, setter) => {
+setter((prev) => {
+  const prevList = Array.isArray(prev.mediaList) ? [...prev.mediaList] : [];
+  const prevFiles = Array.isArray(prev.mediaFiles) ? [...prev.mediaFiles] : [];
+  if (!prevList[index]) return prev;
+  const [img] = prevList.splice(index, 1);
+  const [file] = prevFiles.splice(index, 1);
+  prevList.unshift(img);
+  prevFiles.unshift(file);
+  return {
+    ...prev,
+    mediaList: prevList,
+    mediaFiles: prevFiles,
+    media: prevList[0] || "",
+  };
+});
 };
 
 /* ----------------------------
@@ -769,7 +1291,9 @@ return reviews.filter((r) => r.status === reviewFilter);
 const filteredClients = useMemo(() => {
 const q = clientQuery.trim().toLowerCase();
 if (!q) return clients;
-return clients.filter((c) => `${c.name} ${c.phone}`.toLowerCase().includes(q));
+return clients.filter((c) =>
+`${c.name} ${c.phone} ${c.email || ""} ${c.address || ""}`.toLowerCase().includes(q)
+);
 }, [clients, clientQuery]);
 
 /* ----------------------------
@@ -784,65 +1308,126 @@ price: "",
 duration: 30,
 depositPercentage: 30,
 media: "",
+mediaList: [],
+mediaFiles: [],
 });
 
-const handleAddService = () => {
+const handleAddService = async () => {
 const name = newService.name?.trim();
 const price = Number(newService.price);
 if (!name) return toast.error("Le nom du service est obligatoire.");
 if (!price || price <= 0) return toast.error("Le prix est obligatoire.");
-
-const created = {
-id: uuid("s"),
-name,
-category: newService.category,
-description: newService.description?.trim() || "",
-price,
-duration: clampNumber(newService.duration, 15, 360),
-depositPercentage: clampNumber(newService.depositPercentage, 0, 80),
-media: newService.media || "",
-createdAt: Date.now(),
+try {
+  const form = new FormData();
+  form.append("name", name);
+  form.append("category", newService.category);
+  form.append("description", newService.description?.trim() || "");
+  form.append("price", String(price));
+  form.append("duration", String(clampNumber(newService.duration, 15, 360)));
+  form.append("depositPercentage", String(clampNumber(newService.depositPercentage, 0, 80)));
+  if (Array.isArray(newService.mediaFiles) && newService.mediaFiles.length) {
+    newService.mediaFiles.forEach((file) => form.append("images", file));
+  }
+  const existingUrls = Array.isArray(newService.mediaList)
+    ? newService.mediaList.filter((_, idx) => !newService.mediaFiles?.[idx])
+    : [];
+  if (existingUrls.length) {
+    form.append("imageUrls", JSON.stringify(existingUrls));
+  }
+  if (newService.media) form.append("imageUrl", newService.media);
+  const res = await apiFetch("/services", { method: "POST", body: form });
+  const created = normalizeService(res?.data || res);
+  setServices((prev) => [created, ...prev]);
+  toast.success("Service ajouté !");
+  setShowServiceModal(false);
+  resetNewService();
+} catch (err) {
+  toast.error("Erreur ajout service: " + (err.message || err));
+}
 };
 
-setServices((prev) => [created, ...prev]);
-toast.success("Service ajouté !");
-setShowServiceModal(false);
-resetNewService();
-};
-
-const handleUpdateService = () => {
+const handleUpdateService = async () => {
 if (!editingService?.id) return;
 const name = String(editingService.name || "").trim();
 if (!name) return toast.error("Le nom est obligatoire.");
 
 const updated = {
-...editingService,
-name,
-price: Number(editingService.price || 0),
-duration: clampNumber(editingService.duration, 15, 360),
-depositPercentage: clampNumber(editingService.depositPercentage ?? 30, 0, 80),
+  ...editingService,
+  name,
+  price: Number(editingService.price || 0),
+  duration: clampNumber(editingService.duration, 15, 360),
+  depositPercentage: clampNumber(editingService.depositPercentage ?? 30, 0, 80),
 };
 
 if (!updated.price || updated.price <= 0) return toast.error("Prix invalide.");
-
-setServices((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
-toast.success("Service mis à jour !");
-setEditingService(null);
+try {
+  const form = new FormData();
+  form.append("name", updated.name);
+  form.append("description", updated.description || "");
+  form.append("price", String(updated.price));
+  form.append("duration", String(updated.duration));
+  form.append("category", updated.category || "");
+  form.append("depositPercentage", String(updated.depositPercentage ?? 0));
+  const mediaList =
+    Array.isArray(updated.mediaList) && updated.mediaList.length
+      ? updated.mediaList
+      : updated.media
+      ? [updated.media]
+      : [];
+  const mediaFiles = Array.isArray(updated.mediaFiles) ? updated.mediaFiles : [];
+  if (mediaFiles.length) {
+    mediaFiles.forEach((file) => file && form.append("images", file));
+  }
+  const existingUrls = mediaList.filter((_, idx) => !mediaFiles[idx]);
+  if (existingUrls.length) {
+    form.append("imageUrls", JSON.stringify(existingUrls));
+  }
+  if (updated.media) form.append("imageUrl", updated.media);
+  const res = await apiFetch(`/services/${updated.id}`, { method: "PATCH", body: form });
+  const saved = normalizeService(res?.data || res);
+  setServices((prev) => prev.map((s) => (s.id === updated.id ? { ...s, ...saved } : s)));
+  toast.success("Service mis à jour !");
+  setEditingService(null);
+} catch (err) {
+  toast.error("Erreur mise à jour: " + (err.message || err));
+}
 };
 
-const confirmDeleteService = () => {
+const confirmDeleteService = async () => {
 if (!confirmDelete?.id) return;
-setServices((prev) => prev.filter((s) => s.id !== confirmDelete.id));
-toast.success("Service supprimé.");
-setConfirmDelete(null);
+try {
+  await apiFetch(`/services/${confirmDelete.id}`, { method: "DELETE" });
+  setServices((prev) => prev.filter((s) => s.id !== confirmDelete.id));
+  toast.success("Service supprimé.");
+  setConfirmDelete(null);
+} catch (err) {
+  toast.error("Erreur suppression: " + (err.message || err));
+}
 };
 
 /* ----------------------------
 Actions - Appointments & Payments
 ----------------------------- */
 const setAppointmentStatus = (id, status) => {
-setAppointments((prev) => prev.map((a) => (a.id === id ? { ...a, status } : a)));
-toast.success("Statut mis à jour.");
+const statusMap = {
+  completed: "COMPLETED",
+  cancelled: "CANCELLED",
+  confirmed: "CONFIRMED",
+  confirmed_on_site: "CONFIRMED_ON_SITE",
+  pending: "PENDING",
+  pending_assignment: "PENDING_ASSIGNMENT",
+  in_progress: "IN_PROGRESS",
+  no_show: "NO_SHOW",
+};
+const apiStatus = statusMap[status] || String(status || "").toUpperCase();
+apiFetch(`/appointments/${id}/status`, { method: "PATCH", body: { status: apiStatus } })
+  .then(() => {
+    setAppointments((prev) => prev.map((a) => (a.id === id ? { ...a, status } : a)));
+    toast.success("Statut mis à jour.");
+  })
+  .catch((err) => {
+    toast.error("Erreur mise à jour statut: " + (err.message || err));
+  });
 };
 
 const generateInvoiceForAppointment = (appt) => {
@@ -861,21 +1446,31 @@ depositAmount,
 remainingAmount,
 };
 setInvoices((prev) => [invoice, ...prev]);
-toast.success("Facture générée (démo).");
+toast.success("Facture générée.");
 downloadInvoiceLikeFile(invoice);
 };
 
-const refundAppointmentDeposit = (appt) => {
-if (!appt.depositPaid || (appt.depositPct || 0) <= 0) {
+const refundAppointmentDeposit = async (appt) => {
+if (!appt?.depositPaid || (appt.depositPct || 0) <= 0) {
 toast.error("Aucun acompte à rembourser.");
 return;
 }
+const paymentId = appt.payment?.id;
+if (!paymentId) {
+toast.error("Paiement introuvable pour ce rendez-vous.");
+return;
+}
+try {
+await apiFetch(`/payments/${paymentId}/refund`, { method: "PATCH" });
 setAppointments((prev) =>
 prev.map((a) =>
 a.id === appt.id ? { ...a, paymentStatus: "refunded", depositPaid: false } : a
 )
 );
-toast.success("Remboursement (démo) effectué.");
+toast.success("Remboursement effectué.");
+} catch (err) {
+toast.error("Erreur remboursement: " + (err.message || err));
+}
 };
 
 /* ----------------------------
@@ -898,192 +1493,381 @@ sunday: null,
 },
 });
 
-const addMember = () => {
+const addMember = async () => {
 if (!newMember.name.trim()) return toast.error("Nom requis.");
-const created = { ...newMember, id: uuid("t") };
-setTeam((prev) => [created, ...prev]);
-toast.success("Membre ajouté.");
-setShowTeamModal(false);
-resetNewMember();
+try {
+  const payload = {
+    name: newMember.name.trim(),
+    role: newMember.role,
+    phone: newMember.phone || "",
+    email: newMember.email || "",
+    isActive: !!newMember.active,
+  };
+  const res = await apiFetch("/team", { method: "POST", body: payload });
+  const created = res?.data ?? res;
+  setTeam((prev) => [created, ...prev]);
+  toast.success("Membre ajouté.");
+  setShowTeamModal(false);
+  resetNewMember();
+} catch (err) {
+  toast.error("Erreur ajout membre: " + (err.message || err));
+}
 };
 
-const updateMember = () => {
+const updateMember = async () => {
 if (!editingMember?.id) return;
 if (!editingMember.name.trim()) return toast.error("Nom requis.");
-setTeam((prev) => prev.map((m) => (m.id === editingMember.id ? editingMember : m)));
-toast.success("Membre mis à jour.");
-setEditingMember(null);
+try {
+  const payload = {
+    name: editingMember.name.trim(),
+    role: editingMember.role,
+    phone: editingMember.phone || "",
+    email: editingMember.email || "",
+    isActive: !!editingMember.active,
+  };
+  const res = await apiFetch(`/team/${editingMember.id}`, { method: "PATCH", body: payload });
+  const updated = res?.data ?? res;
+  setTeam((prev) => prev.map((m) => (m.id === editingMember.id ? { ...m, ...updated } : m)));
+  toast.success("Membre mis à jour.");
+  setEditingMember(null);
+} catch (err) {
+  toast.error("Erreur mise à jour: " + (err.message || err));
+}
 };
 
-const deleteMember = (id) => {
-setTeam((prev) => prev.filter((m) => m.id !== id));
-toast.success("Membre supprimé.");
+const deleteMember = async (id) => {
+try {
+  await apiFetch(`/team/${id}`, { method: "DELETE" });
+  setTeam((prev) => prev.filter((m) => m.id !== id));
+  toast.success("Membre supprimé.");
+} catch (err) {
+  toast.error("Erreur suppression: " + (err.message || err));
+}
 };
 
 /* ----------------------------
 Actions - Planning
 ----------------------------- */
-const addPlanningItem = () => {
+const addPlanningItem = async () => {
 if (!planningForm.date) return toast.error("Date requise.");
 const t = planningForm.type;
+try {
 if (t === "break") {
-setPlanning((p) => ({
-...p,
-breaks: [
-{
-id: uuid("br"),
+const res = await apiFetch("/planning/breaks", {
+method: "POST",
+body: {
 date: planningForm.date,
 start: planningForm.start,
 end: planningForm.end,
 label: planningForm.label || "Pause",
 },
-...p.breaks,
-],
-}));
+});
+const created = normalizeBreak(res?.data ?? res);
+setPlanning((p) => ({ ...p, breaks: [created, ...p.breaks] }));
 toast.success("Pause ajoutée.");
 }
 if (t === "exception") {
-setPlanning((p) => ({
-...p,
-exceptions: [
-{
-id: uuid("ex"),
+const res = await apiFetch("/planning/exceptions", {
+method: "POST",
+body: {
 date: planningForm.date,
 open: planningForm.open,
 close: planningForm.close,
 closed: !!planningForm.closed,
 },
-...p.exceptions,
-],
-}));
+});
+const created = normalizeException(res?.data ?? res);
+setPlanning((p) => ({ ...p, exceptions: [created, ...p.exceptions] }));
 toast.success("Exception ajoutée.");
 }
 if (t === "holiday") {
-setPlanning((p) => ({
-...p,
-holidays: [
-{ id: uuid("hol"), date: planningForm.date, name: planningForm.name || "Jour férié" },
-...p.holidays,
-],
-}));
+const res = await apiFetch("/planning/holidays", {
+method: "POST",
+body: {
+date: planningForm.date,
+name: planningForm.name || "Jour férié",
+},
+});
+const created = normalizeHoliday(res?.data ?? res);
+setPlanning((p) => ({ ...p, holidays: [created, ...p.holidays] }));
 toast.success("Jour férié ajouté.");
 }
 setShowPlanningModal(false);
+} catch (err) {
+toast.error(err.message || "Erreur lors de l'ajout");
+}
 };
 
-const removePlanningItem = (type, id) => {
+const removePlanningItem = async (type, id) => {
+try {
+const endpoint =
+type === "breaks"
+? `/planning/breaks/${id}`
+: type === "exceptions"
+? `/planning/exceptions/${id}`
+: `/planning/holidays/${id}`;
+await apiFetch(endpoint, { method: "DELETE" });
 setPlanning((p) => ({
 ...p,
 [type]: p[type].filter((x) => x.id !== id),
 }));
 toast.success("Supprimé.");
+} catch (err) {
+toast.error(err.message || "Erreur lors de la suppression");
+}
 };
 
 /* ----------------------------
 Actions - Salon (portfolio)
 ----------------------------- */
-const addPortfolioItem = () => {
-if (!portfolioForm.title.trim()) return toast.error("Titre requis.");
-if (portfolioForm.type === "gallery" && !portfolioForm.media) return toast.error("Ajoute une photo/vidéo.");
-if (portfolioForm.type === "beforeAfter" && (!portfolioForm.beforeMedia || !portfolioForm.afterMedia))
+const addPortfolioItem = async () => {
+const title = portfolioForm.title.trim();
+if (!title) return toast.error("Titre requis.");
+if (portfolioForm.type === "gallery" && !portfolioForm.media && !portfolioForm.mediaFile)
+return toast.error("Ajoute une photo/vidéo.");
+if (
+portfolioForm.type === "beforeAfter" &&
+((!portfolioForm.beforeMedia && !portfolioForm.beforeFile) || (!portfolioForm.afterMedia && !portfolioForm.afterFile))
+)
 return toast.error("Ajoute AVANT et APRÈS.");
 
-const created =
-portfolioForm.type === "gallery"
-? { id: uuid("pf"), type: "gallery", title: portfolioForm.title.trim(), media: portfolioForm.media, createdAt: Date.now() }
-: {
-id: uuid("pf"),
-type: "beforeAfter",
-title: portfolioForm.title.trim(),
-beforeMedia: portfolioForm.beforeMedia,
-afterMedia: portfolioForm.afterMedia,
-createdAt: Date.now(),
+try {
+  if (portfolioForm.type === "gallery") {
+    const form = new FormData();
+    form.append("caption", title);
+    form.append("category", "gallery");
+    if (portfolioForm.mediaFile) {
+      form.append("image", portfolioForm.mediaFile);
+    } else {
+      form.append("url", portfolioForm.media);
+    }
+    const res = await apiFetch("/portfolio", { method: "POST", body: form });
+    const createdRaw = res?.data ?? res;
+    const created = normalizePortfolioList([createdRaw])[0];
+    setPortfolio((p) => [created, ...p]);
+  } else {
+    const groupId = uuid("pf");
+    const caption = `${title}||${groupId}`;
+    const formBefore = new FormData();
+    formBefore.append("caption", caption);
+    formBefore.append("category", "before");
+    if (portfolioForm.beforeFile) {
+      formBefore.append("image", portfolioForm.beforeFile);
+    } else {
+      formBefore.append("url", portfolioForm.beforeMedia);
+    }
+    const resBefore = await apiFetch("/portfolio", { method: "POST", body: formBefore });
+    const formAfter = new FormData();
+    formAfter.append("caption", caption);
+    formAfter.append("category", "after");
+    if (portfolioForm.afterFile) {
+      formAfter.append("image", portfolioForm.afterFile);
+    } else {
+      formAfter.append("url", portfolioForm.afterMedia);
+    }
+    const resAfter = await apiFetch("/portfolio", { method: "POST", body: formAfter });
+    const beforeItem = resBefore?.data ?? resBefore;
+    const afterItem = resAfter?.data ?? resAfter;
+    const created = {
+      id: groupId,
+      type: "beforeAfter",
+      title,
+      beforeMedia: beforeItem.url || portfolioForm.beforeMedia,
+      afterMedia: afterItem.url || portfolioForm.afterMedia,
+      ids: [beforeItem.id, afterItem.id].filter(Boolean),
+      createdAt: beforeItem.createdAt || Date.now(),
+    };
+    setPortfolio((p) => [created, ...p]);
+  }
+  toast.success("Ajouté au salon.");
+  setShowPortfolioModal(false);
+  setPortfolioForm({
+    type: "gallery",
+    title: "",
+    media: "",
+    mediaFile: null,
+    beforeMedia: "",
+    beforeFile: null,
+    afterMedia: "",
+    afterFile: null,
+  });
+} catch (err) {
+  toast.error(err.message || "Erreur lors de l'ajout");
+}
 };
 
-setPortfolio((p) => [created, ...p]);
-toast.success("Ajouté au salon.");
-setShowPortfolioModal(false);
-setPortfolioForm({ type: "gallery", title: "", media: "", beforeMedia: "", afterMedia: "" });
-};
-
-const removePortfolioItem = (id) => {
-setPortfolio((p) => p.filter((x) => x.id !== id));
-toast.success("Supprimé.");
+const removePortfolioItem = async (item) => {
+const ids = Array.isArray(item?.ids) ? item.ids : [item?.id || item];
+if (!ids[0]) return;
+try {
+  await Promise.all(ids.map((id) => apiFetch(`/portfolio/${id}`, { method: "DELETE" })));
+  setPortfolio((p) => p.filter((x) => x.id !== (item?.id || item)));
+  toast.success("Supprimé.");
+} catch (err) {
+  toast.error(err.message || "Erreur lors de la suppression");
+}
 };
 
 /* ----------------------------
 Actions - Reviews moderation
 ----------------------------- */
-const setReviewStatus = (id, status) => {
-setReviews((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
-toast.success("Avis mis à jour.");
+const setReviewStatus = async (id, status) => {
+try {
+  const res = await apiFetch(`/reviews/${id}`, { method: "PATCH", body: { status } });
+  const updated = normalizeReview(res?.data ?? res);
+  setReviews((prev) => prev.map((r) => (r.id === id ? { ...r, ...updated } : r)));
+  toast.success("Avis mis à jour.");
+} catch (err) {
+  toast.error(err.message || "Erreur lors de la mise à jour");
+}
 };
 
 /* ----------------------------
 Actions - Promos + loyalty
 ----------------------------- */
-const addPromo = () => {
+const addPromo = async () => {
 const code = promoForm.code.trim().toUpperCase();
 if (!code) return toast.error("Code requis.");
 if (!promoForm.value || Number(promoForm.value) <= 0) return toast.error("Valeur invalide.");
 
-setPromos((p) => [
-{
-id: uuid("promo"),
+try {
+const payload = {
 code,
-type: promoForm.type,
-value: Number(promoForm.value),
-active: !!promoForm.active,
-expiresAt: promoForm.expiresAt || "",
-},
-...p,
-]);
+type: promoForm.type === "amount" ? "fixed" : promoForm.type,
+discount: Number(promoForm.value),
+isActive: !!promoForm.active,
+validTo: promoForm.expiresAt || null,
+};
+const res = await apiFetch("/promos", { method: "POST", body: payload });
+const created = normalizePromo(res?.data ?? res);
+setPromos((p) => [created, ...p]);
 toast.success("Promo ajoutée.");
 setShowPromoModal(false);
 setPromoForm({ code: "", type: "percent", value: 10, expiresAt: "", active: true });
+} catch (e) {
+toast.error(e.message || "Erreur lors de l'ajout");
+}
 };
 
-const togglePromo = (id) => {
-setPromos((p) => p.map((x) => (x.id === id ? { ...x, active: !x.active } : x)));
+const togglePromo = async (id) => {
+const current = promos.find((p) => p.id === id);
+if (!current) return;
+try {
+const res = await apiFetch(`/promos/${id}`, {
+method: "PATCH",
+body: { isActive: !current.active },
+});
+const updated = normalizePromo(res?.data ?? res);
+setPromos((p) => p.map((x) => (x.id === id ? updated : x)));
+} catch (e) {
+toast.error(e.message || "Erreur lors de la mise à jour");
+}
 };
 
-const deletePromo = (id) => {
+const deletePromo = async (id) => {
+try {
+await apiFetch(`/promos/${id}`, { method: "DELETE" });
 setPromos((p) => p.filter((x) => x.id !== id));
 toast.success("Promo supprimée.");
+} catch (e) {
+toast.error(e.message || "Erreur lors de la suppression");
+}
+};
+const saveLoyaltySettings = async () => {
+try {
+  const res = await apiFetch("/loyalty", { method: "PATCH", body: { settings: loyalty } });
+  const settings = res?.settings || res?.data?.settings || loyalty;
+  if (settings) setLoyalty(settings);
+  toast.success("Fidélité sauvegardée.");
+} catch (e) {
+  toast.error(e.message || "Erreur lors de la sauvegarde");
+}
 };
 
 /* ----------------------------
 Actions - CRM
 ----------------------------- */
-const markNoShow = (clientId) => {
-setClients((prev) =>
-prev.map((c) => (c.id === clientId ? { ...c, noShowCount: (c.noShowCount || 0) + 1 } : c))
-);
-toast.success("No-show ajouté.");
+const markNoShow = async (clientId) => {
+const current = clients.find((c) => c.id === clientId);
+if (!current) return;
+try {
+  const nextCount = (current.noShowCount || 0) + 1;
+  const res = await apiFetch(`/clients/${clientId}`, { method: "PATCH", body: { noShowCount: nextCount } });
+  const updated = normalizeClient(res?.data ?? res);
+  setClients((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+  if (selectedClient?.id === updated.id) setSelectedClient(updated);
+  toast.success("No-show ajouté.");
+} catch (err) {
+  toast.error(err.message || "Erreur mise à jour no-show");
+}
 };
 
 const updateClientNotes = (clientId, field, value) => {
 setClients((prev) => prev.map((c) => (c.id === clientId ? { ...c, [field]: value } : c)));
 };
+const saveClientNotes = async () => {
+if (!selectedClient?.id) return;
+try {
+  setSavingClientAddress(true);
+  const res = await apiFetch(`/clients/${selectedClient.id}`, {
+    method: "PATCH",
+    body: { preferences: selectedClient.preferences || "", notes: selectedClient.notes || "" },
+  });
+  const updated = normalizeClient(res?.data ?? res);
+  setClients((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+  setSelectedClient(updated);
+  toast.success("Notes sauvegardées.");
+} catch (e) {
+  toast.error(e.message || "Erreur mise à jour notes");
+} finally {
+  setSavingClientAddress(false);
+}
+};
+
+const saveClientAddress = async () => {
+if (!selectedClient?.id) return;
+try {
+setSavingClientAddress(true);
+const res = await apiFetch(`/clients/${selectedClient.id}`, {
+method: "PATCH",
+body: { address: clientAddressDraft },
+});
+const updated = normalizeClient(res?.data ?? res);
+setClients((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+setSelectedClient(updated);
+setClientAddressDraft(updated.address || "");
+toast.success("Adresse mise à jour.");
+} catch (e) {
+toast.error(e.message || "Erreur mise à jour adresse");
+} finally {
+setSavingClientAddress(false);
+}
+};
 
 /* ----------------------------
-Derived stats
+Stats (API)
 ----------------------------- */
-useEffect(() => {
-const completed = appointments.filter((a) => a.status === "completed");
-const cancelled = appointments.filter((a) => a.status === "cancelled");
-
-const totalRevenue = completed.reduce((sum, a) => sum + (a.amount || 0), 0);
+const fetchStats = async () => {
+try {
+const res = await apiFetch(`/stats?period=${statsPeriod}`);
+const data = res?.data ?? res;
+if (data) {
+setStats((prev) => ({ ...prev, ...data }));
+}
+} catch (e) {
+// Fallback on local appointments if API fails
+const completed = appointments.filter((a) => a.status === "COMPLETED");
+const cancelled = appointments.filter((a) => a.status === "CANCELLED");
+const totalRevenue = completed.reduce((sum, a) => sum + (a.totalPrice || a.amount || 0), 0);
 const averageTicket = completed.length ? Math.round(totalRevenue / completed.length) : 0;
-
 const countsByService = new Map();
 for (const a of appointments) {
-countsByService.set(a.serviceName, (countsByService.get(a.serviceName) || 0) + 1);
+const name = a.service?.name || a.serviceName || "Service";
+countsByService.set(name, (countsByService.get(name) || 0) + 1);
 }
 const topServices = Array.from(countsByService.entries())
 .sort((a, b) => b[1] - a[1])
 .slice(0, 5);
-
 setStats((prev) => ({
 ...prev,
 totalRevenue,
@@ -1093,16 +1877,81 @@ cancelledBookings: cancelled.length,
 completedBookings: completed.length,
 topServices,
 }));
-}, [appointments]);
+}
+};
 
-const saveSettings = () => {
-toast.success("Paramètres sauvegardés ! (démo)");
+useEffect(() => {
+fetchStats();
+}, [statsPeriod]);
+
+const applySalonSettingsFromApi = (salon) => {
+  if (!salon) return;
+  const prefs = parseSalonPreferences(salon.salonSettings?.preferences);
+  setSalonSettings((prev) => ({
+    ...prev,
+    name: salon.name ?? prev.name,
+    phone: salon.phone ?? prev.phone,
+    whatsapp: prefs.whatsapp ?? prev.whatsapp,
+    address: salon.address ?? prev.address,
+    description: salon.description ?? prev.description,
+    image: salon.image ?? prev.image,
+    openingHours: salon.openingHours ? openingHoursFromApi(salon.openingHours) : prev.openingHours,
+  }));
+};
+
+const fetchSalonSettings = async () => {
+  try {
+    const res = await apiFetch("/salons/me");
+    const data = res?.data ?? res;
+    const salon = data?.salon ?? data;
+    applySalonSettingsFromApi(salon);
+  } catch (e) {
+    toast.error("Erreur chargement paramètres: " + (e.message || e));
+  }
+};
+
+const saveSettings = async () => {
+  if (savingSettings) return;
+  try {
+    setSavingSettings(true);
+    const safeImage =
+      salonSettings.image && String(salonSettings.image).startsWith("data:")
+        ? null
+        : salonSettings.image || null;
+    const payload = {
+      name: salonSettings.name,
+      phone: salonSettings.phone,
+      whatsapp: salonSettings.whatsapp,
+      address: salonSettings.address,
+      description: salonSettings.description,
+      image: safeImage,
+      openingHours: openingHoursToApi(salonSettings.openingHours),
+    };
+    const res = await apiFetch("/salons/me", { method: "PATCH", body: payload });
+    const data = res?.data ?? res;
+    const salon = data?.salon ?? data;
+    applySalonSettingsFromApi(salon);
+    toast.success("Paramètres sauvegardés.");
+  } catch (e) {
+    toast.error(e.message || "Erreur lors de la sauvegarde");
+  } finally {
+    setSavingSettings(false);
+  }
 };
 
 const salonName = salonSettings.name?.trim() || "Dashboard PRO";
 const upcomingCount = appointments.filter((a) => a.status === "upcoming").length;
 const completedCount = appointments.filter((a) => a.status === "completed").length;
 const cancelledCount = appointments.filter((a) => a.status === "cancelled").length;
+const openFloatingChat = () => {
+  const preferred =
+    appointments.find((a) => {
+      const status = String(a?.status || "").toLowerCase();
+      return !["cancelled", "completed", "no_show"].includes(status);
+    }) || appointments[0];
+  setChatAppointment(preferred || null);
+  setShowChatModal(true);
+};
 
 /* ----------------------------
 Render
@@ -1151,7 +2000,7 @@ return (
 {salonName}
 </h1>
 <p className="text-sm text-gray-500 mt-1">
-Gestion des RDV, services, équipe, planning, paiements, salon, avis, promos, CRM et paramètres.
+Gestion des RDV, services, Équipe, planning, paiements, salon, avis, promos, CRM et paramètres.
 </p>
 </div>
 
@@ -1192,13 +2041,42 @@ active
 </div>
 </Card>
 
-<AnimatePresence mode="wait">
+<AnimatePresence mode="sync">
 {/* ------------------ APPOINTMENTS ------------------ */}
 {activeTab === "appointments" && (
 <motion.div key="appointments" {...pageAnim}>
 <Card>
 <CardHeader icon={<FiCalendar />} title="Rendez-vous" />
 <div className="p-6">
+<div className="mb-5 border border-gray-200 rounded-2xl p-4 bg-gray-50">
+  <div className="flex items-center justify-between mb-3">
+    <p className="font-semibold text-gray-900">Notifications</p>
+    <div className="flex items-center gap-2">
+      <span className="text-xs px-2 py-1 rounded-full bg-amber-100 text-amber-800">
+        {unreadNotifications} non lues
+      </span>
+      <button
+        type="button"
+        onClick={markAllNotificationsRead}
+        className="text-xs px-2 py-1 rounded-lg border border-gray-200 hover:bg-white"
+      >
+        Tout lire
+      </button>
+    </div>
+  </div>
+  {notifications.slice(0, 4).length === 0 ? (
+    <p className="text-sm text-gray-500">Aucune notification.</p>
+  ) : (
+    <div className="space-y-2">
+      {notifications.slice(0, 4).map((n) => (
+        <div key={n.id} className={`text-sm rounded-xl px-3 py-2 ${n.isRead ? "bg-white text-gray-600" : "bg-amber-50 text-gray-800 border border-amber-100"}`}>
+          <p>{n.message}</p>
+          <p className="text-xs text-gray-500 mt-1">{new Date(n.createdAt).toLocaleString("fr-FR")}</p>
+        </div>
+      ))}
+    </div>
+  )}
+</div>
 {loading ? (
 <p className="text-gray-500 font-semibold">Chargement…</p>
 ) : appointments.length === 0 ? (
@@ -1208,85 +2086,138 @@ title="Aucun rendez-vous"
 subtitle="Les réservations apparaîtront ici."
 />
 ) : (
-<DataTable
-emptyLabel="Aucun rendez-vous"
-columns={[
-{ key: "clientName", label: "Client" },
-{ key: "date", label: "Date" },
-{ key: "time", label: "Heure" },
-{ key: "serviceName", label: "Service" },
-{
-key: "staffName",
-label: "Employé",
-render: (row) => <span className="font-semibold">{row.staffName || "-"}</span>,
-},
-{
-key: "paymentStatus",
-label: "Paiement",
-render: (row) => {
-const tone =
-row.paymentStatus === "paid"
-? "green"
-: row.paymentStatus === "deposit_paid"
-? "blue"
-: row.paymentStatus === "refunded"
-? "red"
-: "gray";
-const label = statusLabels[row.paymentStatus] || row.paymentStatus;
-return <Badge tone={tone}>{label}</Badge>;
-},
-},
-{
-key: "status",
-label: "Statut",
-render: (row) => {
-const tone =
-row.status === "completed" ? "green" : row.status === "cancelled" ? "red" : "blue";
-const label = statusLabels[row.status] || row.status;
-return <Badge tone={tone}>{label}</Badge>;
-},
-},
-{
-key: "actions",
-label: "Actions",
-render: (row) => (
-<div className="flex gap-2 flex-wrap">
-<Button
-variant="secondary"
-className="px-3 py-2"
-onClick={() => setAppointmentStatus(row.id, "completed")}
-disabled={row.status === "completed"}
->
-<FiCheck className="mr-2" /> Terminer
-</Button>
-<Button
-variant="secondary"
-className="px-3 py-2"
-onClick={() => setAppointmentStatus(row.id, "cancelled")}
-disabled={row.status === "cancelled"}
->
-<FiX className="mr-2" /> Annuler
-</Button>
-<Button
-variant="secondary"
-className="px-3 py-2"
-onClick={() => generateInvoiceForAppointment(row)}
->
-<FiFileText className="mr-2" /> Facture
-</Button>
-<Button
-variant="secondary"
-className="px-3 py-2"
-onClick={() => refundAppointmentDeposit(row)}
->
-<FiDollarSign className="mr-2" /> Rembourser
-</Button>
+<div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+  {appointments.map((row, idx) => {
+    const avatar = resolveMediaUrl(row.client?.picture || row.client?.avatar);
+    const paymentTone =
+      row.paymentStatus === "paid"
+        ? "green"
+        : row.paymentStatus === "deposit_paid"
+        ? "blue"
+        : row.paymentStatus === "refunded"
+        ? "red"
+        : row.paymentStatus === "pending_cash"
+        ? "amber"
+        : row.paymentStatus === "failed"
+        ? "red"
+        : "gray";
+    const paymentLabel = getStatusLabel(row.paymentStatus);
+    const statusTone =
+      row.status === "completed"
+        ? "green"
+        : row.status === "cancelled"
+        ? "red"
+        : row.status === "confirmed" || row.status === "confirmed_on_site"
+        ? "blue"
+        : row.status === "pending" || row.status === "pending_assignment"
+        ? "amber"
+        : "gray";
+    const statusLabel = getStatusLabel(row.status);
+
+    return (
+      <motion.div
+        key={row.id || idx}
+        initial={{ opacity: 0, y: 18 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25, delay: idx * 0.03 }}
+        className="bg-white rounded-2xl border border-gray-100 shadow-[0_20px_50px_-35px_rgba(15,23,42,0.55)] p-5"
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-center gap-3">
+            {avatar ? (
+              <img
+                src={avatar}
+                alt={row.clientName}
+                className="w-11 h-11 rounded-full object-cover ring-2 ring-white shadow-sm"
+              />
+            ) : (
+              <div className="w-11 h-11 rounded-full bg-primary-100 text-primary-700 font-bold flex items-center justify-center">
+                {(row.clientName || "C").charAt(0).toUpperCase()}
+              </div>
+            )}
+            <div>
+              <p className="font-semibold text-gray-900">{row.clientName}</p>
+              <p className="text-xs text-gray-500">{row.client?.phoneNumber || row.client?.phone || ""}</p>
+              {row.clientAddress ? <p className="text-xs text-gray-400">{row.clientAddress}</p> : null}
+            </div>
+          </div>
+          <Badge tone={statusTone}>{statusLabel}</Badge>
+        </div>
+
+        <div className="grid sm:grid-cols-2 gap-4 mt-5">
+          <div>
+            <p className="text-xs text-gray-500">Date</p>
+            <p className="font-semibold text-gray-900">{formatDate(row.date)}</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500">Heure</p>
+            <p className="font-semibold text-gray-900">{toTime(row.time) || "—"}</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500">Service</p>
+            <p className="font-semibold text-gray-900">{row.serviceName}</p>
+            <p className="text-xs text-gray-500">{row.service?.duration ? `${row.service.duration} min` : ""}</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500">Employé</p>
+            <p className="font-semibold text-gray-900">{row.staffName || "—"}</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500">Paiement</p>
+            <Badge tone={paymentTone}>{paymentLabel}</Badge>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500">Montant</p>
+            <p className="font-semibold text-gray-900">{formatMoney(row.amount)}</p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-2 mt-5">
+          <Button
+            variant="secondary"
+            className="px-3 py-2"
+            onClick={() => setAppointmentStatus(row.id, "completed")}
+            disabled={row.status === "completed"}
+          >
+            <FiCheck className="mr-2" /> Terminer
+          </Button>
+          <Button
+            variant="secondary"
+            className="px-3 py-2"
+            onClick={() => setAppointmentStatus(row.id, "cancelled")}
+            disabled={row.status === "cancelled"}
+          >
+            <FiX className="mr-2" /> Annuler
+          </Button>
+          <Button
+            variant="secondary"
+            className="px-3 py-2"
+            onClick={() => generateInvoiceForAppointment(row)}
+          >
+            <FiFileText className="mr-2" /> Facture
+          </Button>
+          <Button
+            variant="secondary"
+            className="px-3 py-2"
+            onClick={() => refundAppointmentDeposit(row)}
+          >
+            <FiDollarSign className="mr-2" /> Rembourser
+          </Button>
+          <Button
+            variant="secondary"
+            className="px-3 py-2"
+            onClick={() => {
+              setChatAppointment(row);
+              setShowChatModal(true);
+            }}
+          >
+            <FiMessageCircle className="mr-2" /> Chat
+          </Button>
+        </div>
+      </motion.div>
+    );
+  })}
 </div>
-),
-},
-]}
-data={appointments}
-/>
 )}
 </div>
 </Card>
@@ -1341,10 +2272,10 @@ onChange={(e) => setServiceCategory(e.target.value)}
 <div className="md:col-span-4">
 <Select label="Trier par" value={serviceSort} onChange={(e) => setServiceSort(e.target.value)}>
 <option value="recent">Plus récents</option>
-<option value="priceAsc">Prix ↑</option>
-<option value="priceDesc">Prix ↓</option>
-<option value="durationAsc">Durée ↑</option>
-<option value="durationDesc">Durée ↓</option>
+<option value="priceAsc">Prix ?</option>
+<option value="priceDesc">Prix ?</option>
+<option value="durationAsc">Durée ?</option>
+<option value="durationDesc">Durée ?</option>
 </Select>
 </div>
 </div>
@@ -1364,24 +2295,26 @@ action={
 />
 ) : (
 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-{filteredServices.map((service) => (
+{filteredServices.map((service) => {
+const mediaUrl = resolveMediaUrl(service.media);
+return (
 <div
 key={service.id}
 className="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm hover:shadow-md transition-shadow"
 >
 <div className="mb-3">
 {service.media ? (
-isImage(service.media) ? (
-<img src={service.media} alt="aperçu" className="w-full h-36 object-cover rounded-2xl" />
-) : isVideo(service.media) ? (
-<video src={service.media} controls className="w-full h-36 object-cover rounded-2xl" />
+isImage(mediaUrl) ? (
+<img src={mediaUrl} alt="aperçu" className="w-full h-64 object-cover rounded-2xl" />
+) : isVideo(mediaUrl) ? (
+<video src={mediaUrl} controls className="w-full h-64 object-cover rounded-2xl" />
 ) : (
-<div className="w-full h-36 rounded-2xl bg-gray-50 border border-dashed border-gray-200 flex items-center justify-center">
+<div className="w-full h-64 rounded-2xl bg-gray-50 border border-dashed border-gray-200 flex items-center justify-center">
 <FiImage className="w-8 h-8 text-gray-300" />
 </div>
 )
 ) : (
-<div className="w-full h-36 rounded-2xl bg-gray-50 border border-dashed border-gray-200 flex items-center justify-center">
+<div className="w-full h-64 rounded-2xl bg-gray-50 border border-dashed border-gray-200 flex items-center justify-center">
 <FiImage className="w-8 h-8 text-gray-300" />
 </div>
 )}
@@ -1399,7 +2332,22 @@ isImage(service.media) ? (
 </div>
 
 <div className="flex gap-2">
-<IconButton title="Modifier" onClick={() => setEditingService({ ...service })}>
+<IconButton
+title="Modifier"
+                onClick={() => {
+                  const mediaList =
+                    Array.isArray(service.images) && service.images.length
+                      ? service.images
+                      : service.media
+                      ? [service.media]
+                      : [];
+                  setEditingService({
+                    ...service,
+                    mediaList,
+                    mediaFiles: mediaList.map(() => null),
+                  });
+                }}
+>
 <FiEdit2 />
 </IconButton>
 <IconButton title="Supprimer" onClick={() => setConfirmDelete(service)}>
@@ -1427,7 +2375,8 @@ Acompte : {service.depositPercentage ?? 30}%
 )}
 </div>
 </div>
-))}
+);
+})}
 </div>
 )}
 </div>
@@ -1460,32 +2409,57 @@ Annuler
 >
 <div className="space-y-4">
 <div>
-<label className="block text-sm font-semibold text-gray-700 mb-1">Média (photo ou vidéo)</label>
+<label className="block text-sm font-semibold text-gray-700 mb-1">Photos du service</label>
 <input
 ref={fileInputRef}
 type="file"
 accept="image/*,video/*"
+multiple
 onChange={(e) => {
-const file = e.target.files?.[0];
-if (!file) return;
-if (!validateMedia(file)) return;
-readMediaAsDataUrl(file, (dataUrl) => setNewService((p) => ({ ...p, media: dataUrl })));
+const files = e.target.files;
+if (!files || files.length === 0) return;
+appendServiceMedia(files, setNewService);
+e.target.value = "";
 }}
 className="w-full px-4 py-2.5 border border-gray-200 rounded-2xl"
 />
-{newService.media ? (
-<div className="mt-3 flex items-start gap-3">
-{isImage(newService.media) ? (
-<img src={newService.media} alt="preview" className="w-28 h-28 object-cover rounded-2xl border border-gray-100" />
+{newService.mediaList && newService.mediaList.length ? (
+<div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-3">
+{newService.mediaList.map((item, idx) => (
+<div key={`${item}-${idx}`} className="relative group">
+{isImage(resolveMediaUrl(item)) ? (
+<img src={resolveMediaUrl(item)} alt="preview" className="w-full h-24 object-cover rounded-2xl border border-gray-100" />
 ) : (
-<video src={newService.media} controls className="w-28 h-28 object-cover rounded-2xl border border-gray-100" />
+<video src={resolveMediaUrl(item)} className="w-full h-24 object-cover rounded-2xl border border-gray-100" />
 )}
-<Button variant="secondary" className="px-4" onClick={() => setNewService((p) => ({ ...p, media: "" }))}>
-Retirer
-</Button>
+<div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button
+type="button"
+onClick={() => setServiceCover(idx, setNewService)}
+className="px-2 py-1 text-[10px] font-semibold rounded-full bg-white/90 shadow"
+>
+Couverture
+</button>
+<button
+type="button"
+onClick={() => removeServiceMediaAt(idx, setNewService)}
+className="w-7 h-7 rounded-full bg-white/90 shadow flex items-center justify-center text-xs"
+>
+×
+</button>
+</div>
+{idx === 0 && (
+<span className="absolute bottom-2 left-2 px-2 py-0.5 text-[10px] font-semibold rounded-full bg-amber-500 text-white shadow">
+Couverture
+</span>
+)}
+</div>
+))}
 </div>
 ) : (
-<p className="text-xs text-gray-500 mt-2">Max {MAX_MEDIA_MB}MB — image/* ou video/*</p>
+<p className="text-xs text-gray-500 mt-2">
+Max {MAX_MEDIA_MB}MB par fichier – jusqu’à {MAX_SERVICE_MEDIA} photos
+</p>
 )}
 </div>
 
@@ -1570,31 +2544,56 @@ Annuler
 {editingService ? (
 <div className="space-y-4">
 <div>
-<label className="block text-sm font-semibold text-gray-700 mb-1">Média (photo ou vidéo)</label>
+<label className="block text-sm font-semibold text-gray-700 mb-1">Photos du service</label>
 <input
 type="file"
 accept="image/*,video/*"
+multiple
 onChange={(e) => {
-const file = e.target.files?.[0];
-if (!file) return;
-if (!validateMedia(file)) return;
-readMediaAsDataUrl(file, (dataUrl) => setEditingService((p) => ({ ...p, media: dataUrl })));
+const files = e.target.files;
+if (!files || files.length === 0) return;
+appendServiceMedia(files, setEditingService);
+e.target.value = "";
 }}
 className="w-full px-4 py-2.5 border border-gray-200 rounded-2xl"
 />
-{editingService.media ? (
-<div className="mt-3 flex items-start gap-3">
-{isImage(editingService.media) ? (
-<img src={editingService.media} alt="preview" className="w-28 h-28 object-cover rounded-2xl border border-gray-100" />
+{editingService.mediaList && editingService.mediaList.length ? (
+<div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-3">
+{editingService.mediaList.map((item, idx) => (
+<div key={`${item}-${idx}`} className="relative group">
+{isImage(resolveMediaUrl(item)) ? (
+<img src={resolveMediaUrl(item)} alt="preview" className="w-full h-24 object-cover rounded-2xl border border-gray-100" />
 ) : (
-<video src={editingService.media} controls className="w-28 h-28 object-cover rounded-2xl border border-gray-100" />
+<video src={resolveMediaUrl(item)} className="w-full h-24 object-cover rounded-2xl border border-gray-100" />
 )}
-<Button variant="secondary" className="px-4" onClick={() => setEditingService((p) => ({ ...p, media: "" }))}>
-Retirer
-</Button>
+<div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button
+type="button"
+onClick={() => setServiceCover(idx, setEditingService)}
+className="px-2 py-1 text-[10px] font-semibold rounded-full bg-white/90 shadow"
+>
+Couverture
+</button>
+<button
+type="button"
+onClick={() => removeServiceMediaAt(idx, setEditingService)}
+className="w-7 h-7 rounded-full bg-white/90 shadow flex items-center justify-center text-xs"
+>
+×
+</button>
+</div>
+{idx === 0 && (
+<span className="absolute bottom-2 left-2 px-2 py-0.5 text-[10px] font-semibold rounded-full bg-amber-500 text-white shadow">
+Couverture
+</span>
+)}
+</div>
+))}
 </div>
 ) : (
-<p className="text-xs text-gray-500 mt-2">Max {MAX_MEDIA_MB}MB — image/* ou video/*</p>
+<p className="text-xs text-gray-500 mt-2">
+Max {MAX_MEDIA_MB}MB par fichier – jusqu’à {MAX_SERVICE_MEDIA} photos
+</p>
 )}
 </div>
 
@@ -1700,19 +2699,36 @@ right={
 {loading ? (
 <p className="text-gray-500 font-semibold">Chargement…</p>
 ) : team.length === 0 ? (
-<EmptyState icon={<FiUsers />} title="Aucun employé" subtitle="Ajoutez les membres de votre équipe." />
+<EmptyState icon={<FiUsers />} title="Aucun employé" subtitle="Ajoutez les membres de votre Équipe." />
 ) : (
 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-{team.map((m) => (
-<div key={m.id} className="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm">
-<div className="flex items-start justify-between gap-3 mb-4">
+{team.map((m) => {
+const avatar = resolveMediaUrl(m.picture || m.avatar || m.photo);
+return (
+<div
+key={m.id}
+className="relative overflow-hidden bg-white/90 border border-gray-100 rounded-3xl p-5 shadow-[0_18px_40px_-30px_rgba(15,23,42,0.6)] hover:shadow-lg transition-shadow"
+>
+<div className="absolute -top-10 -right-10 w-32 h-32 bg-amber-100/60 rounded-full blur-2xl" />
+<div className="h-1 w-12 rounded-full bg-gradient-to-r from-amber-500 to-orange-400 mb-4" />
+<div className="flex items-start gap-4">
+{avatar ? (
+<img
+src={avatar}
+alt={m.name}
+className="w-14 h-14 rounded-2xl object-cover ring-2 ring-white shadow"
+/>
+) : (
+<div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 text-white flex items-center justify-center font-extrabold">
+{getInitials(m.name)}
+</div>
+)}
+<div className="flex-1 min-w-0">
+<div className="flex items-start justify-between gap-3">
 <div className="min-w-0">
 <h4 className="text-base font-extrabold text-gray-900 truncate">{m.name}</h4>
-<div className="mt-2 flex gap-2 items-center flex-wrap">
-<Badge tone="purple">{m.role}</Badge>
-{m.active ? <Badge tone="green">Actif</Badge> : <Badge tone="red">Inactif</Badge>}
-</div>
-{m.phone ? <p className="text-sm text-gray-500 mt-2">{m.phone}</p> : null}
+{m.email ? <p className="text-xs text-gray-500 mt-1 truncate">{m.email}</p> : null}
+{m.phone ? <p className="text-sm text-gray-500 mt-1">{m.phone}</p> : null}
 </div>
 <div className="flex gap-2">
 <IconButton title="Modifier" onClick={() => setEditingMember({ ...m })}>
@@ -1723,10 +2739,16 @@ right={
 </IconButton>
 </div>
 </div>
+<div className="mt-3 flex gap-2 items-center flex-wrap">
+<Badge tone="purple">{m.role}</Badge>
+{m.active ? <Badge tone="green">Actif</Badge> : <Badge tone="red">Inactif</Badge>}
+</div>
+</div>
+</div>
 
 <div className="mt-4 pt-4 border-t border-gray-100">
 <p className="text-xs font-extrabold text-gray-700 mb-2">Disponibilités</p>
-<div className="space-y-1">
+<div className="space-y-1.5">
 {weekDays.map(([label, key]) => {
 const h = m.availability?.[key];
 return (
@@ -1739,7 +2761,8 @@ return (
 </div>
 </div>
 </div>
-))}
+);
+})}
 </div>
 )}
 </div>
@@ -1801,7 +2824,7 @@ availability: { ...p.availability, [key]: { ...h, open: e.target.value } },
 }
 className="px-3 py-2 border border-gray-200 rounded-xl bg-white"
 />
-<span className="text-gray-500 font-semibold">à</span>
+<span className="text-gray-500 font-semibold">—</span>
 <input
 type="time"
 value={h.close}
@@ -1900,7 +2923,7 @@ availability: { ...p.availability, [key]: { ...h, open: e.target.value } },
 }
 className="px-3 py-2 border border-gray-200 rounded-xl bg-white"
 />
-<span className="text-gray-500 font-semibold">à</span>
+<span className="text-gray-500 font-semibold">—</span>
 <input
 type="time"
 value={h.close}
@@ -1973,7 +2996,7 @@ right={
 <div key={b.id} className="p-3 bg-gray-50 rounded-2xl flex items-center justify-between">
 <div>
 <p className="text-sm font-extrabold text-gray-900">{b.label}</p>
-<p className="text-xs text-gray-500">{b.date} • {b.start}-{b.end}</p>
+<p className="text-xs text-gray-500">{b.date} à {b.start}-{b.end}</p>
 </div>
 <IconButton title="Supprimer" onClick={() => removePlanningItem("breaks", b.id)}>
 <FiTrash2 />
@@ -2092,7 +3115,7 @@ Annuler
 <Card>
 <CardHeader icon={<FiDollarSign />} title="Paiements" />
 <div className="p-6">
-{/* ✅ petit fix: afficher payments si dispo, sinon fallback appointments (tu ne perds aucune donnée) */}
+{/* ? petit fix: afficher payments si dispo, sinon fallback appointments (tu ne perds aucune donnée) */}
 <DataTable
 emptyLabel="Aucun paiement"
 columns={[
@@ -2124,7 +3147,7 @@ r.paymentStatus === "paid"
 : r.paymentStatus === "refunded"
 ? "red"
 : "gray";
-const label = statusLabels[r.paymentStatus] || r.paymentStatus;
+const label = getStatusLabel(r.paymentStatus);
 return <Badge tone={tone}>{label}</Badge>;
 },
 },
@@ -2187,13 +3210,19 @@ className="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm flex items-
 <div className="font-bold text-gray-900 text-base">{pm.method}</div>
 <div className="text-xs text-gray-500">{pm.enabled ? "Activé" : "Désactivé"}</div>
 </div>
+<div className="flex items-center gap-2">
 <Badge tone={pm.enabled ? "green" : "gray"}>{pm.enabled ? "OK" : "OFF"}</Badge>
+<IconButton title="Supprimer" onClick={() => setConfirmPaymentMethod(pm)}>
+<FiTrash2 />
+</IconButton>
+</div>
 </div>
 ))}
 </div>
 </>
 )}
 </div>
+</Card>
 
 <Modal
 open={showPaymentMethodModal}
@@ -2227,9 +3256,39 @@ onChange={(e) => setNewPaymentMethod((p) => ({ ...p, enabled: e.target.value ===
 </Select>
 </div>
 </Modal>
-</Card>
 </motion.div>
 )}
+
+<Modal
+open={!!confirmPaymentMethod}
+title="Supprimer le moyen de paiement"
+onClose={() => setConfirmPaymentMethod(null)}
+footer={
+<div className="flex gap-3 justify-end">
+<Button variant="secondary" onClick={() => setConfirmPaymentMethod(null)} disabled={deletingPaymentMethod}>
+Annuler
+</Button>
+<Button onClick={() => handleDeletePaymentMethod(confirmPaymentMethod?.id)} disabled={deletingPaymentMethod}>
+Supprimer
+</Button>
+</div>
+}
+>
+<div className="space-y-3">
+<div className="flex items-start gap-3">
+<span className="mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-full bg-red-50 text-red-600">
+<FiAlertTriangle />
+</span>
+<div>
+<p className="font-semibold text-gray-900">Cette action est définitive.</p>
+<p className="text-sm text-gray-500">
+Voulez-vous vraiment supprimer le moyen de paiement{" "}
+<span className="font-semibold text-gray-700">{confirmPaymentMethod?.method}</span> ?
+</p>
+</div>
+</div>
+</div>
+</Modal>
 
 {/* ------------------ SALON (id = "portfolio") ------------------ */}
 {activeTab === "portfolio" && (
@@ -2250,7 +3309,11 @@ right={
 <EmptyState icon={<FiCamera />} title="Salon vide" subtitle="Ajoute des photos ou des avant/après." />
 ) : (
 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-{portfolio.map((p) => (
+{portfolio.map((p) => {
+const mediaUrl = resolveMediaUrl(p.media);
+const beforeUrl = resolveMediaUrl(p.beforeMedia);
+const afterUrl = resolveMediaUrl(p.afterMedia);
+return (
 <div key={p.id} className="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm">
 <div className="flex items-start justify-between gap-2">
 <div className="min-w-0">
@@ -2258,7 +3321,7 @@ right={
 <h4 className="mt-2 text-base font-extrabold text-gray-900 truncate">{p.title}</h4>
 <p className="text-xs text-gray-500 mt-1">{formatDate(p.createdAt)}</p>
 </div>
-<IconButton title="Supprimer" onClick={() => removePortfolioItem(p.id)}>
+<IconButton title="Supprimer" onClick={() => removePortfolioItem(p)}>
 <FiTrash2 />
 </IconButton>
 </div>
@@ -2266,10 +3329,10 @@ right={
 <div className="mt-3">
 {p.type === "gallery" ? (
 p.media ? (
-isImage(p.media) ? (
-<img src={p.media} alt="salon" className="w-full h-44 object-cover rounded-2xl" />
+isImage(mediaUrl) ? (
+<img src={mediaUrl} alt="salon" className="w-full h-44 object-cover rounded-2xl" />
 ) : (
-<video src={p.media} controls className="w-full h-44 object-cover rounded-2xl" />
+<video src={mediaUrl} controls className="w-full h-44 object-cover rounded-2xl" />
 )
 ) : (
 <div className="w-full h-44 rounded-2xl bg-gray-50 border border-dashed border-gray-200 flex items-center justify-center">
@@ -2281,13 +3344,13 @@ isImage(p.media) ? (
 <div>
 <p className="text-xs font-extrabold text-gray-700 mb-2">Avant</p>
 {p.beforeMedia ? (
-isImage(p.beforeMedia) ? (
-<img src={p.beforeMedia} alt="avant" className="w-full h-36 object-cover rounded-2xl" />
+isImage(beforeUrl) ? (
+<img src={beforeUrl} alt="avant" className="w-full h-44 object-cover rounded-2xl" />
 ) : (
-<video src={p.beforeMedia} controls className="w-full h-36 object-cover rounded-2xl" />
+<video src={beforeUrl} controls className="w-full h-44 object-cover rounded-2xl" />
 )
 ) : (
-<div className="w-full h-36 rounded-2xl bg-gray-50 border border-dashed border-gray-200 flex items-center justify-center">
+<div className="w-full h-44 rounded-2xl bg-gray-50 border border-dashed border-gray-200 flex items-center justify-center">
 <FiImage className="w-6 h-6 text-gray-300" />
 </div>
 )}
@@ -2295,13 +3358,13 @@ isImage(p.beforeMedia) ? (
 <div>
 <p className="text-xs font-extrabold text-gray-700 mb-2">Après</p>
 {p.afterMedia ? (
-isImage(p.afterMedia) ? (
-<img src={p.afterMedia} alt="après" className="w-full h-36 object-cover rounded-2xl" />
+isImage(afterUrl) ? (
+<img src={afterUrl} alt="après" className="w-full h-44 object-cover rounded-2xl" />
 ) : (
-<video src={p.afterMedia} controls className="w-full h-36 object-cover rounded-2xl" />
+<video src={afterUrl} controls className="w-full h-44 object-cover rounded-2xl" />
 )
 ) : (
-<div className="w-full h-36 rounded-2xl bg-gray-50 border border-dashed border-gray-200 flex items-center justify-center">
+<div className="w-full h-44 rounded-2xl bg-gray-50 border border-dashed border-gray-200 flex items-center justify-center">
 <FiImage className="w-6 h-6 text-gray-300" />
 </div>
 )}
@@ -2310,7 +3373,8 @@ isImage(p.afterMedia) ? (
 )}
 </div>
 </div>
-))}
+);
+})}
 </div>
 )}
 </div>
@@ -2357,7 +3421,7 @@ onChange={(e) => {
 const file = e.target.files?.[0];
 if (!file) return;
 if (!validateMedia(file)) return;
-readMediaAsDataUrl(file, (dataUrl) => setPortfolioForm((p) => ({ ...p, media: dataUrl })));
+readMediaAsDataUrl(file, (dataUrl) => setPortfolioForm((p) => ({ ...p, media: dataUrl, mediaFile: file })));
 }}
 className="w-full px-4 py-2.5 border border-gray-200 rounded-2xl"
 />
@@ -2373,7 +3437,7 @@ onChange={(e) => {
 const file = e.target.files?.[0];
 if (!file) return;
 if (!validateMedia(file)) return;
-readMediaAsDataUrl(file, (dataUrl) => setPortfolioForm((p) => ({ ...p, beforeMedia: dataUrl })));
+readMediaAsDataUrl(file, (dataUrl) => setPortfolioForm((p) => ({ ...p, beforeMedia: dataUrl, beforeFile: file })));
 }}
 className="w-full px-4 py-2.5 border border-gray-200 rounded-2xl"
 />
@@ -2387,7 +3451,7 @@ onChange={(e) => {
 const file = e.target.files?.[0];
 if (!file) return;
 if (!validateMedia(file)) return;
-readMediaAsDataUrl(file, (dataUrl) => setPortfolioForm((p) => ({ ...p, afterMedia: dataUrl })));
+readMediaAsDataUrl(file, (dataUrl) => setPortfolioForm((p) => ({ ...p, afterMedia: dataUrl, afterFile: file })));
 }}
 className="w-full px-4 py-2.5 border border-gray-200 rounded-2xl"
 />
@@ -2426,9 +3490,9 @@ right={
 <div>
 <div className="flex items-center gap-2 flex-wrap">
 <span className="font-extrabold text-gray-900">{r.clientName}</span>
-<Badge tone="amber">⭐ {r.rating}/5</Badge>
+<Badge tone="amber">? {r.rating}/5</Badge>
 <Badge tone={r.status === "approved" ? "green" : r.status === "rejected" ? "red" : "blue"}>
-{statusLabels[r.status] || r.status}
+{getStatusLabel(r.status)}
 </Badge>
 </div>
 <p className="text-sm text-gray-600 mt-2">{r.comment}</p>
@@ -2511,7 +3575,7 @@ right={
 
 <Input label="Récompense" value={loyalty.rewardLabel} onChange={(e) => setLoyalty((p) => ({ ...p, rewardLabel: e.target.value }))} />
 
-<Button variant="secondary" onClick={() => toast.success("Fidélité sauvegardée (démo)")}>
+<Button variant="secondary" onClick={() => toast.success("Fidélité sauvegardée ")}>
 <FiSave className="mr-2" /> Sauvegarder
 </Button>
 </div>
@@ -2585,7 +3649,8 @@ selectedClient?.id === c.id
 <div className="flex items-center justify-between gap-2">
 <div>
 <p className="font-extrabold text-gray-900">{c.name}</p>
-<p className="text-xs text-gray-500 mt-1">{c.phone}</p>
+<p className="text-xs text-gray-500 mt-1">{c.phone || "—"}</p>
+<p className="text-xs text-gray-400">{c.address || ""}</p>
 </div>
 <Badge tone={c.noShowCount > 0 ? "red" : "green"}>No-show: {c.noShowCount}</Badge>
 </div>
@@ -2615,12 +3680,30 @@ selectedClient ? (
 <div className="flex items-start justify-between gap-3">
 <div>
 <h3 className="text-xl font-extrabold text-gray-900">{selectedClient.name}</h3>
-<p className="text-sm text-gray-500 mt-1">{selectedClient.phone}</p>
+<p className="text-sm text-gray-500 mt-1">{selectedClient.phone || "—"}</p>
+<p className="text-sm text-gray-500">{selectedClient.email || "—"}</p>
 </div>
 <Badge tone={selectedClient.noShowCount > 0 ? "red" : "green"}>No-show: {selectedClient.noShowCount}</Badge>
 </div>
 
 <div className="grid md:grid-cols-2 gap-4">
+<div className="md:col-span-2">
+<Input
+label="Adresse"
+value={clientAddressDraft}
+onChange={(e) => setClientAddressDraft(e.target.value)}
+placeholder="Adresse du client"
+/>
+<div className="mt-2 flex justify-end">
+<Button
+variant="secondary"
+onClick={saveClientAddress}
+disabled={savingClientAddress || clientAddressDraft === (selectedClient.address || "")}
+>
+Sauvegarder l'adresse
+</Button>
+</div>
+</div>
 <Textarea
 label="Préférences"
 rows={4}
@@ -2639,6 +3722,11 @@ updateClientNotes(selectedClient.id, "notes", e.target.value);
 setSelectedClient((p) => ({ ...p, notes: e.target.value }));
 }}
 />
+<div className="flex justify-end">
+  <Button variant="secondary" onClick={saveClientNotes} disabled={savingClientAddress}>
+    Sauvegarder notes
+  </Button>
+</div>
 </div>
 
 <div>
@@ -2648,7 +3736,7 @@ setSelectedClient((p) => ({ ...p, notes: e.target.value }));
 <div key={h.id} className="p-4 bg-gray-50 rounded-2xl flex items-center justify-between">
 <div>
 <p className="font-extrabold text-gray-900">{h.service}</p>
-<p className="text-xs text-gray-500 mt-1">{h.date} • {statusLabels[h.status] || h.status}</p>
+<p className="text-xs text-gray-500 mt-1">{h.date} à {getStatusLabel(h.status)}</p>
 </div>
 <span className="font-extrabold text-gray-900">{formatMoney(h.amount)}</span>
 </div>
@@ -2666,7 +3754,8 @@ setSelectedClient((p) => ({ ...p, notes: e.target.value }));
 {/* ------------------ STATS ------------------ */}
 {activeTab === "stats" && (
 <motion.div key="stats" {...pageAnim}>
-<div className="flex flex-wrap gap-2 mb-6">
+<div className="mb-6">
+<div className="flex flex-wrap gap-2">
 {[
 { id: "today", label: "Aujourd'hui" },
 { id: "week", label: "Cette semaine" },
@@ -2684,6 +3773,8 @@ statsPeriod === p.id ? "bg-gray-900 text-white" : "bg-white text-gray-700 border
 {p.label}
 </button>
 ))}
+</div>
+<p className="text-xs text-gray-500 mt-2">Période : {formatPeriodLabel(statsPeriod)}</p>
 </div>
 
 <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -2784,7 +3875,7 @@ return (
 <div className="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center mr-3">
 <FiClock className="w-5 h-5 text-white" />
 </div>
-<span className="font-bold text-gray-900">RDV à venir</span>
+<span className="font-bold text-gray-900">RDV À venir</span>
 </div>
 <span className="text-xl font-extrabold text-blue-700">
 {appointments.filter((a) => a.status === "upcoming").length}
@@ -2814,7 +3905,7 @@ return (
 icon={<FiSettings />}
 title="Paramètres du salon"
 right={
-<Button onClick={saveSettings}>
+<Button onClick={saveSettings} disabled={savingSettings}>
 <FiSave className="mr-2" /> Sauvegarder
 </Button>
 }
@@ -2826,6 +3917,56 @@ right={
 <Input label="WhatsApp" value={salonSettings.whatsapp} onChange={(e) => setSalonSettings((p) => ({ ...p, whatsapp: e.target.value }))} />
 <Input label="Adresse" value={salonSettings.address} onChange={(e) => setSalonSettings((p) => ({ ...p, address: e.target.value }))} />
 <Textarea className="md:col-span-2" label="Description" rows={4} value={salonSettings.description} onChange={(e) => setSalonSettings((p) => ({ ...p, description: e.target.value }))} />
+<div className="md:col-span-2">
+  <label className="block text-sm font-semibold text-gray-700 mb-2">Photo du salon</label>
+  <div className="flex flex-col md:flex-row gap-4">
+    <div className="w-full md:w-64 h-40 rounded-2xl overflow-hidden bg-gray-50 border border-dashed border-gray-200 flex items-center justify-center">
+      {salonSettings.image ? (
+        <img src={resolveMediaUrl(salonSettings.image)} alt="Salon" className="w-full h-full object-cover" />
+      ) : (
+        <FiImage className="w-10 h-10 text-gray-300" />
+      )}
+    </div>
+    <div className="flex flex-col gap-2">
+      <input
+        type="file"
+        accept="image/*"
+        onChange={async (e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          if (!validateMedia(file)) return;
+          readMediaAsDataUrl(file, (dataUrl) =>
+            setSalonSettings((p) => ({ ...p, image: dataUrl }))
+          );
+          try {
+            const imageUrl = await uploadSalonImage(file);
+            if (imageUrl) {
+              setSalonSettings((p) => ({ ...p, image: imageUrl }));
+              toast.success("Photo du salon mise à jour.");
+            }
+          } catch (err) {
+            toast.error(err.message || "Erreur lors de l'upload de l'image.");
+          }
+        }}
+        className="block text-sm text-gray-600"
+      />
+      <div className="flex gap-2">
+        <Button
+          variant="secondary"
+          onClick={() => setSalonSettings((p) => ({ ...p, image: "" }))}
+        >
+          Supprimer
+        </Button>
+        <Button variant="secondary" onClick={saveSettings} disabled={savingSettings}>
+          <FiSave className="mr-2" /> Sauvegarder
+        </Button>
+      </div>
+      <p className="text-xs text-gray-500">
+        Ajoute une image carrée ou paysage. Elle sera affichée sur la page d’accueil et la fiche salon.
+      </p>
+    </div>
+  </div>
+</div>
 </div>
 </div>
 </Card>
@@ -2835,7 +3976,7 @@ right={
 icon={<FiClock />}
 title="Horaires d'ouverture"
 right={
-<Button variant="secondary" onClick={saveSettings}>
+<Button variant="secondary" onClick={saveSettings} disabled={savingSettings}>
 <FiSave className="mr-2" /> Sauvegarder
 </Button>
 }
@@ -2859,7 +4000,7 @@ openingHours: { ...p.openingHours, [key]: { ...hours, open: e.target.value } },
 }
 className="px-3 py-2 border border-gray-200 rounded-xl bg-white"
 />
-<span className="text-gray-500 font-semibold">à</span>
+<span className="text-gray-500 font-semibold">—</span>
 <input
 type="time"
 value={hours.close}
@@ -2902,7 +4043,32 @@ Ajouter horaires
 </motion.div>
 )}
 </AnimatePresence>
+
+<button
+  type="button"
+  onClick={openFloatingChat}
+  className="fixed bottom-6 right-6 z-40 inline-flex items-center gap-2 rounded-full bg-gray-900 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-gray-900/25 transition hover:bg-gray-800"
+>
+  <FiMessageCircle className="h-4 w-4" /> Chat rapide
+</button>
+
+<AppointmentChatModal
+  isOpen={showChatModal}
+  onClose={() => setShowChatModal(false)}
+  appointment={chatAppointment}
+  currentUserId={user?.id}
+/>
 </div>
 </div>
 );
 }
+
+
+
+
+
+
+
+
+
+

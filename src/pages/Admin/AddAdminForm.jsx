@@ -10,7 +10,7 @@ export default function AddAdminForm({ onAdminAdded }) {
     setLoading(true)
     setMessage('')
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/admin/admins`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/admin/admins`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

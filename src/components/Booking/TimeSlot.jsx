@@ -19,20 +19,34 @@ function TimeSlot({ selectedTime, onTimeSelect, duration = 30 }) {
   }, [])
 
   return (
-    <div>
-      <h3 className="font-medium text-gray-900 mb-4">Créneaux disponibles</h3>
-      <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+    <div className="rounded-2xl border border-gray-100 bg-white/80 p-5 shadow-sm">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h3 className="text-sm font-semibold text-gray-900">Choisir un horaire</h3>
+          <p className="text-xs text-gray-500">Durée estimée : {duration} min</p>
+        </div>
+        {selectedTime ? (
+          <div className="text-xs text-primary-700 bg-primary-50 px-3 py-1 rounded-full">
+            {selectedTime}
+          </div>
+        ) : (
+          <div className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+            Aucun créneau
+          </div>
+        )}
+      </div>
+      <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
         {timeSlots.map((time) => (
           <motion.button
             key={time}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.97 }}
             onClick={() => onTimeSelect(time)}
             className={`
-              py-2 px-3 rounded-lg font-medium text-sm transition-all duration-200
+              py-2.5 px-3 rounded-xl font-semibold text-sm transition-all duration-200 border
               ${selectedTime === time 
-                ? 'bg-primary-600 text-white shadow-lg shadow-primary-500/30' 
-                : 'bg-white border border-gray-200 text-gray-700 hover:border-primary-300 hover:text-primary-600'
+                ? 'bg-primary-600 text-white border-primary-600 shadow-lg shadow-primary-500/25' 
+                : 'bg-white border-gray-200 text-gray-700 hover:border-primary-300 hover:text-primary-600'
               }
             `}
           >
@@ -45,4 +59,3 @@ function TimeSlot({ selectedTime, onTimeSelect, duration = 30 }) {
 }
 
 export default TimeSlot
-

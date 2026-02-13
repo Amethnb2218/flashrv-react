@@ -1,5 +1,5 @@
 {
-  "name": "flashrv-react",
+  "name": "style-flow-react",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -12,10 +12,12 @@
   "dependencies": {
     "@react-oauth/google": "^0.13.4",
     "axios": "^1.6.2",
+    "bcrypt": "^6.0.0",
     "canvas-confetti": "^1.9.2",
     "chart.js": "^4.5.1",
     "date-fns": "^3.0.6",
     "framer-motion": "^10.17.0",
+    "multer": "^2.0.2",
     "qrcode.react": "^4.2.0",
     "react": "^18.2.0",
     "react-chartjs-2": "^5.3.1",

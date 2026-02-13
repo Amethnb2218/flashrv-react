@@ -44,7 +44,7 @@ const QR_SIZES = [
 
 const QR_COLORS = [
   { label: 'Noir', value: '#000000' },
-  { label: 'Bleu Ｓｔｙｌｅ Ｆｌｏｗ', value: '#3B82F6' },
+  { label: 'Bleu StyleFlow', value: '#3B82F6' },
   { label: 'Vert', value: '#10B981' },
   { label: 'Violet', value: '#8B5CF6' },
   { label: 'Orange', value: '#F59E0B' },
@@ -121,7 +121,7 @@ export default function QRCodes() {
           </h1>
           <p className="text-gray-600 max-w-2xl mx-auto">
             Créez des QR codes personnalisés pour vos affiches, cartes de visite, 
-            flyers et supports marketing. Scannez pour accéder directement à Ｓｔｙｌｅ Ｆｌｏｗ !
+            flyers et supports marketing. Scannez pour accéder directement à StyleFlow !
           </p>
         </motion.div>
         
@@ -259,7 +259,7 @@ export default function QRCodes() {
                 className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
               />
               <label htmlFor="include-logo" className="text-sm text-gray-700">
-                Inclure le logo Ｓｔｙｌｅ Ｆｌｏｗ au centre
+                Inclure le logo StyleFlow au centre
               </label>
             </div>
             

@@ -1,4 +1,5 @@
 import { createContext, useContext, useReducer, useEffect } from 'react'
+import { disconnectRealtime } from '../utils/realtime'
 
 const AuthContext = createContext()
 
@@ -9,12 +10,22 @@ const initialState = {
   isLoading: true,
 }
 
+const normalizeUserShape = (user) => {
+  if (!user || typeof user !== 'object') return user
+  const next = { ...user }
+  if (next.phoneNumber && !next.phone) next.phone = next.phoneNumber
+  if (next.phone && !next.phoneNumber) next.phoneNumber = next.phone
+  if (next.avatar && !next.picture) next.picture = next.avatar
+  if (next.picture && !next.avatar) next.avatar = next.picture
+  return next
+}
+
 function authReducer(state, action) {
   switch (action.type) {
     case 'LOGIN':
       return {
         ...state,
-        user: action.payload.user,
+        user: normalizeUserShape(action.payload.user),
         token: action.payload.token,
         isAuthenticated: true,
         isLoading: false,
@@ -30,7 +41,7 @@ function authReducer(state, action) {
     case 'UPDATE_USER':
       return {
         ...state,
-        user: { ...state.user, ...action.payload },
+        user: normalizeUserShape({ ...state.user, ...action.payload }),
       }
     case 'SET_LOADING':
       return {
@@ -44,6 +55,7 @@ function authReducer(state, action) {
 
 export function AuthProvider({ children }) {
   const [state, dispatch] = useReducer(authReducer, initialState)
+  const API_BASE = import.meta.env.VITE_API_URL || '/api'
 
   // Check for saved auth on mount et synchronise le cookie "token"
   useEffect(() => {
@@ -74,7 +86,7 @@ export function AuthProvider({ children }) {
   // Login via backend API (vrai login, pose le cookie httpOnly)
   const login = async ({ identifier, password }) => {
     try {
-      const res = await fetch('http://localhost:4000/api/auth/login', {
+      const res = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -87,7 +99,7 @@ export function AuthProvider({ children }) {
       const user = data.data?.user;
       const token = data.data?.token || null;
       if (user && token) {
-        localStorage.setItem('flashrv_user', JSON.stringify(user));
+        localStorage.setItem('flashrv_user', JSON.stringify(normalizeUserShape(user)));
         localStorage.setItem('flashrv_token', token);
         document.cookie = `token=${token}; path=/`;
         dispatch({
@@ -106,7 +118,7 @@ export function AuthProvider({ children }) {
   // Login via Google OAuth uniquement (backend /api/auth/google)
   const loginGoogle = async ({ credential, customName, accountType }) => {
     try {
-      const res = await fetch('http://localhost:4000/api/auth/google', {
+      const res = await fetch(`${API_BASE}/auth/google`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -116,16 +128,19 @@ export function AuthProvider({ children }) {
       if (!res.ok) {
         throw new Error(data.message || 'Erreur de connexion Google');
       }
-      const user = data.data?.user;
-      if (user) {
-        localStorage.setItem('flashrv_user', JSON.stringify(user));
+      let user = data.data?.user;
+      let token = data.data?.token || null;
+      if (user && token) {
+        localStorage.setItem('flashrv_user', JSON.stringify(normalizeUserShape(user)));
+        localStorage.setItem('flashrv_token', token);
+        document.cookie = `token=${token}; path=/; SameSite=Lax`;
         dispatch({
           type: 'LOGIN',
-          payload: { user, token: null }
+          payload: { user, token }
         });
         return user;
       } else {
-        throw new Error('Utilisateur Google non trouvé');
+        throw new Error('Utilisateur ou token Google manquant');
       }
     } catch (err) {
       throw err;
@@ -133,36 +148,38 @@ export function AuthProvider({ children }) {
   }
 
   const register = async (userData) => {
-    // Simulate API call - Replace with actual API
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const newUser = {
-          id: Date.now(),
-          ...userData,
-          role: userData.role || 'client',
-          avatar: null
-        }
-        delete newUser.password
-        
-        const token = 'demo_token_' + Date.now()
-        
-        localStorage.setItem('flashrv_user', JSON.stringify(newUser))
-        localStorage.setItem('flashrv_token', token)
-        document.cookie = `token=${token}; path=/`;
-        
-        dispatch({
-          type: 'LOGIN',
-          payload: { user: newUser, token }
-        })
-        resolve(newUser)
-      }, 1000)
-    })
+    // Appel API backend pour créer un vrai utilisateur
+    const res = await fetch(`${API_BASE}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(userData),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.message || 'Erreur lors de l\'inscription');
+    }
+    const user = data.data?.user;
+    const token = data.data?.token || null;
+    if (user && token) {
+      localStorage.setItem('flashrv_user', JSON.stringify(normalizeUserShape(user)));
+      localStorage.setItem('flashrv_token', token);
+      // Pose le cookie token sur le domaine courant, path /, SameSite=Lax
+      document.cookie = `token=${token}; path=/; SameSite=Lax`;
+      dispatch({
+        type: 'LOGIN',
+        payload: { user, token }
+      });
+      return user;
+    } else {
+      throw new Error('Utilisateur ou token manquant');
+    }
   }
 
   const logout = async () => {
     try {
       // Call backend logout to clear cookie
-      await fetch('http://localhost:4000/api/auth/logout', {
+      await fetch(`${API_BASE}/auth/logout`, {
         method: 'POST',
         credentials: 'include',
       })
@@ -172,6 +189,7 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('flashrv_user')
     localStorage.removeItem('flashrv_token')
     localStorage.removeItem('flashrv_booking')
+    disconnectRealtime()
     dispatch({ type: 'LOGOUT' })
   }
 
@@ -179,7 +197,7 @@ export function AuthProvider({ children }) {
   const loginWithGoogle = async (credential, accountType = 'CLIENT') => {
     try {
       const body = accountType ? { credential, accountType } : { credential };
-      const response = await fetch('http://localhost:4000/api/auth/google', {
+      const response = await fetch(`${API_BASE}/auth/google`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -189,11 +207,14 @@ export function AuthProvider({ children }) {
       if (!response.ok) {
         throw new Error(data.message || 'Erreur de connexion Google');
       }
-      const user = data.data.user;
-      const token = 'google_auth_' + Date.now();
-      localStorage.setItem('flashrv_user', JSON.stringify(user));
+      const user = data.data?.user;
+      const token = data.data?.token || null;
+      if (!user || !token) {
+        throw new Error('Utilisateur ou token Google manquant');
+      }
+      localStorage.setItem('flashrv_user', JSON.stringify(normalizeUserShape(user)));
       localStorage.setItem('flashrv_token', token);
-      document.cookie = `token=${token}; path=/`;
+      document.cookie = `token=${token}; path=/; SameSite=Lax`;
       dispatch({
         type: 'LOGIN',
         payload: { user, token },
@@ -215,7 +236,7 @@ export function AuthProvider({ children }) {
 
   const updateUser = (userData) => {
     const updatedUser = { ...state.user, ...userData }
-    localStorage.setItem('flashrv_user', JSON.stringify(updatedUser))
+    localStorage.setItem('flashrv_user', JSON.stringify(normalizeUserShape(updatedUser)))
     dispatch({ type: 'UPDATE_USER', payload: userData })
   }
 

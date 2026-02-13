@@ -4,11 +4,15 @@ import { motion } from 'framer-motion'
 import { 
   FiCalendar, FiClock, FiMapPin, FiStar, FiMoreVertical, 
   FiX, FiRefreshCw, FiHeart, FiSettings, FiChevronRight,
-  FiGift, FiAward, FiPercent
+  FiGift, FiAward, FiPercent, FiMessageCircle
 } from 'react-icons/fi'
 import { useAuth } from '../../context/AuthContext'
 import { loyaltyConfig } from '../../data/salons'
 import Modal from '../../components/UI/Modal'
+import apiFetch from '@/api/client'
+import { resolveMediaUrl } from '../../utils/media'
+import AppointmentChatModal from '../../components/Chat/AppointmentChatModal'
+import toast from 'react-hot-toast'
 
 function ClientDashboard() {
   const { user } = useAuth()
@@ -16,54 +20,129 @@ function ClientDashboard() {
   const [bookings, setBookings] = useState([])
   const [selectedBooking, setSelectedBooking] = useState(null)
   const [showCancelModal, setShowCancelModal] = useState(false)
+  const [chatBooking, setChatBooking] = useState(null)
+  const [showChatModal, setShowChatModal] = useState(false)
+  const [loading, setLoading] = useState(true)
+
+  const getSalonImage = (salon) => {
+    if (!salon) return ''
+    if (salon.image) return resolveMediaUrl(salon.image)
+    if (Array.isArray(salon.gallery) && salon.gallery.length > 0) {
+      const first = salon.gallery[0]
+      return resolveMediaUrl(first?.media || first?.url)
+    }
+    if (Array.isArray(salon.images) && salon.images.length > 0) {
+      return resolveMediaUrl(salon.images[0])
+    }
+    return ''
+  }
 
   useEffect(() => {
-    if (!user) return
-    // Load bookings from localStorage
-    const savedBookings = JSON.parse(localStorage.getItem('flashrv_bookings') || '[]')
-    // Filter bookings for current user
-    const userBookings = savedBookings.filter(b => b.user?.id === user?.id)
-    setBookings(userBookings)
+    let mounted = true
+    const loadBookings = async () => {
+      if (!user) return
+      setLoading(true)
+      try {
+        const res = await apiFetch('/appointments?scope=client')
+        const data = res?.data ?? res
+        const list = Array.isArray(data) ? data : (data?.appointments || [])
+        const mapped = list.map((appt) => ({
+          id: appt.id,
+          date: appt.date,
+          time: appt.startTime,
+          totalPrice: appt.totalPrice ?? appt.service?.price ?? 0,
+          status: appt.status,
+          salon: appt.salon,
+          services: appt.service ? [appt.service] : [],
+        }))
+        if (mounted) setBookings(mapped)
+      } catch (e) {
+        if (mounted) setBookings([])
+      } finally {
+        if (mounted) setLoading(false)
+      }
+    }
+    loadBookings()
+    return () => {
+      mounted = false
+    }
   }, [user])
 
-  const upcomingBookings = bookings.filter(b => new Date(b.date) >= new Date())
-  const pastBookings = bookings.filter(b => new Date(b.date) < new Date())
+  const now = new Date()
+  const getBookingDateTime = (booking) => {
+    const base = new Date(booking.date)
+    if (!booking.time || isNaN(base.getTime())) return base
+    const [h, m] = String(booking.time).split(':').map(Number)
+    if (Number.isFinite(h)) {
+      base.setHours(h, Number.isFinite(m) ? m : 0, 0, 0)
+    }
+    return base
+  }
+  const upcomingBookings = bookings.filter(b => {
+    const status = String(b.status || '').toUpperCase()
+    const isPast = getBookingDateTime(b) < now
+    const isCancelled = ['CANCELLED', 'NO_SHOW'].includes(status)
+    return !isPast && !isCancelled
+  })
+  const pastBookings = bookings.filter(b => {
+    const status = String(b.status || '').toUpperCase()
+    return getBookingDateTime(b) < now || ['COMPLETED', 'CANCELLED', 'NO_SHOW'].includes(status)
+  })
+  const favoriteSalonsCount = new Set(bookings.map(b => b.salon?.id).filter(Boolean)).size
 
-  const handleCancelBooking = () => {
+  const handleCancelBooking = async () => {
     if (!selectedBooking) return
-    
-    const updatedBookings = bookings.map(b => 
-      b.id === selectedBooking.id ? { ...b, status: 'cancelled' } : b
-    )
-    setBookings(updatedBookings)
-    
-    // Update localStorage
-    const allBookings = JSON.parse(localStorage.getItem('flashrv_bookings') || '[]')
-    const updated = allBookings.map(b => 
-      b.id === selectedBooking.id ? { ...b, status: 'cancelled' } : b
-    )
-    localStorage.setItem('flashrv_bookings', JSON.stringify(updated))
-    
-    setShowCancelModal(false)
-    setSelectedBooking(null)
+    try {
+      await apiFetch(`/appointments/${selectedBooking.id}/status`, {
+        method: 'PATCH',
+        body: { status: 'CANCELLED' },
+      })
+      setBookings((prev) =>
+        prev.map((b) => (b.id === selectedBooking.id ? { ...b, status: 'CANCELLED' } : b))
+      )
+    } catch (e) {
+      // silent for now
+    } finally {
+      setShowCancelModal(false)
+      setSelectedBooking(null)
+    }
+  }
+
+  const openFloatingChat = () => {
+    const preferred = upcomingBookings[0] || bookings[0] || pastBookings[0]
+    if (!preferred) {
+      toast.error('Aucune réservation disponible pour ouvrir le chat.')
+      return
+    }
+    setChatBooking(preferred)
+    setShowChatModal(true)
   }
 
   const getStatusBadge = (status) => {
+    const key = String(status || '').toUpperCase()
     const styles = {
-      confirmed: 'bg-green-100 text-green-700',
-      pending_payment: 'bg-yellow-100 text-yellow-700',
-      cancelled: 'bg-red-100 text-red-700',
-      completed: 'bg-gray-100 text-gray-700',
+      CONFIRMED: 'bg-green-100 text-green-700',
+      CONFIRMED_ON_SITE: 'bg-green-100 text-green-700',
+      PENDING: 'bg-yellow-100 text-yellow-700',
+      PENDING_ASSIGNMENT: 'bg-yellow-100 text-yellow-700',
+      IN_PROGRESS: 'bg-blue-100 text-blue-700',
+      CANCELLED: 'bg-red-100 text-red-700',
+      NO_SHOW: 'bg-red-100 text-red-700',
+      COMPLETED: 'bg-gray-100 text-gray-700',
     }
     const labels = {
-      confirmed: 'Confirmée',
-      pending_payment: 'En attente',
-      cancelled: 'Annulée',
-      completed: 'Terminée',
+      CONFIRMED: 'Confirmée',
+      CONFIRMED_ON_SITE: 'Confirmée (sur place)',
+      PENDING: 'En attente',
+      PENDING_ASSIGNMENT: 'En attente d\'assignation',
+      IN_PROGRESS: 'En cours',
+      CANCELLED: 'Annulée',
+      NO_SHOW: 'Absence',
+      COMPLETED: 'Terminée',
     }
     return (
-      <span className={`px-3 py-1 rounded-full text-xs font-medium ${styles[status] || styles.confirmed}`}>
-        {labels[status] || status}
+      <span className={`px-3 py-1 rounded-full text-xs font-semibold ring-1 ring-inset ring-black/5 ${styles[key] || styles.CONFIRMED}`}>
+        {labels[key] || status}
       </span>
     )
   }
@@ -72,21 +151,30 @@ function ClientDashboard() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow"
+      whileHover={{ y: -3 }}
+      transition={{ type: 'spring', stiffness: 260, damping: 22 }}
+      className="bg-white/90 backdrop-blur rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:border-gray-200 transition-shadow"
     >
+      <div className="h-1 w-full bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-400" />
       <div className="p-6">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center">
-            <img
-              src={booking.salon?.image}
-              alt={booking.salon?.name}
-              className="w-16 h-16 rounded-xl object-cover"
-            />
+            {getSalonImage(booking.salon) ? (
+              <img
+                src={getSalonImage(booking.salon)}
+                alt={booking.salon?.name}
+                className="w-16 h-16 rounded-xl object-cover"
+              />
+            ) : (
+              <div className="w-16 h-16 rounded-xl bg-primary-100 flex items-center justify-center text-primary-700 font-bold text-lg">
+                {booking.salon?.name?.charAt(0) || 'S'}
+              </div>
+            )}
             <div className="ml-4">
               <h3 className="font-bold text-gray-900">{booking.salon?.name}</h3>
               <div className="flex items-center text-gray-500 text-sm mt-1">
                 <FiMapPin className="w-4 h-4 mr-1" />
-                {booking.salon?.address}
+                {booking.salon?.address || booking.salon?.city || ''}
               </div>
             </div>
           </div>
@@ -134,7 +222,7 @@ function ClientDashboard() {
           </div>
         </div>
 
-        {booking.status === 'confirmed' && new Date(booking.date) >= new Date() && (
+        {['PENDING', 'PENDING_ASSIGNMENT', 'CONFIRMED', 'CONFIRMED_ON_SITE'].includes(String(booking.status || '').toUpperCase()) && new Date(booking.date) >= new Date() && (
           <div className="flex gap-3 mt-6">
             <button
               onClick={() => {
@@ -153,7 +241,18 @@ function ClientDashboard() {
           </div>
         )}
 
-        {booking.status === 'completed' && (
+        <button
+          onClick={() => {
+            setChatBooking(booking)
+            setShowChatModal(true)
+          }}
+          className="w-full mt-3 py-2 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors text-sm font-medium"
+        >
+          <FiMessageCircle className="inline w-4 h-4 mr-1" />
+          Ouvrir le chat avec le salon
+        </button>
+
+        {String(booking.status || '').toUpperCase() === 'COMPLETED' && (
           <button className="w-full mt-4 py-2 bg-yellow-50 text-yellow-700 rounded-xl hover:bg-yellow-100 transition-colors text-sm font-medium">
             <FiStar className="inline w-4 h-4 mr-1" />
             Laisser un avis
@@ -176,7 +275,9 @@ function ClientDashboard() {
             <h1 className="text-3xl font-bold text-gray-900">
               Bonjour, {user?.name?.split(' ')[0]} 👋
             </h1>
-            <p className="text-gray-600 mt-1">Gérez vos réservations et votre compte</p>
+            <p className="text-gray-600 mt-1">
+              {loading ? 'Chargement de vos réservations...' : 'Gérez vos réservations et votre compte'}
+            </p>
           </div>
           <Link
             to="/salons"
@@ -193,7 +294,7 @@ function ClientDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-500 text-sm">Réservations à venir</p>
-                <p className="text-3xl font-bold text-gray-900 mt-1">{upcomingBookings.length}</p>
+                <p className="text-3xl font-bold text-gray-900 mt-1">{loading ? '—' : upcomingBookings.length}</p>
               </div>
               <div className="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center">
                 <FiCalendar className="w-6 h-6 text-primary-600" />
@@ -204,7 +305,7 @@ function ClientDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-500 text-sm">Réservations passées</p>
-                <p className="text-3xl font-bold text-gray-900 mt-1">{pastBookings.length}</p>
+                <p className="text-3xl font-bold text-gray-900 mt-1">{loading ? '—' : pastBookings.length}</p>
               </div>
               <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
                 <FiClock className="w-6 h-6 text-green-600" />
@@ -215,7 +316,7 @@ function ClientDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-500 text-sm">Salons favoris</p>
-                <p className="text-3xl font-bold text-gray-900 mt-1">3</p>
+                <p className="text-3xl font-bold text-gray-900 mt-1">{loading ? '—' : favoriteSalonsCount}</p>
               </div>
               <div className="w-12 h-12 bg-pink-100 rounded-xl flex items-center justify-center">
                 <FiHeart className="w-6 h-6 text-accent-600" />
@@ -273,7 +374,12 @@ function ClientDashboard() {
           </div>
 
           <div className="p-6">
-            {activeTab === 'upcoming' ? (
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="w-10 h-10 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-gray-500">Chargement des réservations...</p>
+              </div>
+            ) : activeTab === 'upcoming' ? (
               upcomingBookings.length > 0 ? (
                 <div className="grid gap-6">
                   {upcomingBookings.map(booking => (
@@ -303,7 +409,7 @@ function ClientDashboard() {
               pastBookings.length > 0 ? (
                 <div className="grid gap-6">
                   {pastBookings.map(booking => (
-                    <BookingCard key={booking.id} booking={{ ...booking, status: 'completed' }} />
+                    <BookingCard key={booking.id} booking={booking} />
                   ))}
                 </div>
               ) : (
@@ -323,6 +429,15 @@ function ClientDashboard() {
           </div>
         </div>
       </div>
+
+      <button
+        type="button"
+        onClick={openFloatingChat}
+        className="fixed bottom-6 right-6 z-40 inline-flex items-center gap-2 rounded-full bg-gray-900 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-gray-900/25 transition hover:bg-gray-800"
+      >
+        <FiMessageCircle className="h-4 w-4" />
+        Chat rapide
+      </button>
 
       {/* Cancel Modal */}
       <Modal
@@ -364,9 +479,14 @@ function ClientDashboard() {
           </div>
         </div>
       </Modal>
+      <AppointmentChatModal
+        isOpen={showChatModal}
+        onClose={() => setShowChatModal(false)}
+        appointment={chatBooking}
+        currentUserId={user?.id}
+      />
     </div>
   )
 }
 
 export default ClientDashboard
-

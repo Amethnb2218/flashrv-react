@@ -1,7 +1,7 @@
-// Design System Ｓｔｙｌｅ Ｆｌｏｗ Dashboard (Premium SaaS)
+// Design System FlashRV Dashboard (Premium SaaS)
 // Utilise Tailwind CSS (palette customisée dans tailwind.config.js)
 
-export const styleflowDesignSystem = {
+export const flashrvDesignSystem = {
   colors: {
     primary: 'bg-blue-50 text-blue-800',
     secondary: 'bg-white text-blue-700',

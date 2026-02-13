@@ -2,6 +2,7 @@ import { Outlet, useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
 import Navbar from './Navbar'
 import Footer from './Footer'
+import SiteAssistantWidget from '../Chat/SiteAssistantWidget'
 
 function Layout() {
   const location = useLocation()
@@ -22,9 +23,9 @@ function Layout() {
         <Outlet />
       </main>
       {showFooter && <Footer />}
+      <SiteAssistantWidget />
     </div>
   )
 }
 
 export default Layout
-

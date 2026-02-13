@@ -1,28 +1,34 @@
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
-const { authenticate } = require('../middleware/auth');
+const { authenticate, requireApprovedPro } = require('../middleware/auth');
 const router = express.Router();
 const prisma = new PrismaClient();
 
 /**
  * GET /api/payments
- * Retourne tous les paiements (pour compatibilité frontend)
+ * Retourne les paiements du salon (propriétaire)
  */
-router.get('/', async (req, res, next) => {
+router.get('/', authenticate, requireApprovedPro, async (req, res, next) => {
   try {
-    const payments = await prisma.payment.findMany();
-    res.status(200).json(payments);
-  } catch (error) {
-    next(error);
-  }
-});
-/**
- * GET /api/payments
- * Retourne tous les paiements (pour compatibilité frontend)
- */
-router.get('/', async (req, res, next) => {
-  try {
-    const payments = await prisma.payment.findMany();
+    const salon = await prisma.salon.findFirst({ where: { ownerId: req.user.id } });
+    if (!salon) return res.status(200).json([]);
+    const payments = await prisma.payment.findMany({
+      where: {
+        OR: [
+          { appointment: { salonId: salon.id } },
+          { userId: req.user.id },
+        ],
+      },
+      include: {
+        appointment: {
+          include: {
+            client: { select: { id: true, name: true, username: true, email: true, phoneNumber: true, picture: true } },
+            service: { select: { id: true, name: true, price: true, duration: true, depositPercentage: true } },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
     res.status(200).json(payments);
   } catch (error) {
     next(error);
@@ -212,6 +218,36 @@ router.post('/confirm-on-site', authenticate, async (req, res, next) => {
     });
   } catch (error) {
     console.error('Confirm on-site error:', error);
+    next(error);
+  }
+});
+
+/**
+ * PATCH /api/payments/:id/refund
+ * Marquer un paiement comme remboursé (propriétaire du salon)
+ */
+router.patch('/:id/refund', authenticate, async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const payment = await prisma.payment.findUnique({
+      where: { id },
+      include: { appointment: true },
+    });
+    if (!payment) {
+      return res.status(404).json({ status: 'error', message: 'Paiement introuvable' });
+    }
+    if (payment.appointmentId) {
+      const salon = await prisma.salon.findFirst({ where: { ownerId: req.user.id } });
+      if (!salon || payment.appointment?.salonId !== salon.id) {
+        return res.status(403).json({ status: 'error', message: 'Accès interdit' });
+      }
+    }
+    const updated = await prisma.payment.update({
+      where: { id },
+      data: { status: 'REFUNDED' },
+    });
+    res.json({ status: 'success', data: updated });
+  } catch (error) {
     next(error);
   }
 });

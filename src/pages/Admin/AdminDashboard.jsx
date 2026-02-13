@@ -5,7 +5,7 @@ import {
   FiUsers, FiUserCheck, FiUserX, FiClock, 
   FiBarChart2, FiSearch, FiFilter, FiRefreshCw,
   FiCheck, FiX, FiAlertTriangle, FiShield,
-  FiMail, FiPhone, FiCalendar, FiMoreVertical
+  FiMail, FiPhone, FiCalendar, FiMoreVertical, FiMessageSquare
 } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 import StatCard from '../../components/UI/StatCard';
@@ -14,7 +14,7 @@ import ClientsSection from './ClientsSection';
 import AdminsSection from './AdminsSection';
 import StatsSection from './StatsSection';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 // Composant Client Row avec menu d'actions
 export function ClientRow({ client }) {
@@ -175,8 +175,15 @@ export default function AdminDashboard() {
   const [clients, setClients] = useState([])
   const [clientsLoading, setClientsLoading] = useState(false)
   const [clientSearch, setClientSearch] = useState('')
+  const [feedbacks, setFeedbacks] = useState([])
+  const [feedbackLoading, setFeedbackLoading] = useState(false)
 
   const isSuperAdmin = user?.role === 'SUPER_ADMIN'
+  const feedbackTypeLabels = {
+    bug: 'Bug',
+    suggestion: 'Suggestion',
+    problem: 'Problème',
+  }
 
   // Action réelle pour approuver ou refuser un PRO
   const handleAction = async (userId, actionType) => {
@@ -335,6 +342,26 @@ export default function AdminDashboard() {
     setClientsLoading(false)
   }
 
+  // Charger les feedbacks quand l'onglet est actif
+  useEffect(() => {
+    if (activeTab === 'feedback') fetchFeedback()
+  }, [activeTab])
+  const fetchFeedback = async () => {
+    setFeedbackLoading(true)
+    try {
+      const res = await fetch(`${API_URL}/admin/feedback`, { credentials: 'include' })
+      if (res.ok) {
+        const data = await res.json()
+        setFeedbacks(data.data?.feedbacks || [])
+      } else {
+        setFeedbacks([])
+      }
+    } catch (e) {
+      setFeedbacks([])
+    }
+    setFeedbackLoading(false)
+  }
+
   // Filtrer les PROs
   const filteredPros = pros.filter(pro => {
     const matchesSearch = pro.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -347,6 +374,7 @@ export default function AdminDashboard() {
     { id: 'pending', label: 'En attente', icon: FiClock, count: stats?.pros?.pending || 0 },
     { id: 'all', label: 'Tous les PROs', icon: FiUsers, count: stats?.pros?.total || 0 },
     { id: 'clients', label: 'Clients', icon: FiUserCheck, count: stats?.clients || 0 },
+    { id: 'feedback', label: 'Feedback', icon: FiMessageSquare, count: feedbacks.length },
     { id: 'stats', label: 'Statistiques', icon: FiBarChart2 },
   ]
   if (isSuperAdmin) {
@@ -359,10 +387,7 @@ export default function AdminDashboard() {
         {/* Header */}
         <header className="sticky top-0 z-20 flex flex-col gap-2 py-8 mb-8 bg-white rounded-2xl shadow-md border border-gray-200">
           <div className="flex items-center justify-between">
-            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-[#1E293B] font-poppins">
-              <span className="">Dashboard</span>{' '}
-              <span className="text-2xl md:text-3xl align-middle font-bold tracking-normal">Ｓｔｙｌｅ Ｆｌｏｗ</span>
-            </h1>
+            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-[#1E293B] font-poppins">Dashboard Style • Flow</h1>
             {isSuperAdmin && (
               <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold border border-blue-300">
                 <FiShield className="w-5 h-5 text-blue-500" />
@@ -463,6 +488,90 @@ export default function AdminDashboard() {
             loading={clientsLoading}
             onRefresh={fetchClients}
           />
+        )}
+
+        {activeTab === 'feedback' && (
+          <div className="bg-white rounded-xl shadow border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Retours utilisateurs</h2>
+                <p className="text-sm text-gray-500">Bugs, suggestions et problèmes signalés.</p>
+              </div>
+              <button
+                onClick={fetchFeedback}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+              >
+                <FiRefreshCw className="w-4 h-4" />
+                Actualiser
+              </button>
+            </div>
+
+            {feedbackLoading ? (
+              <div className="text-sm text-gray-500">Chargement…</div>
+            ) : feedbacks.length === 0 ? (
+              <div className="text-sm text-gray-500">Aucun feedback pour le moment.</div>
+            ) : (
+              <div className="space-y-4">
+                {feedbacks.map((fb) => {
+                  const payload = fb.payload || {}
+                  const typeLabel = feedbackTypeLabels[fb.type] || fb.type
+                  const items =
+                    fb.type === 'bug'
+                      ? [
+                          { label: 'Page', value: payload.page },
+                          { label: 'Étapes', value: payload.steps },
+                          { label: 'Attendu', value: payload.expected },
+                          { label: 'Obtenu', value: payload.actual },
+                        ]
+                      : fb.type === 'suggestion'
+                      ? [
+                          { label: 'Idée', value: payload.idea },
+                          { label: 'Bénéfice', value: payload.benefit },
+                        ]
+                      : [
+                          { label: 'Problème', value: payload.problem },
+                          { label: 'Impact', value: payload.impact },
+                        ]
+
+                  return (
+                    <div key={fb.id} className="border border-gray-100 rounded-2xl p-4 shadow-sm">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700">
+                            <FiMessageSquare className="w-3.5 h-3.5" />
+                            {typeLabel}
+                          </div>
+                          <p className="mt-2 text-xs text-gray-500">
+                            {fb.createdAt ? new Date(fb.createdAt).toLocaleString('fr-FR') : ''}
+                          </p>
+                          <p className="mt-1 text-sm text-gray-700">
+                            {fb.user?.name || fb.user?.email || fb.contact || 'Anonyme'}
+                          </p>
+                          {fb.contact && (
+                            <p className="text-xs text-gray-400">Contact : {fb.contact}</p>
+                          )}
+                        </div>
+                        <span className="text-xs font-semibold text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
+                          {fb.status || 'NEW'}
+                        </span>
+                      </div>
+
+                      <div className="grid md:grid-cols-2 gap-3 mt-4">
+                        {items
+                          .filter((item) => item.value)
+                          .map((item) => (
+                            <div key={item.label} className="text-sm">
+                              <div className="text-xs text-gray-500">{item.label}</div>
+                              <div className="text-gray-800">{item.value}</div>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
         )}
 
         {activeTab === 'stats' && stats && (

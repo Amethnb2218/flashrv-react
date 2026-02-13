@@ -6,14 +6,16 @@ function Footer() {
   const currentYear = new Date().getFullYear()
 
   return (
-    <footer className="bg-gray-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+    <footer className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden">
+      <div className="absolute -top-24 right-10 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl"></div>
+      <div className="absolute -bottom-24 left-10 w-80 h-80 bg-yellow-400/10 rounded-full blur-3xl"></div>
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Brand */}
           <div className="space-y-5">
             <Logo variant="light" size="md" showTagline />
             <p className="text-gray-400 text-sm leading-relaxed">
-              La plateforme de réservation de salons de coiffure et beauté au Sénégal. 
+              La plateforme de réservation de salons de coiffure et beauté au Sénégal.
               Trouvez les meilleurs professionnels près de chez vous.
             </p>
             <div className="flex space-x-3">
@@ -104,23 +106,23 @@ function Footer() {
                 </a>
               </li>
             </ul>
-            {/* WhatsApp Button */}
-            <a 
-              href="https://wa.me/221776762784" 
-              target="_blank" 
+            <a
+              href="https://wa.me/221776762784"
+              target="_blank"
               rel="noopener noreferrer"
               className="mt-5 inline-flex items-center space-x-2 bg-green-500 hover:bg-green-600 text-white px-5 py-2.5 rounded-full text-sm font-medium transition-all"
             >
-              <span>💬</span>
+              <FiPhone className="w-4 h-4" />
               <span>WhatsApp</span>
             </a>
           </div>
         </div>
 
         {/* Bottom */}
-        <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
+        <div className="mt-12 pt-8 flex flex-col md:flex-row justify-between items-center border-t border-gray-800/70">
+          <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-amber-500/40 to-transparent mb-6 md:mb-0 md:hidden"></div>
           <p className="text-gray-400 text-sm">
-            © {currentYear} Ｓｔｙｌｅ Ｆｌｏｗ. Tous droits réservés.
+            © {currentYear} StyleFlow. Tous droits réservés.
           </p>
           <div className="flex items-center space-x-4 mt-4 md:mt-0">
             <img src="https://upload.wikimedia.org/wikipedia/commons/e/e1/Orange_Money_logo.png" alt="Orange Money" className="h-6 opacity-70 hover:opacity-100 transition-opacity" />
@@ -133,4 +135,3 @@ function Footer() {
 }
 
 export default Footer
-

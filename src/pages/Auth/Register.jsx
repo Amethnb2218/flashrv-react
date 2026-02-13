@@ -59,10 +59,21 @@ function Register() {
     setIsLoading(true)
     try {
       const user = await register(formData)
+      // Suppression des logs sensibles après debug
+      // console.log('DEBUG inscription classique user:', user)
+      // console.log('DEBUG inscription classique user.salonId:', user.salonId)
+      // console.log('DEBUG inscription classique user.salon:', user.salon)
       toast.success('Compte créé avec succès !')
-      
       if (user.role === 'pro' || user.role === 'PRO') {
-        navigate('/pro/dashboard')
+        if (!user.salonId && !user.salon) {
+          navigate('/pro/onboarding')
+        } else if (user.status === 'PENDING') {
+          navigate('/pro/pending')
+        } else {
+          navigate('/pro/dashboard')
+        }
+      } else if (user.role === 'client' || user.role === 'CLIENT') {
+        navigate('/')
       } else {
         navigate('/salons')
       }
@@ -82,26 +93,30 @@ function Register() {
 
   // Handle Google Login Success - Direct registration with Google data
   const handleGoogleSuccess = async (credentialResponse) => {
-    console.log('✅ Google Register Success!')
-    console.log('Selected role:', formData.role)
     setIsLoading(true)
     try {
       // Convertir le rôle frontend en format backend
       const accountType = formData.role === 'pro' ? 'PRO' : 'CLIENT'
-      console.log('Account type to send:', accountType)
-      
-      // Google fournit déjà le nom complet, pas besoin de le demander
+      // ...existing code...
       const user = await loginWithGoogle(credentialResponse.credential, accountType)
-      
+      // console.log('DEBUG inscription Google user:', user)
+      // console.log('DEBUG inscription Google user.salonId:', user.salonId)
+      // console.log('DEBUG inscription Google user.salon:', user.salon)
       toast.success(`Bienvenue, ${user.name || user.email} !`)
-      
-      // Redirect based on role and status
-      if (user.role === 'PRO' && user.status === 'PENDING') {
-        navigate('/pro/pending')
-      } else if (user.role === 'PRO') {
-        navigate('/pro/dashboard')
+      // Redirection intelligente pour PRO Google : onboarding si pas de salon, sinon selon statut
+      // ...existing code...
+      if (user.role === 'PRO') {
+        if (!user.salonId && !user.salon) {
+          navigate('/pro/onboarding')
+        } else if (user.status === 'PENDING') {
+          navigate('/pro/pending')
+        } else {
+          navigate('/pro/dashboard')
+        }
       } else if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
         navigate('/admin')
+      } else if (user.role === 'CLIENT' || user.role === 'client') {
+        navigate('/')
       } else {
         navigate('/salons')
       }
@@ -134,8 +149,8 @@ function Register() {
           <div className="absolute bottom-20 right-20 w-80 h-80 bg-yellow-300/15 rounded-full blur-3xl"></div>
           <div className="absolute inset-0 flex items-center justify-center p-12">
             <div className="text-center text-white">
-              <h2 className="text-3xl md:text-5xl font-extrabold mb-4">Rejoignez Ｓｔｙｌｅ Ｆｌｏｗ</h2>
-              <p className="text-lg md:text-2xl text-primary-100 mb-8">
+              <h2 className="text-4xl font-bold mb-4">Rejoignez Style • Flow</h2>
+              <p className="text-xl text-primary-100 mb-8">
               {formData.role === 'pro' 
                 ? 'Développez votre activité et gagnez en visibilité'
                 : 'Réservez facilement vos rendez-vous beauté'
@@ -199,7 +214,7 @@ function Register() {
             </Link>
             <h1 className="text-3xl font-bold text-gray-900">Créer un compte</h1>
             <p className="mt-2 text-gray-600">
-              Rejoignez la communauté Ｓｔｙｌｅ Ｆｌｏｗ
+              Rejoignez la communauté Style • Flow
             </p>
           </div>
 

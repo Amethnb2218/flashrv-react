@@ -101,6 +101,9 @@ router.get('/pro/pending', authenticate, requireAdmin, async (req, res) => {
             name: true,
             city: true,
             address: true,
+            phone: true,
+            email: true,
+            image: true,
           },
         },
       },
@@ -151,6 +154,9 @@ router.get('/pro/all', authenticate, requireAdmin, async (req, res) => {
             name: true,
             city: true,
             address: true,
+            phone: true,
+            email: true,
+            image: true,
           },
         },
       },
@@ -166,6 +172,54 @@ router.get('/pro/all', authenticate, requireAdmin, async (req, res) => {
     res.status(500).json({
       status: 'error',
       message: 'Failed to fetch PRO accounts',
+    });
+  }
+});
+
+/**
+ * GET /admin/feedback
+ * Get all feedbacks (bug/suggestion/problème)
+ * Access: ADMIN, SUPER_ADMIN
+ */
+router.get('/feedback', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const { type, status, limit } = req.query;
+    const where = {};
+    if (type) where.type = String(type).toLowerCase();
+    if (status) where.status = String(status).toUpperCase();
+
+    const take = Math.min(parseInt(limit || '100', 10) || 100, 300);
+
+    const feedbacksRaw = await prisma.feedback.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      take,
+      include: {
+        user: {
+          select: { id: true, name: true, email: true },
+        },
+      },
+    });
+
+    const feedbacks = feedbacksRaw.map((fb) => {
+      let parsedPayload = {};
+      try {
+        parsedPayload = fb.payload ? JSON.parse(fb.payload) : {};
+      } catch {
+        parsedPayload = {};
+      }
+      return { ...fb, payload: parsedPayload };
+    });
+
+    res.status(200).json({
+      status: 'success',
+      data: { feedbacks, count: feedbacks.length },
+    });
+  } catch (error) {
+    console.error('Error fetching feedback:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to fetch feedback',
     });
   }
 });
@@ -393,6 +447,88 @@ router.patch('/pro/:id/reactivate', authenticate, requireAdmin, async (req, res)
       status: 'error',
       message: 'Failed to reactivate PRO account',
     });
+  }
+});
+
+/**
+ * DELETE /admin/pro/:id
+ * Delete a PRO account and its salon
+ * Access: ADMIN, SUPER_ADMIN
+ */
+router.delete('/pro/:id', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: { id: true, role: true, email: true },
+    });
+
+    if (!user) {
+      return res.status(404).json({ status: 'error', message: 'User not found' });
+    }
+    if (user.role !== ROLES.PRO && user.role !== ROLES.SALON_OWNER) {
+      return res.status(400).json({ status: 'error', message: 'User is not a PRO account' });
+    }
+
+    await prisma.$transaction(async (tx) => {
+      const salon = await tx.salon.findFirst({ where: { ownerId: id }, select: { id: true } });
+      if (salon) {
+        const salonId = salon.id;
+        const apptIds = await tx.appointment.findMany({
+          where: { salonId },
+          select: { id: true },
+        });
+        const appointmentIds = apptIds.map((a) => a.id);
+        if (appointmentIds.length) {
+          await tx.payment.deleteMany({ where: { appointmentId: { in: appointmentIds } } });
+        }
+        await tx.appointment.deleteMany({ where: { salonId } });
+        await tx.review.deleteMany({ where: { salonId } });
+        await tx.openingHour.deleteMany({ where: { salonId } });
+        await tx.galleryImage.deleteMany({ where: { salonId } });
+        await tx.salonPaymentMethod.deleteMany({ where: { salonId } });
+        await tx.salonSettings.deleteMany({ where: { salonId } });
+        await tx.planningBreak.deleteMany({ where: { salonId } });
+        await tx.planningException.deleteMany({ where: { salonId } });
+        await tx.planningHoliday.deleteMany({ where: { salonId } });
+        await tx.staffMember.deleteMany({ where: { salonId } });
+        await tx.promoCode.deleteMany({ where: { salonId } });
+        await tx.loyalty.deleteMany({ where: { salonId } });
+
+        const serviceIds = await tx.service.findMany({
+          where: { salonId },
+          select: { id: true },
+        });
+        const serviceIdList = serviceIds.map((s) => s.id);
+        if (serviceIdList.length) {
+          await tx.serviceImage.deleteMany({ where: { serviceId: { in: serviceIdList } } });
+        }
+        await tx.service.deleteMany({ where: { salonId } });
+
+        const coiffeurIds = await tx.coiffeur.findMany({
+          where: { salonId },
+          select: { id: true },
+        });
+        const coiffeurIdList = coiffeurIds.map((c) => c.id);
+        if (coiffeurIdList.length) {
+          await tx.availability.deleteMany({ where: { coiffeurId: { in: coiffeurIdList } } });
+        }
+        await tx.coiffeur.deleteMany({ where: { salonId } });
+
+        await tx.salon.delete({ where: { id: salonId } });
+      }
+      await tx.user.delete({ where: { id } });
+    });
+
+    console.log(`🗑️ PRO deleted: ${user.email} by ${req.user.email}`);
+    res.status(200).json({
+      status: 'success',
+      message: 'PRO and salon deleted successfully',
+    });
+  } catch (error) {
+    console.error('Error deleting PRO:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to delete PRO account' });
   }
 });
 

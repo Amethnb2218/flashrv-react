@@ -26,66 +26,83 @@ const STATUS = {
  */
 async function authenticate(req, res, next) {
   try {
-    // Get token from cookie
-    const token = req.cookies.token;
-
+    // Get token from cookie or Authorization header
+    let token = req.cookies.token;
+    // ...
+    if (!token && req.headers.authorization) {
+      token = req.headers.authorization.replace('Bearer ', '').trim();
+      // ...
+    }
     if (!token) {
+      console.warn('[AUTH] Aucun token trouvé dans cookie ou header');
       return res.status(401).json({
         status: 'error',
-        message: 'Not authenticated. Please log in.',
+        message: 'Not authenticated. Token missing in cookie or header.',
+        debug: {
+          cookies: req.cookies,
+          headers: req.headers,
+        }
       });
     }
-
     // Verify token
-    const decoded = verifyToken(token);
-
+    let decoded;
+    try {
+      decoded = verifyToken(token);
+      // ...
+    } catch (e) {
+      // ...
+      return res.status(401).json({
+        status: 'error',
+        message: 'Invalid token: ' + e.message,
+        debug: {
+          token,
+        }
+      });
+    }
     // Find user in database
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
-      select: {
-        id: true,
-        email: true,
-        username: true,
-        name: true,
-        picture: true,
-        role: true,
-        status: true,
-        phoneNumber: true,
-        createdAt: true,
-      },
     });
-
     if (!user) {
+      // ...
       return res.status(401).json({
         status: 'error',
-        message: 'User not found. Please log in again.',
+        message: 'User not found for userId: ' + decoded.userId,
+        debug: {
+          decoded,
+          token,
+          allUsers,
+        }
       });
     }
-
-    // Check if user is suspended
     if (user.status === STATUS.SUSPENDED) {
+      // ...
       return res.status(403).json({
         status: 'error',
         message: 'Your account has been suspended. Contact support.',
+        debug: { user }
       });
     }
-
-    // Check if user is rejected
     if (user.status === STATUS.REJECTED) {
+      // ...
       return res.status(403).json({
         status: 'error',
         message: 'Your account has been rejected.',
+        debug: { user }
       });
     }
-
-    // Attach user to request
     req.user = user;
     next();
-  } catch (error) {
-    console.error('Authentication error:', error.message);
+  } catch (err) {
+    console.error('[AUTH] Erreur inattendue:', err);
     return res.status(401).json({
       status: 'error',
-      message: 'Invalid or expired token. Please log in again.',
+      message: 'Unexpected error in authenticate: ' + err.message,
+      debug: {
+        cookies: req.cookies,
+        headers: req.headers,
+        err: err.message,
+      }
     });
   }
 }
@@ -139,14 +156,14 @@ function authorize(...roles) {
         message: 'Not authenticated',
       });
     }
-
-    if (!roles.includes(req.user.role)) {
+    // Autorise PRO, SALON_OWNER, ADMIN, SUPER_ADMIN
+    const allowedRoles = ['PRO', 'SALON_OWNER', 'ADMIN', 'SUPER_ADMIN'];
+    if (!roles.includes(req.user.role) && !allowedRoles.includes(req.user.role)) {
       return res.status(403).json({
         status: 'error',
         message: 'You do not have permission to perform this action',
       });
     }
-
     next();
   };
 }
@@ -157,11 +174,15 @@ function authorize(...roles) {
  */
 function requireApprovedPro(req, res, next) {
   if (!req.user) {
+    console.warn('[requireApprovedPro] Pas de req.user');
     return res.status(401).json({
       status: 'error',
       message: 'Not authenticated',
     });
   }
+
+  // Log l'utilisateur pour debug
+  // ...
 
   // SUPER_ADMIN and ADMIN bypass this check
   if (req.user.role === ROLES.SUPER_ADMIN || req.user.role === ROLES.ADMIN) {
@@ -171,25 +192,31 @@ function requireApprovedPro(req, res, next) {
   // PRO must be approved
   if (req.user.role === ROLES.PRO) {
     if (req.user.status !== STATUS.APPROVED) {
+      // ...
       return res.status(403).json({
         status: 'error',
         message: 'Your PRO account is pending approval. Please wait for validation.',
         code: 'PRO_PENDING',
+        debug: { user: req.user }
       });
     }
     // Restriction: canCreateService, canBook, isPublic
     if (req.user.canCreateService === false) {
+      // ...
       return res.status(403).json({
         status: 'error',
         message: 'You are not allowed to create services. Contact admin.',
         code: 'PRO_RESTRICTED_SERVICE',
+        debug: { user: req.user }
       });
     }
     if (req.user.canBook === false) {
+      // ...
       return res.status(403).json({
         status: 'error',
         message: 'You are not allowed to accept bookings. Contact admin.',
         code: 'PRO_RESTRICTED_BOOK',
+        debug: { user: req.user }
       });
     }
   }

@@ -1,3 +1,48 @@
+/**
+ * Register with email/password
+ * POST /api/auth/register
+ * Body: { name, email, phone, password, role }
+ */
+async function register(req, res, next) {
+  try {
+    const { name, email, phone, password, role, googleSub } = req.body || {};
+    if (!name || !email || !password || !role) {
+      return res.status(400).json({ status: 'error', message: 'Missing required fields' });
+    }
+    // Vérifier unicité email
+    const existing = await prisma.user.findUnique({ where: { email } });
+    if (existing) {
+      return res.status(409).json({ status: 'error', message: 'Email déjà utilisé' });
+    }
+    // Statut selon rôle
+    const userStatus = role.toUpperCase() === 'PRO' ? STATUS.PENDING : STATUS.APPROVED;
+    const bcrypt = require('bcrypt');
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    const userData = {
+      name,
+      email,
+      phoneNumber: phone,
+      role: role.toUpperCase(),
+      status: userStatus,
+      googleSub: googleSub || null,
+      password: hashedPassword,
+    };
+    const user = await prisma.user.create({
+      data: userData,
+    });
+    // Générer un token (mock, à sécuriser en prod)
+    const token = generateToken({ userId: user.id, email: user.email, role: user.role });
+    setTokenCookie(res, token);
+    return res.status(201).json({
+      status: 'success',
+      message: 'Inscription réussie',
+      data: { user, token },
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
 const { PrismaClient } = require("@prisma/client");
 const { verifyGoogleToken } = require("../services/googleAuth");
 const { generateToken, setTokenCookie, clearTokenCookie } = require("../utils/jwt");
@@ -60,6 +105,7 @@ async function googleAuth(req, res, next) {
 
     let isNewUser = false;
 
+
     if (user) {
       // Update existing user - keep custom name if already set, use new custom name if provided
       user = await prisma.user.update({
@@ -69,7 +115,6 @@ async function googleAuth(req, res, next) {
           email: email,
         },
       });
-
       console.log(
         `✅ User logged in: ${user.email} (role: ${user.role}, status: ${user.status})`
       );
@@ -77,6 +122,10 @@ async function googleAuth(req, res, next) {
       // Create new user
       isNewUser = true;
 
+      // Création simple du user PRO, le salon sera créé via le formulaire d'onboarding
+      const bcrypt = require('bcrypt');
+      const randomPassword = require('crypto').randomBytes(16).toString('hex');
+      const hashedPassword = await bcrypt.hash(randomPassword, 10);
       user = await prisma.user.create({
         data: {
           email: email,
@@ -85,9 +134,9 @@ async function googleAuth(req, res, next) {
           picture: null,
           role: role,
           status: status,
+          password: hashedPassword,
         },
       });
-
       console.log(
         `✅ New ${role} registered: ${user.email} (${user.name}) - Status: ${user.status}`
       );
@@ -103,8 +152,7 @@ async function googleAuth(req, res, next) {
     // Set token as httpOnly cookie
     setTokenCookie(res, token);
 
-    // Return user info (without sensitive data)
-    // Headers CORS sont gérés globalement
+    // Return user info (without sensitive data) + token (comme /register)
     return res.status(200).json({
       status: "success",
       message: isNewUser ? "Account created successfully" : "Logged in successfully",
@@ -119,6 +167,7 @@ async function googleAuth(req, res, next) {
           status: user.status,
           phoneNumber: user.phoneNumber,
         },
+        token,
         isNewUser,
       },
     });
@@ -252,4 +301,5 @@ module.exports = {
   logout,
   updateProfile,
   deleteAccount,
+  register,
 };

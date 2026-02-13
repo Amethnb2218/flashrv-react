@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 
-// Logo FlashRV' - Design Lumineux & Moderne 2026
+// Logo Style•Flow - design lumineux & moderne 2026
 function Logo({ variant = 'default', size = 'md', showTagline = true }) {
   const sizes = {
     sm: { logo: 'w-9 h-9', text: 'text-lg', tagline: 'text-[8px]' },
@@ -16,14 +16,14 @@ function Logo({ variant = 'default', size = 'md', showTagline = true }) {
     <Link to="/" className="flex items-center space-x-3 group select-none">
       {/* Logo Icon - F stylisé avec éclair lumineux */}
       <div className="relative">
-        <svg 
+        <svg
           className={`${s.logo} transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_16px_#facc15] drop-shadow-lg`}
-          viewBox="0 0 48 48" 
-          fill="none" 
+          viewBox="0 0 48 48"
+          fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          aria-label="Logo Ｓｔｙｌｅ Ｆｌｏｗ"
+          aria-label="Logo Style•Flow"
         >
-          {/* Dégradés Black & Gold Élégant */}
+          {/* Dégradés Black & Gold élégant */}
           <defs>
             <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#171717" />
@@ -35,39 +35,41 @@ function Logo({ variant = 'default', size = 'md', showTagline = true }) {
               <stop offset="100%" stopColor="#eab308" />
             </linearGradient>
             <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+              <feGaussianBlur stdDeviation="2" result="coloredBlur" />
               <feMerge>
-                <feMergeNode in="coloredBlur"/>
-                <feMergeNode in="SourceGraphic"/>
+                <feMergeNode in="coloredBlur" />
+                <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
           </defs>
-          
+
           {/* Main rounded square background */}
-          <rect 
-            x="2" y="2" 
-            width="44" height="44" 
-            rx="14" 
+          <rect
+            x="2"
+            y="2"
+            width="44"
+            height="44"
+            rx="14"
             fill="url(#logoGradient)"
             filter="url(#glow)"
           />
-          
+
           {/* Shine effect */}
-          <path 
-            d="M10 8C10 5.79086 11.7909 4 14 4H26C28.2091 4 30 5.79086 30 8V10H14C11.7909 10 10 11.7909 10 14V8Z" 
+          <path
+            d="M10 8C10 5.79086 11.7909 4 14 4H26C28.2091 4 30 5.79086 30 8V10H14C11.7909 10 10 11.7909 10 14V8Z"
             fill="white"
             opacity="0.25"
           />
-          
+
           {/* Letter F - Bold */}
-          <path 
-            d="M16 12H32V17H22V21H30V26H22V36H16V12Z" 
+          <path
+            d="M16 12H32V17H22V21H30V26H22V36H16V12Z"
             fill="white"
           />
-          
-          {/* Flash/éclair symbol - Lumineux */}
-          <path 
-            d="M30 10L26 20H32L25 30L28 22H23L30 10Z" 
+
+          {/* Flash/éclair symbol - lumineux */}
+          <path
+            d="M30 10L26 20H32L25 30L28 22H23L30 10Z"
             fill="url(#flashGradient)"
             filter="url(#glow)"
           />
@@ -76,14 +78,26 @@ function Logo({ variant = 'default', size = 'md', showTagline = true }) {
 
       {/* Brand text */}
       <div className="flex flex-col">
-        <span 
+        <span
           className={`font-extrabold ${s.text} tracking-tight leading-none font-poppins`}
-          style={{ fontFamily: "'Poppins', sans-serif", letterSpacing: '-0.01em' }}
+          style={{ letterSpacing: '-0.01em' }}
         >
-          Ｓｔｙｌｅ Ｆｌｏｗ
+          <span
+            className={
+              isLight
+                ? 'text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.25)]'
+                : 'text-gray-900 drop-shadow-[0_1px_4px_rgba(0,0,0,0.10)]'
+            }
+          >
+            Style
+          </span>
+          <span className="bg-gradient-to-r from-yellow-400 via-yellow-300 to-amber-400 bg-clip-text text-transparent drop-shadow-[0_0_8px_#fde047]">
+            •
+          </span>
+          <span className="text-yellow-400 drop-shadow-[0_0_6px_#fde047]">Flow</span>
         </span>
         {showTagline && (
-          <span 
+          <span
             className={`${s.tagline} font-semibold tracking-[0.22em] uppercase font-inter transition-all duration-300
               ${isLight ? 'text-yellow-100/90 drop-shadow-[0_0_8px_#facc15] animate-pulse' : 'text-yellow-700/80 drop-shadow-[0_0_8px_#fde047]'}
             `}
@@ -97,33 +111,33 @@ function Logo({ variant = 'default', size = 'md', showTagline = true }) {
   )
 }
 
-// Logo icon seul (pour favicon, app icon, etc.)
+// Logo icon seul (favicon, app icon, etc.)
 export function LogoIcon({ size = 40 }) {
   return (
-    <svg 
-      width={size} 
-      height={size} 
-      viewBox="0 0 48 48" 
-      fill="none" 
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 48 48"
+      fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className="drop-shadow-lg"
     >
       <defs>
         <linearGradient id="logoGradientIcon" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#a855f7" />
-          <stop offset="40%" stopColor="#d946ef" />
-          <stop offset="100%" stopColor="#f472b6" />
+          <stop offset="0%" stopColor="#171717" />
+          <stop offset="40%" stopColor="#262626" />
+          <stop offset="100%" stopColor="#404040" />
         </linearGradient>
         <linearGradient id="flashGradientIcon" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#fcd34d" />
           <stop offset="100%" stopColor="#fbbf24" />
         </linearGradient>
       </defs>
-      
-      <rect x="2" y="2" width="44" height="44" rx="14" fill="url(#logoGradientIcon)"/>
-      <path d="M10 8C10 5.79086 11.7909 4 14 4H26C28.2091 4 30 5.79086 30 8V10H14C11.7909 10 10 11.7909 10 14V8Z" fill="white" opacity="0.25"/>
-      <path d="M16 12H32V17H22V21H30V26H22V36H16V12Z" fill="white"/>
-      <path d="M30 10L26 20H32L25 30L28 22H23L30 10Z" fill="url(#flashGradientIcon)"/>
+
+      <rect x="2" y="2" width="44" height="44" rx="14" fill="url(#logoGradientIcon)" />
+      <path d="M10 8C10 5.79086 11.7909 4 14 4H26C28.2091 4 30 5.79086 30 8V10H14C11.7909 10 10 11.7909 10 14V8Z" fill="white" opacity="0.25" />
+      <path d="M16 12H32V17H22V21H30V26H22V36H16V12Z" fill="white" />
+      <path d="M30 10L26 20H32L25 30L28 22H23L30 10Z" fill="url(#flashGradientIcon)" />
     </svg>
   )
 }

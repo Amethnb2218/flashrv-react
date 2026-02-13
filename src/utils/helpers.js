@@ -1,4 +1,4 @@
-import { format, parseISO, isToday, isTomorrow, addDays } from 'date-fns'
+﻿import { format, parseISO, isToday, isTomorrow, addDays } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
 // ============================================
@@ -46,6 +46,17 @@ export const formatPriceCompact = (price) => {
  * @returns {string} Formatted price range
  */
 export const formatPriceRange = (min, max) => {
+  const hasMin = min != null && !isNaN(min)
+  const hasMax = max != null && !isNaN(max)
+
+  if (!hasMin && !hasMax) return '—'
+  if (hasMin && !hasMax) return formatPrice(min)
+  if (!hasMin && hasMax) return formatPrice(max)
+
+  if (Number(min) === Number(max)) {
+    return formatPrice(min)
+  }
+
   return `${formatPrice(min, false)} - ${formatPrice(max)}`
 }
 
@@ -195,3 +206,4 @@ export const scrollToElement = (elementId, offset = 80) => {
     window.scrollTo({ top, behavior: 'smooth' })
   }
 }
+

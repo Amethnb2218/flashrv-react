@@ -17,6 +17,13 @@ const { authenticate } = require("../middleware/auth");
 router.post("/google", authController.googleAuth);
 
 /**
+ * @route   POST /api/auth/register
+ * @desc    Inscription classique (email/password)
+ * @access  Public
+ */
+router.post("/register", authController.register);
+
+/**
  * @route   POST /api/auth/logout
  * @desc    Déconnexion de l'utilisateur
  * @access  Public

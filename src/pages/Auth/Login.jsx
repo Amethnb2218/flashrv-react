@@ -231,8 +231,8 @@ function Login() {
         <div className="absolute inset-0 bg-gradient-to-br from-dark-900/80 to-accent-700/80" />
         <div className="absolute inset-0 flex items-center justify-center p-12">
           <div className="text-center text-white">
-            <h2 className="text-3xl md:text-5xl font-extrabold mb-4">Ｓｔｙｌｅ Ｆｌｏｗ</h2>
-            <p className="text-lg md:text-2xl text-primary-100">
+            <h2 className="text-4xl font-bold mb-4">Style • Flow</h2>
+            <p className="text-xl text-primary-100">
               La beauté à portée de clic
             </p>
           </div>

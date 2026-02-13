@@ -81,6 +81,70 @@ router.get('/:id', authenticate, async (req, res, next) => {
 });
 
 /**
+ * Update current user profile
+ * PUT /api/users/update-profile
+ */
+router.put('/update-profile', authenticate, async (req, res, next) => {
+  try {
+    const { name, username, email, phoneNumber, address, picture } = req.body || {};
+    const userId = req.user.id;
+
+    if (email !== undefined) {
+      const nextEmail = String(email || '').trim();
+      if (!nextEmail) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'Email is required',
+        });
+      }
+      const existing = await prisma.user.findFirst({
+        where: {
+          email: nextEmail,
+          id: { not: userId },
+        },
+        select: { id: true },
+      });
+      if (existing) {
+        return res.status(409).json({
+          status: 'error',
+          message: 'Email already in use',
+        });
+      }
+    }
+
+    const updated = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...(name !== undefined && { name }),
+        ...(username !== undefined && { username }),
+        ...(email !== undefined && { email: String(email || '').trim() }),
+        ...(phoneNumber !== undefined && { phoneNumber }),
+        ...(address !== undefined && { address }),
+        ...(picture !== undefined && { picture }),
+      },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        name: true,
+        picture: true,
+        role: true,
+        phoneNumber: true,
+        address: true,
+      },
+    });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Profil mis à jour',
+      data: { user: updated },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
  * Update user role (admin only)
  * PATCH /api/users/:id/role
  */

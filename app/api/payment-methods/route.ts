@@ -1,3 +1,26 @@
+// PATCH: Modifier un moyen de paiement
+export async function PATCH(req) {
+  try {
+    const body = await req.json();
+    const { id, ...data } = body;
+    const updated = await prisma.paymentMethod.update({ where: { id }, data });
+    return NextResponse.json({ ok: true, data: updated });
+  } catch (e) {
+    return NextResponse.json({ ok: false, error: { message: e.message } }, { status: 500 });
+  }
+}
+
+// DELETE: Supprimer un moyen de paiement
+export async function DELETE(req) {
+  try {
+    const body = await req.json();
+    const { id } = body;
+    await prisma.paymentMethod.delete({ where: { id } });
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    return NextResponse.json({ ok: false, error: { message: e.message } }, { status: 500 });
+  }
+}
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 

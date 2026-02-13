@@ -17,22 +17,39 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <AuthProvider>
           <BookingProvider>
             <App />
-            <Toaster 
+            <Toaster
               position="top-right"
               toastOptions={{
-                duration: 4000,
+                duration: 3500,
                 style: {
-                  background: '#363636',
-                  color: '#fff',
+                  background: '#ffffff',
+                  color: '#0f172a',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '12px',
+                  padding: '12px 14px',
+                  boxShadow: '0 12px 30px rgba(15, 23, 42, 0.08)',
+                  fontWeight: 600,
                 },
                 success: {
+                  iconTheme: {
+                    primary: '#16a34a',
+                    secondary: '#ecfdf3',
+                  },
                   style: {
-                    background: '#10B981',
+                    borderColor: '#bbf7d0',
+                    background: '#f0fdf4',
+                    color: '#14532d',
                   },
                 },
                 error: {
+                  iconTheme: {
+                    primary: '#dc2626',
+                    secondary: '#fef2f2',
+                  },
                   style: {
-                    background: '#EF4444',
+                    borderColor: '#fecaca',
+                    background: '#fef2f2',
+                    color: '#7f1d1d',
                   },
                 },
               }}
@@ -43,4 +60,3 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     </GoogleOAuthProvider>
   </React.StrictMode>,
 )
-

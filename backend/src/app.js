@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
@@ -13,57 +13,44 @@ const paymentRoutes = require('./routes/paymentRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const compatRoutes = require('./routes/compatRoutes');
 const salonPaymentMethodsRoute = require('./routes/salon/paymentMethods');
+const feedbackRoutes = require('./routes/feedbackRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
+const assistantRoutes = require('./routes/assistantRoutes');
 
 const app = express();
 
 // ===========================================
-// CORS CONFIGURATION - CRITIQUE POUR GOOGLE AUTH
+// CORS CONFIGURATION - DEV (localhost)
 // ===========================================
-const allowedOrigins = [
-  'http://localhost:3000',
-  'http://localhost:3001',
-  'http://localhost:5173',
-  'http://127.0.0.1:3000',
-  'http://127.0.0.1:3001',
-  'http://127.0.0.1:5173',
-];
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie, X-Requested-With, Accept');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
 
-
-
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true, // ABSOLUMENT ESSENTIEL pour les cookies
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: [
-    'Content-Type',
-    'Authorization',
-    'Cookie',
-    'X-Requested-With',
-    'Accept'
-  ],
-  exposedHeaders: ['Set-Cookie'],
-  maxAge: 86400, // Cache préflight 24h
-  optionsSuccessStatus: 200
-};
-
-// Appliquer CORS à TOUTES les routes
-app.use(cors(corsOptions));
-
-// Gérer explicitement TOUTES les préflights OPTIONS
-app.options('*', cors(corsOptions));
+app.use(cors({
+  origin: true,
+  credentials: true,
+}));
 
 // ===========================================
 // AUTRES MIDDLEWARES
 // ===========================================
-app.use(express.json({ limit: '10kb' }));
-app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cookieParser());
+
+// Sert les fichiers statiques du dossier uploads
+const { uploadsDir } = require('./utils/paths');
+app.use('/uploads', express.static(uploadsDir));
 
 // ===========================================
 // LOGGING (développement uniquement)
@@ -74,7 +61,7 @@ if (process.env.NODE_ENV === 'development') {
   // Middleware de debug CORS (optionnel)
   app.use((req, res, next) => {
     if (req.method === 'OPTIONS') {
-      console.log('🔍 OPTIONS Preflight Request:', {
+      console.log('OPTIONS Preflight Request:', {
         url: req.url,
         origin: req.headers.origin,
         'access-control-request-method': req.headers['access-control-request-method']
@@ -99,6 +86,7 @@ app.get('/health', (req, res) => {
 // ===========================================
 // ROUTES API
 // ===========================================
+const serviceRoutes = require('./routes/serviceRoutes');
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/salons', salonRoutes);
@@ -107,6 +95,10 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api', compatRoutes);
 app.use('/api/salon/payment-methods', salonPaymentMethodsRoute);
+app.use('/api/services', serviceRoutes);
+app.use('/api/feedback', feedbackRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/assistant', assistantRoutes);
 
 // ===========================================
 // 404 HANDLER
@@ -122,7 +114,7 @@ app.use((req, res, next) => {
 // GLOBAL ERROR HANDLER
 // ===========================================
 app.use((err, req, res, next) => {
-  console.error('❌ Server Error:', {
+  console.error('Server Error:', {
     message: err.message,
     stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
     url: req.originalUrl,
@@ -179,3 +171,4 @@ app.use((err, req, res, next) => {
 });
 
 module.exports = app;
+

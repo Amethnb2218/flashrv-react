@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { 
   FiUser, FiMail, FiPhone, FiMapPin, FiCamera, FiSave, 
@@ -6,6 +6,7 @@ import {
 } from 'react-icons/fi'
 import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
+import apiFetch from '@/api/client'
 
 function Profile() {
   const { user, updateUser } = useAuth()
@@ -19,9 +20,18 @@ function Profile() {
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
-    phone: user?.phone || '',
+    phoneNumber: user?.phoneNumber || user?.phone || '',
     address: user?.address || '',
   })
+
+  useEffect(() => {
+    setFormData({
+      name: user?.name || '',
+      email: user?.email || '',
+      phoneNumber: user?.phoneNumber || user?.phone || '',
+      address: user?.address || '',
+    })
+  }, [user])
 
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
@@ -53,14 +63,31 @@ function Profile() {
   const handleSaveProfile = async (e) => {
     e.preventDefault()
     setLoading(true)
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    updateUser(formData)
-    setSuccess(true)
+    try {
+      const payload = {
+        name: formData.name,
+        email: formData.email,
+        phoneNumber: formData.phoneNumber,
+        address: formData.address,
+      }
+      const data = await apiFetch('/users/update-profile', {
+        method: 'PUT',
+        body: payload,
+      })
+      const updatedUser = data?.data?.user || data?.user
+      if (!updatedUser) throw new Error('Profil non retourné')
+      updateUser(updatedUser)
+      setFormData({
+        name: updatedUser.name || '',
+        email: updatedUser.email || '',
+        phoneNumber: updatedUser.phoneNumber || updatedUser.phone || '',
+        address: updatedUser.address || '',
+      })
+      setSuccess(true)
+    } catch (err) {
+      toast.error('Erreur lors de la sauvegarde')
+    }
     setLoading(false)
-    
     setTimeout(() => setSuccess(false), 3000)
   }
 
@@ -70,18 +97,27 @@ function Profile() {
       alert('Les mots de passe ne correspondent pas')
       return
     }
-    
     setLoading(true)
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    setPasswordData({
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: '',
-    })
-    setSuccess(true)
+    try {
+      const res = await fetch('/api/users/change-password', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('flashrv_token')}`
+        },
+        body: JSON.stringify(passwordData)
+      })
+      if (!res.ok) throw new Error('Erreur lors de la modification du mot de passe')
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      })
+      setSuccess(true)
+    } catch (err) {
+      toast.error('Erreur lors de la modification du mot de passe')
+    }
     setLoading(false)
-    
     setTimeout(() => setSuccess(false), 3000)
   }
 
@@ -106,32 +142,38 @@ function Profile() {
     setShowPhotoMenu(false)
 
     try {
-      // Simulate upload - In production, upload to API/cloud storage
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      
-      // Convert to base64 for demo (in production, use uploaded URL)
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        updateUser({ avatar: reader.result })
-        toast.success('Photo de profil mise à jour !')
-        setUploadingPhoto(false)
-      }
-      reader.readAsDataURL(file)
+      // Envoi réel vers l'API backend
+      const formData = new FormData()
+      formData.append('avatar', file)
+      const res = await fetch('/api/users/upload-avatar', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('flashrv_token')}`
+        },
+        body: formData
+      })
+      if (!res.ok) throw new Error('Erreur lors du téléchargement')
+      const data = await res.json()
+      updateUser({ avatar: data.avatarUrl })
+      toast.success('Photo de profil mise à jour !')
     } catch (error) {
       toast.error('Erreur lors du téléchargement')
-      setUploadingPhoto(false)
     }
+    setUploadingPhoto(false)
   }
 
   // Photo delete handler
   const handlePhotoDelete = async () => {
     setUploadingPhoto(true)
     setShowPhotoMenu(false)
-
     try {
-      await new Promise(resolve => setTimeout(resolve, 500))
-      
-      // Remove avatar - will show initials instead
+      const res = await fetch('/api/users/delete-avatar', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('flashrv_token')}`
+        }
+      })
+      if (!res.ok) throw new Error('Erreur lors de la suppression')
       updateUser({ avatar: null })
       toast.success('Photo de profil supprimée')
     } catch (error) {
@@ -320,8 +362,8 @@ function Profile() {
                       </label>
                       <input
                         type="tel"
-                        name="phone"
-                        value={formData.phone}
+                        name="phoneNumber"
+                        value={formData.phoneNumber}
                         onChange={handleInputChange}
                         className="w-full px-4 py-3 border border-blue-800 bg-blue-900/80 text-blue-100 placeholder:text-blue-300 rounded-xl focus:bg-blue-900/90 focus:text-blue-100 focus:border-blue-700 transition-colors duration-200"
                       />
@@ -473,8 +515,20 @@ function Profile() {
                     <button
                       onClick={async () => {
                         setLoading(true)
-                        await new Promise(r => setTimeout(r, 1000))
-                        setSuccess(true)
+                        try {
+                          const res = await fetch('/api/users/update-notifications', {
+                            method: 'PUT',
+                            headers: {
+                              'Content-Type': 'application/json',
+                              'Authorization': `Bearer ${localStorage.getItem('flashrv_token')}`
+                            },
+                            body: JSON.stringify(notifications)
+                          })
+                          if (!res.ok) throw new Error('Erreur lors de la sauvegarde')
+                          setSuccess(true)
+                        } catch (err) {
+                          toast.error('Erreur lors de la sauvegarde')
+                        }
                         setLoading(false)
                         setTimeout(() => setSuccess(false), 3000)
                       }}
@@ -495,4 +549,3 @@ function Profile() {
 }
 
 export default Profile
-

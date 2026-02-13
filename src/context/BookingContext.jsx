@@ -9,8 +9,13 @@ const initialState = {
   time: null,
   coiffeur: null,
   notes: '',
+  clientFirstName: '',
+  clientLastName: '',
+  clientPhone: '',
+  clientAddress: '',
   totalPrice: 0,
   totalDuration: 0,
+  bookingId: null,
   step: 1,
 }
 
@@ -60,10 +65,20 @@ function bookingReducer(state, action) {
         ...state,
         notes: action.payload,
       }
+    case 'SET_CLIENT_DETAILS':
+      return {
+        ...state,
+        ...action.payload,
+      }
     case 'SET_STEP':
       return {
         ...state,
         step: action.payload,
+      }
+    case 'SET_BOOKING_ID':
+      return {
+        ...state,
+        bookingId: action.payload,
       }
     case 'NEXT_STEP':
       return {
@@ -138,6 +153,10 @@ export function BookingProvider({ children }) {
     dispatch({ type: 'SET_NOTES', payload: notes })
   }
 
+  const setClientDetails = (details) => {
+    dispatch({ type: 'SET_CLIENT_DETAILS', payload: details || {} })
+  }
+
   const nextStep = () => {
     dispatch({ type: 'NEXT_STEP' })
   }
@@ -148,6 +167,10 @@ export function BookingProvider({ children }) {
 
   const setStep = (step) => {
     dispatch({ type: 'SET_STEP', payload: step })
+  }
+
+  const setBookingId = (bookingId) => {
+    dispatch({ type: 'SET_BOOKING_ID', payload: bookingId })
   }
 
   const resetBooking = () => {
@@ -166,9 +189,11 @@ export function BookingProvider({ children }) {
     setTime,
     setCoiffeur,
     setNotes,
+    setClientDetails,
     nextStep,
     prevStep,
     setStep,
+    setBookingId,
     resetBooking,
   }
 
@@ -188,4 +213,3 @@ export function useBooking() {
 }
 
 export default BookingContext
-

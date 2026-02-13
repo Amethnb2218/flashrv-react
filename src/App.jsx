@@ -14,6 +14,7 @@ import CoiffeurDashboard from './pages/Dashboard/CoiffeurDashboard'
 import Profile from './pages/Profile/Profile'
 import QRCodes from './pages/Marketing/QRCodes'
 import ProPending from './pages/Pro/ProPending'
+import ProOnboarding from './pages/Auth/ProOnboarding'
 import AdminDashboard from './pages/Admin/AdminDashboard'
 import NotFound from './pages/NotFound'
 import ProtectedRoute from './components/Auth/ProtectedRoute'
@@ -59,6 +60,11 @@ function App() {
         } />
         
         {/* Protected routes - PRO */}
+        <Route path="pro/onboarding" element={
+          <ProtectedRoute requiredRole="PRO">
+            <ProOnboarding />
+          </ProtectedRoute>
+        } />
         <Route path="pro/pending" element={
           <ProtectedRoute requiredRole="PRO">
             <ProPending />

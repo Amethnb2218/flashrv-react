@@ -5,8 +5,9 @@ import { FiCheck, FiLock, FiCreditCard, FiSmartphone, FiChevronLeft, FiAlertCirc
 import { useBooking } from '../../context/BookingContext'
 import { useAuth } from '../../context/AuthContext'
 import LoadingSpinner from '../../components/UI/LoadingSpinner'
+import apiFetch from '../../api/client'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api'
+const API_URL = import.meta.env.VITE_API_URL || '/api'
 
 // Méthodes de paiement autorisées - MVP
 const PAYMENT_METHODS = [
@@ -38,7 +39,9 @@ function Payment() {
   const { state: bookingState, dispatch: bookingDispatch } = useBooking()
   const { user } = useAuth()
   const [selectedMethod, setSelectedMethod] = useState(null)
-  const [phoneNumber, setPhoneNumber] = useState(user?.phone || '')
+  const [phoneNumber, setPhoneNumber] = useState(
+    bookingState.clientPhone || user?.phoneNumber || user?.phone || ''
+  )
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [paymentStatus, setPaymentStatus] = useState(null) // null, 'processing', 'pending_confirmation'
@@ -69,6 +72,67 @@ function Payment() {
     return cleaned.length >= 9 && validPrefixes.some(p => cleaned.startsWith(p))
   }
 
+  const buildAppointmentNotes = () => {
+    const baseNotes = bookingState.notes?.trim()
+    const extraServices = bookingState.services.slice(1)
+    const extraNote = extraServices.length > 0
+      ? `Services additionnels: ${extraServices.map(s => `${s.name} (${s.price} FCFA)`).join(', ')}`
+      : ''
+    return [baseNotes, extraNote].filter(Boolean).join('\n')
+  }
+
+  const ensureAppointment = async () => {
+    if (bookingState.bookingId) return bookingState.bookingId
+
+    const serviceIds = bookingState.services.map(s => s.id).filter(Boolean)
+    const primaryServiceId = serviceIds[0]
+    if (!primaryServiceId) {
+      throw new Error('Aucun service sélectionné')
+    }
+
+    const dateValue = bookingState.date instanceof Date
+      ? bookingState.date.toISOString()
+      : bookingState.date
+
+    if (!dateValue || !bookingState.time) {
+      throw new Error('Date ou heure manquante')
+    }
+
+    const clientFirstName = String(bookingState.clientFirstName || '').trim()
+    const clientLastName = String(bookingState.clientLastName || '').trim()
+    const clientPhone = String(bookingState.clientPhone || phoneNumber || '').trim()
+    const clientAddress = String(bookingState.clientAddress || '').trim()
+    if (!clientFirstName || !clientLastName || !clientPhone) {
+      throw new Error('Prénom, nom et téléphone sont obligatoires pour confirmer la réservation')
+    }
+
+    const payload = {
+      salonId: bookingState.salon.id,
+      serviceId: primaryServiceId,
+      serviceIds,
+      date: dateValue,
+      startTime: bookingState.time,
+      notes: buildAppointmentNotes(),
+      clientFirstName,
+      clientLastName,
+      clientPhone,
+      clientAddress: clientAddress || null,
+    }
+
+    if (bookingState.coiffeur?.id) {
+      payload.coiffeurId = bookingState.coiffeur.id
+    }
+
+    const result = await apiFetch('/appointments', { method: 'POST', body: payload })
+    const appointment = result?.data?.appointment || result?.appointment
+    if (!appointment?.id) {
+      throw new Error('Impossible de créer la réservation')
+    }
+
+    bookingDispatch({ type: 'SET_BOOKING_ID', payload: appointment.id })
+    return appointment.id
+  }
+
   const handlePayment = async () => {
     if (!selectedMethod) {
       setError('Veuillez choisir un mode de paiement')
@@ -91,39 +155,27 @@ function Payment() {
     setPaymentStatus('processing')
 
     try {
+      const appointmentId = await ensureAppointment()
       // Pour paiement sur place, on peut confirmer directement
       if (selectedMethod === 'pay_on_site') {
-        // Essayer d'appeler le backend, sinon confirmer localement
-        try {
-          const response = await fetch(`${API_URL}/payments/confirm-on-site`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify({
-              amount: bookingState.totalPrice,
-              bookingId: bookingState.bookingId || undefined,
-            }),
-          })
+        const response = await fetch(`${API_URL}/payments/confirm-on-site`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            amount: bookingState.totalPrice,
+            bookingId: appointmentId,
+          }),
+        })
 
-          if (response.ok) {
-            const data = await response.json()
-            handlePaymentSuccess(data.data)
-            return
-          }
-        } catch (apiError) {
-          console.log('Backend non disponible, confirmation locale')
+        const data = await response.json()
+        if (!response.ok) {
+          throw new Error(data.message || 'Erreur lors de la confirmation du paiement sur place')
         }
 
-        // Fallback: confirmation locale si backend non disponible
-        const localPaymentData = {
-          paymentId: 'LOCAL-' + Date.now(),
-          reference: 'FRV-' + Date.now().toString(36).toUpperCase(),
-          status: 'ON_SITE',
-          provider: 'PAY_ON_SITE',
-        }
-        handlePaymentSuccess(localPaymentData)
+        handlePaymentSuccess(data.data, appointmentId)
         return
       }
 
@@ -138,7 +190,7 @@ function Payment() {
           provider: selectedMethod.toUpperCase(),
           amount: depositAmount,
           phoneNumber: phoneNumber || undefined,
-          bookingId: bookingState.bookingId || undefined,
+          bookingId: appointmentId,
         }),
       })
 
@@ -165,11 +217,11 @@ function Payment() {
         }
         
         // Show waiting message - poll for status
-        pollPaymentStatus(data.data.paymentId)
+        pollPaymentStatus(data.data.paymentId, appointmentId)
       } else {
         // Payment initiated, waiting for user to confirm on phone
         setPaymentStatus('pending_confirmation')
-        pollPaymentStatus(data.data.paymentId)
+        pollPaymentStatus(data.data.paymentId, appointmentId)
       }
     } catch (err) {
       console.error('Payment error:', err)
@@ -180,7 +232,7 @@ function Payment() {
     }
   }
 
-  const pollPaymentStatus = async (paymentId) => {
+  const pollPaymentStatus = async (paymentId, appointmentId) => {
     let attempts = 0
     const maxAttempts = 30 // 5 minutes max (10s interval)
 
@@ -192,7 +244,7 @@ function Payment() {
         const data = await response.json()
 
         if (data.data.payment.status === 'COMPLETED') {
-          handlePaymentSuccess(data.data.payment)
+          handlePaymentSuccess(data.data.payment, appointmentId)
           return
         }
 
@@ -217,26 +269,16 @@ function Payment() {
     setTimeout(checkStatus, 5000) // First check after 5 seconds
   }
 
-  const handlePaymentSuccess = (paymentData) => {
-    // Save booking locally
-    const booking = {
-      id: paymentData.reference || paymentData.transactionId || paymentData.paymentId,
-      ...bookingState,
-      user: user,
-      paymentData: paymentData,
-      status: selectedMethod === 'pay_on_site' ? 'confirmed_on_site' : 'confirmed',
-      createdAt: new Date().toISOString(),
-    }
-
-    const existingBookings = JSON.parse(localStorage.getItem('flashrv_bookings') || '[]')
-    localStorage.setItem('flashrv_bookings', JSON.stringify([...existingBookings, booking]))
+  const handlePaymentSuccess = (paymentData, appointmentIdOverride) => {
+    const appointmentId = appointmentIdOverride || bookingState.bookingId
 
     // Clear booking state
     bookingDispatch({ type: 'RESET' })
     localStorage.removeItem('flashrv_booking')
 
     // Redirect to success page
-    navigate('/payment/success', { state: { booking } })
+    const query = appointmentId ? `?appointmentId=${appointmentId}` : ''
+    navigate(`/payment/success${query}`, { state: { appointmentId, paymentData } })
   }
 
   return (
@@ -485,4 +527,3 @@ function Payment() {
 }
 
 export default Payment
-

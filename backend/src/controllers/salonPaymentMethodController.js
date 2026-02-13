@@ -1,3 +1,17 @@
+// DELETE a payment method
+exports.delete = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const salon = await prisma.salon.findUnique({ where: { ownerId: req.user.id } });
+    if (!salon) return res.status(404).json({ error: 'Salon not found' });
+    const method = await prisma.salonPaymentMethod.findUnique({ where: { id } });
+    if (!method || method.salonId !== salon.id) return res.status(404).json({ error: 'Méthode non trouvée' });
+    await prisma.salonPaymentMethod.delete({ where: { id } });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Erreur serveur', details: err.message });
+  }
+};
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 

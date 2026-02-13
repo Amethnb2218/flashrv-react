@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { FiMenu, FiX, FiUser, FiLogOut, FiCalendar, FiSettings, FiPhone, FiMapPin, FiSearch, FiHeart, FiStar } from 'react-icons/fi'
@@ -34,9 +34,9 @@ function Navbar() {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50">
       {/* Top bar avec infos utiles */}
-      <div className="bg-gray-900 text-white text-xs">
+      <div className="bg-gray-950 text-white text-[11px]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-8">
+          <div className="flex items-center justify-between h-6">
             <div className="hidden sm:flex items-center space-x-6">
               <a href="tel:+221338001234" className="flex items-center space-x-1.5 hover:text-amber-400 transition-colors">
                 <FiPhone className="w-3 h-3" />
@@ -68,8 +68,8 @@ function Navbar() {
           : 'bg-white shadow-sm'
       }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo Ｓｔｙｌｅ Ｆｌｏｗ */}
+          <div className="flex items-center justify-between h-14">
+            {/* Logo FlashRV' */}
             <Logo variant="default" size="md" />
 
             {/* Desktop Navigation */}
@@ -79,7 +79,7 @@ function Navbar() {
                   key={link.to}
                   to={link.to}
                   className={({ isActive }) => `
-                    px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200
+                    px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2
                     ${isActive 
                       ? 'text-gray-900 bg-gray-100' 
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -90,9 +90,9 @@ function Navbar() {
                 </NavLink>
               ))}
               
-              <button 
+              <button
                 onClick={() => navigate('/salons')}
-                className="flex items-center space-x-2 px-4 py-2 text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-all"
+                className="flex items-center space-x-2 px-3 py-2 text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
               >
                 <FiSearch className="w-4 h-4" />
                 <span className="text-sm">Rechercher</span>
@@ -101,9 +101,9 @@ function Navbar() {
 
             {/* Right side */}
             <div className="hidden md:flex items-center space-x-2">
-              <button 
+              <button
                 onClick={() => isAuthenticated ? navigate('/dashboard') : navigate('/login')}
-                className="p-2.5 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                className="p-2.5 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
                 title="Mes favoris"
               >
                 <FiHeart className="w-5 h-5" />
@@ -115,7 +115,7 @@ function Navbar() {
                 <div className="relative">
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 transition-all focus:outline-none"
+                    className="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
                   >
                     {(user.avatar || user.picture) ? (
                       <img
@@ -182,13 +182,13 @@ function Navbar() {
                 <div className="flex items-center space-x-2">
                   <Link
                     to="/login"
-                    className="px-4 py-2 font-medium text-gray-700 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-100"
+                    className="px-4 py-2 font-medium text-gray-700 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
                   >
                     Connexion
                   </Link>
                   <Link
                     to="/register"
-                    className="px-5 py-2.5 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-all shadow-sm hover:shadow-md"
+                    className="px-5 py-2.5 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white font-semibold rounded-xl hover:shadow-lg transition-all shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
                   >
                     S'inscrire gratuitement
                   </Link>
@@ -200,6 +200,7 @@ function Navbar() {
             <button
               onClick={() => setIsOpen(!isOpen)}
               className="md:hidden p-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+              aria-label="Ouvrir le menu"
             >
               {isOpen ? <FiX className="w-6 h-6" /> : <FiMenu className="w-6 h-6" />}
             </button>

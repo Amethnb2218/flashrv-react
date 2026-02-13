@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import SectionCard from "../../components/UI/SectionCard.jsx";
 import DataTable from "../../components/UI/DataTable.jsx";
 import StatusBadge from "../../components/UI/StatusBadge.jsx";
@@ -54,6 +54,21 @@ export default function PendingProsSection({ pros, loading, onRefresh, onApprove
             key: "phoneNumber",
             label: "Téléphone",
             render: row => <span className="text-xs text-slate-700">{row.phoneNumber || "-"}</span>,
+          },
+          {
+            key: "salon",
+            label: "Salon",
+            render: row => (
+              <div className="text-xs text-slate-700">
+                <div className="font-semibold text-slate-800">{row.salon?.name || "-"}</div>
+                <div className="text-slate-500">{row.salon?.city || "-"}</div>
+              </div>
+            ),
+          },
+          {
+            key: "salonPhone",
+            label: "Tél. salon",
+            render: row => <span className="text-xs text-slate-700">{row.salon?.phone || "-"}</span>,
           },
           {
             key: "status",
@@ -157,6 +172,10 @@ export default function PendingProsSection({ pros, loading, onRefresh, onApprove
                 <span><b>Téléphone :</b> {selectedUser.phoneNumber || <span className='italic text-slate-400'>Non renseigné</span>}</span>
                 <span><b>Statut :</b> {selectedUser.status || '-'}</span>
                 <span><b>Inscription :</b> {selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString('fr-FR') : '-'}</span>
+                <span><b>Salon :</b> {selectedUser.salon?.name || <span className='italic text-slate-400'>Aucun</span>}</span>
+                <span><b>Ville :</b> {selectedUser.salon?.city || <span className='italic text-slate-400'>-</span>}</span>
+                <span><b>Tél. salon :</b> {selectedUser.salon?.phone || <span className='italic text-slate-400'>-</span>}</span>
+                <span><b>Email salon :</b> {selectedUser.salon?.email || <span className='italic text-slate-400'>-</span>}</span>
               </div>
             </div>
           </div>
@@ -166,3 +185,5 @@ export default function PendingProsSection({ pros, loading, onRefresh, onApprove
     </SectionCard>
   );
 }
+
+

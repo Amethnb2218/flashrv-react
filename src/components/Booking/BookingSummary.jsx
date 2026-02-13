@@ -1,10 +1,24 @@
 import { useBooking } from '../../context/BookingContext'
 import { formatPrice, formatDuration, formatDate } from '../../utils/helpers'
 import { FiCalendar, FiClock, FiUser, FiMapPin, FiAlertCircle, FiInfo } from 'react-icons/fi'
+import { resolveMediaUrl } from '../../utils/media'
 
 function BookingSummary({ salon }) {
   const { state } = useBooking()
   const { services, date, time, coiffeur, totalPrice, totalDuration } = state
+  const resolveSalonImage = () => {
+    if (!salon) return ''
+    if (salon.coverImage || salon.image) return resolveMediaUrl(salon.coverImage || salon.image)
+    if (Array.isArray(salon.gallery) && salon.gallery.length > 0) {
+      const first = salon.gallery[0]
+      return resolveMediaUrl(first?.media || first?.url)
+    }
+    if (Array.isArray(salon.images) && salon.images.length > 0) {
+      return resolveMediaUrl(salon.images[0])
+    }
+    return ''
+  }
+  const salonImage = resolveSalonImage()
 
   // Calculate deposit
   const depositPercentage = salon?.depositPercentage || 25
@@ -17,16 +31,22 @@ function BookingSummary({ salon }) {
 
       {salon && (
         <div className="flex items-start space-x-3 pb-4 border-b border-gray-100">
-          <img
-            src={salon.coverImage || salon.image}
-            alt={salon.name}
-            className="w-16 h-16 rounded-xl object-cover"
-          />
+          {salonImage ? (
+            <img
+              src={salonImage}
+              alt={salon.name}
+              className="w-16 h-16 rounded-xl object-cover"
+            />
+          ) : (
+            <div className="w-16 h-16 rounded-xl bg-primary-100 flex items-center justify-center text-primary-700 font-bold text-lg">
+              {salon.name?.charAt(0) || 'S'}
+            </div>
+          )}
           <div>
             <h4 className="font-medium text-gray-900">{salon.name}</h4>
             <p className="text-sm text-gray-500 flex items-center mt-1">
               <FiMapPin className="w-3 h-3 mr-1" />
-              {salon.neighborhood}
+              {salon.neighborhood || salon.address || salon.city || ''}
             </p>
           </div>
         </div>
@@ -119,4 +139,3 @@ function BookingSummary({ salon }) {
 }
 
 export default BookingSummary
-

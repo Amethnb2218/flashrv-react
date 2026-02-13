@@ -2,8 +2,39 @@ const express = require('express');
 const router = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const { authenticate, authorize } = require('../middleware/auth');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+const { uploadsSubdir } = require('../utils/paths');
+const { pushNotification, pushChatMessage } = require('../realtime/hub');
 
 const prisma = new PrismaClient();
+
+const chatVoiceDir = uploadsSubdir('chat-voices');
+if (!fs.existsSync(chatVoiceDir)) fs.mkdirSync(chatVoiceDir, { recursive: true });
+const chatVoiceStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, chatVoiceDir),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname || '.webm') || '.webm';
+    cb(null, `voice-${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`);
+  },
+});
+const uploadVoice = multer({
+  storage: chatVoiceStorage,
+  limits: { fileSize: 12 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (String(file.mimetype || '').startsWith('audio/')) return cb(null, true);
+    cb(new Error('Only audio files are allowed'));
+  },
+});
+
+const canAccessAppointment = (appointment, user) => {
+  if (!appointment || !user) return false;
+  if (appointment.clientId === user.id) return true;
+  if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') return true;
+  if ((user.role === 'PRO' || user.role === 'SALON_OWNER') && appointment.salon?.ownerId === user.id) return true;
+  return false;
+};
 
 /**
  * Get all appointments for current user
@@ -12,13 +43,21 @@ const prisma = new PrismaClient();
  */
 router.get('/', authenticate, async (req, res, next) => {
   try {
-    const { status, from, to } = req.query;
+    const { status, from, to, scope, asClient } = req.query;
     const userId = req.user.id;
 
     // Build where clause based on user role
     let where = {};
 
-    if (req.user.role === 'CLIENT') {
+    const normalizedScope = String(scope || '').toLowerCase();
+    const forceClientScope =
+      normalizedScope === 'client' ||
+      normalizedScope === 'mes-reservations' ||
+      String(asClient || '').toLowerCase() === 'true';
+
+    if (forceClientScope) {
+      where.clientId = userId;
+    } else if (req.user.role === 'CLIENT') {
       where.clientId = userId;
     } else if (req.user.role === 'COIFFEUR') {
       const coiffeur = await prisma.coiffeur.findUnique({
@@ -27,13 +66,16 @@ router.get('/', authenticate, async (req, res, next) => {
       if (coiffeur) {
         where.coiffeurId = coiffeur.id;
       }
-    } else if (req.user.role === 'SALON_OWNER') {
+    } else if (req.user.role === 'PRO' || req.user.role === 'SALON_OWNER') {
       const salon = await prisma.salon.findUnique({
         where: { ownerId: userId },
       });
       if (salon) {
         where.salonId = salon.id;
       }
+    } else {
+      // Fallback: treat unknown roles as client
+      where.clientId = userId;
     }
 
     // Add filters
@@ -51,10 +93,22 @@ router.get('/', authenticate, async (req, res, next) => {
       where,
       include: {
         client: {
-          select: { id: true, name: true, email: true, picture: true, phoneNumber: true },
+          select: { id: true, name: true, email: true, picture: true, phoneNumber: true, address: true },
         },
         salon: {
-          select: { id: true, name: true, address: true, city: true, phone: true },
+          select: {
+            id: true,
+            name: true,
+            address: true,
+            city: true,
+            phone: true,
+            image: true,
+            gallery: {
+              take: 1,
+              orderBy: { createdAt: 'desc' },
+              select: { id: true, url: true },
+            },
+          },
         },
         coiffeur: {
           include: {
@@ -83,35 +137,90 @@ router.get('/', authenticate, async (req, res, next) => {
  */
 router.post('/', authenticate, async (req, res, next) => {
   try {
-    const { salonId, coiffeurId, serviceId, date, startTime, notes } = req.body;
+    const {
+      salonId,
+      coiffeurId,
+      serviceId,
+      serviceIds,
+      date,
+      startTime,
+      notes,
+      clientFirstName,
+      clientLastName,
+      clientPhone,
+      clientAddress,
+    } = req.body;
 
     // Validate required fields (coiffeurId is now optional - assigned by salon owner later)
-    if (!salonId || !serviceId || !date || !startTime) {
+    const normalizedServiceIds = Array.isArray(serviceIds) && serviceIds.length > 0
+      ? serviceIds
+      : (serviceId ? [serviceId] : []);
+
+    if (!salonId || normalizedServiceIds.length === 0 || !date || !startTime) {
       return res.status(400).json({
         status: 'error',
         message: 'Salon, service, date, and start time are required',
       });
     }
 
-    // Get service to calculate end time and price
-    const service = await prisma.service.findUnique({
-      where: { id: serviceId },
-    });
-
-    if (!service) {
-      return res.status(404).json({
+    const firstName = String(clientFirstName || '').trim();
+    const lastName = String(clientLastName || '').trim();
+    const phone = String(clientPhone || '').trim();
+    const address = clientAddress == null ? '' : String(clientAddress).trim();
+    if (!firstName || !lastName || !phone) {
+      return res.status(400).json({
         status: 'error',
-        message: 'Service not found',
+        message: 'Client first name, last name, and phone are required',
       });
     }
+
+    const fullName = `${firstName} ${lastName}`.trim();
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data: {
+        name: fullName,
+        phoneNumber: phone,
+        ...(clientAddress !== undefined ? { address: address || null } : {}),
+      },
+    });
+
+    const primaryServiceId = serviceId || normalizedServiceIds[0];
+    if (!normalizedServiceIds.includes(primaryServiceId)) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Invalid service selection',
+      });
+    }
+
+    // Get services to calculate end time and price (support multiple services)
+    const services = await prisma.service.findMany({
+      where: { id: { in: normalizedServiceIds } },
+    });
+
+    if (services.length !== normalizedServiceIds.length) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'One or more services not found',
+      });
+    }
+
+    const primaryService = services.find(s => s.id === primaryServiceId) || services[0];
+    const totalDuration = services.reduce((sum, s) => sum + (s.duration || 0), 0);
+    const totalPrice = services.reduce((sum, s) => sum + (s.price || 0), 0);
 
     // Calculate end time
     const [hours, minutes] = startTime.split(':').map(Number);
     const startMinutes = hours * 60 + minutes;
-    const endMinutes = startMinutes + service.duration;
+    const endMinutes = startMinutes + totalDuration;
     const endTime = `${Math.floor(endMinutes / 60).toString().padStart(2, '0')}:${(endMinutes % 60).toString().padStart(2, '0')}`;
 
     const appointmentDate = new Date(date);
+
+    const extraServices = services.filter(s => s.id !== primaryServiceId);
+    const extraServicesNote = extraServices.length > 0
+      ? `Services additionnels: ${extraServices.map(s => `${s.name} (${s.price} FCFA)`).join(', ')}`
+      : '';
+    const combinedNotes = [notes && notes.trim(), extraServicesNote].filter(Boolean).join('\n');
 
     // Check for conflicting appointments only if coiffeurId is provided
     if (coiffeurId) {
@@ -151,17 +260,20 @@ router.post('/', authenticate, async (req, res, next) => {
         date: appointmentDate,
         startTime,
         endTime,
-        totalPrice: service.price,
-        notes,
+        totalPrice: totalPrice,
+        notes: combinedNotes || null,
         status: coiffeurId ? 'PENDING' : 'PENDING_ASSIGNMENT',
         clientId: req.user.id,
         salonId,
         coiffeurId: coiffeurId || null,
-        serviceId,
+        serviceId: primaryServiceId,
       },
       include: {
         salon: {
-          select: { name: true, address: true },
+          select: { id: true, name: true, address: true, ownerId: true },
+        },
+        client: {
+          select: { id: true, name: true, email: true, phoneNumber: true, address: true },
         },
         coiffeur: coiffeurId ? {
           include: {
@@ -172,6 +284,21 @@ router.post('/', authenticate, async (req, res, next) => {
       },
     });
 
+    if (appointment?.salon?.ownerId && appointment.salon.ownerId !== req.user.id) {
+      try {
+        const notification = await prisma.notification.create({
+          data: {
+            userId: appointment.salon.ownerId,
+            type: 'booking',
+            message: `Nouvelle réservation de ${fullName} le ${new Date(appointmentDate).toLocaleDateString('fr-FR')} à ${startTime}.`,
+          },
+        });
+        pushNotification(notification.userId, notification);
+      } catch (e) {
+        console.error('Notification booking error:', e.message);
+      }
+    }
+
     res.status(201).json({
       status: 'success',
       message: coiffeurId 
@@ -179,6 +306,99 @@ router.post('/', authenticate, async (req, res, next) => {
         : 'Réservation créée. Le salon vous assignera un(e) coiffeur(se).',
       data: { appointment },
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * Get messages for one appointment (client <-> pro)
+ * GET /api/appointments/:id/messages
+ */
+router.get('/:id/messages', authenticate, async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const appointment = await prisma.appointment.findUnique({
+      where: { id },
+      include: { salon: { select: { ownerId: true } } },
+    });
+    if (!appointment) {
+      return res.status(404).json({ status: 'error', message: 'Appointment not found' });
+    }
+    if (!canAccessAppointment(appointment, req.user)) {
+      return res.status(403).json({ status: 'error', message: 'Access denied' });
+    }
+
+    const messages = await prisma.chatMessage.findMany({
+      where: { appointmentId: id },
+      include: {
+        sender: { select: { id: true, name: true, picture: true, role: true } },
+      },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    res.status(200).json({ status: 'success', data: { messages } });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * Send message (text and/or vocal) for an appointment
+ * POST /api/appointments/:id/messages
+ */
+router.post('/:id/messages', authenticate, uploadVoice.single('voice'), async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const text = String(req.body?.text || '').trim();
+    const voiceUrl = req.file ? `/uploads/chat-voices/${req.file.filename}` : null;
+    if (!text && !voiceUrl) {
+      return res.status(400).json({ status: 'error', message: 'Message text or voice is required' });
+    }
+
+    const appointment = await prisma.appointment.findUnique({
+      where: { id },
+      include: { salon: { select: { ownerId: true, name: true } }, client: { select: { id: true, name: true } } },
+    });
+    if (!appointment) {
+      return res.status(404).json({ status: 'error', message: 'Appointment not found' });
+    }
+    if (!canAccessAppointment(appointment, req.user)) {
+      return res.status(403).json({ status: 'error', message: 'Access denied' });
+    }
+
+    const message = await prisma.chatMessage.create({
+      data: {
+        appointmentId: id,
+        senderId: req.user.id,
+        text: text || null,
+        audioUrl: voiceUrl,
+      },
+      include: {
+        sender: { select: { id: true, name: true, picture: true, role: true } },
+      },
+    });
+
+    const recipientId = req.user.id === appointment.clientId
+      ? appointment.salon?.ownerId
+      : appointment.clientId;
+    if (recipientId && recipientId !== req.user.id) {
+      try {
+        const notification = await prisma.notification.create({
+          data: {
+            userId: recipientId,
+            type: 'chat',
+            message: `Nouveau message pour la réservation chez ${appointment.salon?.name || 'le salon'}.`,
+          },
+        });
+        pushNotification(notification.userId, notification);
+        pushChatMessage(recipientId, { appointmentId: id, message });
+      } catch (e) {
+        console.error('Notification chat error:', e.message);
+      }
+    }
+
+    res.status(201).json({ status: 'success', data: { message } });
   } catch (error) {
     next(error);
   }
@@ -196,7 +416,7 @@ router.get('/:id', authenticate, async (req, res, next) => {
       where: { id },
       include: {
         client: {
-          select: { id: true, name: true, email: true, picture: true, phoneNumber: true },
+          select: { id: true, name: true, email: true, picture: true, phoneNumber: true, address: true },
         },
         salon: true,
         coiffeur: {
@@ -220,7 +440,7 @@ router.get('/:id', authenticate, async (req, res, next) => {
     const hasAccess =
       appointment.clientId === req.user.id ||
       req.user.role === 'ADMIN' ||
-      (req.user.role === 'SALON_OWNER' && appointment.salon.ownerId === req.user.id);
+      ((req.user.role === 'PRO' || req.user.role === 'SALON_OWNER') && appointment.salon.ownerId === req.user.id);
 
     if (!hasAccess) {
       return res.status(403).json({
@@ -270,7 +490,7 @@ router.patch('/:id/status', authenticate, async (req, res, next) => {
     // Check permissions
     const canUpdate =
       req.user.role === 'ADMIN' ||
-      (req.user.role === 'SALON_OWNER' && appointment.salon.ownerId === req.user.id) ||
+      ((req.user.role === 'PRO' || req.user.role === 'SALON_OWNER') && appointment.salon.ownerId === req.user.id) ||
       (status === 'CANCELLED' && appointment.clientId === req.user.id);
 
     if (!canUpdate) {
