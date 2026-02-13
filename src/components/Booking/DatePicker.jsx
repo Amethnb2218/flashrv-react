@@ -32,16 +32,16 @@ function DatePicker({ selectedDate, onDateSelect, onSelect }) {
 
   return (
     <div className="rounded-2xl border border-gray-100 bg-white/80 p-5 shadow-sm">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
         <div>
           <h3 className="text-sm font-semibold text-gray-900">Choisir une date</h3>
           <p className="text-xs text-gray-500">14 prochains jours disponibles</p>
         </div>
-        <div className="text-xs text-primary-700 bg-primary-50 px-3 py-1 rounded-full">
+        <div className="text-xs text-primary-700 bg-primary-50 px-3 py-1 rounded-full max-w-full break-words">
           {selectedLabel || 'Aucune date'}
         </div>
       </div>
-      <div className="flex space-x-3 overflow-x-auto pb-2 scrollbar-hide">
+      <div className="flex space-x-2 sm:space-x-3 overflow-x-auto pb-2 scrollbar-hide">
         {days.map((day) => (
           <motion.button
             key={day.date}
@@ -49,7 +49,7 @@ function DatePicker({ selectedDate, onDateSelect, onSelect }) {
             whileTap={{ scale: 0.97 }}
             onClick={() => handleSelect(day.date)}
             className={`
-              flex-shrink-0 w-20 px-3 py-3 rounded-2xl text-center transition-all duration-200 border
+              flex-shrink-0 w-20 px-2 sm:px-3 py-3 rounded-2xl text-center transition-all duration-200 border
               ${selectedDate === day.date
                 ? 'bg-primary-600 border-primary-600 text-white shadow-lg shadow-primary-500/25'
                 : 'bg-white border-gray-200 text-gray-700 hover:border-primary-300'

@@ -20,7 +20,7 @@ function TimeSlot({ selectedTime, onTimeSelect, duration = 30 }) {
 
   return (
     <div className="rounded-2xl border border-gray-100 bg-white/80 p-5 shadow-sm">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
         <div>
           <h3 className="text-sm font-semibold text-gray-900">Choisir un horaire</h3>
           <p className="text-xs text-gray-500">Durée estimée : {duration} min</p>
@@ -35,7 +35,7 @@ function TimeSlot({ selectedTime, onTimeSelect, duration = 30 }) {
           </div>
         )}
       </div>
-      <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
+      <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-3">
         {timeSlots.map((time) => (
           <motion.button
             key={time}
@@ -43,7 +43,7 @@ function TimeSlot({ selectedTime, onTimeSelect, duration = 30 }) {
             whileTap={{ scale: 0.97 }}
             onClick={() => onTimeSelect(time)}
             className={`
-              py-2.5 px-3 rounded-xl font-semibold text-sm transition-all duration-200 border
+              py-2.5 px-2 sm:px-3 rounded-xl font-semibold text-xs sm:text-sm transition-all duration-200 border
               ${selectedTime === time 
                 ? 'bg-primary-600 text-white border-primary-600 shadow-lg shadow-primary-500/25' 
                 : 'bg-white border-gray-200 text-gray-700 hover:border-primary-300 hover:text-primary-600'

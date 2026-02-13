@@ -293,7 +293,7 @@ function Payment() {
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-2xl p-8 max-w-md w-full text-center"
+            className="bg-white rounded-2xl p-5 sm:p-8 max-w-md w-full text-center"
           >
             <div className="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <FiSmartphone className="w-10 h-10 text-primary-600 animate-pulse" />
@@ -330,14 +330,14 @@ function Payment() {
             <FiChevronLeft className="w-5 h-5 mr-1" />
             Retour
           </button>
-          <h1 className="text-3xl font-bold text-gray-900">Paiement</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Paiement</h1>
           <p className="text-gray-600 mt-2">Finalisez votre réservation en toute sécurité</p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid md:grid-cols-2 gap-5 sm:gap-8">
           {/* Payment Methods */}
           <div>
-            <div className="bg-white rounded-2xl shadow-sm p-6">
+            <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-6">
                 Mode de paiement
               </h2>
@@ -402,7 +402,7 @@ function Payment() {
 
           {/* Order Summary */}
           <div>
-            <div className="bg-white rounded-2xl shadow-sm p-6 sticky top-24">
+            <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 md:sticky md:top-24">
               <h2 className="text-xl font-bold text-gray-900 mb-6">
                 Récapitulatif
               </h2>
@@ -422,9 +422,9 @@ function Payment() {
               <div className="py-4 border-b border-gray-100">
                 <h4 className="font-medium text-gray-900 mb-3">Services</h4>
                 {bookingState.services.map(service => (
-                  <div key={service.id} className="flex justify-between text-sm mb-2">
-                    <span className="text-gray-600">{service.name}</span>
-                    <span className="font-medium">{service.price.toLocaleString()} FCFA</span>
+                  <div key={service.id} className="flex justify-between text-sm mb-2 gap-3">
+                    <span className="text-gray-600 break-words">{service.name}</span>
+                    <span className="font-medium whitespace-nowrap">{service.price.toLocaleString()} FCFA</span>
                   </div>
                 ))}
               </div>
@@ -498,7 +498,7 @@ function Payment() {
               <button
                 onClick={handlePayment}
                 disabled={loading || !selectedMethod || paymentStatus === 'pending_confirmation'}
-                className="w-full py-4 bg-gradient-to-r from-primary-600 to-accent-600 text-white font-semibold rounded-xl hover:from-primary-700 hover:to-accent-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                className="w-full py-4 px-3 bg-gradient-to-r from-primary-600 to-accent-600 text-white font-semibold text-sm sm:text-base rounded-xl hover:from-primary-700 hover:to-accent-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-center"
               >
                 {loading ? (
                   <LoadingSpinner size="sm" />

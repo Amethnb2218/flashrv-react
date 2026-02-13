@@ -264,18 +264,18 @@ function PaymentSuccess() {
             >
               <FiCheck className="w-10 h-10 text-green-500" />
             </motion.div>
-            <h1 className="text-3xl font-bold text-white mb-2">Réservation confirmée !</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Réservation confirmée !</h1>
             <p className="text-green-100">Votre rendez-vous a été enregistré avec succès</p>
           </div>
 
           <div className="p-6 sm:p-8">
             <div className="text-center mb-8">
               <p className="text-sm text-gray-500 mb-1">Référence de réservation</p>
-              <p className="text-2xl font-bold text-primary-600 font-mono">{booking.id}</p>
+              <p className="text-lg sm:text-2xl font-bold text-primary-600 font-mono break-all">{booking.id}</p>
             </div>
 
             <div className="bg-gray-50 rounded-2xl p-6 mb-8">
-              <div className="flex items-start mb-6 pb-6 border-b border-gray-200">
+              <div className="flex flex-col sm:flex-row items-start mb-6 pb-6 border-b border-gray-200 gap-3 sm:gap-0">
                 {salonImage ? (
                   <img
                     src={salonImage}
@@ -296,7 +296,7 @@ function PaymentSuccess() {
                 </div>
               </div>
 
-              <div className="grid sm:grid-cols-2 gap-6">
+              <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
                 <div className="flex items-start">
                   <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center mr-3">
                     <FiCalendar className="w-5 h-5 text-primary-600" />
