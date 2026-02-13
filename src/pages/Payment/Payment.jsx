@@ -7,8 +7,6 @@ import { useAuth } from '../../context/AuthContext'
 import LoadingSpinner from '../../components/UI/LoadingSpinner'
 import apiFetch from '../../api/client'
 
-const API_URL = import.meta.env.VITE_API_URL || '/api'
-
 // Méthodes de paiement autorisées - MVP
 const PAYMENT_METHODS = [
   {
@@ -141,11 +139,11 @@ function Payment() {
 
     if (['orange_money', 'wave'].includes(selectedMethod)) {
       if (!phoneNumber) {
-        setError('Veuillez entrer votre numéro de téléphone')
+        setError('Veuillez entrer votre num?ro de t?l?phone')
         return
       }
       if (!validatePhone(phoneNumber)) {
-        setError('Numéro de téléphone invalide. Utilisez un numéro sénégalais (77, 78, 76, 70, 75, 33)')
+        setError('Num?ro de t?l?phone invalide. Utilisez un num?ro s?n?galais (77, 78, 76, 70, 75, 33)')
         return
       }
     }
@@ -156,76 +154,48 @@ function Payment() {
 
     try {
       const appointmentId = await ensureAppointment()
-      // Pour paiement sur place, on peut confirmer directement
+
       if (selectedMethod === 'pay_on_site') {
-        const response = await fetch(`${API_URL}/payments/confirm-on-site`, {
+        const data = await apiFetch('/payments/confirm-on-site', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify({
+          body: {
             amount: bookingState.totalPrice,
             bookingId: appointmentId,
-          }),
+          },
         })
-
-        const data = await response.json()
-        if (!response.ok) {
-          throw new Error(data.message || 'Erreur lors de la confirmation du paiement sur place')
-        }
-
-        handlePaymentSuccess(data.data, appointmentId)
+        handlePaymentSuccess(data?.data || data, appointmentId)
         return
       }
 
-      // Pour Wave et Orange Money
-      const response = await fetch(`${API_URL}/payments/init`, {
+      const data = await apiFetch('/payments/init', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
+        body: {
           provider: selectedMethod.toUpperCase(),
           amount: depositAmount,
           phoneNumber: phoneNumber || undefined,
           bookingId: appointmentId,
-        }),
+        },
       })
 
-      // Vérifier si la réponse est vide
-      const text = await response.text()
-      if (!text) {
-        throw new Error('Erreur de connexion au serveur. Veuillez réessayer.')
+      const payload = data?.data || data
+      if (!payload?.paymentId) {
+        throw new Error('Erreur lors du paiement')
       }
 
-      const data = JSON.parse(text)
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Erreur lors du paiement')
-      }
-
-      if (data.data.checkoutUrl || data.data.mockCheckoutUrl) {
-        // Redirect to payment provider (Wave, Orange Money)
+      if (payload.checkoutUrl || payload.mockCheckoutUrl) {
         setPaymentStatus('pending_confirmation')
-        
-        // Open payment URL in new tab (or mock in test mode)
-        const url = data.data.checkoutUrl || data.data.mockCheckoutUrl
+        const url = payload.checkoutUrl || payload.mockCheckoutUrl
         if (url && url !== 'mock') {
           window.open(url, '_blank')
         }
-        
-        // Show waiting message - poll for status
-        pollPaymentStatus(data.data.paymentId, appointmentId)
+        pollPaymentStatus(payload.paymentId, appointmentId)
       } else {
-        // Payment initiated, waiting for user to confirm on phone
         setPaymentStatus('pending_confirmation')
-        pollPaymentStatus(data.data.paymentId, appointmentId)
+        pollPaymentStatus(payload.paymentId, appointmentId)
       }
     } catch (err) {
       console.error('Payment error:', err)
-      setError(err.message || 'Une erreur est survenue. Veuillez réessayer.')
+      setError(err.message || 'Une erreur est survenue. Veuillez r?essayer.')
       setPaymentStatus(null)
     } finally {
       setLoading(false)
@@ -234,31 +204,30 @@ function Payment() {
 
   const pollPaymentStatus = async (paymentId, appointmentId) => {
     let attempts = 0
-    const maxAttempts = 30 // 5 minutes max (10s interval)
+    const maxAttempts = 30
 
     const checkStatus = async () => {
       try {
-        const response = await fetch(`${API_URL}/payments/${paymentId}/status`, {
-          credentials: 'include',
-        })
-        const data = await response.json()
+        const data = await apiFetch(`/payments/${paymentId}/status`)
+        const payload = data?.data || data
+        const status = payload?.payment?.status
 
-        if (data.data.payment.status === 'COMPLETED') {
-          handlePaymentSuccess(data.data.payment, appointmentId)
+        if (status === 'COMPLETED') {
+          handlePaymentSuccess(payload.payment, appointmentId)
           return
         }
 
-        if (data.data.payment.status === 'FAILED') {
-          setError('Le paiement a échoué. Veuillez réessayer.')
+        if (status === 'FAILED') {
+          setError('Le paiement a ?chou?. Veuillez r?essayer.')
           setPaymentStatus(null)
           return
         }
 
         attempts++
         if (attempts < maxAttempts) {
-          setTimeout(checkStatus, 10000) // Check every 10 seconds
+          setTimeout(checkStatus, 10000)
         } else {
-          setError('Délai d\'attente dépassé. Vérifiez votre téléphone et réessayez.')
+          setError("Délai d'attente dépassé. Vérifiez votre téléphone et réessayez.")
           setPaymentStatus(null)
         }
       } catch (err) {
@@ -266,7 +235,7 @@ function Payment() {
       }
     }
 
-    setTimeout(checkStatus, 5000) // First check after 5 seconds
+    setTimeout(checkStatus, 5000)
   }
 
   const handlePaymentSuccess = (paymentData, appointmentIdOverride) => {
