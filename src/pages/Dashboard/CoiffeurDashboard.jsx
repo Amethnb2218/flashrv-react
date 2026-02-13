@@ -4056,6 +4056,8 @@ Ajouter horaires
   isOpen={showChatModal}
   onClose={() => setShowChatModal(false)}
   appointment={chatAppointment}
+  appointments={appointments}
+  showThreadList
   currentUserId={user?.id}
 />
 </div>

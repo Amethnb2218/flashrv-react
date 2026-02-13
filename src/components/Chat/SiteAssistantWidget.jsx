@@ -18,8 +18,9 @@ function SiteAssistantWidget() {
 
   const role = String(user?.role || '').toUpperCase()
   const isAdminArea = location.pathname.startsWith('/admin')
+  const isProArea = location.pathname.startsWith('/pro')
   const isClientScope = !isAuthenticated || role === 'CLIENT'
-  const shouldRender = !isAdminArea && isClientScope
+  const shouldRender = !isAdminArea && !isProArea && isClientScope
 
   const [isOpen, setIsOpen] = useState(false)
   const [input, setInput] = useState('')

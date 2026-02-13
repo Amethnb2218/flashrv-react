@@ -433,7 +433,7 @@ function ClientDashboard() {
       <button
         type="button"
         onClick={openFloatingChat}
-        className="fixed bottom-6 right-6 z-40 inline-flex items-center gap-2 rounded-full bg-gray-900 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-gray-900/25 transition hover:bg-gray-800"
+        className="fixed bottom-24 right-6 z-40 inline-flex items-center gap-2 rounded-full bg-gray-900 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-gray-900/25 transition hover:bg-gray-800"
       >
         <FiMessageCircle className="h-4 w-4" />
         Chat rapide
