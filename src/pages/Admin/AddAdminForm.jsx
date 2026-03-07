@@ -73,9 +73,4 @@ export default function AddAdminForm({ onAdminAdded }) {
     </div>
   )
 }
-        {loading ? 'Ajout...' : 'Ajouter Admin'}
-      </button>
-      {message && <span className="ml-2 text-sm text-gray-200 font-poppins">{message}</span>}
-    </form>
-  )
 }
