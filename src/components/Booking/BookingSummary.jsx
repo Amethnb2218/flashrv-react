@@ -26,7 +26,7 @@ function BookingSummary({ salon }) {
   const remainingAmount = totalPrice - depositAmount
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 lg:sticky lg:top-24">
+    <div className="box-border w-full min-w-0 max-w-full overflow-hidden bg-white rounded-2xl shadow-lg p-3 sm:p-6 lg:sticky lg:top-24">
       <h3 className="font-semibold text-lg mb-4">Récapitulatif</h3>
 
       {salon ? (

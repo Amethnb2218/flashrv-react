@@ -213,7 +213,7 @@ function Home() {
               transition={{ duration: reduceMotion ? 0 : 0.6 }}
             >
               <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">
-                Réservation simple, résultat premium
+                Réservez. Brillez.
               </span>
               <h1 className="mt-4 text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
                 Salons & Boutiques,{' '}
@@ -222,7 +222,7 @@ function Home() {
                 </span>
               </h1>
               <p className="mt-5 text-lg text-gray-600 max-w-xl leading-relaxed">
-                StyleFlow connecte clients, salons et boutiques. Réservez un RDV ou commandez vos articles préférés.
+                StyleFlow connecte clients, salons et boutiques. Réservez un rendez-vous ou commandez vos articles préférés en toute simplicité.
               </p>
 
               <form onSubmit={handleSearch} className="mt-8 bg-white/95 rounded-3xl p-4 shadow-[0_28px_70px_-40px_rgba(15,23,42,0.6)] border border-white/70 backdrop-blur">

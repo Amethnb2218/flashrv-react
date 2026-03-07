@@ -76,7 +76,7 @@ function TimeSlot({
   const nextDate = dateUnavailable ? getNextAvailableDate?.(selectedDate) : null
 
   return (
-    <section className="w-full max-w-full overflow-hidden rounded-2xl border border-gray-100 bg-white p-4">
+    <section className="box-border w-full min-w-0 max-w-full overflow-hidden rounded-2xl border border-gray-100 bg-white p-3 sm:p-4">
       <div className="mb-3 flex items-center justify-between gap-2">
         <p className="text-sm font-semibold text-gray-900">Heure</p>
         {selectedTime && (
@@ -96,7 +96,7 @@ function TimeSlot({
             <button
               key={period.id}
               onClick={() => setActivePeriod(period.id)}
-              className={`min-w-[102px] flex-1 rounded-xl border px-2 py-2 text-center transition-all ${
+              className={`min-w-0 flex-1 rounded-xl border px-1.5 py-2 text-center transition-all sm:px-2 ${
                 isActive
                   ? 'border-primary-500 bg-primary-600 text-white shadow-md shadow-primary-500/20'
                   : hasSelected
@@ -133,7 +133,7 @@ function TimeSlot({
           className="max-h-[42vh] w-full max-w-full overflow-x-hidden overflow-y-auto rounded-xl border border-gray-100 bg-gray-50/60 p-2"
           style={{ WebkitOverflowScrolling: 'touch' }}
         >
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(90px,1fr))] gap-2.5">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(72px,1fr))] gap-2 sm:grid-cols-[repeat(auto-fit,minmax(90px,1fr))] sm:gap-2.5">
             {currentPeriod.slots.map((time) => {
               const isSelected = selectedTime === time
 

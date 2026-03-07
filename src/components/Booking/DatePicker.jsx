@@ -86,7 +86,7 @@ function DatePicker({ selectedDate, onDateSelect, onSelect, isDateDisabled, days
   }
 
   return (
-    <section className="w-full max-w-full overflow-hidden rounded-2xl border border-gray-100 bg-white p-4">
+    <section className="box-border w-full min-w-0 max-w-full overflow-hidden rounded-2xl border border-gray-100 bg-white p-3 sm:p-4">
       <div className="mb-3 flex items-center justify-between gap-2">
         <p className="text-sm font-semibold text-gray-900">Date</p>
         {selectedLabel && (
@@ -96,18 +96,18 @@ function DatePicker({ selectedDate, onDateSelect, onSelect, isDateDisabled, days
         )}
       </div>
 
-      <div className="mb-3 flex items-center justify-between gap-2">
+      <div className="mb-3 flex items-center justify-between gap-1 sm:gap-2">
         <button
           type="button"
           onClick={() => setPageStart((v) => Math.max(v - PAGE_SIZE, 0))}
           disabled={!canGoPrev}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+          className="inline-flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 sm:h-9 sm:w-9"
           aria-label="Dates precedentes"
         >
           <FiChevronLeft className="h-4 w-4" />
         </button>
 
-        <div className="flex items-center gap-1.5 text-[11px]">
+        <div className="flex flex-wrap items-center justify-center gap-1 text-[10px] sm:gap-1.5 sm:text-[11px]">
           <button
             type="button"
             onClick={() => pickFromOffset(1)}
@@ -142,7 +142,7 @@ function DatePicker({ selectedDate, onDateSelect, onSelect, isDateDisabled, days
           type="button"
           onClick={() => setPageStart((v) => Math.min(v + PAGE_SIZE, Math.max(allDays.length - PAGE_SIZE, 0)))}
           disabled={!canGoNext}
-          className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+          className="inline-flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 sm:h-9 sm:w-9"
           aria-label="Dates suivantes"
         >
           <FiChevronRight className="h-4 w-4" />
@@ -169,7 +169,7 @@ function DatePicker({ selectedDate, onDateSelect, onSelect, isDateDisabled, days
                   handleSelect(day.date)
                 }}
                 disabled={isDisabled}
-                className={`snap-start w-[78px] flex-shrink-0 rounded-2xl border px-2 py-2.5 text-center transition-all duration-200 ${
+                className={`snap-start w-[68px] flex-shrink-0 rounded-2xl border px-1.5 py-2 text-center transition-all duration-200 sm:w-[78px] sm:px-2 sm:py-2.5 ${
                   isDisabled
                     ? 'cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400'
                     : isSelected

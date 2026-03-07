@@ -249,7 +249,7 @@ function Booking() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -12 }}
                 transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                className="w-full max-w-full overflow-x-hidden rounded-2xl bg-white p-3 shadow-sm sm:p-6"
+                className="box-border w-full min-w-0 max-w-full overflow-x-hidden rounded-2xl bg-white p-3 shadow-sm sm:p-6"
               >
                 {/* Step 1: Services */}
                 {state.step === 1 && (
@@ -279,12 +279,12 @@ function Booking() {
                 {/* Step 2: Date & Time */}
                 {state.step === 2 && (
                   <div className="space-y-3 sm:space-y-4">
-                    <div className="mx-auto w-full max-w-[380px] rounded-2xl border border-primary-100 bg-gradient-to-r from-primary-50 to-white px-3.5 py-3 sm:max-w-none sm:px-4">
+                    <div className="w-full min-w-0 rounded-2xl border border-primary-100 bg-gradient-to-r from-primary-50 to-white px-3 py-3 sm:px-4">
                       <h2 className="text-base font-bold text-gray-900 sm:text-xl">Date et heure</h2>
                       <p className="mt-1 text-xs text-gray-600 sm:text-sm">Choisissez un jour puis un créneau disponible.</p>
                     </div>
 
-                    <div className="mx-auto w-full max-w-[380px] sm:max-w-none">
+                    <div className="w-full min-w-0">
                       <DatePicker
                         selectedDate={state.date}
                         onDateSelect={(date) => {
@@ -301,7 +301,7 @@ function Booking() {
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.25 }}
-                        className="mx-auto w-full max-w-[380px] sm:max-w-none"
+                        className="w-full min-w-0"
                       >
                         <TimeSlot
                           selectedDate={state.date}
