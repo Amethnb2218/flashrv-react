@@ -24,14 +24,7 @@ const rateLimit = require('express-rate-limit');
 const app = express();
 
 // ===========================================
-// SECURITY HEADERS
-// ===========================================
-app.use(helmet({
-  crossOriginResourcePolicy: { policy: 'cross-origin' },
-}));
-
-// ===========================================
-// CORS CONFIGURATION
+// CORS CONFIGURATION (must be BEFORE helmet and other middleware)
 // ===========================================
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || process.env.FRONTEND_URL || 'http://localhost:3000').split(',').map(s => s.trim());
 if (process.env.NODE_ENV !== 'production') {
@@ -39,12 +32,29 @@ if (process.env.NODE_ENV !== 'production') {
     if (!allowedOrigins.includes(o)) allowedOrigins.push(o);
   });
 }
+
+// Handle preflight OPTIONS requests explicitly
+app.options('*', cors({
+  origin: (origin, cb) => {
+    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+    cb(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+}));
+
 app.use(cors({
   origin: (origin, cb) => {
     if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
     cb(new Error('Not allowed by CORS'));
   },
   credentials: true,
+}));
+
+// ===========================================
+// SECURITY HEADERS (after CORS)
+// ===========================================
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
 }));
 
 // ===========================================
