@@ -217,21 +217,24 @@ function Booking() {
                 {/* Step 2: Date & Time */}
                 {state.step === 2 && (
                   <div className="space-y-3 sm:space-y-4">
-                    <div className="rounded-2xl border border-primary-100 bg-gradient-to-r from-primary-50 to-white px-3.5 py-3 sm:px-4">
+                    <div className="mx-auto w-full max-w-[380px] rounded-2xl border border-primary-100 bg-gradient-to-r from-primary-50 to-white px-3.5 py-3 sm:max-w-none sm:px-4">
                       <h2 className="text-base font-bold text-gray-900 sm:text-xl">Date et heure</h2>
                       <p className="mt-1 text-xs text-gray-600 sm:text-sm">Choisissez un jour puis un créneau disponible.</p>
                     </div>
 
-                    <DatePicker
-                      selectedDate={state.date}
-                      onDateSelect={(date) => dispatch({ type: 'SET_DATE', payload: date })}
-                    />
+                    <div className="mx-auto w-full max-w-[380px] sm:max-w-none">
+                      <DatePicker
+                        selectedDate={state.date}
+                        onDateSelect={(date) => dispatch({ type: 'SET_DATE', payload: date })}
+                      />
+                    </div>
 
                     {state.date && (
                       <motion.div
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.25 }}
+                        className="mx-auto w-full max-w-[380px] sm:max-w-none"
                       >
                         <TimeSlot
                           selectedTime={state.time}

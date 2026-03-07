@@ -77,7 +77,7 @@ function TimeSlot({ selectedTime, onTimeSelect, duration = 30 }) {
         )}
       </div>
 
-      <div className="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+      <div className="mb-3 grid grid-cols-3 gap-2">
         {periods.map((period) => {
           const isActive = activePeriod === period.id
           const hasSelected = selectedTime && period.slots.includes(selectedTime)
@@ -86,7 +86,7 @@ function TimeSlot({ selectedTime, onTimeSelect, duration = 30 }) {
             <button
               key={period.id}
               onClick={() => setActivePeriod(period.id)}
-              className={`rounded-xl border px-3 py-2 text-left transition-all ${
+              className={`rounded-xl border px-2 py-2 text-center transition-all ${
                 isActive
                   ? 'border-primary-500 bg-primary-600 text-white shadow-md shadow-primary-500/20'
                   : hasSelected
@@ -94,11 +94,11 @@ function TimeSlot({ selectedTime, onTimeSelect, duration = 30 }) {
                   : 'border-gray-200 bg-gray-50 text-gray-700 active:bg-gray-100'
               }`}
             >
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-center gap-1.5">
                 <period.Icon className="h-4 w-4" />
-                <span className="text-sm font-semibold">{period.label}</span>
+                <span className="text-[13px] font-semibold">{period.label}</span>
               </div>
-              <p className={`mt-1 text-[11px] ${isActive ? 'text-primary-100' : 'text-gray-500'}`}>{period.range}</p>
+              <p className={`mt-1 text-[10px] ${isActive ? 'text-primary-100' : 'text-gray-500'}`}>{period.range}</p>
             </button>
           )
         })}
@@ -109,7 +109,7 @@ function TimeSlot({ selectedTime, onTimeSelect, duration = 30 }) {
         className="max-h-[42vh] w-full max-w-full overflow-x-hidden overflow-y-auto rounded-xl border border-gray-100 bg-gray-50/60 p-2"
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-4">
           {currentPeriod.slots.map((time) => {
             const isSelected = selectedTime === time
 
