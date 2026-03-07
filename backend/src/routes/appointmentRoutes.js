@@ -1,14 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../lib/prisma');
 const { authenticate, authorize } = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { uploadsSubdir } = require('../utils/paths');
 const { pushNotification, pushChatMessage } = require('../realtime/hub');
-
-const prisma = new PrismaClient();
 
 const chatVoiceDir = uploadsSubdir('chat-voices');
 if (!fs.existsSync(chatVoiceDir)) fs.mkdirSync(chatVoiceDir, { recursive: true });

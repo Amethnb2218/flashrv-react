@@ -1,10 +1,9 @@
 
 const express = require('express');
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../lib/prisma');
 const { authenticate, requireAdmin, requireSuperAdmin, ROLES, STATUS } = require('../middleware/auth');
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // ============================================
 // SUPER_ADMIN ROUTES - Restriction PRO/ADMIN

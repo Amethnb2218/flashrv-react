@@ -1,6 +1,6 @@
 ﻿const express = require('express');
 const router = express.Router();
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../lib/prisma');
 const { authenticate, optionalAuth, authorize, ROLES, STATUS } = require('../middleware/auth');
 
 // Multer for file uploads
@@ -9,9 +9,6 @@ const path = require('path');
 const fs = require('fs');
 const { uploadsDir, uploadsSubdir } = require('../utils/paths');
 const { pushNotification } = require('../realtime/hub');
-
-// Initialiser Prisma
-const prisma = new PrismaClient();
 
 const attachServiceImages = async (salon) => {
   if (!salon || !Array.isArray(salon.services) || salon.services.length === 0) {

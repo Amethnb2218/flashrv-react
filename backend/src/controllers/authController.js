@@ -86,13 +86,11 @@ async function login(req, res, next) {
     return next(error);
   }
 }
-const { PrismaClient } = require("@prisma/client");
+const prisma = require("../lib/prisma");
 const { verifyGoogleToken } = require("../services/googleAuth");
 const { generateToken, setTokenCookie, clearTokenCookie } = require("../utils/jwt");
 const { ROLES, STATUS } = require("../middleware/auth");
 const { sendWelcomeEmail } = require("../services/emailService");
-
-const prisma = new PrismaClient();
 
 /**
  * Petit helper: force les bons headers CORS sur la réponse

@@ -12,8 +12,7 @@ exports.delete = async (req, res) => {
     res.status(500).json({ error: 'Erreur serveur', details: err.message });
   }
 };
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../lib/prisma');
 
 // GET all payment methods for the current PRO's salon
 exports.getAll = async (req, res) => {

@@ -1,10 +1,9 @@
 const express = require('express');
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../lib/prisma');
 const { optionalAuth } = require('../middleware/auth');
 const { pushNotification } = require('../realtime/hub');
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 const ALLOWED_TYPES = new Set(['bug', 'suggestion', 'problem']);
 

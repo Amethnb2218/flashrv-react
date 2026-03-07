@@ -1,13 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../lib/prisma');
 const { authenticate } = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { uploadsDir } = require('../utils/paths');
-
-const prisma = new PrismaClient();
 
 // Multer config for product images
 if (!fs.existsSync(uploadsDir)) {

@@ -11,8 +11,7 @@
 // (le code de la route PATCH sera replacé plus bas)
 const express = require('express');
 const router = express.Router();
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../lib/prisma');
 const multer = require('multer');
 const path = require('path');
 const { authenticate } = require('../middleware/auth');

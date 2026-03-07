@@ -1,10 +1,8 @@
 require('dotenv').config();
 const http = require('http');
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('./lib/prisma');
 const app = require('./app');
 const { initRealtime } = require('./realtime/hub');
-
-const prisma = new PrismaClient();
 const PORT = process.env.PORT || 4000;
 
 async function connectDatabase() {
