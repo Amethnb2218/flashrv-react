@@ -164,7 +164,7 @@ export default function ProOnboarding({ onComplete }) {
           <input id="address" className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-primary-500 outline-none transition placeholder-gray-400 text-base bg-gray-50" placeholder="Quartier, rue, point de repère..." value={form.address} onChange={e => handleChange('address', e.target.value)} autoComplete="off" />
           {errors.address && <div className="text-red-500 text-xs mt-1">{errors.address}</div>}
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1">
             <label className="block font-medium mb-1 text-gray-700" htmlFor="city">
               Ville <span className="text-primary-500">*</span>

@@ -34,7 +34,7 @@ function verifyToken(token) {
 const cookieOptions = {
   httpOnly: true, // Not accessible via JavaScript
   secure: process.env.NODE_ENV === 'production', // HTTPS only in production
-  sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+  sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'none' required for cross-origin (styleflow.me → ondigitalocean.app)
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
   path: '/',
 };

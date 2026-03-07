@@ -181,7 +181,7 @@ function Home() {
               <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">
                 Réservation simple, résultat premium
               </span>
-              <h1 className="mt-4 text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
+              <h1 className="mt-4 text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
                 Salons & Boutiques,{' '}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-yellow-600">
                   en quelques clics

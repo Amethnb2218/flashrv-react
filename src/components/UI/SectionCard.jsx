@@ -20,10 +20,10 @@ export default function SectionCard({
 
   return (
     <section
-      className={`rounded-2xl ${variantClass} ${padded ? (dense ? "p-4" : "p-8") : ""} ${className}`}
+      className={`rounded-2xl ${variantClass} ${padded ? (dense ? "p-4" : "p-4 sm:p-8") : ""} ${className}`}
     >
       {(title || right || icon || subtitle) && (
-        <div className={`flex items-center justify-between mb-4 ${dense ? "mb-2" : "mb-6"}`}>
+        <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 ${dense ? "mb-2" : "mb-6"}`}>
           <div>
             <div className="flex items-center gap-2">
               {icon && <span className="text-blue-600">{icon}</span>}

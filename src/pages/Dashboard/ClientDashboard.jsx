@@ -289,49 +289,49 @@ function ClientDashboard() {
         </div>
 
         {/* Quick stats */}
-        <div className="grid sm:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-8">
+          <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-500 text-sm">Réservations à venir</p>
-                <p className="text-3xl font-bold text-gray-900 mt-1">{loading ? '—' : upcomingBookings.length}</p>
+                <p className="text-xl sm:text-3xl font-bold text-gray-900 mt-1">{loading ? '—' : upcomingBookings.length}</p>
               </div>
-              <div className="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center">
-                <FiCalendar className="w-6 h-6 text-primary-600" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary-100 rounded-xl flex items-center justify-center">
+                <FiCalendar className="w-5 h-5 sm:w-6 sm:h-6 text-primary-600" />
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-500 text-sm">Réservations passées</p>
-                <p className="text-3xl font-bold text-gray-900 mt-1">{loading ? '—' : pastBookings.length}</p>
+                <p className="text-xl sm:text-3xl font-bold text-gray-900 mt-1">{loading ? '—' : pastBookings.length}</p>
               </div>
-              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                <FiClock className="w-6 h-6 text-green-600" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                <FiClock className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-500 text-sm">Salons favoris</p>
-                <p className="text-3xl font-bold text-gray-900 mt-1">{loading ? '—' : favoriteSalonsCount}</p>
+                <p className="text-xl sm:text-3xl font-bold text-gray-900 mt-1">{loading ? '—' : favoriteSalonsCount}</p>
               </div>
-              <div className="w-12 h-12 bg-pink-100 rounded-xl flex items-center justify-center">
-                <FiHeart className="w-6 h-6 text-accent-600" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-pink-100 rounded-xl flex items-center justify-center">
+                <FiHeart className="w-5 h-5 sm:w-6 sm:h-6 text-accent-600" />
               </div>
             </div>
           </div>
           {/* Loyalty Card */}
-          <div className="bg-gradient-to-br from-primary-600 to-accent-600 rounded-2xl p-6 shadow-sm text-white">
+          <div className="bg-gradient-to-br from-primary-600 to-accent-600 rounded-2xl p-4 sm:p-6 shadow-sm text-white">
             <div className="flex items-center justify-between mb-3">
               <FiGift className="w-8 h-8" />
               <span className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full">Programme fidélité</span>
             </div>
             <p className="text-primary-100 text-sm mb-1">Prochain service gratuit</p>
             <div className="flex items-baseline gap-1">
-              <span className="text-4xl font-bold">{pastBookings.length}</span>
+              <span className="text-2xl sm:text-4xl font-bold">{pastBookings.length}</span>
               <span className="text-primary-200">/ {loyaltyConfig.bookingsForReward}</span>
             </div>
             <div className="mt-3 h-2 bg-white/20 rounded-full overflow-hidden">

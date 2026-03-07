@@ -489,7 +489,7 @@ function Profile() {
                     ].map(item => (
                       <div 
                         key={item.key}
-                        className="flex items-center justify-between p-4 bg-gray-50 rounded-xl"
+                        className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 rounded-xl gap-3"
                       >
                         <div>
                           <p className="font-medium text-gray-900">{item.label}</p>

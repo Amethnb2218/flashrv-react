@@ -2109,7 +2109,7 @@ return (
 
 <div className="relative max-w-7xl mx-auto px-4 py-8">
 	{/* Stat Cards Section */}
-	<div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+	<div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-6">
 		<StatCard
 			icon={<FiTrendingUp className="text-amber-500" />} 
 			label="Revenus"
@@ -2136,7 +2136,7 @@ return (
 		/>
 	</div>
 {/* Header */}
-<Card className="p-6 mb-6 sticky top-4 z-10">
+<Card className="p-4 sm:p-6 mb-6 sticky top-4 z-10">
 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
 <div className="min-w-0">
 <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 truncate">
@@ -2179,7 +2179,7 @@ return (
 </div>
 
 {/* Tabs */}
-<div className="mt-6 flex flex-wrap gap-2">
+<div className="mt-6 flex gap-2 overflow-x-auto pb-2 sm:flex-wrap sm:overflow-x-visible">
 {tabs.map((t) => {
 const Icon = t.icon;
 const active = activeTab === t.id;
@@ -2188,7 +2188,7 @@ return (
 key={t.id}
 onClick={() => setActiveTab(t.id)}
 className={cx(
-"inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-semibold transition-all",
+"inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-2xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap",
 active
 ? "bg-gray-900 text-white shadow-sm"
 : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"

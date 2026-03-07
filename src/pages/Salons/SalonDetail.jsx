@@ -314,7 +314,7 @@ function SalonDetail() {
       <div className="absolute top-1/3 left-1/4 w-64 h-64 bg-orange-100/20 rounded-full blur-3xl"></div>
       
       {/* Image Gallery */}
-      <div className="relative z-10 h-[320px] md:h-[420px] lg:h-[520px] max-h-[60vh] bg-gray-900 overflow-hidden rounded-b-[32px] shadow-[0_30px_80px_-50px_rgba(15,23,42,0.6)]">
+      <div className="relative z-10 h-[220px] sm:h-[320px] md:h-[420px] lg:h-[520px] max-h-[60vh] bg-gray-900 overflow-hidden rounded-b-[32px] shadow-[0_30px_80px_-50px_rgba(15,23,42,0.6)]">
         {galleryImages.length > 0 ? (
           <img
             src={galleryImages[currentImageIndex]}
@@ -376,7 +376,7 @@ function SalonDetail() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-24 relative z-10 pb-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 sm:-mt-24 relative z-10 pb-12">
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">

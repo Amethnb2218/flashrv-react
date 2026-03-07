@@ -41,7 +41,7 @@ export default function DataTable({
                 {col.label}
               </th>
             ))}
-            {rowActions && <th className="py-3 px-4 text-center align-middle w-44">Actions</th>}
+            {rowActions && <th className="py-3 px-4 text-center align-middle min-w-[100px] sm:w-44">Actions</th>}
           </tr>
         </thead>
         <tbody>
@@ -53,7 +53,7 @@ export default function DataTable({
                       <div className="h-4 bg-slate-100 rounded w-3/4 mx-auto" />
                     </td>
                   ))}
-                  {rowActions && <td className="py-4 px-4 align-middle w-44"><div className="h-4 bg-slate-100 rounded w-8 mx-auto" /></td>}
+                  {rowActions && <td className="py-4 px-4 align-middle min-w-[100px] sm:w-44"><div className="h-4 bg-slate-100 rounded w-8 mx-auto" /></td>}
                 </tr>
               ))
             : data.length === 0 ? (
@@ -87,7 +87,7 @@ export default function DataTable({
                       </td>
                     ))}
                     {rowActions && (
-                      <td className="py-4 px-4 align-middle text-center w-44">
+                      <td className="py-4 px-4 align-middle text-center min-w-[100px] sm:w-44">
                         {rowActions(row)}
                       </td>
                     )}

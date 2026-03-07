@@ -16,18 +16,33 @@ import StatsSection from './StatsSection';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
+/** Helper: returns fetch options with auth headers (token + cookie) */
+function authFetchOpts(extra = {}) {
+  const token = localStorage.getItem('flashrv_token');
+  return {
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(extra.headers || {}),
+    },
+    ...extra,
+    // ensure headers aren't overwritten
+  };
+}
+
 // Composant Client Row avec menu d'actions
 export function ClientRow({ client }) {
   const [showMenu, setShowMenu] = useState(false);
   return (
     <tr className="group border-b border-blue-100 hover:bg-blue-50 transition-all duration-150">
-      <td className="py-4 px-6">
+      <td className="py-3 px-3 sm:px-6">
         <div>
           <p className="text-xs font-extrabold tracking-widest uppercase text-blue-700 font-poppins">{client.name}</p>
           <p className="text-xs font-extrabold tracking-widest lowercase text-blue-700 font-poppins">{client.email?.toLowerCase()}</p>
         </div>
       </td>
-      <td className="py-4 px-6 text-xs font-extrabold tracking-widest uppercase text-blue-700 font-poppins">{client.phoneNumber || '-'}</td>
+      <td className="py-3 px-3 sm:px-6 text-xs font-extrabold tracking-widest uppercase text-blue-700 font-poppins">{client.phoneNumber || '-'}</td>
       <td className="py-4 px-6 text-xs font-extrabold tracking-widest uppercase text-blue-700 font-poppins">{new Date(client.createdAt).toLocaleDateString('fr-FR')}</td>
       <td className="py-4 px-6 relative">
         <div className="relative flex items-center gap-2">
@@ -199,11 +214,7 @@ export default function AdminDashboard() {
     }
     setActionLoading(true);
     try {
-      const res = await fetch(url, {
-        method,
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-      });
+      const res = await fetch(url, authFetchOpts({ method }));
       if (!res.ok) {
         const data = await res.json();
         alert(data.message || 'Erreur lors de la mise à jour du statut');
@@ -238,7 +249,7 @@ export default function AdminDashboard() {
       let stats = null;
       // Charger les stats toujours
       try {
-        const statsRes = await fetch(`${API_URL}/admin/stats`, { credentials: 'include' });
+        const statsRes = await fetch(`${API_URL}/admin/stats`, authFetchOpts());
         if (statsRes.ok) {
           const statsData = await statsRes.json();
           stats = statsData.data || null;
@@ -249,7 +260,7 @@ export default function AdminDashboard() {
       // Charger les PROs selon l'onglet
       if (activeTab === 'pending') {
         try {
-          const pendingRes = await fetch(`${API_URL}/admin/pro/pending`, { credentials: 'include' });
+          const pendingRes = await fetch(`${API_URL}/admin/pro/pending`, authFetchOpts());
           if (pendingRes.ok) {
             const pendingData = await pendingRes.json();
             pros = pendingData.data?.pros || [];
@@ -257,7 +268,7 @@ export default function AdminDashboard() {
         } catch {}
       } else if (activeTab === 'all') {
         try {
-          const allRes = await fetch(`${API_URL}/admin/pro/all`, { credentials: 'include' });
+          const allRes = await fetch(`${API_URL}/admin/pro/all`, authFetchOpts());
           if (allRes.ok) {
             const allData = await allRes.json();
             pros = allData.data?.pros || [];
@@ -276,12 +287,10 @@ export default function AdminDashboard() {
   // Gestion de restriction PRO
   const handleRestrict = async (userId, flags) => {
     try {
-      await fetch(`${API_URL}/admin/pro/${userId}/restrict`, {
+      await fetch(`${API_URL}/admin/pro/${userId}/restrict`, authFetchOpts({
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify(flags),
-      })
+      }))
       fetchData()
     } catch (error) {
       alert('Erreur lors de la restriction')
@@ -297,7 +306,7 @@ export default function AdminDashboard() {
   }, [activeTab])
   const fetchAdmins = async () => {
     try {
-      const res = await fetch(`${API_URL}/admin/admins`, { credentials: 'include' })
+      const res = await fetch(`${API_URL}/admin/admins`, authFetchOpts())
       if (res.ok) {
         const data = await res.json()
         setAdmins(data.data.admins || [])
@@ -310,12 +319,10 @@ export default function AdminDashboard() {
   }
   const handleRestrictAdmin = async (adminId, flags) => {
     try {
-      await fetch(`${API_URL}/admin/admins/${adminId}/restrict`, {
+      await fetch(`${API_URL}/admin/admins/${adminId}/restrict`, authFetchOpts({
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify(flags),
-      })
+      }))
       fetchAdmins()
     } catch (error) {
       alert('Erreur lors de la restriction admin')
@@ -329,7 +336,7 @@ export default function AdminDashboard() {
   const fetchClients = async () => {
     setClientsLoading(true)
     try {
-      const res = await fetch(`${API_URL}/admin/clients`, { credentials: 'include' })
+      const res = await fetch(`${API_URL}/admin/clients`, authFetchOpts())
       if (res.ok) {
         const data = await res.json()
         setClients(data.data.clients || [])
@@ -349,7 +356,7 @@ export default function AdminDashboard() {
   const fetchFeedback = async () => {
     setFeedbackLoading(true)
     try {
-      const res = await fetch(`${API_URL}/admin/feedback`, { credentials: 'include' })
+      const res = await fetch(`${API_URL}/admin/feedback`, authFetchOpts())
       if (res.ok) {
         const data = await res.json()
         setFeedbacks(data.data?.feedbacks || [])
@@ -385,9 +392,9 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-[#F7FAFC] overflow-x-hidden">
       <div className="max-w-7xl mx-auto px-4">
         {/* Header */}
-        <header className="sticky top-0 z-20 flex flex-col gap-2 py-8 mb-8 bg-white rounded-2xl shadow-md border border-gray-200">
-          <div className="flex items-center justify-between">
-            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-[#1E293B] font-poppins">Dashboard Style • Flow</h1>
+        <header className="sticky top-0 z-20 flex flex-col gap-2 py-5 sm:py-8 mb-6 sm:mb-8 bg-white rounded-2xl shadow-md border border-gray-200 px-4 sm:px-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+            <h1 className="text-xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-[#1E293B] font-poppins">Dashboard Style • Flow</h1>
             {isSuperAdmin && (
               <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold border border-blue-300">
                 <FiShield className="w-5 h-5 text-blue-500" />
@@ -400,12 +407,12 @@ export default function AdminDashboard() {
               </span>
             )}
           </div>
-          <p className="text-base text-[#64748B] font-normal mt-2 ml-1">Plateforme de gestion intelligente et monitoring temps réel</p>
+          <p className="text-sm sm:text-base text-[#64748B] font-normal mt-2 ml-1">Plateforme de gestion intelligente et monitoring temps réel</p>
         </header>
 
         {/* Stats Cards */}
         {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8 mb-8 sm:mb-12">
             <StatCard
               icon={FiClock}
               label="En attente"
@@ -440,7 +447,7 @@ export default function AdminDashboard() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-6 py-4 text-base font-semibold whitespace-nowrap transition-colors ${
+                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-3 sm:py-4 text-sm sm:text-base font-semibold whitespace-nowrap transition-colors ${
                   activeTab === tab.id
                     ? 'text-blue-700 border-b-2 border-blue-700 bg-blue-50'
                     : 'text-gray-500 hover:text-blue-700 hover:bg-blue-50'

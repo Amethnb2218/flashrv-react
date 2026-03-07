@@ -31,14 +31,14 @@ export default function AddAdminForm({ onAdminAdded }) {
   }
 
   return (
-    <form onSubmit={handleAdd} className="flex flex-col md:flex-row gap-2 items-start md:items-end mb-4">
+    <form onSubmit={handleAdd} className="flex flex-col sm:flex-row gap-2 items-start sm:items-end mb-4">
       <input
         type="email"
         required
         placeholder="Email de l'utilisateur à promouvoir"
         value={email}
         onChange={e => setEmail(e.target.value)}
-        className="border border-blue-800 bg-blue-900/80 text-blue-100 placeholder:text-blue-300 px-3 py-2 rounded-lg focus:bg-blue-900/90 focus:text-blue-100 focus:border-blue-700 transition-colors duration-200"
+        className="w-full sm:w-auto border border-blue-800 bg-blue-900/80 text-blue-100 placeholder:text-blue-300 px-3 py-2 rounded-lg focus:bg-blue-900/90 focus:text-blue-100 focus:border-blue-700 transition-colors duration-200"
       />
       <button type="submit" disabled={loading} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold">
         {loading ? 'Ajout...' : 'Ajouter Admin'}

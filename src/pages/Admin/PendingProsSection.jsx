@@ -92,7 +92,7 @@ export default function PendingProsSection({ pros, loading, onRefresh, onApprove
         ]}
         data={filtered}
         toolbar={
-          <div className="flex gap-2 w-full">
+          <div className="flex flex-col sm:flex-row gap-2 w-full">
             <div className="relative flex-1">
               <input
                 type="text"
@@ -119,10 +119,10 @@ export default function PendingProsSection({ pros, loading, onRefresh, onApprove
           </div>
         }
         rowActions={row => (
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-1.5 sm:gap-2">
             <button
               onClick={() => onApprove(row)}
-              className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-blue-50 text-blue-700 font-semibold text-xs shadow-sm border border-blue-100 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
+              className="inline-flex items-center gap-1 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-blue-50 text-blue-700 font-semibold text-xs shadow-sm border border-blue-100 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
               title="Valider ce PRO"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
@@ -130,7 +130,7 @@ export default function PendingProsSection({ pros, loading, onRefresh, onApprove
             </button>
             <button
               onClick={() => onReject(row)}
-              className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-rose-50 text-rose-700 font-semibold text-xs shadow-sm border border-rose-100 hover:bg-rose-100 focus:outline-none focus:ring-2 focus:ring-rose-100 transition"
+              className="inline-flex items-center gap-1 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-rose-50 text-rose-700 font-semibold text-xs shadow-sm border border-rose-100 hover:bg-rose-100 focus:outline-none focus:ring-2 focus:ring-rose-100 transition"
               title="Refuser ce PRO"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
@@ -138,7 +138,7 @@ export default function PendingProsSection({ pros, loading, onRefresh, onApprove
             </button>
             <button
               onClick={() => onRestrict && onRestrict(row)}
-              className="inline-flex items-center gap-1 px-4 py-2 rounded-lg bg-amber-50 text-amber-700 font-semibold text-xs shadow-sm border border-amber-100 hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-100 transition"
+              className="inline-flex items-center gap-1 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-amber-50 text-amber-700 font-semibold text-xs shadow-sm border border-amber-100 hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-100 transition"
               title="Restreindre les droits"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z" /></svg>

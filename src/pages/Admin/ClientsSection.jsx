@@ -80,7 +80,7 @@ export default function ClientsSection({ clients, loading, onRefresh }) {
             </div>
           }
           rowActions={row => (
-            <div className="flex gap-2 justify-center">
+            <div className="flex flex-wrap gap-1.5 sm:gap-2 justify-center">
               <button className="bg-blue-100 text-blue-700 px-3 py-1 rounded-xl text-xs font-semibold shadow hover:bg-blue-200 transition" title="Voir">
                 Voir
               </button>

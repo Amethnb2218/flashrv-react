@@ -43,10 +43,11 @@ async function register(req, res, next) {
     // Générer un token (mock, à sécuriser en prod)
     const token = generateToken({ userId: user.id, email: user.email, role: user.role });
     setTokenCookie(res, token);
+    const { password: _pw, ...safeUser } = user;
     return res.status(201).json({
       status: 'success',
       message: 'Inscription réussie',
-      data: { user, token },
+      data: { user: safeUser, token },
     });
   } catch (error) {
     return next(error);
@@ -75,10 +76,11 @@ async function login(req, res, next) {
     }
     const token = generateToken({ userId: user.id, email: user.email, role: user.role });
     setTokenCookie(res, token);
+    const { password: _pw, ...safeUser } = user;
     return res.json({
       status: 'success',
       message: 'Connexion réussie',
-      data: { user, token },
+      data: { user: safeUser, token },
     });
   } catch (error) {
     return next(error);
