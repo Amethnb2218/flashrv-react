@@ -19,7 +19,7 @@ function TimeSlot({ selectedTime, onTimeSelect, duration = 30 }) {
   }, [])
 
   return (
-    <div className="rounded-2xl border border-gray-100 bg-white/80 p-5 shadow-sm">
+    <div className="rounded-2xl border border-gray-100 bg-white/80 p-3 sm:p-5 shadow-sm">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
         <div>
           <h3 className="text-sm font-semibold text-gray-900">Choisir un horaire</h3>
@@ -43,7 +43,7 @@ function TimeSlot({ selectedTime, onTimeSelect, duration = 30 }) {
             whileTap={{ scale: 0.97 }}
             onClick={() => onTimeSelect(time)}
             className={`
-              py-2.5 px-2 sm:px-3 rounded-xl font-semibold text-xs sm:text-sm transition-all duration-200 border
+              py-2.5 px-1 sm:px-3 rounded-xl font-semibold text-xs sm:text-sm transition-all duration-200 border text-center
               ${selectedTime === time 
                 ? 'bg-primary-600 text-white border-primary-600 shadow-lg shadow-primary-500/25' 
                 : 'bg-white border-gray-200 text-gray-700 hover:border-primary-300 hover:text-primary-600'

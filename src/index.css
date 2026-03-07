@@ -1,5 +1,14 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+/* Hide scrollbar but allow scroll */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
 /* Premium glowing effect for table headers and menus */
 .drop-shadow-glow {
   filter: drop-shadow(0 0 8px #facc15) drop-shadow(0 0 2px #38bdf8);

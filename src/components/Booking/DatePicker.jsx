@@ -31,7 +31,7 @@ function DatePicker({ selectedDate, onDateSelect, onSelect }) {
     : null
 
   return (
-    <div className="rounded-2xl border border-gray-100 bg-white/80 p-5 shadow-sm">
+    <div className="rounded-2xl border border-gray-100 bg-white/80 p-3 sm:p-5 shadow-sm">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
         <div>
           <h3 className="text-sm font-semibold text-gray-900">Choisir une date</h3>
@@ -41,35 +41,39 @@ function DatePicker({ selectedDate, onDateSelect, onSelect }) {
           {selectedLabel || 'Aucune date'}
         </div>
       </div>
-      <div className="flex space-x-2 sm:space-x-3 overflow-x-auto pb-2 scrollbar-hide">
-        {days.map((day) => (
-          <motion.button
-            key={day.date}
-            whileHover={{ scale: 1.04 }}
-            whileTap={{ scale: 0.97 }}
-            onClick={() => handleSelect(day.date)}
-            className={`
-              flex-shrink-0 w-20 px-2 sm:px-3 py-3 rounded-2xl text-center transition-all duration-200 border
-              ${selectedDate === day.date
-                ? 'bg-primary-600 border-primary-600 text-white shadow-lg shadow-primary-500/25'
-                : 'bg-white border-gray-200 text-gray-700 hover:border-primary-300'
-              }
-            `}
-          >
-            <div className={`text-[11px] uppercase tracking-wide ${selectedDate === day.date ? 'text-primary-100' : 'text-gray-500'}`}>
-              {day.dayName}
-            </div>
-            <div className="text-2xl font-bold mt-1">{day.dayNumber}</div>
-            <div className={`text-[11px] ${selectedDate === day.date ? 'text-primary-100' : 'text-gray-500'}`}>
-              {day.month}
-            </div>
-            {day.isToday && (
-              <div className={`text-[11px] mt-1 ${selectedDate === day.date ? 'text-white' : 'text-primary-600'}`}>
-                Aujourd'hui
+      <div className="-mx-3 sm:-mx-5 px-3 sm:px-5">
+        <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory">
+          {days.map((day) => (
+            <motion.button
+              key={day.date}
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => handleSelect(day.date)}
+              className={`
+                flex-shrink-0 w-[72px] sm:w-20 px-2 sm:px-3 py-3 rounded-2xl text-center transition-all duration-200 border snap-start
+                ${selectedDate === day.date
+                  ? 'bg-primary-600 border-primary-600 text-white shadow-lg shadow-primary-500/25'
+                  : 'bg-white border-gray-200 text-gray-700 hover:border-primary-300'
+                }
+              `}
+            >
+              <div className={`text-[11px] uppercase tracking-wide ${selectedDate === day.date ? 'text-primary-100' : 'text-gray-500'}`}>
+                {day.dayName}
               </div>
-            )}
-          </motion.button>
-        ))}
+              <div className="text-2xl font-bold mt-1">{day.dayNumber}</div>
+              <div className={`text-[11px] ${selectedDate === day.date ? 'text-primary-100' : 'text-gray-500'}`}>
+                {day.month}
+              </div>
+              {day.isToday && (
+                <div className={`text-[11px] mt-1 ${selectedDate === day.date ? 'text-white' : 'text-primary-600'}`}>
+                  Aujourd'hui
+                </div>
+              )}
+            </motion.button>
+          ))}
+          {/* Spacer so last item can scroll fully into view */}
+          <div className="flex-shrink-0 w-1" aria-hidden />
+        </div>
       </div>
     </div>
   )
