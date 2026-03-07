@@ -1,5 +1,5 @@
 ﻿import { Link } from 'react-router-dom'
-import { FiStar, FiMapPin, FiClock, FiCheck, FiCamera } from 'react-icons/fi'
+import { FiStar, FiMapPin, FiClock, FiCheck, FiCamera, FiShoppingBag } from 'react-icons/fi'
 import { motion } from 'framer-motion'
 import { formatPrice } from '../../utils/helpers'
 import { resolveMediaUrl } from '../../utils/media'
@@ -26,7 +26,9 @@ function SalonCard({ salon, index = 0, variant = 'featured' }) {
       '</svg>'
     )
 
-  const rawCover = resolveMedia(salon.coverImage || salon.image)
+  const galleryFirst = Array.isArray(salon.gallery) && salon.gallery.length > 0
+    ? (salon.gallery[0].url || salon.gallery[0].media) : ''
+  const rawCover = resolveMedia(salon.coverImage || salon.image || galleryFirst)
   const coverImage = rawCover || ''
   // fallback pour le quartier
   const neighborhood = salon.neighborhood || salon.address || ''
@@ -47,9 +49,13 @@ function SalonCard({ salon, index = 0, variant = 'featured' }) {
   const isOpen = todayHours && !todayHours.isClosed
   const isShootingStudio = salon.type === 'shooting'
   const isBarber = salon.type === 'barber'
+  const isBoutique = salon.businessType === 'BOUTIQUE'
 
   // Badge config for salon types
   const getSalonTypeBadge = () => {
+    if (isBoutique) {
+      return { icon: '🛍️', label: 'Boutique', bg: 'bg-amber-500', text: 'text-white' }
+    }
     if (isShootingStudio) {
       return { icon: '📷', label: 'Studio Photo', bg: 'bg-blue-500', text: 'text-white' }
     }
@@ -70,7 +76,7 @@ function SalonCard({ salon, index = 0, variant = 'featured' }) {
 
   const typeBadge = getSalonTypeBadge()
   const isList = variant === 'list'
-  const ctaLabel = isList ? 'Voir disponibilités' : 'Réserver'
+  const ctaLabel = isBoutique ? 'Voir les articles' : isList ? 'Voir disponibilités' : 'Réserver'
   const imageHeight = isList ? 'h-44 md:h-48' : 'h-52'
   const cardClass = isList
     ? 'bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 group hover:-translate-y-1'

@@ -83,7 +83,7 @@ async function callOpenAIResponses({ message, history = [] }) {
     },
     ...history.slice(-8).map((h) => ({
       role: h.role === 'assistant' ? 'assistant' : 'user',
-      content: [{ type: 'input_text', text: String(h.text || '') }],
+      content: [{ type: h.role === 'assistant' ? 'output_text' : 'input_text', text: String(h.text || '') }],
     })),
     {
       role: 'user',

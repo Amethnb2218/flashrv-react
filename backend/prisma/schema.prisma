@@ -144,8 +144,8 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // ============================================
@@ -191,6 +191,7 @@ model User {
   chatMessages    ChatMessage[]
   feedbacks       Feedback[]
   userSettings    UserSettings?
+  orders          Order[]        @relation("ClientOrders")
 
   @@map("users")
 }
@@ -213,6 +214,7 @@ model Salon {
   rating      Float    @default(0)
   reviewCount Int      @default(0)
   salonType   String   @default("mixte") // homme, femme, mixte
+  businessType String  @default("SALON") // SALON, BOUTIQUE
   isOpen      Boolean  @default(true)
   status      String   @default("PENDING") // PENDING, APPROVED, REJECTED
   createdAt   DateTime @default(now())
@@ -238,7 +240,12 @@ model Salon {
   staffMembers    StaffMember[]
   promoCodes      PromoCode[]
   loyalties       Loyalty[]
+  products        Product[]
+  orders          Order[]
 
+  @@index([status])
+  @@index([businessType])
+  @@index([city])
   @@map("salons")
 }
 
@@ -367,6 +374,9 @@ model Appointment {
   payment Payment?
   messages ChatMessage[]
 
+  @@index([clientId])
+  @@index([salonId, date])
+  @@index([status])
   @@map("appointments")
 }
 
@@ -412,6 +422,10 @@ model Payment {
   // Appointment relation (optional)
   appointmentId String?     @unique
   appointment   Appointment? @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+
+  // Order relation (optional, for boutique purchases)
+  orderId String?  @unique
+  order   Order?   @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   // User relation
   userId String
@@ -515,4 +529,86 @@ model GalleryImage {
   salon   Salon  @relation(fields: [salonId], references: [id], onDelete: Cascade)
 
   @@map("gallery_images")
+}
+
+// ============================================
+// PRODUCT MODEL (Boutique)
+// ============================================
+model Product {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  price       Float
+  stock       Int      @default(0)
+  category    String?
+  imageUrl    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  salonId String
+  salon   Salon  @relation(fields: [salonId], references: [id], onDelete: Cascade)
+
+  orderItems OrderItem[]
+  images     ProductImage[]
+
+  @@map("products")
+}
+
+// ============================================
+// PRODUCT IMAGE MODEL
+// ============================================
+model ProductImage {
+  id        String   @id @default(uuid())
+  url       String
+  createdAt DateTime @default(now())
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("product_images")
+}
+
+// ============================================
+// ORDER MODEL (Boutique)
+// ============================================
+model Order {
+  id            String   @id @default(uuid())
+  status        String   @default("PENDING") // PENDING, CONFIRMED, PREPARING, READY, DELIVERED, CANCELLED
+  totalPrice    Float
+  notes         String?
+  deliveryMode  String   @default("PICKUP") // PICKUP, DELIVERY
+  deliveryAddress String?
+  clientPhone   String?
+  clientName    String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  clientId String
+  client   User   @relation("ClientOrders", fields: [clientId], references: [id])
+
+  salonId String
+  salon   Salon  @relation(fields: [salonId], references: [id], onDelete: Cascade)
+
+  items   OrderItem[]
+  payment Payment?
+
+  @@map("orders")
+}
+
+// ============================================
+// ORDER ITEM MODEL
+// ============================================
+model OrderItem {
+  id        String @id @default(uuid())
+  quantity  Int
+  unitPrice Float
+
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
 }

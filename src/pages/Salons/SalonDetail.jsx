@@ -4,7 +4,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { 
   FiMapPin, FiPhone, FiMail, FiClock, FiStar, FiCheck, 
   FiWifi, FiCoffee, FiChevronLeft, FiChevronRight, FiShare2,
-  FiHeart, FiX
+  FiHeart, FiX, FiShoppingCart, FiBox, FiPlus, FiMinus
 } from 'react-icons/fi'
 // import { salons, servicesBySalon, coiffeursBySalon, reviews } from '../../data/salons'
 import { formatPrice, formatDuration, formatPriceRange } from '../../utils/helpers'
@@ -38,6 +38,13 @@ function SalonDetail() {
   const [activeService, setActiveService] = useState(null)
   const [serviceImageIndex, setServiceImageIndex] = useState(0)
 
+  // Boutique state
+  const [boutiqueProducts, setBoutiqueProducts] = useState([])
+  const [cart, setCart] = useState([]) // [{product, quantity}]
+  const [showCartModal, setShowCartModal] = useState(false)
+  const [orderForm, setOrderForm] = useState({ deliveryMode: 'PICKUP', deliveryAddress: '', clientPhone: '', clientName: '', notes: '' })
+  const [orderSubmitting, setOrderSubmitting] = useState(false)
+
   useEffect(() => {
     let mounted = true
     const fetchSalon = async () => {
@@ -60,6 +67,15 @@ function SalonDetail() {
         setServices(salon?.services || [])
         setCoiffeurs(salon?.coiffeurs || [])
         setSalonReviews(salon?.reviews || [])
+        // Fetch boutique products if applicable
+        if (salon?.businessType === 'BOUTIQUE') {
+          setActiveTab('articles')
+          try {
+            const prodRes = await apiFetch(`/products/boutique/${salon.id}`)
+            const prodData = prodRes?.data ?? prodRes
+            setBoutiqueProducts(Array.isArray(prodData) ? prodData : [])
+          } catch (_) { /* no-op */ }
+        }
       } catch (e) {
         if (!mounted) return
         setSalon(null)
@@ -96,6 +112,62 @@ function SalonDetail() {
       sunday: 'Dimanche'
     }
     return days[day]
+  }
+
+  const isBoutique = salonData?.businessType === 'BOUTIQUE'
+
+  const addToCart = (product) => {
+    setCart(prev => {
+      const existing = prev.find(c => c.product.id === product.id)
+      if (existing) {
+        return prev.map(c => c.product.id === product.id ? { ...c, quantity: c.quantity + 1 } : c)
+      }
+      return [...prev, { product, quantity: 1 }]
+    })
+  }
+
+  const removeFromCart = (productId) => {
+    setCart(prev => {
+      const existing = prev.find(c => c.product.id === productId)
+      if (existing && existing.quantity > 1) {
+        return prev.map(c => c.product.id === productId ? { ...c, quantity: c.quantity - 1 } : c)
+      }
+      return prev.filter(c => c.product.id !== productId)
+    })
+  }
+
+  const cartTotal = cart.reduce((sum, c) => sum + c.product.price * c.quantity, 0)
+  const cartCount = cart.reduce((sum, c) => sum + c.quantity, 0)
+
+  const handleSubmitOrder = async () => {
+    if (!isAuthenticated) {
+      navigate('/login', { state: { from: { pathname: `/salons/${id}` } } })
+      return
+    }
+    if (cart.length === 0) return
+    setOrderSubmitting(true)
+    try {
+      await apiFetch('/orders', {
+        method: 'POST',
+        body: {
+          salonId: salonData.id,
+          items: cart.map(c => ({ productId: c.product.id, quantity: c.quantity })),
+          deliveryMode: orderForm.deliveryMode,
+          deliveryAddress: orderForm.deliveryMode === 'DELIVERY' ? orderForm.deliveryAddress : undefined,
+          clientPhone: orderForm.clientPhone || undefined,
+          clientName: orderForm.clientName || user?.name || undefined,
+          notes: orderForm.notes || undefined,
+        }
+      })
+      setCart([])
+      setShowCartModal(false)
+      setOrderForm({ deliveryMode: 'PICKUP', deliveryAddress: '', clientPhone: '', clientName: '', notes: '' })
+      alert('Commande envoyée ! Le vendeur va la confirmer.')
+    } catch (e) {
+      alert(e.message || 'Erreur lors de la commande')
+    } finally {
+      setOrderSubmitting(false)
+    }
   }
 
   const amenityIcons = {
@@ -348,7 +420,7 @@ function SalonDetail() {
 
               <div className="flex flex-wrap gap-2 mb-6">
                 <span className="px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">
-                  {services.length} services
+                  {isBoutique ? `${boutiqueProducts.length} article${boutiqueProducts.length > 1 ? 's' : ''}` : `${services.length} services`}
                 </span>
                 {priceLabel !== '—' && (
                   <span className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700">
@@ -389,7 +461,7 @@ function SalonDetail() {
             {/* Tabs */}
             <div className="bg-white/90 backdrop-blur rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
               <div className="flex gap-2 p-2 bg-gray-50 border-b border-gray-100">
-                {['services', 'equipe', 'avis'].map(tab => (
+                {(isBoutique ? ['articles', 'equipe', 'avis'] : ['services', 'equipe', 'avis']).map(tab => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
@@ -400,6 +472,7 @@ function SalonDetail() {
                     }`}
                   >
                     {tab === 'services' && 'Services'}
+                    {tab === 'articles' && 'Articles'}
                     {tab === 'equipe' && 'Équipe'}
                     {tab === 'avis' && `Avis (${salonReviews.length})`}
                   </button>
@@ -452,6 +525,77 @@ function SalonDetail() {
                         </div>
                       </div>
                     ))}
+                  </div>
+                )}
+
+                {/* Articles Tab (Boutique) */}
+                {activeTab === 'articles' && (
+                  <div className="space-y-4">
+                    {boutiqueProducts.length === 0 ? (
+                      <div className="text-center py-12">
+                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <FiBox className="w-8 h-8 text-gray-400" />
+                        </div>
+                        <p className="text-gray-500">Aucun article disponible pour le moment.</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {boutiqueProducts.filter(p => p.isActive !== false).map(product => {
+                          const img = resolveMediaUrl(product.imageUrl || product.image)
+                          const inCart = cart.find(c => c.product.id === product.id)
+                          return (
+                            <div key={product.id} className="bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-md transition-shadow">
+                              {img ? (
+                                <div className="w-full h-56 bg-gray-50 flex items-center justify-center">
+                                  <img src={img} alt={product.name} className="w-full h-full object-contain p-2" loading="lazy" />
+                                </div>
+                              ) : (
+                                <div className="w-full h-56 bg-gray-50 flex items-center justify-center">
+                                  <FiBox className="w-10 h-10 text-gray-300" />
+                                </div>
+                              )}
+                              <div className="p-4">
+                                <div className="flex justify-between items-start mb-2">
+                                  <div>
+                                    <h4 className="font-semibold text-gray-900">{product.name}</h4>
+                                    {product.category && <p className="text-xs text-gray-500">{product.category}</p>}
+                                  </div>
+                                  <span className="font-bold text-amber-600">{formatPrice(product.price)}</span>
+                                </div>
+                                {product.description && (
+                                  <p className="text-sm text-gray-600 mb-3 line-clamp-2">{product.description}</p>
+                                )}
+                                <div className="flex items-center justify-between">
+                                  <span className={`text-xs font-medium px-2 py-1 rounded-full ${product.stock > 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                                    {product.stock > 0 ? `${product.stock} en stock` : 'Rupture'}
+                                  </span>
+                                  {product.stock > 0 && (
+                                    inCart ? (
+                                      <div className="flex items-center gap-2">
+                                        <button onClick={() => removeFromCart(product.id)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200">
+                                          <FiMinus className="w-4 h-4" />
+                                        </button>
+                                        <span className="font-semibold text-sm">{inCart.quantity}</span>
+                                        <button onClick={() => addToCart(product)} className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center hover:bg-amber-200">
+                                          <FiPlus className="w-4 h-4" />
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <button
+                                        onClick={() => addToCart(product)}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 transition"
+                                      >
+                                        <FiShoppingCart className="w-4 h-4" /> Ajouter
+                                      </button>
+                                    )
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -631,20 +775,54 @@ function SalonDetail() {
               transition={{ delay: reduceMotion ? 0 : 0.2, duration: reduceMotion ? 0 : 0.35 }}
               className="bg-white/95 backdrop-blur rounded-3xl shadow-2xl p-6 sticky top-24 border border-white/70 ring-1 ring-black/5"
             >
-              <div className="text-center mb-6">
-                <span className="text-xs uppercase tracking-wide text-gray-500">À partir de</span>
-                <p className="text-3xl font-extrabold text-gray-900 mt-1">{priceText}</p>
-                <p className="text-xs text-gray-500 mt-2">
-                  {services.length} service{services.length > 1 ? 's' : ''} · {ratingHint}
-                </p>
-              </div>
+              {isBoutique ? (
+                <>
+                  <div className="text-center mb-6">
+                    <span className="text-xs uppercase tracking-wide text-gray-500">Boutique</span>
+                    <p className="text-3xl font-extrabold text-gray-900 mt-1">{boutiqueProducts.length} article{boutiqueProducts.length > 1 ? 's' : ''}</p>
+                    <p className="text-xs text-gray-500 mt-2">{ratingHint}</p>
+                  </div>
 
-              <button
-                onClick={handleBookNow}
-                className="w-full mb-4 rounded-xl bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white font-semibold py-3.5 shadow-lg hover:shadow-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
-              >
-                Réserver maintenant
-              </button>
+                  {cartCount > 0 && (
+                    <div className="mb-4 p-4 bg-amber-50 border border-amber-100 rounded-2xl">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-semibold text-gray-900">Panier ({cartCount})</span>
+                        <span className="font-bold text-amber-600">{formatPrice(cartTotal)}</span>
+                      </div>
+                      {cart.map(c => (
+                        <div key={c.product.id} className="flex items-center justify-between text-sm py-1">
+                          <span className="text-gray-700">{c.product.name} × {c.quantity}</span>
+                          <span className="text-gray-500">{formatPrice(c.product.price * c.quantity)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <button
+                    onClick={() => cartCount > 0 ? setShowCartModal(true) : setActiveTab('articles')}
+                    className="w-full mb-4 rounded-xl bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 text-white font-semibold py-3.5 shadow-lg hover:shadow-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+                  >
+                    {cartCount > 0 ? `Commander (${formatPrice(cartTotal)})` : 'Voir les articles'}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="text-center mb-6">
+                    <span className="text-xs uppercase tracking-wide text-gray-500">À partir de</span>
+                    <p className="text-3xl font-extrabold text-gray-900 mt-1">{priceText}</p>
+                    <p className="text-xs text-gray-500 mt-2">
+                      {services.length} service{services.length > 1 ? 's' : ''} · {ratingHint}
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={handleBookNow}
+                    className="w-full mb-4 rounded-xl bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white font-semibold py-3.5 shadow-lg hover:shadow-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+                  >
+                    Réserver maintenant
+                  </button>
+                </>
+              )}
 
               {/* WhatsApp Button */}
               {salon.whatsapp && (
@@ -837,6 +1015,102 @@ function SalonDetail() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Cart / Order Modal (Boutique) */}
+      {showCartModal && isBoutique && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setShowCartModal(false)}>
+          <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <h3 className="text-xl font-bold text-gray-900">Votre commande</h3>
+              <button onClick={() => setShowCartModal(false)} className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-50">
+                <FiX className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+              {cart.map(c => (
+                <div key={c.product.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                  <div>
+                    <p className="font-semibold text-gray-900">{c.product.name}</p>
+                    <p className="text-sm text-gray-500">{formatPrice(c.product.price)} × {c.quantity}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => removeFromCart(c.product.id)} className="w-8 h-8 rounded-full bg-white border flex items-center justify-center"><FiMinus className="w-4 h-4" /></button>
+                    <span className="font-bold">{c.quantity}</span>
+                    <button onClick={() => addToCart(c.product)} className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center"><FiPlus className="w-4 h-4" /></button>
+                    <span className="ml-2 font-semibold">{formatPrice(c.product.price * c.quantity)}</span>
+                  </div>
+                </div>
+              ))}
+
+              <div className="border-t border-gray-100 pt-4">
+                <div className="flex justify-between text-lg font-bold">
+                  <span>Total</span>
+                  <span className="text-amber-600">{formatPrice(cartTotal)}</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Mode de livraison</label>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setOrderForm(f => ({ ...f, deliveryMode: 'PICKUP' }))}
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border transition ${orderForm.deliveryMode === 'PICKUP' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-700 border-gray-200'}`}
+                  >
+                    Retrait en boutique
+                  </button>
+                  <button
+                    onClick={() => setOrderForm(f => ({ ...f, deliveryMode: 'DELIVERY' }))}
+                    className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border transition ${orderForm.deliveryMode === 'DELIVERY' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-700 border-gray-200'}`}
+                  >
+                    Livraison
+                  </button>
+                </div>
+              </div>
+
+              {orderForm.deliveryMode === 'DELIVERY' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Adresse de livraison</label>
+                  <input
+                    value={orderForm.deliveryAddress}
+                    onChange={e => setOrderForm(f => ({ ...f, deliveryAddress: e.target.value }))}
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
+                    placeholder="Votre adresse"
+                  />
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
+                <input
+                  value={orderForm.clientPhone}
+                  onChange={e => setOrderForm(f => ({ ...f, clientPhone: e.target.value }))}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
+                  placeholder="Numéro de téléphone"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Notes (optionnel)</label>
+                <textarea
+                  value={orderForm.notes}
+                  onChange={e => setOrderForm(f => ({ ...f, notes: e.target.value }))}
+                  rows={2}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
+                  placeholder="Instructions spéciales…"
+                />
+              </div>
+
+              <button
+                onClick={handleSubmitOrder}
+                disabled={orderSubmitting || cart.length === 0}
+                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-60"
+              >
+                {orderSubmitting ? 'Envoi en cours…' : `Confirmer la commande (${formatPrice(cartTotal)})`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

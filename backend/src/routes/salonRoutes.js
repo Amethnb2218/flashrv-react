@@ -48,7 +48,14 @@ const storage = multer.diskStorage({
     cb(null, name);
   },
 });
-const upload = multer({ storage });
+const imageFileFilter = (req, file, cb) => {
+  const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+  if (!allowed.includes(file.mimetype)) {
+    return cb(new Error('Seuls les fichiers JPEG, PNG, WebP et GIF sont autorisés'));
+  }
+  cb(null, true);
+};
+const upload = multer({ storage, fileFilter: imageFileFilter, limits: { fileSize: 5 * 1024 * 1024 } });
 
 // Multer storage for salon cover image
 const salonImageDir = uploadsSubdir('salon');
@@ -61,7 +68,7 @@ const salonImageStorage = multer.diskStorage({
     cb(null, name);
   },
 });
-const uploadSalonImage = multer({ storage: salonImageStorage });
+const uploadSalonImage = multer({ storage: salonImageStorage, fileFilter: imageFileFilter, limits: { fileSize: 5 * 1024 * 1024 } });
 
 /**
  * Upload an image to the salon gallery
@@ -366,6 +373,7 @@ router.get('/', optionalAuth, async (req, res, next) => {
               },
             },
           },
+          gallery: { take: 1, orderBy: { createdAt: 'desc' } },
           openingHours: { orderBy: { dayOfWeek: 'asc' } },
           _count: {
             select: { reviews: true },
@@ -509,7 +517,7 @@ router.get('/:id', optionalAuth, async (req, res, next) => {
  */
 router.post('/', authenticate, authorize('PRO', 'SALON_OWNER', 'ADMIN'), async (req, res, next) => {
   try {
-    const { name, description, address, city, phone, salonType, image, status } = req.body;
+    const { name, description, address, city, phone, salonType, businessType, image, status } = req.body;
 
     // Validate required fields
     if (!name || !address || !city) {
@@ -545,6 +553,7 @@ router.post('/', authenticate, authorize('PRO', 'SALON_OWNER', 'ADMIN'), async (
         phone,
         email: req.user.email,
         salonType: salonType || 'mixte',
+        businessType: businessType || 'SALON',
         image: image || null,
         status: status || autoStatus,
         owner: { connect: { id: req.user.id } },

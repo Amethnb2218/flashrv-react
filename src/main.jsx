@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import App from './App'
+import ErrorBoundary from './components/ErrorBoundary'
 import { AuthProvider } from './context/AuthContext'
 import { BookingProvider } from './context/BookingContext'
 import { Toaster } from 'react-hot-toast'
@@ -14,6 +15,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <BrowserRouter>
+        <ErrorBoundary>
         <AuthProvider>
           <BookingProvider>
             <App />
@@ -56,6 +58,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             />
           </BookingProvider>
         </AuthProvider>
+        </ErrorBoundary>
       </BrowserRouter>
     </GoogleOAuthProvider>
   </React.StrictMode>,

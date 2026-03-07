@@ -36,6 +36,10 @@ FiTag,
 FiEdit3,
 FiCreditCard,
 FiMessageCircle,
+FiShoppingBag,
+FiPackage,
+FiShoppingCart,
+FiBox,
 } from "react-icons/fi";
 import AppointmentChatModal from "../../components/Chat/AppointmentChatModal";
 
@@ -531,6 +535,25 @@ const [unreadNotifications, setUnreadNotifications] = useState(0);
 const [chatAppointment, setChatAppointment] = useState(null);
 const [showChatModal, setShowChatModal] = useState(false);
 
+// Boutique state
+const [businessType, setBusinessType] = useState("SALON");
+const isBoutique = businessType === "BOUTIQUE";
+const [products, setProducts] = useState([]);
+const [orders, setOrders] = useState([]);
+const [showProductModal, setShowProductModal] = useState(false);
+const [editingProduct, setEditingProduct] = useState(null);
+const [newProduct, setNewProduct] = useState({
+  name: "",
+  description: "",
+  price: "",
+  stock: "",
+  category: "",
+  image: "",
+  imageFile: null,
+});
+const [productQuery, setProductQuery] = useState("");
+const [orderFilter, setOrderFilter] = useState("all");
+
 // Payment methods
 const [paymentMethods, setPaymentMethods] = useState([]); // {id, method, enabled}
 const [loadingPaymentMethods, setLoadingPaymentMethods] = useState(false);
@@ -684,22 +707,33 @@ const [serviceSort, setServiceSort] = useState("recent");
 const fileInputRef = useRef(null);
 
 const tabs = useMemo(
-() => [
-{ id: "appointments", label: "Rendez-vous", icon: FiCalendar },
-{ id: "services", label: "Services", icon: FiScissors },
-{ id: "team", label: "Équipe", icon: FiUsers },
-{ id: "planning", label: "Planning", icon: FiClock },
-{ id: "payments", label: "Paiements", icon: FiDollarSign },
-{ id: "paymentMethods", label: "Moyens de paiement", icon: FiCreditCard },
-// ? on garde l'id "portfolio", mais le label affiché = "Salon"
-{ id: "portfolio", label: "Salon", icon: FiCamera },
-{ id: "reviews", label: "Avis", icon: FiStar },
-{ id: "promos", label: "Promos & Fidélité", icon: FiGift },
-{ id: "crm", label: "CRM Clients", icon: FiUser },
-{ id: "stats", label: "Stats", icon: FiBarChart2 },
-{ id: "settings", label: "Paramètres", icon: FiSettings },
+() => isBoutique ? [
+  { id: "orders", label: "Commandes", icon: FiShoppingCart },
+  { id: "products", label: "Articles", icon: FiBox },
+  { id: "team", label: "Équipe", icon: FiUsers },
+  { id: "payments", label: "Paiements", icon: FiDollarSign },
+  { id: "paymentMethods", label: "Moyens de paiement", icon: FiCreditCard },
+  { id: "portfolio", label: "Boutique", icon: FiCamera },
+  { id: "reviews", label: "Avis", icon: FiStar },
+  { id: "promos", label: "Promos & Fidélité", icon: FiGift },
+  { id: "crm", label: "CRM Clients", icon: FiUser },
+  { id: "stats", label: "Stats", icon: FiBarChart2 },
+  { id: "settings", label: "Paramètres", icon: FiSettings },
+] : [
+  { id: "appointments", label: "Rendez-vous", icon: FiCalendar },
+  { id: "services", label: "Services", icon: FiScissors },
+  { id: "team", label: "Équipe", icon: FiUsers },
+  { id: "planning", label: "Planning", icon: FiClock },
+  { id: "payments", label: "Paiements", icon: FiDollarSign },
+  { id: "paymentMethods", label: "Moyens de paiement", icon: FiCreditCard },
+  { id: "portfolio", label: "Salon", icon: FiCamera },
+  { id: "reviews", label: "Avis", icon: FiStar },
+  { id: "promos", label: "Promos & Fidélité", icon: FiGift },
+  { id: "crm", label: "CRM Clients", icon: FiUser },
+  { id: "stats", label: "Stats", icon: FiBarChart2 },
+  { id: "settings", label: "Paramètres", icon: FiSettings },
 ],
-[]
+[isBoutique]
 );
 
 const asArray = (res) => (Array.isArray(res) ? res : res?.data ?? []);
@@ -1108,6 +1142,25 @@ toast.error(msg);
 })
 .finally(() => setLoading(false));
 }, []);
+
+// Fetch boutique data (products + orders) when businessType is BOUTIQUE
+useEffect(() => {
+  if (!isBoutique) return;
+  setActiveTab((prev) => prev === "appointments" ? "orders" : prev);
+  const fetchBoutiqueData = async () => {
+    try {
+      const [productsRes, ordersRes] = await Promise.all([
+        apiFetch("/products"),
+        apiFetch("/orders"),
+      ]);
+      setProducts(asArray(productsRes));
+      setOrders(asArray(ordersRes));
+    } catch (err) {
+      console.error("Erreur chargement boutique:", err);
+    }
+  };
+  fetchBoutiqueData();
+}, [isBoutique]);
 
 useEffect(() => {
 fetchSalonSettings();
@@ -1845,6 +1898,95 @@ setSavingClientAddress(false);
 };
 
 /* ----------------------------
+Boutique: Product & Order handlers
+----------------------------- */
+const resetProductForm = () => {
+  setNewProduct({ name: "", description: "", price: "", stock: "", category: "", image: "", imageFile: null });
+  setEditingProduct(null);
+};
+
+const handleSaveProduct = async () => {
+  const form = editingProduct || newProduct;
+  if (!form.name || !form.price) {
+    toast.error("Nom et prix sont obligatoires.");
+    return;
+  }
+  try {
+    const formData = new FormData();
+    formData.append("name", form.name);
+    formData.append("description", form.description || "");
+    formData.append("price", Number(form.price));
+    formData.append("stock", form.stock ? Number(form.stock) : 0);
+    formData.append("category", form.category || "");
+    if (form.imageFile) formData.append("image", form.imageFile);
+
+    if (editingProduct?.id) {
+      const res = await apiFetch(`/products/${editingProduct.id}`, { method: "PATCH", body: formData });
+      const updated = res?.data ?? res;
+      setProducts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+      toast.success("Article mis à jour.");
+    } else {
+      const res = await apiFetch("/products", { method: "POST", body: formData });
+      const created = res?.data ?? res;
+      setProducts((prev) => [created, ...prev]);
+      toast.success("Article ajouté.");
+    }
+    resetProductForm();
+    setShowProductModal(false);
+  } catch (e) {
+    toast.error(e.message || "Erreur lors de la sauvegarde");
+  }
+};
+
+const handleDeleteProduct = async (id) => {
+  if (!id) return;
+  try {
+    await apiFetch(`/products/${id}`, { method: "DELETE" });
+    setProducts((prev) => prev.filter((p) => p.id !== id));
+    toast.success("Article supprimé.");
+  } catch (e) {
+    toast.error(e.message || "Erreur lors de la suppression");
+  }
+};
+
+const handleOrderStatus = async (orderId, newStatus) => {
+  try {
+    const res = await apiFetch(`/orders/${orderId}/status`, {
+      method: "PATCH",
+      body: { status: newStatus },
+    });
+    const updated = res?.data ?? res;
+    setOrders((prev) => prev.map((o) => (o.id === updated.id ? updated : o)));
+    toast.success(`Commande ${newStatus === "CANCELLED" ? "annulée" : "mise à jour"}.`);
+  } catch (e) {
+    toast.error(e.message || "Erreur mise à jour commande");
+  }
+};
+
+const filteredProducts = useMemo(() => {
+  let list = products;
+  if (productQuery) {
+    const q = productQuery.toLowerCase();
+    list = list.filter((p) => p.name?.toLowerCase().includes(q) || p.category?.toLowerCase().includes(q));
+  }
+  return list;
+}, [products, productQuery]);
+
+const filteredOrders = useMemo(() => {
+  if (orderFilter === "all") return orders;
+  return orders.filter((o) => o.status === orderFilter);
+}, [orders, orderFilter]);
+
+const orderStatusOptions = [
+  { value: "PENDING", label: "En attente", tone: "amber" },
+  { value: "CONFIRMED", label: "Confirmée", tone: "blue" },
+  { value: "PREPARING", label: "En préparation", tone: "purple" },
+  { value: "READY", label: "Prête", tone: "green" },
+  { value: "DELIVERED", label: "Livrée", tone: "green" },
+  { value: "CANCELLED", label: "Annulée", tone: "red" },
+];
+
+/* ----------------------------
 Stats (API)
 ----------------------------- */
 const fetchStats = async () => {
@@ -1886,6 +2028,7 @@ fetchStats();
 
 const applySalonSettingsFromApi = (salon) => {
   if (!salon) return;
+  if (salon.businessType) setBusinessType(salon.businessType);
   const prefs = parseSalonPreferences(salon.salonSettings?.preferences);
   setSalonSettings((prev) => ({
     ...prev,
@@ -1974,21 +2117,21 @@ return (
 			color="amber"
 		/>
 		<StatCard
-			icon={<FiCalendar className="text-blue-500" />} 
-			label="RDV"
-			value={stats.totalBookings}
+			icon={isBoutique ? <FiShoppingCart className="text-blue-500" /> : <FiCalendar className="text-blue-500" />} 
+			label={isBoutique ? "Commandes" : "RDV"}
+			value={isBoutique ? orders.length : stats.totalBookings}
 			color="blue"
 		/>
 		<StatCard
 			icon={<FiCheck className="text-green-500" />} 
-			label="Terminés"
-			value={stats.completedBookings}
+			label={isBoutique ? "Livrées" : "Terminés"}
+			value={isBoutique ? orders.filter(o => o.status === "DELIVERED").length : stats.completedBookings}
 			color="green"
 		/>
 		<StatCard
 			icon={<FiX className="text-red-500" />} 
 			label="Annulés"
-			value={stats.cancelledBookings}
+			value={isBoutique ? orders.filter(o => o.status === "CANCELLED").length : stats.cancelledBookings}
 			color="red"
 		/>
 	</div>
@@ -2000,20 +2143,38 @@ return (
 {salonName}
 </h1>
 <p className="text-sm text-gray-500 mt-1">
-Gestion des RDV, services, Équipe, planning, paiements, salon, avis, promos, CRM et paramètres.
+{isBoutique
+  ? "Gestion des commandes, articles, paiements, boutique, avis, promos, CRM et paramètres."
+  : "Gestion des RDV, services, Équipe, planning, paiements, salon, avis, promos, CRM et paramètres."}
 </p>
 </div>
 
 <div className="flex items-center gap-2 flex-wrap justify-start md:justify-end">
-<Badge tone="blue">
-<FiCalendar className="mr-2" /> À venir: {upcomingCount}
-</Badge>
-<Badge tone="green">
-<FiCheck className="mr-2" /> Terminés: {completedCount}
-</Badge>
-<Badge tone="red">
-<FiX className="mr-2" /> Annulés: {cancelledCount}
-</Badge>
+{isBoutique ? (
+  <>
+    <Badge tone="amber">
+      <FiShoppingCart className="mr-2" /> En attente: {orders.filter(o => o.status === "PENDING").length}
+    </Badge>
+    <Badge tone="green">
+      <FiCheck className="mr-2" /> Livrées: {orders.filter(o => o.status === "DELIVERED").length}
+    </Badge>
+    <Badge tone="blue">
+      <FiBox className="mr-2" /> Articles: {products.length}
+    </Badge>
+  </>
+) : (
+  <>
+    <Badge tone="blue">
+      <FiCalendar className="mr-2" /> À venir: {upcomingCount}
+    </Badge>
+    <Badge tone="green">
+      <FiCheck className="mr-2" /> Terminés: {completedCount}
+    </Badge>
+    <Badge tone="red">
+      <FiX className="mr-2" /> Annulés: {cancelledCount}
+    </Badge>
+  </>
+)}
 </div>
 </div>
 
@@ -2042,6 +2203,339 @@ active
 </Card>
 
 <AnimatePresence mode="sync">
+
+{/* ------------------ ORDERS (Boutique) ------------------ */}
+{activeTab === "orders" && (
+<motion.div key="orders" {...pageAnim}>
+<Card>
+<CardHeader icon={<FiShoppingCart />} title={`Commandes (${filteredOrders.length})`} />
+<div className="p-6">
+  <div className="flex flex-wrap gap-2 mb-5">
+    {[{ value: "all", label: "Toutes" }, ...orderStatusOptions].map((opt) => (
+      <button
+        key={opt.value}
+        onClick={() => setOrderFilter(opt.value)}
+        className={cx(
+          "px-3 py-1.5 rounded-xl text-sm font-medium transition",
+          orderFilter === opt.value
+            ? "bg-gray-900 text-white"
+            : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
+        )}
+      >
+        {opt.label}
+      </button>
+    ))}
+  </div>
+  {loading ? (
+    <p className="text-gray-500 font-semibold">Chargement…</p>
+  ) : filteredOrders.length === 0 ? (
+    <EmptyState icon={<FiShoppingCart />} title="Aucune commande" subtitle="Les commandes apparaîtront ici." />
+  ) : (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      {filteredOrders.map((order, idx) => {
+        const statusOpt = orderStatusOptions.find((s) => s.value === order.status) || { label: order.status, tone: "gray" };
+        return (
+          <motion.div
+            key={order.id || idx}
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25, delay: idx * 0.03 }}
+            className="bg-white rounded-2xl border border-gray-100 shadow-[0_20px_50px_-35px_rgba(15,23,42,0.55)] p-5"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="font-semibold text-gray-900">{order.clientName || "Client"}</p>
+                <p className="text-xs text-gray-500">{order.clientPhone || ""}</p>
+                {order.deliveryMode === "DELIVERY" && order.deliveryAddress && (
+                  <p className="text-xs text-gray-400 mt-1">📍 {order.deliveryAddress}</p>
+                )}
+              </div>
+              <Badge tone={statusOpt.tone}>{statusOpt.label}</Badge>
+            </div>
+
+            <div className="mt-4 space-y-1">
+              {(order.items || []).map((item, i) => (
+                <div key={i} className="flex justify-between text-sm">
+                  <span className="text-gray-700">{item.product?.name || "Article"} × {item.quantity}</span>
+                  <span className="font-medium">{formatMoney(item.unitPrice * item.quantity)}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-4 mt-4">
+              <div>
+                <p className="text-xs text-gray-500">Total</p>
+                <p className="font-bold text-gray-900">{formatMoney(order.totalPrice)}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">Mode</p>
+                <p className="font-semibold text-gray-900">
+                  {order.deliveryMode === "DELIVERY" ? "Livraison" : "Retrait"}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">Date</p>
+                <p className="font-semibold text-gray-900">
+                  {new Date(order.createdAt).toLocaleString("fr-FR")}
+                </p>
+              </div>
+              {order.notes && (
+                <div>
+                  <p className="text-xs text-gray-500">Notes</p>
+                  <p className="text-sm text-gray-700">{order.notes}</p>
+                </div>
+              )}
+            </div>
+
+            {order.status !== "DELIVERED" && order.status !== "CANCELLED" && (
+              <div className="flex flex-wrap gap-2 mt-4">
+                {order.status === "PENDING" && (
+                  <Button variant="secondary" className="px-3 py-2" onClick={() => handleOrderStatus(order.id, "CONFIRMED")}>
+                    <FiCheck className="mr-1" /> Confirmer
+                  </Button>
+                )}
+                {order.status === "CONFIRMED" && (
+                  <Button variant="secondary" className="px-3 py-2" onClick={() => handleOrderStatus(order.id, "PREPARING")}>
+                    <FiPackage className="mr-1" /> Préparer
+                  </Button>
+                )}
+                {order.status === "PREPARING" && (
+                  <Button variant="secondary" className="px-3 py-2" onClick={() => handleOrderStatus(order.id, "READY")}>
+                    <FiCheck className="mr-1" /> Prête
+                  </Button>
+                )}
+                {order.status === "READY" && (
+                  <Button variant="secondary" className="px-3 py-2" onClick={() => handleOrderStatus(order.id, "DELIVERED")}>
+                    <FiCheck className="mr-1" /> Livrée
+                  </Button>
+                )}
+                <Button variant="secondary" className="px-3 py-2 text-red-600" onClick={() => handleOrderStatus(order.id, "CANCELLED")}>
+                  <FiX className="mr-1" /> Annuler
+                </Button>
+              </div>
+            )}
+          </motion.div>
+        );
+      })}
+    </div>
+  )}
+</div>
+</Card>
+</motion.div>
+)}
+
+{/* ------------------ PRODUCTS (Boutique) ------------------ */}
+{activeTab === "products" && (
+<motion.div key="products" {...pageAnim}>
+<Card className="mb-6">
+  <CardHeader
+    icon={<FiBox />}
+    title={`Articles (${filteredProducts.length})`}
+    right={
+      <Button onClick={() => { resetProductForm(); setShowProductModal(true); }}>
+        <FiPlus className="mr-2" /> Ajouter
+      </Button>
+    }
+  />
+  <div className="p-6">
+    <div className="mb-5">
+      <div className="relative max-w-md">
+        <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+        <input
+          value={productQuery}
+          onChange={(e) => setProductQuery(e.target.value)}
+          placeholder="Rechercher un article…"
+          className="w-full pl-11 pr-4 py-2.5 border border-gray-200 rounded-2xl bg-white focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+        />
+      </div>
+    </div>
+
+    {loading ? (
+      <p className="text-gray-500 font-semibold">Chargement…</p>
+    ) : filteredProducts.length === 0 ? (
+      <EmptyState icon={<FiBox />} title="Aucun article" subtitle="Ajoutez vos articles pour commencer à vendre." />
+    ) : (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {filteredProducts.map((product) => {
+          const img = resolveMediaUrl(product.imageUrl || product.image);
+          return (
+            <motion.div
+              key={product.id}
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
+            >
+              {img ? (
+                <div className="w-full h-56 bg-gray-50 flex items-center justify-center">
+                  <img src={img} alt={product.name} className="w-full h-full object-contain p-2" />
+                </div>
+              ) : (
+                <div className="w-full h-56 bg-gray-100 flex items-center justify-center">
+                  <FiBox className="w-10 h-10 text-gray-300" />
+                </div>
+              )}
+              <div className="p-4">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="font-semibold text-gray-900">{product.name}</h3>
+                    {product.category && <p className="text-xs text-gray-500">{product.category}</p>}
+                  </div>
+                  <p className="font-bold text-amber-600">{formatMoney(product.price)}</p>
+                </div>
+                {product.description && (
+                  <p className="text-sm text-gray-600 mt-2 line-clamp-2">{product.description}</p>
+                )}
+                <div className="flex items-center justify-between mt-3">
+                  <span className={cx(
+                    "text-xs font-medium px-2 py-1 rounded-full",
+                    product.stock > 0 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                  )}>
+                    {product.stock > 0 ? `${product.stock} en stock` : "Rupture"}
+                  </span>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setEditingProduct({ ...product, imageFile: null });
+                        setShowProductModal(true);
+                      }}
+                      className="p-2 rounded-xl hover:bg-gray-100"
+                    >
+                      <FiEdit2 className="w-4 h-4 text-gray-500" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteProduct(product.id)}
+                      className="p-2 rounded-xl hover:bg-red-50"
+                    >
+                      <FiTrash2 className="w-4 h-4 text-red-400" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          );
+        })}
+      </div>
+    )}
+  </div>
+</Card>
+
+{/* Product Modal */}
+{showProductModal && (
+  <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6"
+    >
+      <h2 className="text-xl font-bold text-gray-900 mb-4">
+        {editingProduct?.id ? "Modifier l'article" : "Nouvel article"}
+      </h2>
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Nom *</label>
+          <input
+            value={(editingProduct || newProduct).name}
+            onChange={(e) => {
+              const val = e.target.value;
+              editingProduct
+                ? setEditingProduct((p) => ({ ...p, name: val }))
+                : setNewProduct((p) => ({ ...p, name: val }));
+            }}
+            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
+            placeholder="Nom de l'article"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+          <textarea
+            value={(editingProduct || newProduct).description}
+            onChange={(e) => {
+              const val = e.target.value;
+              editingProduct
+                ? setEditingProduct((p) => ({ ...p, description: val }))
+                : setNewProduct((p) => ({ ...p, description: val }));
+            }}
+            rows={3}
+            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
+            placeholder="Description de l'article"
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Prix (FCFA) *</label>
+            <input
+              type="number"
+              value={(editingProduct || newProduct).price}
+              onChange={(e) => {
+                const val = e.target.value;
+                editingProduct
+                  ? setEditingProduct((p) => ({ ...p, price: val }))
+                  : setNewProduct((p) => ({ ...p, price: val }));
+              }}
+              className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
+              placeholder="0"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Stock</label>
+            <input
+              type="number"
+              value={(editingProduct || newProduct).stock}
+              onChange={(e) => {
+                const val = e.target.value;
+                editingProduct
+                  ? setEditingProduct((p) => ({ ...p, stock: val }))
+                  : setNewProduct((p) => ({ ...p, stock: val }));
+              }}
+              className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
+              placeholder="0"
+            />
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
+          <input
+            value={(editingProduct || newProduct).category}
+            onChange={(e) => {
+              const val = e.target.value;
+              editingProduct
+                ? setEditingProduct((p) => ({ ...p, category: val }))
+                : setNewProduct((p) => ({ ...p, category: val }));
+            }}
+            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
+            placeholder="ex: Accessoires, Vêtements…"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Image</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              editingProduct
+                ? setEditingProduct((p) => ({ ...p, imageFile: file }))
+                : setNewProduct((p) => ({ ...p, imageFile: file }));
+            }}
+            className="w-full text-sm"
+          />
+        </div>
+      </div>
+      <div className="flex justify-end gap-3 mt-6">
+        <Button variant="secondary" onClick={() => { setShowProductModal(false); resetProductForm(); }}>
+          Annuler
+        </Button>
+        <Button onClick={handleSaveProduct}>
+          <FiSave className="mr-2" /> {editingProduct?.id ? "Modifier" : "Ajouter"}
+        </Button>
+      </div>
+    </motion.div>
+  </div>
+)}
+</motion.div>
+)}
+
 {/* ------------------ APPOINTMENTS ------------------ */}
 {activeTab === "appointments" && (
 <motion.div key="appointments" {...pageAnim}>

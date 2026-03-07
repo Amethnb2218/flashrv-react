@@ -34,14 +34,9 @@ async function authenticate(req, res, next) {
       // ...
     }
     if (!token) {
-      console.warn('[AUTH] Aucun token trouvé dans cookie ou header');
       return res.status(401).json({
         status: 'error',
-        message: 'Not authenticated. Token missing in cookie or header.',
-        debug: {
-          cookies: req.cookies,
-          headers: req.headers,
-        }
+        message: 'Not authenticated',
       });
     }
     // Verify token
@@ -53,10 +48,7 @@ async function authenticate(req, res, next) {
       // ...
       return res.status(401).json({
         status: 'error',
-        message: 'Invalid token: ' + e.message,
-        debug: {
-          token,
-        }
+        message: 'Invalid or expired token',
       });
     }
     // Find user in database
@@ -67,12 +59,7 @@ async function authenticate(req, res, next) {
       // ...
       return res.status(401).json({
         status: 'error',
-        message: 'User not found for userId: ' + decoded.userId,
-        debug: {
-          decoded,
-          token,
-          allUsers,
-        }
+        message: 'User not found',
       });
     }
     if (user.status === STATUS.SUSPENDED) {
@@ -80,7 +67,6 @@ async function authenticate(req, res, next) {
       return res.status(403).json({
         status: 'error',
         message: 'Your account has been suspended. Contact support.',
-        debug: { user }
       });
     }
     if (user.status === STATUS.REJECTED) {
@@ -88,7 +74,6 @@ async function authenticate(req, res, next) {
       return res.status(403).json({
         status: 'error',
         message: 'Your account has been rejected.',
-        debug: { user }
       });
     }
     req.user = user;
@@ -97,12 +82,7 @@ async function authenticate(req, res, next) {
     console.error('[AUTH] Erreur inattendue:', err);
     return res.status(401).json({
       status: 'error',
-      message: 'Unexpected error in authenticate: ' + err.message,
-      debug: {
-        cookies: req.cookies,
-        headers: req.headers,
-        err: err.message,
-      }
+      message: 'Authentication failed',
     });
   }
 }

@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from 'react'
-import { Link, NavLink, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { FiMenu, FiX, FiUser, FiLogOut, FiCalendar, FiSettings, FiPhone, FiMapPin, FiSearch, FiHeart, FiStar } from 'react-icons/fi'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -11,6 +11,9 @@ function Navbar() {
   const [showUserMenu, setShowUserMenu] = useState(false)
   const { user, isAuthenticated, logout } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+  const searchParams = new URLSearchParams(location.search)
+  const isBoutiquePage = location.pathname === '/salons' && searchParams.get('businessType') === 'BOUTIQUE'
 
   useEffect(() => {
     const handleScroll = () => {
@@ -78,17 +81,31 @@ function Navbar() {
                 <NavLink
                   key={link.to}
                   to={link.to}
-                  className={({ isActive }) => `
+                  end={link.to === '/salons'}
+                  className={({ isActive }) => {
+                    const active = link.to === '/salons' ? (isActive && !isBoutiquePage) : isActive
+                    return `
                     px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2
-                    ${isActive 
+                    ${active 
                       ? 'text-gray-900 bg-gray-100' 
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                     }
-                  `}
+                  `}}
                 >
                   {link.label}
                 </NavLink>
               ))}
+
+              <Link
+                to="/salons?businessType=BOUTIQUE"
+                className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 ${
+                  isBoutiquePage
+                    ? 'text-gray-900 bg-gray-100'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                Boutiques
+              </Link>
               
               <button
                 onClick={() => navigate('/salons')}
@@ -221,15 +238,28 @@ function Navbar() {
                   <NavLink
                     key={link.to}
                     to={link.to}
+                    end={link.to === '/salons'}
                     onClick={() => setIsOpen(false)}
-                    className={({ isActive }) => `
+                    className={({ isActive }) => {
+                      const active = link.to === '/salons' ? (isActive && !isBoutiquePage) : isActive
+                      return `
                       block py-3 px-4 rounded-xl font-medium transition-colors
-                      ${isActive ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50'}
-                    `}
+                      ${active ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50'}
+                    `}}
                   >
                     {link.label}
                   </NavLink>
                 ))}
+
+                <Link
+                  to="/salons?businessType=BOUTIQUE"
+                  onClick={() => setIsOpen(false)}
+                  className={`block py-3 px-4 rounded-xl font-medium transition-colors ${
+                    isBoutiquePage ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  Boutiques
+                </Link>
                 
                 <div className="border-t border-gray-100 pt-4 mt-4">
                   {isAuthenticated ? (

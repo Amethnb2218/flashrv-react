@@ -16,36 +16,60 @@ const salonPaymentMethodsRoute = require('./routes/salon/paymentMethods');
 const feedbackRoutes = require('./routes/feedbackRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const assistantRoutes = require('./routes/assistantRoutes');
+const productRoutes = require('./routes/productRoutes');
+const orderRoutes = require('./routes/orderRoutes');
+
+const rateLimit = require('express-rate-limit');
 
 const app = express();
 
 // ===========================================
-// CORS CONFIGURATION - DEV (localhost)
+// SECURITY HEADERS
 // ===========================================
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (origin) {
-    res.header('Access-Control-Allow-Origin', origin);
-  }
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie, X-Requested-With, Accept');
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-  next();
-});
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+}));
 
+// ===========================================
+// CORS CONFIGURATION
+// ===========================================
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || process.env.FRONTEND_URL || 'http://localhost:3000').split(',').map(s => s.trim());
+if (process.env.NODE_ENV !== 'production') {
+  ['http://localhost:3000', 'http://127.0.0.1:3000'].forEach(o => {
+    if (!allowedOrigins.includes(o)) allowedOrigins.push(o);
+  });
+}
 app.use(cors({
-  origin: true,
+  origin: (origin, cb) => {
+    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+    cb(new Error('Not allowed by CORS'));
+  },
   credentials: true,
 }));
 
 // ===========================================
+// RATE LIMITING
+// ===========================================
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: { status: 'error', message: 'Trop de tentatives, réessayez dans 15 minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+const globalLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000,
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use(globalLimiter);
+
+// ===========================================
 // AUTRES MIDDLEWARES
 // ===========================================
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.json({ limit: '2mb' }));
+app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 app.use(cookieParser());
 
 // Sert les fichiers statiques du dossier uploads
@@ -87,7 +111,7 @@ app.get('/health', (req, res) => {
 // ROUTES API
 // ===========================================
 const serviceRoutes = require('./routes/serviceRoutes');
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/salons', salonRoutes);
 app.use('/api/appointments', appointmentRoutes);
@@ -99,6 +123,8 @@ app.use('/api/services', serviceRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/assistant', assistantRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/orders', orderRoutes);
 
 // ===========================================
 // 404 HANDLER

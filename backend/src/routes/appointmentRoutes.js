@@ -215,6 +215,14 @@ router.post('/', authenticate, async (req, res, next) => {
     const endTime = `${Math.floor(endMinutes / 60).toString().padStart(2, '0')}:${(endMinutes % 60).toString().padStart(2, '0')}`;
 
     const appointmentDate = new Date(date);
+    if (isNaN(appointmentDate.getTime())) {
+      return res.status(400).json({ status: 'error', message: 'Date invalide' });
+    }
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    if (appointmentDate < now) {
+      return res.status(400).json({ status: 'error', message: 'Impossible de réserver dans le passé' });
+    }
 
     const extraServices = services.filter(s => s.id !== primaryServiceId);
     const extraServicesNote = extraServices.length > 0

@@ -1,0 +1,8 @@
+node_modules/
+.env
+*.db
+*.db-journal
+uploads/gallery/*
+uploads/salon/*
+uploads/chat-voices/*
+!uploads/.gitkeep

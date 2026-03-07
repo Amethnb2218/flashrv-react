@@ -1,7 +1,7 @@
 ﻿import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
-import { FiSearch, FiMapPin, FiCalendar, FiStar, FiArrowRight, FiCheck, FiNavigation, FiShield, FiUsers, FiClock, FiZap, FiMessageSquare, FiAlertTriangle, FiX } from 'react-icons/fi'
+import { FiSearch, FiMapPin, FiCalendar, FiStar, FiArrowRight, FiCheck, FiNavigation, FiShield, FiUsers, FiClock, FiZap, FiMessageSquare, FiAlertTriangle, FiX, FiShoppingBag } from 'react-icons/fi'
 import { categories } from '../data/salons'
 import SalonCard from '../components/Salon/SalonCard'
 import toast from 'react-hot-toast'
@@ -46,15 +46,28 @@ function Home() {
     }
   }, [])
 
+  const onlySalons = useMemo(() => salons.filter(s => (s.businessType || 'SALON') !== 'BOUTIQUE'), [salons])
+  const onlyBoutiques = useMemo(() => salons.filter(s => s.businessType === 'BOUTIQUE'), [salons])
+
   const featuredSalons = useMemo(() => {
-    const list = [...salons]
+    const list = [...onlySalons]
     list.sort((a, b) => {
       const da = a?.createdAt ? new Date(a.createdAt).getTime() : 0
       const db = b?.createdAt ? new Date(b.createdAt).getTime() : 0
       return da - db
     })
     return list.slice(0, 3)
-  }, [salons])
+  }, [onlySalons])
+
+  const featuredBoutiques = useMemo(() => {
+    const list = [...onlyBoutiques]
+    list.sort((a, b) => {
+      const da = a?.createdAt ? new Date(a.createdAt).getTime() : 0
+      const db = b?.createdAt ? new Date(b.createdAt).getTime() : 0
+      return da - db
+    })
+    return list.slice(0, 3)
+  }, [onlyBoutiques])
 
   const totalReviews = salons.reduce((sum, s) => sum + (s.reviewCount || 0), 0)
   const avgRating = salons.length
@@ -63,7 +76,8 @@ function Home() {
       : 'Nouveau')
     : '—'
   const stats = [
-    { value: `${salonsTotal || salons.length}`, label: 'Salons partenaires' },
+    { value: `${onlySalons.length}`, label: 'Salons partenaires' },
+    { value: `${onlyBoutiques.length}`, label: 'Boutiques' },
     { value: `${totalReviews}`, label: 'Avis clients' },
     { value: avgRating, label: 'Note moyenne' }
   ]
@@ -168,13 +182,13 @@ function Home() {
                 Réservation simple, résultat premium
               </span>
               <h1 className="mt-4 text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
-                Le meilleur de la coiffure,{' '}
+                Salons & Boutiques,{' '}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-yellow-600">
                   en quelques clics
                 </span>
               </h1>
               <p className="mt-5 text-lg text-gray-600 max-w-xl leading-relaxed">
-                StyleFlow connecte clients et professionnels. Comparez, réservez et gérez vos rendez-vous facilement.
+                StyleFlow connecte clients, salons et boutiques. Réservez un RDV ou commandez vos articles préférés.
               </p>
 
               <form onSubmit={handleSearch} className="mt-8 bg-white/95 rounded-3xl p-4 shadow-[0_28px_70px_-40px_rgba(15,23,42,0.6)] border border-white/70 backdrop-blur">
@@ -277,7 +291,7 @@ function Home() {
                 </div>
               </form>
 
-                <div className="mt-10 grid grid-cols-3 gap-4 max-w-xl">
+                <div className="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-2xl">
                   {stats.map((stat, i) => (
                     <div key={i} className="bg-white/80 border border-gray-100 rounded-2xl p-4 text-center shadow-sm">
                       <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
@@ -391,6 +405,49 @@ function Home() {
           </div>
         </div>
       </section>
+
+      {/* Featured Boutiques */}
+      {(loadingSalons || featuredBoutiques.length > 0) && (
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-10">
+            <div>
+              <span className="inline-block px-4 py-2 bg-amber-50 text-amber-700 rounded-full text-sm font-medium mb-4">
+                <span className="mr-1">🛍️</span> Shopping
+              </span>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
+                Boutiques en vedette
+              </h2>
+              <p className="mt-2 text-gray-600">Découvrez les boutiques partenaires et commandez en ligne.</p>
+            </div>
+            <Link
+              to="/salons?businessType=BOUTIQUE"
+              className="mt-6 md:mt-0 inline-flex items-center gap-2 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 text-white font-semibold py-3 px-6 rounded-full transition-all shadow-lg hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 group"
+            >
+              <FiShoppingBag className="w-4 h-4" />
+              <span>Voir toutes les boutiques</span>
+              <FiArrowRight className="group-hover:translate-x-1 transition-transform" />
+            </Link>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {loadingSalons ? (
+              [1, 2, 3].map((i) => (
+                <div key={i} className="bg-white rounded-2xl border border-gray-100 p-5 animate-pulse">
+                  <div className="h-40 bg-gray-100 rounded-xl mb-4"></div>
+                  <div className="h-4 bg-gray-100 rounded w-2/3 mb-2"></div>
+                  <div className="h-3 bg-gray-100 rounded w-1/2"></div>
+                </div>
+              ))
+            ) : (
+              featuredBoutiques.map((salon, i) => (
+                <SalonCard key={salon.id} salon={salon} index={i} />
+              ))
+            )}
+          </div>
+        </div>
+      </section>
+      )}
 
       {/* Categories */}
       <section className="py-16 bg-gradient-to-b from-white to-amber-50/20">

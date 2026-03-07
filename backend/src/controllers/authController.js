@@ -9,6 +9,9 @@ async function register(req, res, next) {
     if (!name || !email || !password || !role) {
       return res.status(400).json({ status: 'error', message: 'Missing required fields' });
     }
+    if (password.length < 8) {
+      return res.status(400).json({ status: 'error', message: 'Le mot de passe doit contenir au moins 8 caractères' });
+    }
     // Vérifier unicité email
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
