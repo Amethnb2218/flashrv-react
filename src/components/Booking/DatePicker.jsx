@@ -149,7 +149,7 @@ function DatePicker({ selectedDate, onDateSelect, onSelect, isDateDisabled, days
         </button>
       </div>
 
-      <div className="relative w-full max-w-full overflow-hidden">
+      <div className="relative w-full min-w-0 overflow-hidden">
         <div
           ref={scrollRef}
           className="scrollbar-hide flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain pb-1"

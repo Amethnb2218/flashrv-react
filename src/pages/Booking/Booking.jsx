@@ -169,12 +169,12 @@ function Booking() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-x-clip bg-gradient-to-br from-gray-50 via-white to-amber-50/20 py-4 sm:py-8">
+    <div className="relative min-h-screen w-full max-w-[100vw] overflow-x-hidden bg-gradient-to-br from-gray-50 via-white to-amber-50/20 py-4 sm:py-8">
       {/* Decorative background elements */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-amber-100/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
-      <div className="absolute bottom-0 left-0 w-80 h-80 bg-yellow-100/30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4"></div>
+      <div className="absolute top-0 right-0 w-96 h-96 bg-amber-100/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none"></div>
+      <div className="absolute bottom-0 left-0 w-80 h-80 bg-yellow-100/30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4 pointer-events-none"></div>
       
-      <div className="relative z-10 mx-auto w-full max-w-7xl px-3 sm:px-6 lg:px-8">
+      <div className="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Header — compact on mobile */}
         <div className="mb-4 sm:mb-8">
           <button
@@ -238,9 +238,9 @@ function Booking() {
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-4 sm:gap-8">
+        <div className="grid lg:grid-cols-3 gap-4 sm:gap-8 w-full min-w-0">
           {/* Main Content */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 min-w-0">
             <AnimatePresence mode="sync">
               <motion.div
                 key={state.step}
@@ -476,7 +476,7 @@ function Booking() {
           </div>
 
           {/* Sidebar - Booking Summary */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 min-w-0">
             <BookingSummary salon={salon} />
           </div>
         </div>

@@ -53,9 +53,9 @@ function BookingSummary({ salon }) {
           <h4 className="text-sm font-medium text-gray-500 mb-2">Services ({services.length})</h4>
           <ul className="space-y-2">
             {services.map((service) => (
-              <li key={service.id} className="flex justify-between text-sm gap-3">
-                <span className="text-gray-700 break-words">{service.name}</span>
-                <span className="font-medium whitespace-nowrap">{formatPrice(service.price)}</span>
+              <li key={service.id} className="flex justify-between text-sm gap-2">
+                <span className="text-gray-700 break-words min-w-0 flex-1">{service.name}</span>
+                <span className="font-medium whitespace-nowrap flex-shrink-0">{formatPrice(service.price)}</span>
               </li>
             ))}
           </ul>
@@ -89,28 +89,28 @@ function BookingSummary({ salon }) {
 
       <div className="pt-4 space-y-3">
         {totalDuration > 0 ? (
-          <div className="flex justify-between text-sm text-gray-500">
-            <span>Durée estimée</span>
-            <span>{formatDuration(totalDuration)}</span>
+          <div className="flex justify-between text-sm text-gray-500 gap-2">
+            <span className="min-w-0">Durée estimée</span>
+            <span className="flex-shrink-0">{formatDuration(totalDuration)}</span>
           </div>
         ) : null}
 
-        <div className="flex justify-between text-sm text-gray-700">
-          <span>Total services</span>
-          <span className="font-medium">{formatPrice(totalPrice)}</span>
+        <div className="flex justify-between text-sm text-gray-700 gap-2">
+          <span className="min-w-0">Total services</span>
+          <span className="font-medium flex-shrink-0">{formatPrice(totalPrice)}</span>
         </div>
 
         {services.length > 0 ? (
           <>
             <div className="h-px bg-gray-200" />
             <div className="bg-primary-50 rounded-xl p-4">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium text-dark-900">Acompte à payer ({depositPercentage}%)</span>
-                <span className="text-lg font-bold text-primary-600">{formatPrice(depositAmount)}</span>
+              <div className="flex justify-between items-center mb-2 gap-2">
+                <span className="text-sm font-medium text-dark-900 min-w-0">Acompte à payer ({depositPercentage}%)</span>
+                <span className="text-base sm:text-lg font-bold text-primary-600 flex-shrink-0">{formatPrice(depositAmount)}</span>
               </div>
-              <div className="flex justify-between items-center text-sm text-gray-600">
-                <span>Reste à payer au salon</span>
-                <span>{formatPrice(remainingAmount)}</span>
+              <div className="flex justify-between items-center text-sm text-gray-600 gap-2">
+                <span className="min-w-0">Reste à payer au salon</span>
+                <span className="flex-shrink-0">{formatPrice(remainingAmount)}</span>
               </div>
             </div>
             {salon?.cancellationPolicy ? (

@@ -130,7 +130,7 @@ function TimeSlot({
       ) : (
         <div
           ref={scrollRef}
-          className="max-h-[42vh] w-full max-w-full overflow-x-hidden overflow-y-auto rounded-xl border border-gray-100 bg-gray-50/60 p-2"
+          className="max-h-[42vh] w-full min-w-0 overflow-x-hidden overflow-y-auto rounded-xl border border-gray-100 bg-gray-50/60 p-2"
           style={{ WebkitOverflowScrolling: 'touch' }}
         >
           <div className="grid grid-cols-[repeat(auto-fit,minmax(72px,1fr))] gap-2 sm:grid-cols-[repeat(auto-fit,minmax(90px,1fr))] sm:gap-2.5">
