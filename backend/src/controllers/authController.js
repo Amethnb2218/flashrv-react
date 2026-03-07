@@ -38,6 +38,8 @@ async function register(req, res, next) {
     const user = await prisma.user.create({
       data: userData,
     });
+    // Email de confirmation (non-bloquant)
+    sendWelcomeEmail({ to: user.email, name: user.name });
     // Générer un token (mock, à sécuriser en prod)
     const token = generateToken({ userId: user.id, email: user.email, role: user.role });
     setTokenCookie(res, token);
@@ -86,6 +88,7 @@ const { PrismaClient } = require("@prisma/client");
 const { verifyGoogleToken } = require("../services/googleAuth");
 const { generateToken, setTokenCookie, clearTokenCookie } = require("../utils/jwt");
 const { ROLES, STATUS } = require("../middleware/auth");
+const { sendWelcomeEmail } = require("../services/emailService");
 
 const prisma = new PrismaClient();
 
@@ -179,6 +182,8 @@ async function googleAuth(req, res, next) {
       console.log(
         `✅ New ${role} registered: ${user.email} (${user.name}) - Status: ${user.status}`
       );
+      // Email de confirmation (non-bloquant)
+      sendWelcomeEmail({ to: user.email, name: user.name });
     }
 
     // Generate JWT token
