@@ -108,66 +108,76 @@ function Booking() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-amber-50/20 py-8 relative overflow-x-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-amber-50/20 py-4 sm:py-8 relative overflow-x-hidden">
       {/* Decorative background elements */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-amber-100/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
       <div className="absolute bottom-0 left-0 w-80 h-80 bg-yellow-100/30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4"></div>
-      <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-orange-100/20 rounded-full blur-3xl"></div>
       
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-6 sm:mb-8">
+      <div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        {/* Header — compact on mobile */}
+        <div className="mb-4 sm:mb-8">
           <button
             onClick={handleBack}
-            className="flex items-center text-gray-600 hover:text-gray-900 transition-colors mb-4"
+            className="flex items-center text-gray-600 hover:text-gray-900 transition-colors mb-2 sm:mb-4 text-sm"
           >
-            <FiChevronLeft className="w-5 h-5 mr-1" />
+            <FiChevronLeft className="w-5 h-5 mr-0.5" />
             Retour
           </button>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 break-words">Réservation - {salon.name}</h1>
-          <p className="text-gray-600 mt-2 text-sm sm:text-base">Complétez les étapes pour finaliser votre réservation</p>
+          <h1 className="text-xl sm:text-3xl font-bold text-gray-900 break-words">Réservation</h1>
+          <p className="text-gray-500 mt-1 text-xs sm:text-base">{salon.name}</p>
         </div>
 
-        {/* Steps indicator */}
-        <div className="mb-6 sm:mb-8 overflow-x-auto pb-2">
-          <div className="flex items-center justify-between gap-3 min-w-max sm:min-w-0 max-w-3xl mx-auto">
+        {/* Steps indicator — compact on mobile */}
+        <div className="mb-6 sm:mb-8">
+          <div className="flex items-center justify-center gap-1 sm:gap-0 max-w-md mx-auto">
             {steps.map((step, index) => (
-              <div key={step.id} className="flex items-center">
-                <div
-                  className={`flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 transition-all ${
-                    state.step > step.id
-                      ? 'bg-green-500 border-green-500 text-white'
-                      : state.step === step.id
-                      ? 'bg-primary-600 border-primary-600 text-white'
-                      : 'bg-white border-gray-300 text-gray-400'
+              <div key={step.id} className="flex items-center flex-1 last:flex-none">
+                <button
+                  onClick={() => {
+                    if (state.step > step.id) dispatch({ type: 'SET_STEP', payload: step.id })
+                  }}
+                  disabled={state.step < step.id}
+                  className={`flex items-center gap-1.5 sm:gap-2 transition-all ${
+                    state.step > step.id ? 'cursor-pointer' : state.step < step.id ? 'cursor-default opacity-50' : ''
                   }`}
                 >
-                  {state.step > step.id ? (
-                    <FiCheck className="w-5 h-5 sm:w-6 sm:h-6" />
-                  ) : (
-                    <step.icon className="w-5 h-5 sm:w-6 sm:h-6" />
-                  )}
-                </div>
-                <span
-                  className={`ml-2 sm:ml-3 text-xs sm:text-base font-medium whitespace-nowrap ${
-                    state.step >= step.id ? 'text-gray-900' : 'text-gray-400'
-                  }`}
-                >
-                  {step.title}
-                </span>
-                {index < steps.length - 1 && (
+
                   <div
-                    className={`w-10 sm:w-24 h-1 mx-2 sm:mx-4 rounded ${
-                      state.step > step.id ? 'bg-green-500' : 'bg-gray-200'
+                    className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full text-xs sm:text-sm font-bold transition-all ${
+                      state.step > step.id
+                        ? 'bg-green-500 text-white'
+                        : state.step === step.id
+                        ? 'bg-primary-600 text-white shadow-lg shadow-primary-500/30'
+                        : 'bg-gray-100 text-gray-400'
                     }`}
-                  />
+                  >
+                    {state.step > step.id ? (
+                      <FiCheck className="w-4 h-4" />
+                    ) : (
+                      <step.icon className="w-4 h-4" />
+                    )}
+                  </div>
+                  <span className={`hidden sm:inline text-sm font-medium whitespace-nowrap ${
+                    state.step === step.id ? 'text-gray-900' : state.step > step.id ? 'text-green-600' : 'text-gray-400'
+                  }`}>
+                    {step.title}
+                  </span>
+                </button>
+                {index < steps.length - 1 && (
+                  <div className={`flex-1 h-0.5 mx-2 sm:mx-3 rounded ${
+                    state.step > step.id ? 'bg-green-500' : 'bg-gray-200'
+                  }`} />
                 )}
               </div>
             ))}
           </div>
+          {/* Mobile step label */}
+          <p className="sm:hidden text-center text-xs font-medium text-primary-600 mt-2">
+            Étape {state.step} : {steps[state.step - 1]?.title}
+          </p>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-4 sm:gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2">
             <AnimatePresence mode="sync">
@@ -178,15 +188,15 @@ function Booking() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -12 }}
                 transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                className="bg-white rounded-2xl shadow-sm p-4 sm:p-6"
+                className="bg-white rounded-2xl shadow-sm p-3 sm:p-6"
               >
                 {/* Step 1: Services */}
                 {state.step === 1 && (
                   <div>
-                    <h2 className="text-xl font-bold text-gray-900 mb-6">
+                    <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6">
                       Choisissez vos services
                     </h2>
-                    <div className="grid gap-4">
+                    <div className="grid gap-3 sm:gap-4">
                       {salon.services.map(service => (
                         <ServiceCard
                           key={service.id}
@@ -208,13 +218,13 @@ function Booking() {
                 {/* Step 2: Date & Time */}
                 {state.step === 2 && (
                   <div>
-                    <h2 className="text-xl font-bold text-gray-900 mb-2">
-                      Choisissez la date et l'heure
+                    <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-1">
+                      Date et heure
                     </h2>
-                    <p className="text-sm text-gray-500 mb-6">
-                      Sélectionnez d'abord une date, puis choisissez un créneau disponible.
+                    <p className="text-xs sm:text-sm text-gray-500 mb-4">
+                      Sélectionnez une date puis un créneau horaire.
                     </p>
-                    <div className="space-y-8">
+                    <div className="space-y-5">
                       <DatePicker
                         selectedDate={state.date}
                         onDateSelect={(date) => dispatch({ type: 'SET_DATE', payload: date })}
@@ -233,7 +243,7 @@ function Booking() {
                 {/* Step 3: Confirmation */}
                 {state.step === 3 && (
                   <div>
-                    <h2 className="text-xl font-bold text-gray-900 mb-6">
+                    <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6">
                       Confirmer votre réservation
                     </h2>
 
@@ -349,24 +359,26 @@ function Booking() {
               </motion.div>
             </AnimatePresence>
 
-            {/* Navigation Buttons */}
-            <div className="sticky bottom-2 z-20 mt-6 flex flex-col-reverse sm:flex-row justify-between gap-3 rounded-2xl border border-gray-200 bg-white/95 p-2 backdrop-blur sm:static sm:border-0 sm:bg-transparent sm:p-0">
+            {/* Navigation Buttons — fixed bottom bar on mobile */}
+            <div className="fixed bottom-0 left-0 right-0 z-30 flex justify-between gap-2 bg-white/95 backdrop-blur border-t border-gray-200 p-3 sm:static sm:border-0 sm:bg-transparent sm:p-0 sm:mt-6 sm:flex-row">
               <button
                 onClick={handleBack}
-                className="w-full sm:w-auto px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors flex items-center justify-center"
+                className="flex-1 sm:flex-none px-4 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors flex items-center justify-center text-sm font-medium"
               >
-                <FiChevronLeft className="w-5 h-5 mr-2" />
-                {state.step === 1 ? 'Annuler' : 'Précédent'}
+                <FiChevronLeft className="w-4 h-4 mr-1" />
+                {state.step === 1 ? 'Annuler' : 'Retour'}
               </button>
               <button
                 onClick={handleNext}
                 disabled={!canProceed()}
-                className="w-full sm:w-auto px-6 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-[2] sm:flex-none px-6 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed text-sm font-semibold"
               >
                 {state.step === 3 ? 'Passer au paiement' : 'Continuer'}
-                <FiChevronRight className="w-5 h-5 ml-2" />
+                <FiChevronRight className="w-4 h-4 ml-1" />
               </button>
             </div>
+            {/* Spacer for fixed bottom bar on mobile */}
+            <div className="h-16 sm:hidden" />
           </div>
 
           {/* Sidebar - Booking Summary */}
