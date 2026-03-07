@@ -125,8 +125,9 @@ function Footer() {
             © {currentYear} StyleFlow. Tous droits réservés.
           </p>
           <div className="flex items-center space-x-4 mt-4 md:mt-0">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/e/e1/Orange_Money_logo.png" alt="Orange Money" className="h-6 opacity-70 hover:opacity-100 transition-opacity" />
-            <img src="https://upload.wikimedia.org/wikipedia/commons/0/0a/Wave_%28payment%29_logo.png" alt="Wave" className="h-6 opacity-70 hover:opacity-100 transition-opacity" />
+            <span className="px-3 py-1 bg-orange-500/20 text-orange-400 text-xs font-semibold rounded-full border border-orange-500/30">Orange Money</span>
+            <span className="px-3 py-1 bg-blue-500/20 text-blue-400 text-xs font-semibold rounded-full border border-blue-500/30">Wave</span>
+            <span className="px-3 py-1 bg-green-500/20 text-green-400 text-xs font-semibold rounded-full border border-green-500/30">Cash</span>
           </div>
         </div>
       </div>
