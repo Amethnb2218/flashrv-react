@@ -24,9 +24,8 @@ async function register(req, res, next) {
       return res.status(400).json({ status: 'error', message: 'Rôle invalide' });
     }
     const userStatus = normalizedRole === 'PRO' ? STATUS.PENDING : STATUS.APPROVED;
-    const bcrypt = require('bcrypt');
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    const bcrypt = require('bcryptjs');
+    const hashedPassword = await bcrypt.hash(password, 10);
     const userData = {
       name,
       email,
@@ -131,7 +130,7 @@ async function googleAuth(req, res, next) {
       isNewUser = true;
 
       // Création simple du user PRO, le salon sera créé via le formulaire d'onboarding
-      const bcrypt = require('bcrypt');
+      const bcrypt = require('bcryptjs');
       const randomPassword = require('crypto').randomBytes(16).toString('hex');
       const hashedPassword = await bcrypt.hash(randomPassword, 10);
       user = await prisma.user.create({
