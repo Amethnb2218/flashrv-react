@@ -24,6 +24,13 @@ router.post("/google", authController.googleAuth);
 router.post("/register", authController.register);
 
 /**
+ * @route   POST /api/auth/login
+ * @desc    Connexion classique (email/password)
+ * @access  Public
+ */
+router.post("/login", authController.login);
+
+/**
  * @route   POST /api/auth/logout
  * @desc    Déconnexion de l'utilisateur
  * @access  Public

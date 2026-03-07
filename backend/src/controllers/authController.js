@@ -50,6 +50,38 @@ async function register(req, res, next) {
     return next(error);
   }
 }
+
+/**
+ * Login with email/password
+ * POST /api/auth/login
+ * Body: { identifier, password }
+ */
+async function login(req, res, next) {
+  try {
+    const { identifier, password } = req.body || {};
+    if (!identifier || !password) {
+      return res.status(400).json({ status: 'error', message: 'Email et mot de passe requis' });
+    }
+    const user = await prisma.user.findUnique({ where: { email: identifier } });
+    if (!user || !user.password) {
+      return res.status(401).json({ status: 'error', message: 'Identifiants incorrects' });
+    }
+    const bcrypt = require('bcryptjs');
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) {
+      return res.status(401).json({ status: 'error', message: 'Identifiants incorrects' });
+    }
+    const token = generateToken({ userId: user.id, email: user.email, role: user.role });
+    setTokenCookie(res, token);
+    return res.json({
+      status: 'success',
+      message: 'Connexion réussie',
+      data: { user, token },
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
 const { PrismaClient } = require("@prisma/client");
 const { verifyGoogleToken } = require("../services/googleAuth");
 const { generateToken, setTokenCookie, clearTokenCookie } = require("../utils/jwt");
@@ -309,4 +341,5 @@ module.exports = {
   updateProfile,
   deleteAccount,
   register,
+  login,
 };
