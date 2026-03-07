@@ -2,31 +2,10 @@ const express = require('express');
 const router = express.Router();
 const prisma = require('../lib/prisma');
 const { authenticate } = require('../middleware/auth');
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
-const { uploadsDir } = require('../utils/paths');
+const { uploadProductImages: cloudinaryProductUpload } = require('../config/cloudinary');
 
-// Multer config for product images
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadsDir),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, `product-${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`);
-  },
-});
-const imageFileFilter = (req, file, cb) => {
-  const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-  if (!allowed.includes(file.mimetype)) {
-    return cb(new Error('Seuls les fichiers JPEG, PNG, WebP et GIF sont autorisés'));
-  }
-  cb(null, true);
-};
-const upload = multer({ storage, fileFilter: imageFileFilter, limits: { fileSize: 5 * 1024 * 1024 } });
-const uploadProductImages = upload.fields([
+// Cloudinary-based upload
+const uploadProductImages = cloudinaryProductUpload.fields([
   { name: 'image', maxCount: 1 },
   { name: 'images', maxCount: 10 },
 ]);
@@ -47,11 +26,10 @@ router.post('/', authenticate, uploadProductImages, async (req, res, next) => {
       return res.status(400).json({ status: 'error', message: 'Boutique introuvable' });
     }
 
-    // Collect image URLs from uploaded files
     const imageUrls = [];
     const files = [...(req.files?.image || []), ...(req.files?.images || [])];
     for (const file of files) {
-      imageUrls.push(`/uploads/${file.filename}`);
+      imageUrls.push(file.path || file.secure_url || file.url || `/uploads/${file.filename}`);
     }
 
     const mainImage = imageUrls[0] || imageUrl || null;

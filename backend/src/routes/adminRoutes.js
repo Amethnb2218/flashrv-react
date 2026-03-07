@@ -2,6 +2,7 @@
 const express = require('express');
 const prisma = require('../lib/prisma');
 const { authenticate, requireAdmin, requireSuperAdmin, ROLES, STATUS } = require('../middleware/auth');
+const { sendProApprovedEmail } = require('../services/emailService');
 
 const router = express.Router();
 
@@ -264,6 +265,9 @@ router.patch('/pro/:id/approve', authenticate, requireAdmin, async (req, res) =>
     });
 
     console.log(`✅ PRO account approved: ${updatedUser.email} by ${req.user.email}`);
+
+    // Notifier le PRO par email (non-bloquant)
+    sendProApprovedEmail({ to: updatedUser.email, name: updatedUser.name });
 
     res.status(200).json({
       status: 'success',
@@ -659,8 +663,66 @@ router.get('/admins', authenticate, requireSuperAdmin, async (req, res) => {
 });
 
 /**
+ * POST /admin/admins
+ * Promote a user to ADMIN by email
+ * Access: SUPER_ADMIN only
+ */
+router.post('/admins', authenticate, requireSuperAdmin, async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'L\'email est requis',
+      });
+    }
+
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    if (!user) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Aucun utilisateur trouvé avec cet email',
+      });
+    }
+
+    if (user.role === ROLES.SUPER_ADMIN) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Impossible de modifier un SUPER_ADMIN',
+      });
+    }
+
+    if (user.role === ROLES.ADMIN) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Cet utilisateur est déjà administrateur',
+      });
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: user.id },
+      data: { role: ROLES.ADMIN, status: STATUS.APPROVED },
+      select: { id: true, email: true, name: true, role: true },
+    });
+
+    console.log(`👑 User promoted to ADMIN by email: ${updatedUser.email} by ${req.user.email}`);
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Utilisateur promu administrateur',
+      data: { user: updatedUser },
+    });
+  } catch (error) {
+    console.error('Error promoting admin by email:', error);
+    res.status(500).json({ status: 'error', message: 'Erreur lors de la promotion' });
+  }
+});
+
+/**
  * POST /admin/admins/create
- * Promote a user to ADMIN
+ * Promote a user to ADMIN (by userId)
  * Access: SUPER_ADMIN only
  */
 router.post('/admins/create', authenticate, requireSuperAdmin, async (req, res) => {

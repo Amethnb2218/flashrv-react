@@ -40,6 +40,10 @@ async function register(req, res, next) {
     });
     // Email de confirmation (non-bloquant)
     sendWelcomeEmail({ to: user.email, name: user.name });
+    // Notifier les admins si c'est un PRO (non-bloquant)
+    if (normalizedRole === 'PRO') {
+      sendProPendingNotification({ proName: user.name, proEmail: user.email });
+    }
     // Générer un token (mock, à sécuriser en prod)
     const token = generateToken({ userId: user.id, email: user.email, role: user.role });
     setTokenCookie(res, token);
@@ -90,7 +94,7 @@ const prisma = require("../lib/prisma");
 const { verifyGoogleToken } = require("../services/googleAuth");
 const { generateToken, setTokenCookie, clearTokenCookie } = require("../utils/jwt");
 const { ROLES, STATUS } = require("../middleware/auth");
-const { sendWelcomeEmail } = require("../services/emailService");
+const { sendWelcomeEmail, sendProPendingNotification } = require("../services/emailService");
 
 /**
  * Petit helper: force les bons headers CORS sur la réponse
@@ -140,13 +144,13 @@ async function googleAuth(req, res, next) {
     const role = accountType === "PRO" ? ROLES.PRO : ROLES.CLIENT;
     const status = role === ROLES.PRO ? STATUS.PENDING : STATUS.APPROVED;
 
-    // Check if user exists
+    // Check if user exists by googleSub first, then by email
     let user = await prisma.user.findUnique({
       where: { googleSub: googleSub },
     });
 
     let isNewUser = false;
-
+    let accountLinked = false;
 
     if (user) {
       // Update existing user - keep custom name if already set, use new custom name if provided
@@ -161,29 +165,49 @@ async function googleAuth(req, res, next) {
         `✅ User logged in: ${user.email} (role: ${user.role}, status: ${user.status})`
       );
     } else {
-      // Create new user
-      isNewUser = true;
+      // No user with this googleSub — check if email already exists (manual account)
+      const existingByEmail = await prisma.user.findUnique({ where: { email } });
 
-      // Création simple du user PRO, le salon sera créé via le formulaire d'onboarding
-      const bcrypt = require('bcryptjs');
-      const randomPassword = require('crypto').randomBytes(16).toString('hex');
-      const hashedPassword = await bcrypt.hash(randomPassword, 10);
-      user = await prisma.user.create({
-        data: {
-          email: email,
-          googleSub: googleSub,
-          name: userName || googleName || "Utilisateur",
-          picture: null,
-          role: role,
-          status: status,
-          password: hashedPassword,
-        },
-      });
-      console.log(
-        `✅ New ${role} registered: ${user.email} (${user.name}) - Status: ${user.status}`
-      );
-      // Email de confirmation (non-bloquant)
-      sendWelcomeEmail({ to: user.email, name: user.name });
+      if (existingByEmail) {
+        // Link Google account to existing manual account
+        user = await prisma.user.update({
+          where: { id: existingByEmail.id },
+          data: {
+            googleSub: googleSub,
+            name: existingByEmail.name || userName || googleName,
+          },
+        });
+        accountLinked = true;
+        console.log(
+          `🔗 Google account linked to existing user: ${user.email} (role: ${user.role})`
+        );
+      } else {
+        // Create new user
+        isNewUser = true;
+        const bcrypt = require('bcryptjs');
+        const randomPassword = require('crypto').randomBytes(16).toString('hex');
+        const hashedPassword = await bcrypt.hash(randomPassword, 10);
+        user = await prisma.user.create({
+          data: {
+            email: email,
+            googleSub: googleSub,
+            name: userName || googleName || "Utilisateur",
+            picture: null,
+            role: role,
+            status: status,
+            password: hashedPassword,
+          },
+        });
+        console.log(
+          `✅ New ${role} registered: ${user.email} (${user.name}) - Status: ${user.status}`
+        );
+        // Email de confirmation (non-bloquant)
+        sendWelcomeEmail({ to: user.email, name: user.name });
+        // Notifier les admins si c'est un PRO (non-bloquant)
+        if (role === ROLES.PRO) {
+          sendProPendingNotification({ proName: user.name, proEmail: user.email });
+        }
+      }
     }
 
     // Generate JWT token
@@ -199,7 +223,11 @@ async function googleAuth(req, res, next) {
     // Return user info (without sensitive data) + token (comme /register)
     return res.status(200).json({
       status: "success",
-      message: isNewUser ? "Account created successfully" : "Logged in successfully",
+      message: accountLinked
+        ? "Compte lié avec Google avec succès"
+        : isNewUser
+        ? "Account created successfully"
+        : "Logged in successfully",
       data: {
         user: {
           id: user.id,
@@ -213,6 +241,7 @@ async function googleAuth(req, res, next) {
         },
         token,
         isNewUser,
+        accountLinked,
       },
     });
   } catch (error) {

@@ -15,32 +15,10 @@ const prisma = require('../lib/prisma');
 const multer = require('multer');
 const path = require('path');
 const { authenticate } = require('../middleware/auth');
-const { uploadsDir } = require('../utils/paths');
+const { uploadServiceImages: cloudinaryServiceUpload } = require('../config/cloudinary');
 
-// Multer config (chemin unique, sûr)
-const fs = require('fs');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadsDir);
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const name = file.fieldname + '-' + Date.now() + ext;
-    cb(null, name);
-  },
-});
-const imageFileFilter = (req, file, cb) => {
-  const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-  if (!allowed.includes(file.mimetype)) {
-    return cb(new Error('Seuls les fichiers JPEG, PNG, WebP et GIF sont autorisés'));
-  }
-  cb(null, true);
-};
-const upload = multer({ storage, fileFilter: imageFileFilter, limits: { fileSize: 5 * 1024 * 1024 } });
-const uploadServiceImages = upload.fields([
+// Cloudinary-based upload
+const uploadServiceImages = cloudinaryServiceUpload.fields([
   { name: 'image', maxCount: 1 },
   { name: 'images', maxCount: 10 },
 ]);
@@ -70,7 +48,8 @@ const collectServiceImages = (req) => {
     ...(req.files?.images || []),
   ];
   for (const file of files) {
-    urls.push(`/uploads/${file.filename}`);
+    // Cloudinary returns full URL in file.path
+    urls.push(file.path || file.secure_url || file.url || `/uploads/${file.filename}`);
   }
   const bodyImages = normalizeImagesInput(req.body.images);
   const extraImages = normalizeImagesInput(req.body.imageUrls);

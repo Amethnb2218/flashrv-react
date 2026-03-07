@@ -586,7 +586,10 @@ export default function AdminDashboard() {
         )}
 
         {activeTab === 'admins' && isSuperAdmin && (
-          <AdminsSection admins={admins} loading={false} onRefresh={fetchAdmins} />
+          <>
+            <AddAdminForm onAdminAdded={fetchAdmins} />
+            <AdminsSection admins={admins} loading={false} onRefresh={fetchAdmins} />
+          </>
         )}
       </div>
     </div>

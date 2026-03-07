@@ -9,6 +9,7 @@ const path = require('path');
 const fs = require('fs');
 const { uploadsDir, uploadsSubdir } = require('../utils/paths');
 const { pushNotification } = require('../realtime/hub');
+const { uploadGallery, uploadSalonImage: cloudinarySalonUpload, cloudinary } = require('../config/cloudinary');
 
 const attachServiceImages = async (salon) => {
   if (!salon || !Array.isArray(salon.services) || salon.services.length === 0) {
@@ -32,40 +33,9 @@ const attachServiceImages = async (salon) => {
   return salon;
 };
 
-// Set up Multer storage for gallery images
-const uploadDir = uploadsSubdir('gallery');
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const name = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
-    cb(null, name);
-  },
-});
-const imageFileFilter = (req, file, cb) => {
-  const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-  if (!allowed.includes(file.mimetype)) {
-    return cb(new Error('Seuls les fichiers JPEG, PNG, WebP et GIF sont autorisés'));
-  }
-  cb(null, true);
-};
-const upload = multer({ storage, fileFilter: imageFileFilter, limits: { fileSize: 5 * 1024 * 1024 } });
-
-// Multer storage for salon cover image
-const salonImageDir = uploadsSubdir('salon');
-if (!fs.existsSync(salonImageDir)) fs.mkdirSync(salonImageDir, { recursive: true });
-const salonImageStorage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, salonImageDir),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const name = `salon-${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
-    cb(null, name);
-  },
-});
-const uploadSalonImage = multer({ storage: salonImageStorage, fileFilter: imageFileFilter, limits: { fileSize: 5 * 1024 * 1024 } });
+// Cloudinary-based upload instances (persistent cloud storage)
+const upload = uploadGallery;
+const uploadSalonImage = cloudinarySalonUpload;
 
 /**
  * Upload an image to the salon gallery
@@ -86,11 +56,11 @@ router.post('/:id/gallery', authenticate, upload.single('image'), async (req, re
     if (!req.file) {
       return res.status(400).json({ status: 'error', message: 'Image file is required' });
     }
-    const relPath = `/uploads/gallery/${req.file.filename}`;
+    const imageUrl = req.file.path || req.file.secure_url || req.file.url;
     const { caption, category } = req.body;
     const galleryImage = await prisma.galleryImage.create({
       data: {
-        url: relPath,
+        url: imageUrl,
         caption: caption || null,
         category: category || null,
         salonId: id,
@@ -121,8 +91,16 @@ router.delete('/:salonId/gallery/:imageId', authenticate, async (req, res, next)
     if (!image || image.salonId !== salonId) {
       return res.status(404).json({ status: 'error', message: 'Image not found' });
     }
-    // Supprimer le fichier physique si présent
-    if (image.url && image.url.startsWith('/uploads/gallery/')) {
+    // Delete from Cloudinary if it's a Cloudinary URL, else try local file
+    if (image.url && image.url.includes('cloudinary.com')) {
+      try {
+        const parts = image.url.split('/upload/');
+        if (parts[1]) {
+          const publicId = parts[1].replace(/^v\d+\//, '').replace(/\.[^.]+$/, '');
+          await cloudinary.uploader.destroy(publicId);
+        }
+      } catch (e) { /* ignore cloudinary delete errors */ }
+    } else if (image.url && image.url.startsWith('/uploads/gallery/')) {
       const relativeUploadPath = String(image.url).replace(/^\/?uploads\/?/, '');
       const filePath = path.join(uploadsDir, relativeUploadPath);
       if (fs.existsSync(filePath)) {
@@ -202,10 +180,10 @@ router.post('/me/image', authenticate, uploadSalonImage.single('image'), async (
     if (!req.file) {
       return res.status(400).json({ status: 'error', message: 'Image file is required' });
     }
-    const relPath = `/uploads/salon/${req.file.filename}`;
+    const imageUrl = req.file.path || req.file.secure_url || req.file.url;
     const updated = await prisma.salon.update({
       where: { id: salon.id },
-      data: { image: relPath },
+      data: { image: imageUrl },
     });
     res.status(200).json({ status: 'success', data: { image: updated.image } });
   } catch (error) {
