@@ -94,20 +94,20 @@ function Footer() {
                 <span>Dakar, Sénégal</span>
               </li>
               <li>
-                <a href="tel:+221776762784" className="flex items-center space-x-3 text-gray-400 hover:text-white transition-colors">
+                <a href="tel:+221338001234" className="flex items-center space-x-3 text-gray-400 hover:text-white transition-colors">
                   <FiPhone className="w-4 h-4" />
-                  <span>+221 77 676 27 84</span>
+                  <span>+221 33 800 12 34</span>
                 </a>
               </li>
               <li>
-                <a href="mailto:mouhamed26.sall@gmail.com" className="flex items-center space-x-3 text-gray-400 hover:text-white transition-colors">
+                <a href="mailto:contact@styleflow.me" className="flex items-center space-x-3 text-gray-400 hover:text-white transition-colors">
                   <FiMail className="w-4 h-4" />
-                  <span className="text-sm">mouhamed26.sall@gmail.com</span>
+                  <span className="text-sm">contact@styleflow.me</span>
                 </a>
               </li>
             </ul>
             <a
-              href="https://wa.me/221776762784"
+              href="https://wa.me/221338001234"
               target="_blank"
               rel="noopener noreferrer"
               className="mt-5 inline-flex items-center space-x-2 bg-green-500 hover:bg-green-600 text-white px-5 py-2.5 rounded-full text-sm font-medium transition-all"
