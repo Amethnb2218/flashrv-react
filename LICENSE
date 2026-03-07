@@ -1,41 +1,183 @@
-PROPRIETARY SOFTWARE LICENSE
-=============================
+# PROPRIETARY SOFTWARE LICENSE AGREEMENT
 
 Copyright (c) 2026 Mouhamed Sall (Amethnb2218). All Rights Reserved.
 
-NOTICE: This software and its source code are the exclusive property of Mouhamed Sall.
+This Proprietary Software License Agreement ("Agreement") is a legal agreement
+between you ("User") and Mouhamed Sall ("Owner") for the software known as
+FlashRV ("Software"), including all source code, documentation, assets, designs,
+database schemas, API specifications, and associated files.
 
-RESTRICTIONS:
--------------
-1. NO COPYING: You may not copy, reproduce, or duplicate any part of this software.
+By accessing, viewing, or downloading any part of this Software, you agree to
+be bound by the terms of this Agreement.
 
-2. NO MODIFICATION: You may not modify, adapt, translate, or create derivative works.
+1. OWNERSHIP AND COPYRIGHT
 
-3. NO DISTRIBUTION: You may not distribute, publish, or share this software or any part of it.
+---
 
-4. NO COMMERCIAL USE: You may not use this software for commercial purposes without explicit written permission.
+The Software is the exclusive intellectual property of Mouhamed Sall.
+All rights, title, and interest in and to the Software, including but not
+limited to copyrights, patents, trade secrets, trademarks, and any other
+intellectual property rights, are and shall remain the sole property of
+the Owner. This Agreement does not transfer any ownership rights to the User.
 
-5. NO REVERSE ENGINEERING: You may not reverse engineer, decompile, or disassemble this software.
+2. RESTRICTIONS
 
-6. VIEWING ONLY: This repository is public for portfolio/demonstration purposes only.
+---
 
-PERMITTED USES:
----------------
-- Viewing the code for educational purposes
-- Reviewing the code as part of a job application process
-- Providing feedback or suggestions via GitHub issues
+Without the prior express written consent of the Owner, the User shall NOT:
 
-ENFORCEMENT:
-------------
-Any unauthorized use, copying, modification, or distribution of this software 
-will be subject to legal action under applicable copyright laws.
+a) COPY, REPRODUCE, or DUPLICATE any part of the Software, in whole or
+in part, in any form or by any means.
 
-For licensing inquiries or permission requests, contact: amethsl2218@gmail.com
+b) MODIFY, ADAPT, TRANSLATE, or create derivative works based on the
+Software or any portion thereof.
+
+c) DISTRIBUTE, PUBLISH, SHARE, SUBLICENSE, SELL, RENT, LEASE, or
+otherwise transfer the Software or any rights therein to any third party.
+
+d) USE the Software, in whole or in part, for any COMMERCIAL PURPOSE,
+including but not limited to incorporating it into products or services,
+using it to generate revenue, or deploying it in a production environment.
+
+e) REVERSE ENGINEER, DECOMPILE, DISASSEMBLE, or attempt to derive the
+source code, algorithms, data structures, or underlying ideas of the
+Software.
+
+f) REMOVE, ALTER, or OBSCURE any copyright notices, proprietary markings,
+or this license from any copy of the Software.
+
+g) USE the Software to BUILD A COMPETING PRODUCT or service, whether
+directly or indirectly.
+
+h) SCRAPE, CRAWL, or use automated tools to extract code, data, or
+content from this repository.
+
+i) CLAIM AUTHORSHIP or represent the Software as their own work, in whole
+or in part, in any context including but not limited to portfolios,
+resumes, academic submissions, or public presentations.
+
+j) USE the Software's DESIGN, ARCHITECTURE, or BUSINESS LOGIC as a
+blueprint or reference for building similar software.
+
+3. PERMITTED USES
+
+---
+
+The following uses are permitted without prior written consent:
+
+a) Viewing the source code for personal educational purposes only.
+
+b) Reviewing the code as part of a hiring or job evaluation process,
+solely to assess the Owner's technical skills.
+
+c) Providing feedback or suggestions via GitHub Issues on the original
+repository.
+
+d) Referencing the project in articles, reviews, or discussions, provided
+proper attribution is given and no source code is reproduced.
+
+4. CONFIDENTIALITY
+
+---
+
+The User acknowledges that the Software contains confidential and proprietary
+information, including business logic, algorithms, database schemas, API
+designs, and trade secrets. The User agrees to maintain the confidentiality
+of such information and not disclose it to any third party.
+
+5. CONTRIBUTIONS
+
+---
+
+Any contributions (pull requests, patches, suggestions) submitted to the
+Software shall become the exclusive property of the Owner. By submitting
+a contribution, the contributor irrevocably assigns all rights, title, and
+interest in the contribution to the Owner.
+
+6. TERMINATION
+
+---
+
+This license is effective until terminated. The Owner may terminate this
+Agreement at any time without notice if the User breaches any term of this
+Agreement. Upon termination, the User must immediately cease all use of the
+Software and destroy all copies in their possession.
+
+7. ENFORCEMENT AND REMEDIES
+
+---
+
+Any unauthorized use, reproduction, modification, distribution, or
+exploitation of the Software constitutes a material breach of this Agreement
+and a violation of applicable intellectual property laws, including but not
+limited to:
+
+- The Berne Convention for the Protection of Literary and Artistic Works
+- The WIPO Copyright Treaty
+- Applicable national copyright and intellectual property laws
+
+The Owner reserves the right to pursue all available legal remedies,
+including but not limited to:
+
+a) Injunctive relief to prevent further unauthorized use.
+b) Recovery of actual damages and lost profits.
+c) Statutory damages as provided by applicable law.
+d) Recovery of attorney fees and legal costs.
+e) DMCA takedown notices for infringing copies.
+
+8. DISCLAIMER OF WARRANTIES
+
+---
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. THE OWNER DOES NOT
+WARRANT THAT THE SOFTWARE WILL BE ERROR-FREE OR UNINTERRUPTED.
+
+9. LIMITATION OF LIABILITY
 
 ---
-FlashRV - Salon Booking Platform for Senegal
-Developed by Mouhamed Sall © 2026
+
+IN NO EVENT SHALL THE OWNER BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
+CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING OUT OF OR RELATED TO THE USE OR
+INABILITY TO USE THE SOFTWARE, EVEN IF THE OWNER HAS BEEN ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGES.
+
+10. GOVERNING LAW
+
+---
+
+This Agreement shall be governed by and construed in accordance with the
+laws of the Republic of Senegal. Any disputes arising under this Agreement
+shall be subject to the exclusive jurisdiction of the courts of Dakar, Senegal.
+
+11. SEVERABILITY
+
+---
+
+If any provision of this Agreement is held to be invalid or unenforceable,
+the remaining provisions shall continue in full force and effect.
+
+12. ENTIRE AGREEMENT
+
+---
+
+This Agreement constitutes the entire agreement between the parties with
+respect to the Software and supersedes all prior or contemporaneous
+understandings, whether written or oral.
+
+13. CONTACT AND LICENSING INQUIRIES
+
+---
+
+For licensing requests, commercial use permissions, or any questions
+regarding this Agreement, contact:
+
+Name: Mouhamed Sall
+Email: amethsl2218@gmail.com
+GitHub: https://github.com/Amethnb2218
+
+---
+
+FlashRV - Salon & Boutique Booking Platform for Senegal
+Developed by Mouhamed Sall © 2026. All Rights Reserved.
