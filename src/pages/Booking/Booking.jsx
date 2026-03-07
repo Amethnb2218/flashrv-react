@@ -240,16 +240,15 @@ function Booking() {
 
         <div className="grid lg:grid-cols-3 gap-4 sm:gap-8 w-full min-w-0">
           {/* Main Content */}
-          <div className="lg:col-span-2 min-w-0">
-            <AnimatePresence mode="sync">
+          <div className="lg:col-span-2 min-w-0 overflow-hidden">
+            <AnimatePresence mode="wait">
               <motion.div
                 key={state.step}
-                layout
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -12 }}
-                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                className="box-border w-full min-w-0 max-w-full overflow-x-hidden rounded-2xl bg-white p-3 shadow-sm sm:p-6"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="box-border w-full min-w-0 overflow-hidden rounded-2xl bg-white p-3 shadow-sm sm:p-6"
               >
                 {/* Step 1: Services */}
                 {state.step === 1 && (
@@ -297,12 +296,7 @@ function Booking() {
                     </div>
 
                     {state.date && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.25 }}
-                        className="w-full min-w-0"
-                      >
+                      <div className="w-full min-w-0">
                         <TimeSlot
                           selectedDate={state.date}
                           selectedTime={state.time}
@@ -315,21 +309,19 @@ function Booking() {
                             dispatch({ type: 'SET_TIME', payload: null })
                           }}
                         />
-                      </motion.div>
+                      </div>
                     )}
 
                     {/* Quick selection feedback */}
                     {state.date && state.time && (
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
+                      <div
                         className="flex items-center gap-2 rounded-xl border border-green-200 bg-green-50 p-3"
                       >
                         <FiCheck className="w-4 h-4 text-green-600 flex-shrink-0" />
                         <p className="text-xs font-medium text-green-700">
                           {new Date(state.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })} à {state.time}
                         </p>
-                      </motion.div>
+                      </div>
                     )}
                   </div>
                 )}
