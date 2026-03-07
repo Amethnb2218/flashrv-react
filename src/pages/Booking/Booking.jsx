@@ -107,12 +107,12 @@ function Booking() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-amber-50/20 py-4 sm:py-8 relative overflow-x-hidden">
+    <div className="relative min-h-screen overflow-x-clip bg-gradient-to-br from-gray-50 via-white to-amber-50/20 py-4 sm:py-8">
       {/* Decorative background elements */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-amber-100/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
       <div className="absolute bottom-0 left-0 w-80 h-80 bg-yellow-100/30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4"></div>
       
-      <div className="relative z-10 max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+      <div className="relative z-10 mx-auto w-full max-w-7xl px-3 sm:px-6 lg:px-8">
         {/* Header — compact on mobile */}
         <div className="mb-4 sm:mb-8">
           <button
@@ -187,7 +187,7 @@ function Booking() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -12 }}
                 transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                className="bg-white rounded-2xl shadow-sm p-3 sm:p-6"
+                className="w-full max-w-full overflow-x-hidden rounded-2xl bg-white p-3 shadow-sm sm:p-6"
               >
                 {/* Step 1: Services */}
                 {state.step === 1 && (
@@ -377,7 +377,7 @@ function Booking() {
             </AnimatePresence>
 
             {/* Navigation Buttons — fixed bottom bar on mobile */}
-            <div className="fixed bottom-0 left-0 right-0 z-30 flex justify-between gap-2 border-t border-gray-200 bg-white/95 p-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur sm:static sm:mt-6 sm:border-0 sm:bg-transparent sm:p-0 sm:pb-0 sm:shadow-none">
+            <div className="fixed bottom-0 left-0 right-0 z-[70] flex justify-between gap-2 border-t border-gray-200 bg-white/95 p-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur sm:static sm:mt-6 sm:border-0 sm:bg-transparent sm:p-0 sm:pb-0 sm:shadow-none">
               <button
                 onClick={handleBack}
                 className="flex-1 sm:flex-none px-4 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors flex items-center justify-center text-sm font-medium"

@@ -42,7 +42,7 @@ function DatePicker({ selectedDate, onDateSelect, onSelect }) {
     : null
 
   return (
-    <section className="rounded-2xl border border-gray-100 bg-white p-3 sm:p-4">
+    <section className="w-full max-w-full overflow-hidden rounded-2xl border border-gray-100 bg-white p-3 sm:p-4">
       <div className="mb-3 flex items-center justify-between gap-2">
         <p className="text-sm font-semibold text-gray-900">Date</p>
         {selectedLabel && (
@@ -52,15 +52,16 @@ function DatePicker({ selectedDate, onDateSelect, onSelect }) {
         )}
       </div>
 
-      <div className="relative -mx-3 sm:-mx-4">
+      <div className="relative w-full max-w-full overflow-hidden">
         <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-6 bg-gradient-to-r from-white to-transparent" />
         <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-6 bg-gradient-to-l from-white to-transparent" />
 
         <div
           ref={scrollRef}
-          className="scrollbar-hide flex snap-x snap-mandatory gap-2 overflow-x-auto px-3 pb-1 sm:px-4"
-          style={{ WebkitOverflowScrolling: 'touch' }}
+          className="scrollbar-hide flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain px-0.5 pb-1"
+          style={{ WebkitOverflowScrolling: 'touch', scrollPaddingInline: 'calc(50% - 44px)' }}
         >
+          <div className="w-[calc(50%-44px)] flex-shrink-0" aria-hidden />
           {days.map((day) => {
             const isSelected = selectedDate === day.date
 
@@ -69,7 +70,7 @@ function DatePicker({ selectedDate, onDateSelect, onSelect }) {
                 key={day.date}
                 whileTap={{ scale: 0.96 }}
                 onClick={() => handleSelect(day.date)}
-                className={`snap-start min-w-[76px] flex-shrink-0 rounded-2xl border px-2.5 py-2.5 text-center transition-all duration-200 ${
+                className={`snap-center w-[88px] flex-shrink-0 rounded-2xl border px-2.5 py-2.5 text-center transition-all duration-200 ${
                   isSelected
                     ? 'border-primary-500 bg-primary-600 text-white shadow-lg shadow-primary-500/25'
                     : 'border-gray-200 bg-gray-50 text-gray-800 active:bg-gray-100'
@@ -88,7 +89,7 @@ function DatePicker({ selectedDate, onDateSelect, onSelect }) {
               </motion.button>
             )
           })}
-          <div className="w-1 flex-shrink-0" aria-hidden />
+          <div className="w-[calc(50%-44px)] flex-shrink-0" aria-hidden />
         </div>
       </div>
 

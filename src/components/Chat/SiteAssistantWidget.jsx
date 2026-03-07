@@ -19,6 +19,7 @@ function SiteAssistantWidget() {
   const role = String(user?.role || '').toUpperCase()
   const isAdminArea = location.pathname.startsWith('/admin')
   const isProArea = location.pathname.startsWith('/pro')
+  const isBookingPage = location.pathname.startsWith('/booking')
   const isClientScope = !isAuthenticated || role === 'CLIENT'
   const shouldRender = !isAdminArea && !isProArea && isClientScope
 
@@ -208,7 +209,11 @@ function SiteAssistantWidget() {
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-[calc(env(safe-area-inset-bottom)+1rem)] right-4 sm:right-6 z-50 inline-flex items-center gap-2 rounded-full border border-cyan-200/60 bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-[0_14px_40px_rgba(37,99,235,0.45)] transition hover:scale-[1.02]"
+          className={`fixed right-4 z-50 inline-flex items-center gap-2 rounded-full border border-cyan-200/60 bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-[0_14px_40px_rgba(37,99,235,0.45)] transition hover:scale-[1.02] sm:right-6 ${
+            isBookingPage
+              ? 'bottom-[calc(env(safe-area-inset-bottom)+6rem)] sm:bottom-[calc(env(safe-area-inset-bottom)+1rem)]'
+              : 'bottom-[calc(env(safe-area-inset-bottom)+1rem)]'
+          }`}
         >
           <FiHelpCircle className="h-4 w-4" />
           Assistant
@@ -216,7 +221,13 @@ function SiteAssistantWidget() {
       ) : null}
 
       {isOpen ? (
-        <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+1rem)] right-4 sm:right-6 z-[60] w-[min(92vw,390px)] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+        <div
+          className={`fixed right-4 z-[60] w-[min(92vw,390px)] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl sm:right-6 ${
+            isBookingPage
+              ? 'bottom-[calc(env(safe-area-inset-bottom)+6rem)] sm:bottom-[calc(env(safe-area-inset-bottom)+1rem)]'
+              : 'bottom-[calc(env(safe-area-inset-bottom)+1rem)]'
+          }`}
+        >
           <div className="flex items-center justify-between bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 px-4 py-3 text-white">
             <div>
               <p className="text-sm font-semibold">Assistant</p>

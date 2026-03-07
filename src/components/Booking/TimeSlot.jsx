@@ -66,7 +66,7 @@ function TimeSlot({ selectedTime, onTimeSelect, duration = 30 }) {
   const currentPeriod = periods.find((p) => p.id === activePeriod) || periods[0]
 
   return (
-    <section className="rounded-2xl border border-gray-100 bg-white p-3 sm:p-4">
+    <section className="w-full max-w-full overflow-hidden rounded-2xl border border-gray-100 bg-white p-3 sm:p-4">
       <div className="mb-3 flex items-center justify-between gap-2">
         <p className="text-sm font-semibold text-gray-900">Heure</p>
         {selectedTime && (
@@ -106,7 +106,7 @@ function TimeSlot({ selectedTime, onTimeSelect, duration = 30 }) {
 
       <div
         ref={scrollRef}
-        className="max-h-[42vh] overflow-y-auto rounded-xl border border-gray-100 bg-gray-50/60 p-2"
+        className="max-h-[42vh] w-full max-w-full overflow-x-hidden overflow-y-auto rounded-xl border border-gray-100 bg-gray-50/60 p-2"
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
@@ -119,7 +119,7 @@ function TimeSlot({ selectedTime, onTimeSelect, duration = 30 }) {
                 data-time={time}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => onTimeSelect(time)}
-                className={`rounded-xl border py-2.5 text-sm font-semibold transition-all ${
+                className={`w-full min-w-0 rounded-xl border py-2.5 text-center text-sm font-semibold transition-all ${
                   isSelected
                     ? 'border-primary-500 bg-primary-600 text-white shadow-md shadow-primary-500/25'
                     : 'border-gray-200 bg-white text-gray-800 active:bg-gray-100'
