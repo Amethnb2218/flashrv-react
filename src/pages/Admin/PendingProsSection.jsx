@@ -2,7 +2,7 @@
 import SectionCard from "../../components/UI/SectionCard.jsx";
 import DataTable from "../../components/UI/DataTable.jsx";
 import StatusBadge from "../../components/UI/StatusBadge.jsx";
-import { FiUserCheck, FiSearch } from "react-icons/fi";
+import { FiUserCheck, FiSearch, FiRefreshCw, FiUsers } from "react-icons/fi";
 
 export default function PendingProsSection({ pros, loading, onRefresh, onApprove, onReject, onRestrict }) {
   const [search, setSearch] = useState("");
@@ -14,6 +14,105 @@ export default function PendingProsSection({ pros, loading, onRefresh, onApprove
       (pro.name?.toLowerCase().includes(search.toLowerCase()) ||
         pro.email?.toLowerCase().includes(search.toLowerCase())) &&
       (status === "all" || pro.status === status)
+  );
+
+  /* ── Action buttons (shared between card & table) ── */
+  const ActionButtons = ({ row }) => (
+    <div className="flex flex-wrap gap-1.5">
+      <button
+        onClick={() => onApprove(row)}
+        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 font-semibold text-xs shadow-sm border border-blue-100 hover:bg-blue-100 transition"
+        title="Valider ce PRO"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+        Valider
+      </button>
+      <button
+        onClick={() => onReject(row)}
+        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-rose-50 text-rose-700 font-semibold text-xs shadow-sm border border-rose-100 hover:bg-rose-100 transition"
+        title="Refuser ce PRO"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+        Refuser
+      </button>
+      <button
+        onClick={() => onRestrict && onRestrict(row)}
+        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-amber-50 text-amber-700 font-semibold text-xs shadow-sm border border-amber-100 hover:bg-amber-100 transition"
+        title="Restreindre les droits"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z" /></svg>
+        Restreindre
+      </button>
+    </div>
+  );
+
+  /* ── Toolbar (shared) ── */
+  const Toolbar = () => (
+    <div className="flex flex-col sm:flex-row gap-2 w-full">
+      <div className="relative flex-1">
+        <input
+          type="text"
+          placeholder="Rechercher un PRO..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-100 focus:border-blue-400 font-inter text-base shadow-sm transition"
+        />
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300">
+          <FiSearch className="w-5 h-5" />
+        </span>
+      </div>
+      <select
+        value={status}
+        onChange={e => setStatus(e.target.value)}
+        className="border border-slate-200 px-4 py-2 rounded-xl bg-slate-50 text-slate-700 font-semibold shadow-sm text-base focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition"
+      >
+        <option value="all">Tous</option>
+        <option value="PENDING">En attente</option>
+        <option value="APPROVED">Approuvés</option>
+        <option value="REJECTED">Refusés</option>
+        <option value="SUSPENDED">Suspendus</option>
+      </select>
+    </div>
+  );
+
+  /* ── Mobile card for a single PRO ── */
+  const ProCard = ({ row }) => (
+    <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-4 flex flex-col gap-3">
+      {/* Header: avatar + name/email + status */}
+      <div className="flex items-start gap-3">
+        <button
+          type="button"
+          onClick={() => setSelectedUser(row)}
+          className="w-11 h-11 shrink-0 rounded-full bg-emerald-50 border-2 border-emerald-100 flex items-center justify-center text-lg text-emerald-600 font-bold"
+        >
+          {row.name?.[0]?.toUpperCase() || row.email?.[0]?.toUpperCase()}
+        </button>
+        <div className="flex-1 min-w-0">
+          <button
+            type="button"
+            onClick={() => setSelectedUser(row)}
+            className="text-sm font-semibold text-slate-800 truncate block max-w-full text-left hover:text-emerald-700 transition"
+          >
+            {row.name || row.email}
+          </button>
+          <div className="text-xs text-slate-500 truncate">{row.email}</div>
+        </div>
+        <StatusBadge status={row.status} />
+      </div>
+
+      {/* Info grid */}
+      <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-600">
+        <div><span className="text-slate-400">Tél :</span> {row.phoneNumber || "-"}</div>
+        <div><span className="text-slate-400">Inscrit :</span> {row.createdAt ? new Date(row.createdAt).toLocaleDateString("fr-FR") : "-"}</div>
+        <div className="col-span-2"><span className="text-slate-400">Salon :</span> {row.salon?.name ? <span className="font-semibold text-slate-700">{row.salon.name}</span> : "-"} {row.salon?.city ? <span className="text-slate-400">· {row.salon.city}</span> : ""}</div>
+        {row.salon?.phone && <div className="col-span-2"><span className="text-slate-400">Tél. salon :</span> {row.salon.phone}</div>}
+      </div>
+
+      {/* Actions */}
+      <div className="pt-1 border-t border-slate-100">
+        <ActionButtons row={row} />
+      </div>
+    </div>
   );
 
   return (
@@ -30,126 +129,116 @@ export default function PendingProsSection({ pros, loading, onRefresh, onApprove
         </button>
       }
     >
-      <DataTable
-        loading={loading}
-        columns={[
-          // Nom & Prénom supprimé, on ne garde que l'email
-          {
-            key: "email",
-            label: (
-              <span className="flex justify-start w-full pl-6">Email</span>
-            ),
-            render: row => (
-              <button
-                type="button"
-                onClick={() => setSelectedUser(row)}
-                className="inline-block px-4 py-2 rounded-xl bg-emerald-50 border border-emerald-100 shadow-sm hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-200 transition cursor-pointer"
-                title="Voir le profil complet"
-              >
-                <span className="text-xs text-emerald-700 font-inter tracking-wide underline underline-offset-2">{row.email}</span>
-              </button>
-            ),
-          },
-          {
-            key: "phoneNumber",
-            label: "Téléphone",
-            render: row => <span className="text-xs text-slate-700">{row.phoneNumber || "-"}</span>,
-          },
-          {
-            key: "salon",
-            label: "Salon",
-            render: row => (
-              <div className="text-xs text-slate-700">
-                <div className="font-semibold text-slate-800">{row.salon?.name || "-"}</div>
-                <div className="text-slate-500">{row.salon?.city || "-"}</div>
+      {/* ─── MOBILE: card list (visible < lg) ─── */}
+      <div className="lg:hidden flex flex-col gap-3">
+        {/* Toolbar */}
+        <div className="flex flex-col gap-2 p-3 rounded-xl bg-slate-50 border border-slate-100">
+          <Toolbar />
+          {onRefresh && (
+            <button
+              onClick={onRefresh}
+              className="self-end flex items-center gap-2 bg-blue-600 text-white rounded-xl px-4 py-2 font-semibold shadow-sm hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 transition text-sm"
+            >
+              <FiRefreshCw className="w-4 h-4" />
+              Actualiser
+            </button>
+          )}
+        </div>
+
+        {/* Cards */}
+        {loading ? (
+          Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="rounded-2xl border border-slate-200 bg-white p-4 animate-pulse">
+              <div className="flex gap-3 mb-3">
+                <div className="w-11 h-11 rounded-full bg-slate-100" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 bg-slate-100 rounded w-3/4" />
+                  <div className="h-3 bg-slate-100 rounded w-1/2" />
+                </div>
               </div>
-            ),
-          },
-          {
-            key: "salonPhone",
-            label: "Tél. salon",
-            render: row => <span className="text-xs text-slate-700">{row.salon?.phone || "-"}</span>,
-          },
-          {
-            key: "status",
-            label: "Statut",
-            render: row => (
-              <div className="flex justify-center">
-                <StatusBadge status={row.status} />
-              </div>
-            ),
-            align: "text-center"
-          },
-          {
-            key: "createdAt",
-            label: "Inscription",
-            render: row => (
-              <span className="text-xs text-slate-500">
-                {row.createdAt ? new Date(row.createdAt).toLocaleDateString("fr-FR") : "-"}
-              </span>
-            ),
-          },
-        ]}
-        data={filtered}
-        toolbar={
-          <div className="flex flex-col sm:flex-row gap-2 w-full">
-            <div className="relative flex-1">
-              <input
-                type="text"
-                placeholder="Rechercher un PRO..."
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-100 focus:border-blue-400 font-inter text-base shadow-sm transition"
-              />
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300">
-                <FiSearch className="w-5 h-5" />
-              </span>
+              <div className="h-3 bg-slate-100 rounded w-full mb-2" />
+              <div className="h-8 bg-slate-100 rounded w-2/3" />
             </div>
-            <select
-              value={status}
-              onChange={e => setStatus(e.target.value)}
-              className="border border-slate-200 px-4 py-2 rounded-xl bg-slate-50 text-slate-700 font-semibold shadow-sm text-base focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition"
-            >
-              <option value="all">Tous</option>
-              <option value="PENDING">En attente</option>
-              <option value="APPROVED">Approuvés</option>
-              <option value="REJECTED">Refusés</option>
-              <option value="SUSPENDED">Suspendus</option>
-            </select>
+          ))
+        ) : filtered.length === 0 ? (
+          <div className="flex flex-col items-center gap-2 py-8 text-slate-400 font-medium">
+            <FiUsers className="w-10 h-10 text-slate-200" />
+            <span>Aucun PRO en attente</span>
           </div>
-        }
-        rowActions={row => (
-          <div className="flex flex-wrap gap-1.5 sm:gap-2">
-            <button
-              onClick={() => onApprove(row)}
-              className="inline-flex items-center gap-1 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-blue-50 text-blue-700 font-semibold text-xs shadow-sm border border-blue-100 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-100 transition"
-              title="Valider ce PRO"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-              Valider
-            </button>
-            <button
-              onClick={() => onReject(row)}
-              className="inline-flex items-center gap-1 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-rose-50 text-rose-700 font-semibold text-xs shadow-sm border border-rose-100 hover:bg-rose-100 focus:outline-none focus:ring-2 focus:ring-rose-100 transition"
-              title="Refuser ce PRO"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-              Refuser
-            </button>
-            <button
-              onClick={() => onRestrict && onRestrict(row)}
-              className="inline-flex items-center gap-1 px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg bg-amber-50 text-amber-700 font-semibold text-xs shadow-sm border border-amber-100 hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-amber-100 transition"
-              title="Restreindre les droits"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z" /></svg>
-              Restreindre
-            </button>
-          </div>
+        ) : (
+          filtered.map(row => <ProCard key={row.id} row={row} />)
         )}
-        onRefresh={onRefresh}
-        emptyLabel="Aucun PRO en attente"
-        pagination={null}
-      />
+      </div>
+
+      {/* ─── DESKTOP: table (visible >= lg) ─── */}
+      <div className="hidden lg:block">
+        <DataTable
+          loading={loading}
+          columns={[
+            {
+              key: "email",
+              label: (
+                <span className="flex justify-start w-full pl-6">Email</span>
+              ),
+              render: row => (
+                <button
+                  type="button"
+                  onClick={() => setSelectedUser(row)}
+                  className="inline-block px-4 py-2 rounded-xl bg-emerald-50 border border-emerald-100 shadow-sm hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-200 transition cursor-pointer"
+                  title="Voir le profil complet"
+                >
+                  <span className="text-xs text-emerald-700 font-inter tracking-wide underline underline-offset-2">{row.email}</span>
+                </button>
+              ),
+            },
+            {
+              key: "phoneNumber",
+              label: "Téléphone",
+              render: row => <span className="text-xs text-slate-700">{row.phoneNumber || "-"}</span>,
+            },
+            {
+              key: "salon",
+              label: "Salon",
+              render: row => (
+                <div className="text-xs text-slate-700">
+                  <div className="font-semibold text-slate-800">{row.salon?.name || "-"}</div>
+                  <div className="text-slate-500">{row.salon?.city || "-"}</div>
+                </div>
+              ),
+            },
+            {
+              key: "salonPhone",
+              label: "Tél. salon",
+              render: row => <span className="text-xs text-slate-700">{row.salon?.phone || "-"}</span>,
+            },
+            {
+              key: "status",
+              label: "Statut",
+              render: row => (
+                <div className="flex justify-center">
+                  <StatusBadge status={row.status} />
+                </div>
+              ),
+              align: "text-center"
+            },
+            {
+              key: "createdAt",
+              label: "Inscription",
+              render: row => (
+                <span className="text-xs text-slate-500">
+                  {row.createdAt ? new Date(row.createdAt).toLocaleDateString("fr-FR") : "-"}
+                </span>
+              ),
+            },
+          ]}
+          data={filtered}
+          toolbar={<Toolbar />}
+          rowActions={row => <ActionButtons row={row} />}
+          onRefresh={onRefresh}
+          emptyLabel="Aucun PRO en attente"
+          pagination={null}
+        />
+      </div>
     {/* Carte modale premium infos user */}
     {selectedUser && (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
