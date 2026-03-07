@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiCheck, FiChevronLeft, FiChevronRight, FiClock, FiCalendar, FiUser, FiScissors } from 'react-icons/fi'
@@ -16,6 +16,14 @@ const steps = [
   { id: 2, title: 'Date & Heure', icon: FiCalendar },
   { id: 3, title: 'Confirmation', icon: FiCheck },
 ]
+
+const toDateKey = (value) => {
+  const date = value instanceof Date ? value : new Date(value)
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
 
 function Booking() {
   const { salonId } = useParams()
@@ -97,6 +105,60 @@ function Booking() {
       dispatch({ type: 'PREV_STEP' })
     }
   }
+
+  const closedWeekdays = useMemo(() => {
+    const out = new Set()
+    const openingHours = Array.isArray(salon?.openingHours) ? salon.openingHours : []
+    openingHours.forEach((h) => {
+      if (h?.isClosed && Number.isInteger(h?.dayOfWeek)) {
+        out.add(Number(h.dayOfWeek))
+      }
+    })
+    return out
+  }, [salon?.openingHours])
+
+  const fixedUnavailableDates = useMemo(() => {
+    const out = new Set()
+    const holidays = Array.isArray(salon?.holidays) ? salon.holidays : []
+    holidays.forEach((h) => {
+      const dateValue = typeof h === 'string' ? h : h?.date
+      if (!dateValue) return
+      const dt = new Date(dateValue)
+      if (Number.isNaN(dt.getTime())) return
+      out.add(toDateKey(dt))
+    })
+    return out
+  }, [salon?.holidays])
+
+  const isDateUnavailable = useCallback((dateKey) => {
+    if (!dateKey) return true
+    const date = new Date(`${dateKey}T00:00:00`)
+    if (Number.isNaN(date.getTime())) return true
+
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    if (date < today) return true
+
+    if (closedWeekdays.has(date.getDay())) return true
+    if (fixedUnavailableDates.has(dateKey)) return true
+
+    return false
+  }, [closedWeekdays, fixedUnavailableDates])
+
+  const getNextAvailableDate = useCallback((fromDate) => {
+    const base = fromDate ? new Date(`${fromDate}T00:00:00`) : new Date()
+    if (Number.isNaN(base.getTime())) return null
+    base.setHours(0, 0, 0, 0)
+
+    for (let i = 1; i <= 180; i++) {
+      const candidate = new Date(base)
+      candidate.setDate(candidate.getDate() + i)
+      const key = toDateKey(candidate)
+      if (!isDateUnavailable(key)) return key
+    }
+
+    return null
+  }, [isDateUnavailable])
 
   if (loading) {
     return <LoadingSpinner />
@@ -225,7 +287,12 @@ function Booking() {
                     <div className="mx-auto w-full max-w-[380px] sm:max-w-none">
                       <DatePicker
                         selectedDate={state.date}
-                        onDateSelect={(date) => dispatch({ type: 'SET_DATE', payload: date })}
+                        onDateSelect={(date) => {
+                          dispatch({ type: 'SET_DATE', payload: date })
+                          dispatch({ type: 'SET_TIME', payload: null })
+                        }}
+                        isDateDisabled={isDateUnavailable}
+                        daysToShow={120}
                       />
                     </div>
 
@@ -237,9 +304,16 @@ function Booking() {
                         className="mx-auto w-full max-w-[380px] sm:max-w-none"
                       >
                         <TimeSlot
+                          selectedDate={state.date}
                           selectedTime={state.time}
                           onTimeSelect={(time) => dispatch({ type: 'SET_TIME', payload: time })}
                           duration={state.totalDuration}
+                          isDateUnavailable={isDateUnavailable}
+                          getNextAvailableDate={getNextAvailableDate}
+                          onDateSelect={(date) => {
+                            dispatch({ type: 'SET_DATE', payload: date })
+                            dispatch({ type: 'SET_TIME', payload: null })
+                          }}
                         />
                       </motion.div>
                     )}

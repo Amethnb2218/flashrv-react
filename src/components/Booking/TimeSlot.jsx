@@ -1,8 +1,16 @@
 import { motion } from 'framer-motion'
-import { useMemo, useRef, useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { FiClock, FiMoon, FiSun, FiSunset } from 'react-icons/fi'
 
-function TimeSlot({ selectedTime, onTimeSelect, duration = 30 }) {
+function TimeSlot({
+  selectedDate,
+  selectedTime,
+  onTimeSelect,
+  duration = 30,
+  isDateUnavailable,
+  getNextAvailableDate,
+  onDateSelect,
+}) {
   const scrollRef = useRef(null)
   const [activePeriod, setActivePeriod] = useState(null)
 
@@ -51,7 +59,6 @@ function TimeSlot({ selectedTime, onTimeSelect, duration = 30 }) {
       else setActivePeriod('soir')
       return
     }
-
     if (!activePeriod) {
       setActivePeriod('matin')
     }
@@ -64,9 +71,12 @@ function TimeSlot({ selectedTime, onTimeSelect, duration = 30 }) {
   }, [selectedTime])
 
   const currentPeriod = periods.find((p) => p.id === activePeriod) || periods[0]
+  const dateUnavailable = Boolean(selectedDate && isDateUnavailable?.(selectedDate))
+  const hasSlots = !dateUnavailable && currentPeriod.slots.length > 0
+  const nextDate = dateUnavailable ? getNextAvailableDate?.(selectedDate) : null
 
   return (
-    <section className="w-full max-w-full overflow-hidden rounded-2xl border border-gray-100 bg-white p-3 sm:p-4">
+    <section className="w-full max-w-full overflow-hidden rounded-2xl border border-gray-100 bg-white p-4">
       <div className="mb-3 flex items-center justify-between gap-2">
         <p className="text-sm font-semibold text-gray-900">Heure</p>
         {selectedTime && (
@@ -77,7 +87,7 @@ function TimeSlot({ selectedTime, onTimeSelect, duration = 30 }) {
         )}
       </div>
 
-      <div className="mb-3 grid grid-cols-3 gap-2">
+      <div className="mb-3 flex flex-wrap gap-2">
         {periods.map((period) => {
           const isActive = activePeriod === period.id
           const hasSelected = selectedTime && period.slots.includes(selectedTime)
@@ -86,7 +96,7 @@ function TimeSlot({ selectedTime, onTimeSelect, duration = 30 }) {
             <button
               key={period.id}
               onClick={() => setActivePeriod(period.id)}
-              className={`rounded-xl border px-2 py-2 text-center transition-all ${
+              className={`min-w-[102px] flex-1 rounded-xl border px-2 py-2 text-center transition-all ${
                 isActive
                   ? 'border-primary-500 bg-primary-600 text-white shadow-md shadow-primary-500/20'
                   : hasSelected
@@ -104,33 +114,48 @@ function TimeSlot({ selectedTime, onTimeSelect, duration = 30 }) {
         })}
       </div>
 
-      <div
-        ref={scrollRef}
-        className="max-h-[42vh] w-full max-w-full overflow-x-hidden overflow-y-auto rounded-xl border border-gray-100 bg-gray-50/60 p-2"
-        style={{ WebkitOverflowScrolling: 'touch' }}
-      >
-        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-4">
-          {currentPeriod.slots.map((time) => {
-            const isSelected = selectedTime === time
-
-            return (
-              <motion.button
-                key={time}
-                data-time={time}
-                whileTap={{ scale: 0.97 }}
-                onClick={() => onTimeSelect(time)}
-                className={`w-full min-w-0 rounded-xl border py-2.5 text-center text-sm font-semibold transition-all ${
-                  isSelected
-                    ? 'border-primary-500 bg-primary-600 text-white shadow-md shadow-primary-500/25'
-                    : 'border-gray-200 bg-white text-gray-800 active:bg-gray-100'
-                }`}
-              >
-                {time}
-              </motion.button>
-            )
-          })}
+      {!hasSlots ? (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-800">
+          <p className="font-medium">Aucun creneau disponible pour cette date.</p>
+          {nextDate ? (
+            <button
+              type="button"
+              onClick={() => onDateSelect?.(nextDate)}
+              className="mt-2 rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs font-semibold text-amber-700 transition hover:bg-amber-100"
+            >
+              Prochaine date disponible: {new Date(`${nextDate}T00:00:00`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+            </button>
+          ) : null}
         </div>
-      </div>
+      ) : (
+        <div
+          ref={scrollRef}
+          className="max-h-[42vh] w-full max-w-full overflow-x-hidden overflow-y-auto rounded-xl border border-gray-100 bg-gray-50/60 p-2"
+          style={{ WebkitOverflowScrolling: 'touch' }}
+        >
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(90px,1fr))] gap-2.5">
+            {currentPeriod.slots.map((time) => {
+              const isSelected = selectedTime === time
+
+              return (
+                <motion.button
+                  key={time}
+                  data-time={time}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => onTimeSelect(time)}
+                  className={`w-full min-w-0 rounded-xl border py-2.5 text-center text-sm font-semibold transition-all ${
+                    isSelected
+                      ? 'border-primary-500 bg-primary-600 text-white shadow-md shadow-primary-500/25'
+                      : 'border-gray-200 bg-white text-gray-800 active:bg-gray-100'
+                  }`}
+                >
+                  {time}
+                </motion.button>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       <p className="mt-2 text-center text-xs text-gray-500">Duree estimee: {duration} min</p>
     </section>
@@ -138,3 +163,4 @@ function TimeSlot({ selectedTime, onTimeSelect, duration = 30 }) {
 }
 
 export default TimeSlot
+
