@@ -136,9 +136,11 @@ function authorize(...roles) {
         message: 'Not authenticated',
       });
     }
-    // Autorise PRO, SALON_OWNER, ADMIN, SUPER_ADMIN
-    const allowedRoles = ['PRO', 'SALON_OWNER', 'ADMIN', 'SUPER_ADMIN'];
-    if (!roles.includes(req.user.role) && !allowedRoles.includes(req.user.role)) {
+    // SUPER_ADMIN a accès à tout
+    if (req.user.role === 'SUPER_ADMIN') {
+      return next();
+    }
+    if (!roles.includes(req.user.role)) {
       return res.status(403).json({
         status: 'error',
         message: 'You do not have permission to perform this action',

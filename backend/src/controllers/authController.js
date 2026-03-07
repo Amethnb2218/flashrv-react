@@ -17,8 +17,13 @@ async function register(req, res, next) {
     if (existing) {
       return res.status(409).json({ status: 'error', message: 'Email déjà utilisé' });
     }
-    // Statut selon rôle
-    const userStatus = role.toUpperCase() === 'PRO' ? STATUS.PENDING : STATUS.APPROVED;
+    // Statut selon rôle — seuls CLIENT et PRO sont autorisés à l'inscription
+    const allowedRoles = ['CLIENT', 'PRO'];
+    const normalizedRole = role.toUpperCase();
+    if (!allowedRoles.includes(normalizedRole)) {
+      return res.status(400).json({ status: 'error', message: 'Rôle invalide' });
+    }
+    const userStatus = normalizedRole === 'PRO' ? STATUS.PENDING : STATUS.APPROVED;
     const bcrypt = require('bcrypt');
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
@@ -26,7 +31,7 @@ async function register(req, res, next) {
       name,
       email,
       phoneNumber: phone,
-      role: role.toUpperCase(),
+      role: normalizedRole,
       status: userStatus,
       googleSub: googleSub || null,
       password: hashedPassword,
