@@ -18,29 +18,29 @@ export default function PendingProsSection({ pros, loading, onRefresh, onApprove
 
   /* ── Action buttons (shared between card & table) ── */
   const ActionButtons = ({ row }) => (
-    <div className="flex flex-wrap gap-1.5">
+    <div className="flex flex-wrap gap-2">
       <button
         onClick={() => onApprove(row)}
-        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 font-semibold text-xs shadow-sm border border-blue-100 hover:bg-blue-100 transition"
+        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-500 text-white font-semibold text-xs shadow-sm hover:bg-emerald-600 active:scale-95 transition"
         title="Valider ce PRO"
       >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
         Valider
       </button>
       <button
         onClick={() => onReject(row)}
-        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-rose-50 text-rose-700 font-semibold text-xs shadow-sm border border-rose-100 hover:bg-rose-100 transition"
+        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-500 text-white font-semibold text-xs shadow-sm hover:bg-rose-600 active:scale-95 transition"
         title="Refuser ce PRO"
       >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
         Refuser
       </button>
       <button
         onClick={() => onRestrict && onRestrict(row)}
-        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-amber-50 text-amber-700 font-semibold text-xs shadow-sm border border-amber-100 hover:bg-amber-100 transition"
+        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-500 text-white font-semibold text-xs shadow-sm hover:bg-amber-600 active:scale-95 transition"
         title="Restreindre les droits"
       >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z" /></svg>
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M12 20a8 8 0 100-16 8 8 0 000 16z" /></svg>
         Restreindre
       </button>
     </div>

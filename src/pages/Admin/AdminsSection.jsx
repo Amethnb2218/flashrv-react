@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import SectionCard from "../../components/UI/SectionCard.jsx";
 import DataTable from "../../components/UI/DataTable.jsx";
-import { FiShield, FiSearch } from "react-icons/fi";
+import { FiShield, FiSearch, FiRefreshCw, FiUsers, FiCalendar } from "react-icons/fi";
 
 export default function AdminsSection({ admins, loading, onRefresh, onDelete, onRestrict }) {
   const [search, setSearch] = useState("");
@@ -13,15 +13,88 @@ export default function AdminsSection({ admins, loading, onRefresh, onDelete, on
       a.email?.toLowerCase().includes(search.toLowerCase())
   );
 
-  // Placeholder handlers if not provided
   const handleDelete = (admin) => {
     if (onDelete) return onDelete(admin);
-    alert(`Supprimer l'admin: ${admin.name}`);
   };
   const handleRestrict = (admin) => {
     if (onRestrict) return onRestrict(admin);
-    alert(`Restreindre les droits de: ${admin.name}`);
   };
+
+  /* ── Toolbar (shared) ── */
+  const Toolbar = () => (
+    <div className="flex gap-2 w-full">
+      <div className="relative flex-1">
+        <input
+          type="text"
+          placeholder="Rechercher un admin..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-100 focus:border-blue-400 font-inter text-base shadow-sm transition"
+        />
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300">
+          <FiSearch className="w-5 h-5" />
+        </span>
+      </div>
+    </div>
+  );
+
+  /* ── Action buttons (shared) ── */
+  const ActionButtons = ({ row }) => (
+    <div className="flex flex-wrap gap-2">
+      <button
+        onClick={() => handleRestrict(row)}
+        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-500 text-white font-semibold text-xs shadow-sm hover:bg-amber-600 active:scale-95 transition"
+        title="Restreindre les droits"
+      >
+        <FiShield className="w-4 h-4" />
+        Restreindre
+      </button>
+      <button
+        onClick={() => handleDelete(row)}
+        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-500 text-white font-semibold text-xs shadow-sm hover:bg-rose-600 active:scale-95 transition"
+        title="Supprimer l'admin"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+        Supprimer
+      </button>
+    </div>
+  );
+
+  /* ── Mobile card ── */
+  const AdminCard = ({ row }) => (
+    <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-4 flex flex-col gap-3">
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => setSelectedUser(row)}
+          className="w-11 h-11 shrink-0 rounded-full bg-indigo-50 border-2 border-indigo-100 flex items-center justify-center text-lg text-indigo-600 font-bold"
+        >
+          {row.name?.[0]?.toUpperCase() || row.email?.[0]?.toUpperCase()}
+        </button>
+        <div className="flex-1 min-w-0">
+          <button
+            type="button"
+            onClick={() => setSelectedUser(row)}
+            className="text-sm font-semibold text-slate-800 truncate block max-w-full text-left hover:text-indigo-700 transition"
+          >
+            {row.name || row.email}
+          </button>
+          <div className="text-xs text-slate-500 truncate">{row.email}</div>
+        </div>
+        {row.adminType && (
+          <span className="shrink-0 inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border bg-slate-100 text-slate-700 border-slate-200">
+            {row.adminType}
+          </span>
+        )}
+      </div>
+      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
+        <span className="flex items-center gap-1"><FiCalendar className="w-3 h-3 text-slate-400" /> {row.createdAt ? new Date(row.createdAt).toLocaleDateString("fr-FR") : "-"}</span>
+      </div>
+      <div className="pt-1 border-t border-slate-100">
+        <ActionButtons row={row} />
+      </div>
+    </div>
+  );
 
   return (
     <SectionCard
@@ -37,83 +110,83 @@ export default function AdminsSection({ admins, loading, onRefresh, onDelete, on
         </button>
       }
     >
-      <DataTable
-        loading={loading}
-        columns={[
-          {
-            key: "email",
-            label: (
-              <div className="flex justify-start w-full pl-6">Email</div>
-            ),
-            render: row => (
-              <button
-                type="button"
-                onClick={() => setSelectedUser(row)}
-                className="inline-block px-4 py-2 rounded-xl bg-emerald-50 border border-emerald-100 shadow-sm hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-200 transition cursor-pointer"
-                title="Voir le profil complet"
-              >
-                <span className="text-xs text-emerald-700 font-inter tracking-wide underline underline-offset-2">{row.email}</span>
-              </button>
-            ),
-          },
-          {
-            key: "createdAt",
-            label: "Inscription",
-            render: row => (
-              <span className="text-xs text-slate-500">
-                {row.createdAt ? new Date(row.createdAt).toLocaleDateString("fr-FR") : "-"}
-              </span>
-            ),
-          },
-          {
-            key: "adminType",
-            label: "Type",
-            render: row => (
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border bg-slate-100 text-slate-800 border-slate-200">
-                {row.adminType || "-"}
-              </span>
-            ),
-          },
-        ]}
-        data={filtered}
-        toolbar={
-          <div className="flex gap-2 w-full">
-            <div className="relative flex-1">
-              <input
-                type="text"
-                placeholder="Rechercher un admin..."
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-100 focus:border-blue-400 font-inter text-base shadow-sm transition"
-              />
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300">
-                <FiSearch className="w-5 h-5" />
-              </span>
+      {/* ─── MOBILE: card list (< lg) ─── */}
+      <div className="lg:hidden flex flex-col gap-3">
+        <div className="flex flex-col gap-2 p-3 rounded-xl bg-slate-50 border border-slate-100">
+          <Toolbar />
+          {onRefresh && (
+            <button
+              onClick={onRefresh}
+              className="self-end flex items-center gap-2 bg-blue-600 text-white rounded-xl px-3 py-2 font-semibold shadow-sm hover:bg-blue-700 transition text-sm"
+            >
+              <FiRefreshCw className="w-4 h-4" /> Actualiser
+            </button>
+          )}
+        </div>
+        {loading ? (
+          Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="rounded-2xl border border-slate-200 bg-white p-4 animate-pulse">
+              <div className="flex gap-3 mb-3"><div className="w-11 h-11 rounded-full bg-slate-100" /><div className="flex-1 space-y-2"><div className="h-4 bg-slate-100 rounded w-3/4" /><div className="h-3 bg-slate-100 rounded w-1/2" /></div></div>
             </div>
+          ))
+        ) : filtered.length === 0 ? (
+          <div className="flex flex-col items-center gap-2 py-8 text-slate-400 font-medium">
+            <FiUsers className="w-10 h-10 text-slate-200" />
+            <span>Aucun administrateur trouvé</span>
           </div>
-        }
-        rowActions={row => (
-          <div className="flex gap-2">
-            <button
-              onClick={() => handleRestrict(row)}
-              className="px-3 py-1 rounded-lg text-xs font-semibold bg-yellow-50 text-yellow-700 border border-yellow-200 hover:bg-yellow-100 transition"
-              title="Restreindre les droits"
-            >
-              Restreindre
-            </button>
-            <button
-              onClick={() => handleDelete(row)}
-              className="px-3 py-1 rounded-lg text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 transition"
-              title="Supprimer l'admin"
-            >
-              Supprimer
-            </button>
-          </div>
+        ) : (
+          filtered.map(row => <AdminCard key={row.id} row={row} />)
         )}
-        onRefresh={onRefresh}
-        emptyLabel="Aucun administrateur trouvé"
-        pagination={null}
-      />
+      </div>
+
+      {/* ─── DESKTOP: table (>= lg) ─── */}
+      <div className="hidden lg:block">
+        <DataTable
+          loading={loading}
+          columns={[
+            {
+              key: "email",
+              label: (
+                <div className="flex justify-start w-full pl-6">Email</div>
+              ),
+              render: row => (
+                <button
+                  type="button"
+                  onClick={() => setSelectedUser(row)}
+                  className="inline-block px-4 py-2 rounded-xl bg-emerald-50 border border-emerald-100 shadow-sm hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-200 transition cursor-pointer"
+                  title="Voir le profil complet"
+                >
+                  <span className="text-xs text-emerald-700 font-inter tracking-wide underline underline-offset-2">{row.email}</span>
+                </button>
+              ),
+            },
+            {
+              key: "createdAt",
+              label: "Inscription",
+              render: row => (
+                <span className="text-xs text-slate-500">
+                  {row.createdAt ? new Date(row.createdAt).toLocaleDateString("fr-FR") : "-"}
+                </span>
+              ),
+            },
+            {
+              key: "adminType",
+              label: "Type",
+              render: row => (
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border bg-slate-100 text-slate-800 border-slate-200">
+                  {row.adminType || "-"}
+                </span>
+              ),
+            },
+          ]}
+          data={filtered}
+          toolbar={<Toolbar />}
+          rowActions={row => <ActionButtons row={row} />}
+          onRefresh={onRefresh}
+          emptyLabel="Aucun administrateur trouvé"
+          pagination={null}
+        />
+      </div>
     {/* Carte modale premium infos admin */}
     {selectedUser && (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">

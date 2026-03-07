@@ -15,14 +15,23 @@ function SalonCard({ salon, index = 0, variant = 'featured' }) {
     'data:image/svg+xml;utf8,' +
     encodeURIComponent(
       '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600">' +
-        '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">' +
-          '<stop offset="0%" stop-color="#f8fafc"/>' +
-          '<stop offset="100%" stop-color="#e2e8f0"/>' +
-        '</linearGradient></defs>' +
+        '<defs>' +
+          '<linearGradient id="g" x1="0" y1="0" x2="0.5" y2="1">' +
+            '<stop offset="0%" stop-color="#0f172a"/>' +
+            '<stop offset="100%" stop-color="#1e293b"/>' +
+          '</linearGradient>' +
+          '<linearGradient id="a" x1="0" y1="0" x2="1" y2="1">' +
+            '<stop offset="0%" stop-color="#f59e0b" stop-opacity="0.15"/>' +
+            '<stop offset="100%" stop-color="#f59e0b" stop-opacity="0.03"/>' +
+          '</linearGradient>' +
+        '</defs>' +
         '<rect width="100%" height="100%" fill="url(#g)"/>' +
-        '<circle cx="120" cy="120" r="48" fill="#e2e8f0"/>' +
-        '<rect x="200" y="90" width="420" height="36" rx="18" fill="#e2e8f0"/>' +
-        '<rect x="200" y="150" width="300" height="24" rx="12" fill="#e5e7eb"/>' +
+        '<rect width="100%" height="100%" fill="url(#a)"/>' +
+        '<g transform="translate(400,250)" text-anchor="middle">' +
+          '<circle r="52" fill="none" stroke="#f59e0b" stroke-width="1.5" opacity="0.4"/>' +
+          '<text y="8" font-size="42" fill="#f59e0b" opacity="0.6">✂</text>' +
+        '</g>' +
+        '<text x="400" y="340" text-anchor="middle" font-size="18" fill="#94a3b8" font-family="system-ui,sans-serif" letter-spacing="2">STYLE · FLOW</text>' +
       '</svg>'
     )
 

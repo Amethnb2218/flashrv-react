@@ -322,10 +322,13 @@ function SalonDetail() {
             className="w-full h-full object-cover object-center brightness-[0.98] contrast-[1.05]"
             loading="eager"
             decoding="async"
+            onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.parentElement.querySelector('.img-fallback')?.classList?.remove('hidden'); }}
           />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-400">Aucune image</div>
-        )}
+        ) : null}
+        <div className={`img-fallback w-full h-full flex flex-col items-center justify-center text-slate-400 absolute inset-0 ${galleryImages.length > 0 ? 'hidden' : ''}`}>
+          <svg className="w-16 h-16 mb-3 text-slate-300" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" /></svg>
+          <span className="text-sm font-medium">Photo bientôt disponible</span>
+        </div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.18),_transparent_55%)]" />
         {/* Navigation arrows */}
@@ -928,12 +931,13 @@ function SalonDetail() {
                       src={activeServiceImages[serviceImageIndex]}
                       alt={activeService.name}
                       className="w-full h-64 md:h-full object-cover"
+                      onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.parentElement.querySelector('.svc-fallback')?.classList?.remove('hidden'); }}
                     />
-                  ) : (
-                    <div className="w-full h-64 md:h-full flex items-center justify-center text-gray-400">
-                      Aucune image
-                    </div>
-                  )}
+                  ) : null}
+                  <div className={`svc-fallback w-full h-64 md:h-full flex flex-col items-center justify-center text-slate-400 bg-slate-50 ${activeServiceImages.length > 0 ? 'hidden' : ''}`}>
+                    <svg className="w-12 h-12 mb-2 text-slate-300" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" /></svg>
+                    <span className="text-sm">Photo non disponible</span>
+                  </div>
 
                   {activeServiceImages.length > 1 && (
                     <>
