@@ -7,6 +7,7 @@ function DatePicker({ selectedDate, onDateSelect, onSelect }) {
   const days = useMemo(() => {
     const result = []
     const today = new Date()
+
     for (let i = 0; i < 14; i++) {
       const date = new Date(today)
       date.setDate(today.getDate() + i)
@@ -15,88 +16,84 @@ function DatePicker({ selectedDate, onDateSelect, onSelect }) {
         dayName: date.toLocaleDateString('fr-FR', { weekday: 'short' }),
         dayNumber: date.getDate(),
         month: date.toLocaleDateString('fr-FR', { month: 'short' }),
-        isToday: i === 0
+        isToday: i === 0,
       })
     }
+
     return result
   }, [])
 
   useEffect(() => {
     if (!selectedDate || !scrollRef.current) return
-    const idx = days.findIndex(d => d.date === selectedDate)
+    const idx = days.findIndex((d) => d.date === selectedDate)
     if (idx < 0) return
-    const btn = scrollRef.current.children[idx]
-    if (btn) btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+    const button = scrollRef.current.children[idx]
+    if (button) button.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
   }, [selectedDate, days])
 
   const handleSelect = onDateSelect || onSelect
 
   const selectedLabel = selectedDate
-    ? new Date(selectedDate).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
+    ? new Date(selectedDate).toLocaleDateString('fr-FR', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+      })
     : null
 
   return (
-    <div>
-      {/* Header row */}
-      <div className="flex items-center justify-between mb-2.5 px-1">
-        <p className="text-[13px] font-semibold text-gray-800 flex items-center gap-1.5">
-          📅 <span>Choisir une date</span>
-        </p>
+    <section className="rounded-2xl border border-gray-100 bg-white p-3 sm:p-4">
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <p className="text-sm font-semibold text-gray-900">Date</p>
         {selectedLabel && (
-          <span className="text-[11px] font-medium text-primary-700 bg-primary-50 px-2 py-0.5 rounded-full truncate max-w-[50%]">
+          <span className="max-w-[65%] truncate rounded-full bg-primary-50 px-2.5 py-1 text-[11px] font-medium text-primary-700">
             {selectedLabel}
           </span>
         )}
       </div>
 
-      {/* Horizontally scrollable date strip */}
-      <div className="relative -mx-3 sm:-mx-6">
-        <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-5 bg-gradient-to-r from-white to-transparent z-10" />
-        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-5 bg-gradient-to-l from-white to-transparent z-10" />
+      <div className="relative -mx-3 sm:-mx-4">
+        <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-6 bg-gradient-to-r from-white to-transparent" />
+        <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-6 bg-gradient-to-l from-white to-transparent" />
 
         <div
           ref={scrollRef}
-          className="flex gap-1.5 overflow-x-auto py-1 px-4 sm:px-6 scrollbar-hide snap-x snap-mandatory"
+          className="scrollbar-hide flex snap-x snap-mandatory gap-2 overflow-x-auto px-3 pb-1 sm:px-4"
           style={{ WebkitOverflowScrolling: 'touch' }}
         >
           {days.map((day) => {
             const isSelected = selectedDate === day.date
+
             return (
               <motion.button
                 key={day.date}
-                whileTap={{ scale: 0.92 }}
+                whileTap={{ scale: 0.96 }}
                 onClick={() => handleSelect(day.date)}
-                className={`
-                  snap-center flex-shrink-0 w-[58px] py-2 rounded-xl text-center transition-all duration-200 border
-                  ${isSelected
-                    ? 'bg-primary-600 border-primary-500 text-white shadow-lg shadow-primary-500/30 scale-105'
-                    : 'bg-gray-50 border-gray-100 text-gray-700 active:bg-gray-100'
-                  }
-                `}
+                className={`snap-start min-w-[76px] flex-shrink-0 rounded-2xl border px-2.5 py-2.5 text-center transition-all duration-200 ${
+                  isSelected
+                    ? 'border-primary-500 bg-primary-600 text-white shadow-lg shadow-primary-500/25'
+                    : 'border-gray-200 bg-gray-50 text-gray-800 active:bg-gray-100'
+                }`}
               >
-                <div className={`text-[9px] uppercase tracking-widest font-semibold ${isSelected ? 'text-primary-200' : 'text-gray-400'}`}>
+                <p className={`text-[10px] font-semibold uppercase tracking-wide ${isSelected ? 'text-primary-100' : 'text-gray-500'}`}>
                   {day.dayName}
-                </div>
-                <div className="text-lg font-bold leading-tight mt-0.5">{day.dayNumber}</div>
-                <div className={`text-[9px] leading-tight ${isSelected ? 'text-primary-200' : 'text-gray-400'}`}>
-                  {day.month}
-                </div>
+                </p>
+                <p className="mt-0.5 text-xl font-bold leading-none">{day.dayNumber}</p>
+                <p className={`mt-1 text-[11px] ${isSelected ? 'text-primary-100' : 'text-gray-500'}`}>{day.month}</p>
                 {day.isToday && (
-                  <div className={`w-1 h-1 rounded-full mx-auto mt-1 ${isSelected ? 'bg-white' : 'bg-primary-500'}`} />
+                  <p className={`mt-1 text-[10px] font-semibold ${isSelected ? 'text-primary-100' : 'text-primary-600'}`}>
+                    Aujourd&apos;hui
+                  </p>
                 )}
               </motion.button>
             )
           })}
-          <div className="flex-shrink-0 w-3" aria-hidden />
+          <div className="w-1 flex-shrink-0" aria-hidden />
         </div>
       </div>
 
-      {!selectedDate && (
-        <p className="text-[11px] text-gray-400 mt-2 text-center select-none">
-          ← Glissez pour voir plus →
-        </p>
-      )}
-    </div>
+      {!selectedDate && <p className="mt-2 text-center text-[11px] text-gray-500">Faites glisser pour voir les prochains jours.</p>}
+    </section>
   )
 }
 

@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import { useMemo, useRef, useEffect, useState } from 'react'
+import { FiClock, FiMoon, FiSun, FiSunset } from 'react-icons/fi'
 
 function TimeSlot({ selectedTime, onTimeSelect, duration = 30 }) {
   const scrollRef = useRef(null)
@@ -15,23 +16,46 @@ function TimeSlot({ selectedTime, onTimeSelect, duration = 30 }) {
     return slots
   }, [])
 
-  const periods = useMemo(() => [
-    { id: 'matin', label: 'Matin', emoji: '🌅', range: '8h–12h', slots: timeSlots.filter(t => parseInt(t) < 12) },
-    { id: 'aprem', label: 'Après-midi', emoji: '☀️', range: '12h–17h', slots: timeSlots.filter(t => parseInt(t) >= 12 && parseInt(t) < 17) },
-    { id: 'soir', label: 'Soir', emoji: '🌙', range: '17h–20h', slots: timeSlots.filter(t => parseInt(t) >= 17) },
-  ], [timeSlots])
+  const periods = useMemo(
+    () => [
+      {
+        id: 'matin',
+        label: 'Matin',
+        range: '08:00 - 11:30',
+        Icon: FiSun,
+        slots: timeSlots.filter((t) => parseInt(t, 10) < 12),
+      },
+      {
+        id: 'aprem',
+        label: 'Apres-midi',
+        range: '12:00 - 16:30',
+        Icon: FiSunset,
+        slots: timeSlots.filter((t) => parseInt(t, 10) >= 12 && parseInt(t, 10) < 17),
+      },
+      {
+        id: 'soir',
+        label: 'Soir',
+        range: '17:00 - 19:30',
+        Icon: FiMoon,
+        slots: timeSlots.filter((t) => parseInt(t, 10) >= 17),
+      },
+    ],
+    [timeSlots]
+  )
 
-  // Auto-select active period based on selected time or default to first
   useEffect(() => {
     if (selectedTime) {
-      const hour = parseInt(selectedTime)
+      const hour = parseInt(selectedTime, 10)
       if (hour < 12) setActivePeriod('matin')
       else if (hour < 17) setActivePeriod('aprem')
       else setActivePeriod('soir')
-    } else if (!activePeriod) {
+      return
+    }
+
+    if (!activePeriod) {
       setActivePeriod('matin')
     }
-  }, [selectedTime])
+  }, [selectedTime, activePeriod])
 
   useEffect(() => {
     if (!selectedTime || !scrollRef.current) return
@@ -39,66 +63,67 @@ function TimeSlot({ selectedTime, onTimeSelect, duration = 30 }) {
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }, [selectedTime])
 
-  const currentPeriod = periods.find(p => p.id === activePeriod) || periods[0]
+  const currentPeriod = periods.find((p) => p.id === activePeriod) || periods[0]
 
   return (
-    <div>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-3 px-1">
-        <p className="text-[13px] font-semibold text-gray-800 flex items-center gap-1.5">
-          🕐 <span>Choisir un horaire</span>
-        </p>
+    <section className="rounded-2xl border border-gray-100 bg-white p-3 sm:p-4">
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <p className="text-sm font-semibold text-gray-900">Heure</p>
         {selectedTime && (
-          <span className="text-[12px] font-bold text-primary-700 bg-primary-50 px-2.5 py-0.5 rounded-full">
+          <span className="inline-flex items-center gap-1 rounded-full bg-primary-50 px-2.5 py-1 text-xs font-semibold text-primary-700">
+            <FiClock className="h-3.5 w-3.5" />
             {selectedTime}
           </span>
         )}
       </div>
 
-      {/* Period tabs — pill-style, horizontally scrollable on tiny screens */}
-      <div className="flex gap-1.5 mb-3 overflow-x-auto scrollbar-hide">
+      <div className="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
         {periods.map((period) => {
           const isActive = activePeriod === period.id
           const hasSelected = selectedTime && period.slots.includes(selectedTime)
+
           return (
             <button
               key={period.id}
               onClick={() => setActivePeriod(period.id)}
-              className={`
-                flex-1 min-w-0 flex items-center justify-center gap-1 px-2 py-2 rounded-xl text-xs font-semibold transition-all border
-                ${isActive
-                  ? 'bg-primary-600 text-white border-primary-500 shadow-md shadow-primary-500/20'
+              className={`rounded-xl border px-3 py-2 text-left transition-all ${
+                isActive
+                  ? 'border-primary-500 bg-primary-600 text-white shadow-md shadow-primary-500/20'
                   : hasSelected
-                  ? 'bg-primary-50 text-primary-700 border-primary-200'
-                  : 'bg-gray-50 text-gray-500 border-gray-100 active:bg-gray-100'
-                }
-              `}
+                  ? 'border-primary-200 bg-primary-50 text-primary-700'
+                  : 'border-gray-200 bg-gray-50 text-gray-700 active:bg-gray-100'
+              }`}
             >
-              <span className="text-sm">{period.emoji}</span>
-              <span className="truncate">{period.label}</span>
+              <div className="flex items-center gap-2">
+                <period.Icon className="h-4 w-4" />
+                <span className="text-sm font-semibold">{period.label}</span>
+              </div>
+              <p className={`mt-1 text-[11px] ${isActive ? 'text-primary-100' : 'text-gray-500'}`}>{period.range}</p>
             </button>
           )
         })}
       </div>
 
-      {/* Time slots grid — 3 cols mobile, 4 cols larger */}
-      <div ref={scrollRef} className="max-h-[40vh] overflow-y-auto scrollbar-hide rounded-xl" style={{ WebkitOverflowScrolling: 'touch' }}>
-        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-1.5">
+      <div
+        ref={scrollRef}
+        className="max-h-[42vh] overflow-y-auto rounded-xl border border-gray-100 bg-gray-50/60 p-2"
+        style={{ WebkitOverflowScrolling: 'touch' }}
+      >
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
           {currentPeriod.slots.map((time) => {
             const isSelected = selectedTime === time
+
             return (
               <motion.button
                 key={time}
                 data-time={time}
-                whileTap={{ scale: 0.9 }}
+                whileTap={{ scale: 0.97 }}
                 onClick={() => onTimeSelect(time)}
-                className={`
-                  py-2.5 rounded-xl font-semibold text-[13px] transition-all duration-150 border text-center
-                  ${isSelected
-                    ? 'bg-primary-600 text-white border-primary-500 shadow-lg shadow-primary-500/25 scale-105'
-                    : 'bg-gray-50 border-gray-100 text-gray-700 active:bg-gray-100'
-                  }
-                `}
+                className={`rounded-xl border py-2.5 text-sm font-semibold transition-all ${
+                  isSelected
+                    ? 'border-primary-500 bg-primary-600 text-white shadow-md shadow-primary-500/25'
+                    : 'border-gray-200 bg-white text-gray-800 active:bg-gray-100'
+                }`}
               >
                 {time}
               </motion.button>
@@ -107,11 +132,8 @@ function TimeSlot({ selectedTime, onTimeSelect, duration = 30 }) {
         </div>
       </div>
 
-      {/* Duration info */}
-      <p className="text-[11px] text-gray-400 mt-2.5 text-center">
-        Durée estimée : <span className="font-medium text-gray-500">{duration} min</span>
-      </p>
-    </div>
+      <p className="mt-2 text-center text-xs text-gray-500">Duree estimee: {duration} min</p>
+    </section>
   )
 }
 

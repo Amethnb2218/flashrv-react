@@ -7,7 +7,6 @@ import { useAuth } from '../../context/AuthContext'
 import ServiceCard from '../../components/Booking/ServiceCard'
 import DatePicker from '../../components/Booking/DatePicker'
 import TimeSlot from '../../components/Booking/TimeSlot'
-import CoiffeurCard from '../../components/Booking/CoiffeurCard'
 import BookingSummary from '../../components/Booking/BookingSummary'
 import LoadingSpinner from '../../components/UI/LoadingSpinner'
 import apiFetch from '@/api/client'
@@ -217,29 +216,22 @@ function Booking() {
 
                 {/* Step 2: Date & Time */}
                 {state.step === 2 && (
-                  <div className="space-y-0">
-                    <div className="mb-4">
-                      <h2 className="text-base sm:text-xl font-bold text-gray-900">
-                        Date et heure
-                      </h2>
-                      <p className="text-[12px] sm:text-sm text-gray-400 mt-0.5">
-                        Sélectionnez une date puis un créneau horaire.
-                      </p>
+                  <div className="space-y-3 sm:space-y-4">
+                    <div className="rounded-2xl border border-primary-100 bg-gradient-to-r from-primary-50 to-white px-3.5 py-3 sm:px-4">
+                      <h2 className="text-base font-bold text-gray-900 sm:text-xl">Date et heure</h2>
+                      <p className="mt-1 text-xs text-gray-600 sm:text-sm">Choisissez un jour puis un créneau disponible.</p>
                     </div>
 
-                    {/* Date section */}
                     <DatePicker
                       selectedDate={state.date}
                       onDateSelect={(date) => dispatch({ type: 'SET_DATE', payload: date })}
                     />
 
-                    {/* TimeSlot appears after date is selected */}
                     {state.date && (
                       <motion.div
                         initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.25 }}
-                        className="mt-5"
                       >
                         <TimeSlot
                           selectedTime={state.time}
@@ -254,10 +246,10 @@ function Booking() {
                       <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="mt-4 flex items-center gap-2 bg-green-50 border border-green-100 rounded-xl p-3"
+                        className="flex items-center gap-2 rounded-xl border border-green-200 bg-green-50 p-3"
                       >
                         <FiCheck className="w-4 h-4 text-green-600 flex-shrink-0" />
-                        <p className="text-[12px] text-green-700 font-medium">
+                        <p className="text-xs font-medium text-green-700">
                           {new Date(state.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })} à {state.time}
                         </p>
                       </motion.div>
@@ -385,7 +377,7 @@ function Booking() {
             </AnimatePresence>
 
             {/* Navigation Buttons — fixed bottom bar on mobile */}
-            <div className="fixed bottom-0 left-0 right-0 z-30 flex justify-between gap-2 bg-white/95 backdrop-blur border-t border-gray-200 p-3 sm:static sm:border-0 sm:bg-transparent sm:p-0 sm:mt-6 sm:flex-row">
+            <div className="fixed bottom-0 left-0 right-0 z-30 flex justify-between gap-2 border-t border-gray-200 bg-white/95 p-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur sm:static sm:mt-6 sm:border-0 sm:bg-transparent sm:p-0 sm:pb-0 sm:shadow-none">
               <button
                 onClick={handleBack}
                 className="flex-1 sm:flex-none px-4 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors flex items-center justify-center text-sm font-medium"
@@ -396,7 +388,7 @@ function Booking() {
               <button
                 onClick={handleNext}
                 disabled={!canProceed()}
-                className="flex-[2] sm:flex-none px-6 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed text-sm font-semibold"
+                className="flex-[2] sm:flex-none px-6 py-3 rounded-xl bg-primary-600 text-white transition-colors flex items-center justify-center text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-40 hover:bg-primary-700"
               >
                 {state.step === 3 ? 'Passer au paiement' : 'Continuer'}
                 <FiChevronRight className="w-4 h-4 ml-1" />
@@ -417,4 +409,3 @@ function Booking() {
 }
 
 export default Booking
-
