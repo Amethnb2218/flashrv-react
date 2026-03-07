@@ -138,29 +138,63 @@ function Home() {
     }
 
     setIsLocating(true)
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords
-        toast.success('Position trouvée !')
-        localStorage.setItem('flashrv_location', JSON.stringify({ lat: latitude, lng: longitude }))
-        navigate(`/salons?lat=${latitude}&lng=${longitude}`)
-        setIsLocating(false)
-      },
-      (error) => {
-        setIsLocating(false)
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            toast.error('Vous avez refusé la géolocalisation')
-            break
-          case error.POSITION_UNAVAILABLE:
-            toast.error('Position non disponible')
-            break
-          default:
-            toast.error('Erreur de géolocalisation')
+
+    const onSuccess = (position) => {
+      const { latitude, longitude } = position.coords
+      toast.success('Position trouvée !')
+      localStorage.setItem('flashrv_location', JSON.stringify({ lat: latitude, lng: longitude }))
+      navigate(`/salons?lat=${latitude}&lng=${longitude}`)
+      setIsLocating(false)
+    }
+
+    const onError = (error, isRetry = false) => {
+      // If high-accuracy failed (not a permission issue), retry with low accuracy
+      if (!isRetry && error.code !== 1) {
+        navigator.geolocation.getCurrentPosition(
+          onSuccess,
+          (retryErr) => onError(retryErr, true),
+          { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 }
+        )
+        return
+      }
+
+      setIsLocating(false)
+      if (error.code === 1) {
+        toast.error('Géolocalisation refusée. Activez-la dans les paramètres de votre navigateur, puis réessayez.', { duration: 5000 })
+      } else if (error.code === 2) {
+        toast.error('Position non disponible. Vérifiez que le GPS est activé.')
+      } else {
+        toast.error('Délai dépassé. Réessayez ou entrez votre ville manuellement.')
+      }
+    }
+
+    // Check permission state first (if supported) to give better feedback
+    if (navigator.permissions && navigator.permissions.query) {
+      navigator.permissions.query({ name: 'geolocation' }).then((result) => {
+        if (result.state === 'denied') {
+          setIsLocating(false)
+          toast.error('La géolocalisation est bloquée. Allez dans les paramètres de votre navigateur pour l\'autoriser.', { duration: 5000 })
+          return
         }
-      },
-      { enableHighAccuracy: true, timeout: 10000 }
-    )
+        navigator.geolocation.getCurrentPosition(
+          onSuccess,
+          (err) => onError(err, false),
+          { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
+        )
+      }).catch(() => {
+        navigator.geolocation.getCurrentPosition(
+          onSuccess,
+          (err) => onError(err, false),
+          { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
+        )
+      })
+    } else {
+      navigator.geolocation.getCurrentPosition(
+        onSuccess,
+        (err) => onError(err, false),
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
+      )
+    }
   }
 
   return (
