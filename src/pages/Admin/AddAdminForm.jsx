@@ -73,4 +73,3 @@ export default function AddAdminForm({ onAdminAdded }) {
     </div>
   )
 }
-}

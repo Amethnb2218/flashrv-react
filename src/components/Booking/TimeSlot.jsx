@@ -1,87 +1,115 @@
 import { motion } from 'framer-motion'
-import { useMemo, useRef, useEffect } from 'react'
+import { useMemo, useRef, useEffect, useState } from 'react'
 
 function TimeSlot({ selectedTime, onTimeSelect, duration = 30 }) {
   const scrollRef = useRef(null)
+  const [activePeriod, setActivePeriod] = useState(null)
 
-  // Generate time slots from 8:00 to 20:00
   const timeSlots = useMemo(() => {
     const slots = []
-    const startHour = 8
-    const endHour = 20
-    
-    for (let hour = startHour; hour < endHour; hour++) {
+    for (let hour = 8; hour < 20; hour++) {
       for (let min = 0; min < 60; min += 30) {
-        const time = `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`
-        slots.push(time)
+        slots.push(`${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`)
       }
     }
-    
     return slots
   }, [])
 
-  // Group time slots by period for easier visual scanning
-  const periods = useMemo(() => {
-    return [
-      { label: 'Matin', emoji: '🌅', slots: timeSlots.filter(t => parseInt(t) < 12) },
-      { label: 'Après-midi', emoji: '☀️', slots: timeSlots.filter(t => parseInt(t) >= 12 && parseInt(t) < 17) },
-      { label: 'Soir', emoji: '🌙', slots: timeSlots.filter(t => parseInt(t) >= 17) },
-    ]
-  }, [timeSlots])
+  const periods = useMemo(() => [
+    { id: 'matin', label: 'Matin', emoji: '🌅', range: '8h–12h', slots: timeSlots.filter(t => parseInt(t) < 12) },
+    { id: 'aprem', label: 'Après-midi', emoji: '☀️', range: '12h–17h', slots: timeSlots.filter(t => parseInt(t) >= 12 && parseInt(t) < 17) },
+    { id: 'soir', label: 'Soir', emoji: '🌙', range: '17h–20h', slots: timeSlots.filter(t => parseInt(t) >= 17) },
+  ], [timeSlots])
 
-  // Auto-scroll to selected time period
+  // Auto-select active period based on selected time or default to first
+  useEffect(() => {
+    if (selectedTime) {
+      const hour = parseInt(selectedTime)
+      if (hour < 12) setActivePeriod('matin')
+      else if (hour < 17) setActivePeriod('aprem')
+      else setActivePeriod('soir')
+    } else if (!activePeriod) {
+      setActivePeriod('matin')
+    }
+  }, [selectedTime])
+
   useEffect(() => {
     if (!selectedTime || !scrollRef.current) return
     const el = scrollRef.current.querySelector(`[data-time="${selectedTime}"]`)
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }, [selectedTime])
 
+  const currentPeriod = periods.find(p => p.id === activePeriod) || periods[0]
+
   return (
-    <div className="rounded-2xl border border-gray-100 bg-white/80 p-3 sm:p-5 shadow-sm">
-      <div className="flex items-center justify-between gap-2 mb-3">
-        <h3 className="text-sm font-semibold text-gray-900">🕐 Choisir un horaire</h3>
-        {selectedTime ? (
-          <span className="text-xs font-semibold text-primary-700 bg-primary-50 px-2.5 py-1 rounded-full">
+    <div>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3 px-1">
+        <p className="text-[13px] font-semibold text-gray-800 flex items-center gap-1.5">
+          🕐 <span>Choisir un horaire</span>
+        </p>
+        {selectedTime && (
+          <span className="text-[12px] font-bold text-primary-700 bg-primary-50 px-2.5 py-0.5 rounded-full">
             {selectedTime}
-          </span>
-        ) : (
-          <span className="text-xs text-gray-400 bg-gray-50 px-2.5 py-1 rounded-full">
-            Aucun créneau
           </span>
         )}
       </div>
 
-      <div ref={scrollRef} className="space-y-4 max-h-[50vh] overflow-y-auto scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
-        {periods.map((period) => (
-          <div key={period.label}>
-            <p className="text-xs font-medium text-gray-500 mb-2 flex items-center gap-1.5">
-              <span>{period.emoji}</span> {period.label}
-            </p>
-            <div className="grid grid-cols-4 sm:grid-cols-4 lg:grid-cols-6 gap-1.5 sm:gap-2">
-              {period.slots.map((time) => (
-                <motion.button
-                  key={time}
-                  data-time={time}
-                  whileTap={{ scale: 0.93 }}
-                  onClick={() => onTimeSelect(time)}
-                  className={`
-                    py-2.5 rounded-xl font-semibold text-xs sm:text-sm transition-all duration-200 border text-center
-                    ${selectedTime === time 
-                      ? 'bg-primary-600 text-white border-primary-600 shadow-md shadow-primary-500/25' 
-                      : 'bg-white border-gray-200 text-gray-700 active:bg-gray-50'
-                    }
-                  `}
-                >
-                  {time}
-                </motion.button>
-              ))}
-            </div>
-          </div>
-        ))}
+      {/* Period tabs — pill-style, horizontally scrollable on tiny screens */}
+      <div className="flex gap-1.5 mb-3 overflow-x-auto scrollbar-hide">
+        {periods.map((period) => {
+          const isActive = activePeriod === period.id
+          const hasSelected = selectedTime && period.slots.includes(selectedTime)
+          return (
+            <button
+              key={period.id}
+              onClick={() => setActivePeriod(period.id)}
+              className={`
+                flex-1 min-w-0 flex items-center justify-center gap-1 px-2 py-2 rounded-xl text-xs font-semibold transition-all border
+                ${isActive
+                  ? 'bg-primary-600 text-white border-primary-500 shadow-md shadow-primary-500/20'
+                  : hasSelected
+                  ? 'bg-primary-50 text-primary-700 border-primary-200'
+                  : 'bg-gray-50 text-gray-500 border-gray-100 active:bg-gray-100'
+                }
+              `}
+            >
+              <span className="text-sm">{period.emoji}</span>
+              <span className="truncate">{period.label}</span>
+            </button>
+          )
+        })}
       </div>
 
-      <p className="text-xs text-gray-400 mt-3 text-center">
-        Durée estimée : {duration} min
+      {/* Time slots grid — 3 cols mobile, 4 cols larger */}
+      <div ref={scrollRef} className="max-h-[40vh] overflow-y-auto scrollbar-hide rounded-xl" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-1.5">
+          {currentPeriod.slots.map((time) => {
+            const isSelected = selectedTime === time
+            return (
+              <motion.button
+                key={time}
+                data-time={time}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => onTimeSelect(time)}
+                className={`
+                  py-2.5 rounded-xl font-semibold text-[13px] transition-all duration-150 border text-center
+                  ${isSelected
+                    ? 'bg-primary-600 text-white border-primary-500 shadow-lg shadow-primary-500/25 scale-105'
+                    : 'bg-gray-50 border-gray-100 text-gray-700 active:bg-gray-100'
+                  }
+                `}
+              >
+                {time}
+              </motion.button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Duration info */}
+      <p className="text-[11px] text-gray-400 mt-2.5 text-center">
+        Durée estimée : <span className="font-medium text-gray-500">{duration} min</span>
       </p>
     </div>
   )

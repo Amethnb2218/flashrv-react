@@ -217,26 +217,51 @@ function Booking() {
 
                 {/* Step 2: Date & Time */}
                 {state.step === 2 && (
-                  <div>
-                    <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-1">
-                      Date et heure
-                    </h2>
-                    <p className="text-xs sm:text-sm text-gray-500 mb-4">
-                      Sélectionnez une date puis un créneau horaire.
-                    </p>
-                    <div className="space-y-5">
-                      <DatePicker
-                        selectedDate={state.date}
-                        onDateSelect={(date) => dispatch({ type: 'SET_DATE', payload: date })}
-                      />
-                      {state.date && (
+                  <div className="space-y-0">
+                    <div className="mb-4">
+                      <h2 className="text-base sm:text-xl font-bold text-gray-900">
+                        Date et heure
+                      </h2>
+                      <p className="text-[12px] sm:text-sm text-gray-400 mt-0.5">
+                        Sélectionnez une date puis un créneau horaire.
+                      </p>
+                    </div>
+
+                    {/* Date section */}
+                    <DatePicker
+                      selectedDate={state.date}
+                      onDateSelect={(date) => dispatch({ type: 'SET_DATE', payload: date })}
+                    />
+
+                    {/* TimeSlot appears after date is selected */}
+                    {state.date && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.25 }}
+                        className="mt-5"
+                      >
                         <TimeSlot
                           selectedTime={state.time}
                           onTimeSelect={(time) => dispatch({ type: 'SET_TIME', payload: time })}
                           duration={state.totalDuration}
                         />
-                      )}
-                    </div>
+                      </motion.div>
+                    )}
+
+                    {/* Quick selection feedback */}
+                    {state.date && state.time && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="mt-4 flex items-center gap-2 bg-green-50 border border-green-100 rounded-xl p-3"
+                      >
+                        <FiCheck className="w-4 h-4 text-green-600 flex-shrink-0" />
+                        <p className="text-[12px] text-green-700 font-medium">
+                          {new Date(state.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })} à {state.time}
+                        </p>
+                      </motion.div>
+                    )}
                   </div>
                 )}
 
