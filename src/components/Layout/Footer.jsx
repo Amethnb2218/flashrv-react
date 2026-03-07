@@ -10,7 +10,7 @@ function Footer() {
       <div className="absolute -top-24 right-10 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl"></div>
       <div className="absolute -bottom-24 left-10 w-80 h-80 bg-yellow-400/10 rounded-full blur-3xl"></div>
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 lg:gap-10">
           {/* Brand */}
           <div className="space-y-5">
             <Logo variant="light" size="md" showTagline />

@@ -272,7 +272,7 @@ function ClientDashboard() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
               Bonjour, {user?.name?.split(' ')[0]} 👋
             </h1>
             <p className="text-gray-600 mt-1">

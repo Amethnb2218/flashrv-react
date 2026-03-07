@@ -19,7 +19,7 @@ function Layout() {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Navbar />
-      <main className="flex-grow pt-24">
+      <main className="flex-grow pt-20 sm:pt-24">
         <Outlet />
       </main>
       {showFooter && <Footer />}
