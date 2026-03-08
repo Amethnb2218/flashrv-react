@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /pro/dashboard
+Disallow: /dashboard
+Disallow: /profile
+Disallow: /payment
+
+Sitemap: https://styleflow.me/sitemap.xml
