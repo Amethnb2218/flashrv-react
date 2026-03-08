@@ -3,22 +3,7 @@ const express = require('express');
 const router = express.Router();
 const prisma = require('../lib/prisma');
 const { authenticate, requireApprovedPro } = require('../middleware/auth');
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
-const { uploadsSubdir } = require('../utils/paths');
-
-const galleryDir = uploadsSubdir('gallery');
-if (!fs.existsSync(galleryDir)) fs.mkdirSync(galleryDir, { recursive: true });
-const galleryStorage = multer.diskStorage({
-	destination: (req, file, cb) => cb(null, galleryDir),
-	filename: (req, file, cb) => {
-		const ext = path.extname(file.originalname);
-		const name = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
-		cb(null, name);
-	},
-});
-const uploadGallery = multer({ storage: galleryStorage });
+const { uploadGallery } = require('../config/cloudinary');
 
 // Suppression d'un membre de l'équipe
 router.delete('/team/:id', authenticate, requireApprovedPro, async (req, res) => {
@@ -188,7 +173,7 @@ router.get('/portfolio', authenticate, requireApprovedPro, async (req, res) => {
 router.post('/portfolio', authenticate, requireApprovedPro, uploadGallery.single('image'), async (req, res) => {
 	try {
 		const { url, caption, category } = req.body || {};
-		const fileUrl = req.file ? `/uploads/gallery/${req.file.filename}` : null;
+		const fileUrl = req.file ? (req.file.path || req.file.secure_url || req.file.url) : null;
 		const mediaUrl = fileUrl || url;
 		if (!mediaUrl) return res.status(400).json({ ok: false, error: 'URL requise' });
 		const salon = await prisma.salon.findFirst({ where: { ownerId: req.user.id } });
@@ -202,6 +187,29 @@ router.post('/portfolio', authenticate, requireApprovedPro, uploadGallery.single
 			},
 		});
 		res.status(201).json({ ok: true, data: created });
+	} catch (error) {
+		res.status(400).json({ ok: false, error: error.message });
+	}
+});
+router.patch('/portfolio/:id', authenticate, requireApprovedPro, uploadGallery.single('image'), async (req, res) => {
+	try {
+		const { id } = req.params;
+		const { url, caption, category } = req.body || {};
+		const salon = await prisma.salon.findFirst({ where: { ownerId: req.user.id } });
+		if (!salon) return res.status(400).json({ ok: false, error: 'Salon introuvable' });
+		const item = await prisma.galleryImage.findUnique({ where: { id } });
+		if (!item || item.salonId !== salon.id) return res.status(404).json({ ok: false, error: 'Item introuvable' });
+		const fileUrl = req.file ? (req.file.path || req.file.secure_url || req.file.url) : null;
+		const mediaUrl = fileUrl || url;
+		const updated = await prisma.galleryImage.update({
+			where: { id },
+			data: {
+				...(mediaUrl ? { url: mediaUrl } : {}),
+				...(caption !== undefined ? { caption } : {}),
+				...(category !== undefined ? { category } : {}),
+			},
+		});
+		res.json({ ok: true, data: updated });
 	} catch (error) {
 		res.status(400).json({ ok: false, error: error.message });
 	}

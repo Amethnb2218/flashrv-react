@@ -1749,6 +1749,26 @@ try {
 }
 };
 
+const updatePortfolioImage = async (item, file) => {
+if (!file || !item?.id) return;
+if (!validateMedia(file)) return;
+const id = Array.isArray(item.ids) ? item.ids[0] : item.id;
+const form = new FormData();
+form.append("image", file);
+try {
+  const res = await apiFetch(`/portfolio/${id}`, { method: "PATCH", body: form });
+  const updated = res?.data ?? res;
+  setPortfolio((p) =>
+    p.map((x) =>
+      x.id === item.id ? { ...x, media: updated.url || x.media } : x
+    )
+  );
+  toast.success("Image mise à jour.");
+} catch (err) {
+  toast.error(err.message || "Erreur lors de la mise à jour");
+}
+};
+
 const removePortfolioItem = async (item) => {
 const ids = Array.isArray(item?.ids) ? item.ids : [item?.id || item];
 if (!ids[0]) return;
@@ -3816,9 +3836,30 @@ return (
 <h4 className="mt-2 text-base font-extrabold text-gray-900 truncate">{p.title}</h4>
 <p className="text-xs text-gray-500 mt-1">{formatDate(p.createdAt)}</p>
 </div>
+<div className="flex gap-1">
+{p.type === "gallery" && (
+<>
+<input
+  type="file"
+  accept="image/*,video/*"
+  className="hidden"
+  ref={(el) => { if (el) el._portfolioId = p.id; }}
+  onChange={(e) => {
+    const file = e.target.files?.[0];
+    if (file) updatePortfolioImage(p, file);
+    e.target.value = "";
+  }}
+  id={`portfolio-edit-${p.id}`}
+/>
+<IconButton title="Modifier" onClick={() => document.getElementById(`portfolio-edit-${p.id}`)?.click()}>
+  <FiEdit2 />
+</IconButton>
+</>
+)}
 <IconButton title="Supprimer" onClick={() => removePortfolioItem(p)}>
 <FiTrash2 />
 </IconButton>
+</div>
 </div>
 
 <div className="mt-3">
