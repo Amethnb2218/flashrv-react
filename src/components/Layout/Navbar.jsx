@@ -236,29 +236,30 @@ function Navbar() {
             </button>
           </div>
         </div>
+      </div>
 
-        {/* Mobile Drawer */}
-        <AnimatePresence>
-          {isOpen && (
-            <>
-              {/* Backdrop */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden"
-                onClick={closeDrawer}
-              />
+      {/* Mobile Drawer — rendered outside main navbar div for stable positioning */}
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-[9990] bg-black/50 backdrop-blur-sm md:hidden"
+              onClick={closeDrawer}
+            />
 
-              {/* Drawer panel */}
-              <motion.div
-                initial={{ x: '100%' }}
-                animate={{ x: 0 }}
-                exit={{ x: '100%' }}
-                transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-                className="fixed top-0 right-0 bottom-0 z-50 w-[80%] max-w-xs bg-white shadow-2xl md:hidden flex flex-col"
-              >
+            {/* Drawer panel */}
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+              className="fixed top-0 right-0 bottom-0 z-[9999] w-[80%] max-w-xs bg-white shadow-2xl md:hidden flex flex-col"
+            >
                 {/* Drawer header */}
                 <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
                   <Logo variant="default" size="sm" />
@@ -394,11 +395,10 @@ function Navbar() {
                     </button>
                   </div>
                 )}
-              </motion.div>
-            </>
-          )}
-        </AnimatePresence>
-      </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </nav>
   )
 }

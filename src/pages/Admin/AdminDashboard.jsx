@@ -5,7 +5,7 @@ import {
   FiUsers, FiUserCheck, FiClock, 
   FiBarChart2, FiRefreshCw, FiShield,
   FiCalendar, FiMessageSquare,
-  FiBell, FiMapPin
+  FiBell, FiMapPin, FiX
 } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 import StatCard from '../../components/UI/StatCard';
@@ -306,17 +306,31 @@ export default function AdminDashboard() {
                 </button>
                 <AnimatePresence>
                   {notifOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -8, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -8, scale: 0.95 }}
-                      transition={{ duration: 0.15 }}
-                      className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-200 z-50 overflow-hidden"
-                    >
-                      <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
-                        <h3 className="text-sm font-bold text-slate-800">Nouvelles inscriptions PRO</h3>
-                        <span className="text-xs text-slate-400">{pendingCount} en attente</span>
-                      </div>
+                    <>
+                      {/* Mobile backdrop */}
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/40 z-40 sm:hidden"
+                        onClick={() => setNotifOpen(false)}
+                      />
+                      <motion.div
+                        initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                        transition={{ duration: 0.15 }}
+                        className="fixed inset-x-3 top-20 z-50 sm:absolute sm:inset-x-auto sm:top-auto sm:right-0 sm:mt-2 w-auto sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden"
+                      >
+                        <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+                          <h3 className="text-sm font-bold text-slate-800">Nouvelles inscriptions PRO</h3>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-slate-400">{pendingCount} en attente</span>
+                            <button onClick={() => setNotifOpen(false)} className="sm:hidden p-1 rounded-lg hover:bg-slate-100 transition">
+                              <FiX className="w-4 h-4 text-slate-400" />
+                            </button>
+                          </div>
+                        </div>
                       <div className="max-h-80 overflow-y-auto divide-y divide-slate-50">
                         {pendingPros.length === 0 ? (
                           <div className="px-4 py-8 text-center text-sm text-slate-400">Aucune inscription en attente</div>
@@ -361,6 +375,7 @@ export default function AdminDashboard() {
                         </div>
                       )}
                     </motion.div>
+                    </>
                   )}
                 </AnimatePresence>
               </div>
