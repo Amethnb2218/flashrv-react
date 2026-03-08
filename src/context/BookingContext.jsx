@@ -108,13 +108,13 @@ export function BookingProvider({ children }) {
   // Persist booking state
   useEffect(() => {
     if (state.salon || state.services.length > 0) {
-      localStorage.setItem('flashrv_booking', JSON.stringify(state))
+      sessionStorage.setItem('flashrv_booking', JSON.stringify(state))
     }
   }, [state])
 
   // Load saved booking on mount
   useEffect(() => {
-    const saved = localStorage.getItem('flashrv_booking')
+    const saved = sessionStorage.getItem('flashrv_booking')
     if (saved) {
       try {
         const booking = JSON.parse(saved)
@@ -174,7 +174,7 @@ export function BookingProvider({ children }) {
   }
 
   const resetBooking = () => {
-    localStorage.removeItem('flashrv_booking')
+    sessionStorage.removeItem('flashrv_booking')
     dispatch({ type: 'RESET' })
   }
 

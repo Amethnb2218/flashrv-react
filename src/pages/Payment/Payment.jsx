@@ -243,7 +243,7 @@ function Payment() {
 
     // Clear booking state
     bookingDispatch({ type: 'RESET' })
-    localStorage.removeItem('flashrv_booking')
+    sessionStorage.removeItem('flashrv_booking')
 
     // Redirect to success page
     const query = appointmentId ? `?appointmentId=${appointmentId}` : ''

@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import SectionCard from "../../components/UI/SectionCard.jsx";
 import DataTable from "../../components/UI/DataTable.jsx";
 import StatusBadge from "../../components/UI/StatusBadge.jsx";
@@ -16,7 +16,7 @@ export default function PendingProsSection({ pros, loading, onRefresh, onApprove
       (status === "all" || pro.status === status)
   );
 
-  /* ── Action buttons (shared between card & table) ── */
+  /* -- Action buttons (shared between card & table) -- */
   const ActionButtons = ({ row }) => (
     <div className="flex items-center gap-1.5">
       <button
@@ -46,7 +46,7 @@ export default function PendingProsSection({ pros, loading, onRefresh, onApprove
     </div>
   );
 
-  /* ── Toolbar (shared) ── */
+  /* -- Toolbar (shared) -- */
   const Toolbar = () => (
     <div className="flex flex-col sm:flex-row gap-2 w-full">
       <div className="relative flex-1">
@@ -68,14 +68,14 @@ export default function PendingProsSection({ pros, loading, onRefresh, onApprove
       >
         <option value="all">Tous</option>
         <option value="PENDING">En attente</option>
-        <option value="APPROVED">Approuvés</option>
-        <option value="REJECTED">Refusés</option>
+        <option value="APPROVED">Approuv�s</option>
+        <option value="REJECTED">Refus�s</option>
         <option value="SUSPENDED">Suspendus</option>
       </select>
     </div>
   );
 
-  /* ── Mobile card for a single PRO (modern SaaS style) ── */
+  /* -- Mobile card for a single PRO (modern SaaS style) -- */
   const ProCard = ({ row }) => (
     <div className="group rounded-xl border border-slate-200 bg-white hover:border-slate-300 hover:shadow-md transition-all duration-200 overflow-hidden">
       {/* Top section: avatar + identity + badge */}
@@ -139,7 +139,7 @@ export default function PendingProsSection({ pros, loading, onRefresh, onApprove
         </button>
       }
     >
-      {/* ─── MOBILE: card list (visible < lg) ─── */}
+      {/* --- MOBILE: card list (visible < lg) --- */}
       <div className="lg:hidden flex flex-col gap-3">
         {/* Toolbar */}
         <div className="flex flex-col gap-2 p-3 rounded-xl bg-slate-50 border border-slate-100">
@@ -180,7 +180,7 @@ export default function PendingProsSection({ pros, loading, onRefresh, onApprove
         )}
       </div>
 
-      {/* ─── DESKTOP: table (visible >= lg) ─── */}
+      {/* --- DESKTOP: table (visible >= lg) --- */}
       <div className="hidden lg:block">
         <DataTable
           loading={loading}
@@ -207,7 +207,7 @@ export default function PendingProsSection({ pros, loading, onRefresh, onApprove
             },
             {
               key: "phoneNumber",
-              label: "Téléphone",
+              label: "T�l�phone",
               render: row => <span className="text-xs text-slate-700">{row.phoneNumber || "-"}</span>,
             },
             {
@@ -222,7 +222,7 @@ export default function PendingProsSection({ pros, loading, onRefresh, onApprove
             },
             {
               key: "salonPhone",
-              label: "Tél. salon",
+              label: "T�l. salon",
               render: row => <span className="text-xs text-slate-700">{row.salon?.phone || "-"}</span>,
             },
             {
@@ -281,7 +281,7 @@ export default function PendingProsSection({ pros, loading, onRefresh, onApprove
             <div className="w-full mt-5 space-y-3">
               <div className="flex items-center gap-3 text-sm">
                 <FiPhone className="w-4 h-4 text-slate-400 shrink-0" />
-                <span className="text-slate-600">{selectedUser.phoneNumber || <span className="italic text-slate-400">Non renseigné</span>}</span>
+                <span className="text-slate-600">{selectedUser.phoneNumber || <span className="italic text-slate-400">Non renseign�</span>}</span>
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <FiCalendar className="w-4 h-4 text-slate-400 shrink-0" />
@@ -293,7 +293,7 @@ export default function PendingProsSection({ pros, loading, onRefresh, onApprove
                     <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Salon</p>
                   </div>
                   <div className="flex items-center gap-3 text-sm">
-                    <span className="w-4 h-4 shrink-0 flex items-center justify-center text-slate-400">🏠</span>
+                    <span className="w-4 h-4 shrink-0 flex items-center justify-center text-slate-400">??</span>
                     <span className="font-medium text-slate-700">{selectedUser.salon.name}</span>
                   </div>
                   {selectedUser.salon.city && (

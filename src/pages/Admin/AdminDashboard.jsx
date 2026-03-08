@@ -18,7 +18,7 @@ const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 /** Helper: returns fetch options with auth headers (token + cookie) */
 function authFetchOpts(extra = {}) {
-  const token = localStorage.getItem('flashrv_token');
+  const token = sessionStorage.getItem('flashrv_token');
   return {
     credentials: 'include',
     headers: {
@@ -50,9 +50,9 @@ export default function AdminDashboard() {
   const [pendingPros, setPendingPros] = useState([])
   const notifRef = useRef(null)
 
-  // Track "last seen" pending count in localStorage
+  // Track "last seen" pending count in sessionStorage
   const NOTIF_KEY = 'flashrv_admin_last_seen_pending'
-  const getLastSeen = () => parseInt(localStorage.getItem(NOTIF_KEY) || '0', 10)
+  const getLastSeen = () => parseInt(sessionStorage.getItem(NOTIF_KEY) || '0', 10)
   const pendingCount = stats?.pros?.pending || 0
   const unreadCount = Math.max(0, pendingCount - getLastSeen())
 
@@ -82,7 +82,7 @@ export default function AdminDashboard() {
   const toggleNotif = () => {
     if (!notifOpen) {
       fetchPendingForNotif()
-      localStorage.setItem(NOTIF_KEY, String(pendingCount))
+      sessionStorage.setItem(NOTIF_KEY, String(pendingCount))
     }
     setNotifOpen(prev => !prev)
   }

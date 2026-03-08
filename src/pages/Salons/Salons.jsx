@@ -1,4 +1,4 @@
-Ôªøimport { categories } from '../../data/salons'
+import { categories } from '../../data/salons'
 import SalonCard from '../../components/Salon/SalonCard'
 import { useEffect, useState, useMemo, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
@@ -114,9 +114,9 @@ function Salons() {
         return "high"
       }
       const normalized =
-        filters.priceRange === "‚Ç¨" ? "low" :
-        filters.priceRange === "‚Ç¨‚Ç¨" ? "mid" :
-        filters.priceRange === "‚Ç¨‚Ç¨‚Ç¨" ? "high" :
+        filters.priceRange === "Ä" ? "low" :
+        filters.priceRange === "ÄÄ" ? "mid" :
+        filters.priceRange === "ÄÄÄ" ? "high" :
         filters.priceRange
       result = result.filter(s => priceBucket(s) === normalized)
     }
@@ -173,16 +173,16 @@ function Salons() {
     const chips = []
     if (filters.search) chips.push({ key: 'search', label: `Recherche: ${filters.search}` })
     if (filters.neighborhood) chips.push({ key: 'neighborhood', label: `Quartier: ${filters.neighborhood}` })
-    if (filters.category) chips.push({ key: 'category', label: `Cat√©gorie: ${filters.category}` })
+    if (filters.category) chips.push({ key: 'category', label: `CatÈgorie: ${filters.category}` })
     if (filters.priceRange) {
       const priceLabel =
-        filters.priceRange === 'low' ? 'Budget: ‚â§ 5‚ÄØ000 F' :
-        filters.priceRange === 'mid' ? 'Budget: 5‚ÄØ000‚Äì15‚ÄØ000 F' :
-        filters.priceRange === 'high' ? 'Budget: ‚â• 15‚ÄØ000 F' :
+        filters.priceRange === 'low' ? 'Budget: = 5?000 F' :
+        filters.priceRange === 'mid' ? 'Budget: 5?000ñ15?000 F' :
+        filters.priceRange === 'high' ? 'Budget: = 15?000 F' :
         `Budget: ${filters.priceRange}`
       chips.push({ key: 'priceRange', label: priceLabel })
     }
-    if (filters.minRating) chips.push({ key: 'minRating', label: `Note ‚â• ${filters.minRating}` })
+    if (filters.minRating) chips.push({ key: 'minRating', label: `Note = ${filters.minRating}` })
     if (filters.type) chips.push({ key: 'type', label: `Type: ${filters.type}` })
     if (filters.salonType) chips.push({ key: 'salonType', label: `Type salon: ${filters.salonType}` })
     if (filters.businessType) chips.push({ key: 'businessType', label: filters.businessType === 'BOUTIQUE' ? 'Boutiques' : 'Salons' })
@@ -212,10 +212,10 @@ function Salons() {
             transition={{ duration: reduceMotion ? 0 : 0.45 }}
           >
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              {filters.businessType === 'BOUTIQUE' ? 'Trouvez votre boutique' : 'Trouvez votre salon id√©al'}
+              {filters.businessType === 'BOUTIQUE' ? 'Trouvez votre boutique' : 'Trouvez votre salon idÈal'}
             </h1>
             <p className="text-primary-100 mb-6">
-              {filteredSalons.length} √©tablissement{filteredSalons.length > 1 ? 's' : ''} disponible{filteredSalons.length > 1 ? 's' : ''}
+              {filteredSalons.length} Ètablissement{filteredSalons.length > 1 ? 's' : ''} disponible{filteredSalons.length > 1 ? 's' : ''}
             </p>
 
             {/* Type toggle - Categories */}
@@ -248,7 +248,7 @@ function Salons() {
                     : 'bg-white/20 text-white hover:bg-white/30'
                 }`}
               >
-                Salons beaut√©
+                Salons beautÈ
               </button>
               <button
                 onClick={() => { updateFilter('type', 'salon'); updateFilter('salonType', 'mixte'); updateFilter('businessType', ''); }}
@@ -258,7 +258,7 @@ function Salons() {
                     : 'bg-white/20 text-white hover:bg-white/30'
                 }`}
               >
-                Coiffure & beaut√©
+                Coiffure & beautÈ
               </button>
               <button
                 onClick={() => { updateFilter('type', 'barber'); updateFilter('salonType', ''); updateFilter('businessType', ''); }}
@@ -360,7 +360,7 @@ function Salons() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {/* Category */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Cat√©gorie</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">CatÈgorie</label>
                 <select
                   value={filters.category}
                   onChange={(e) => updateFilter('category', e.target.value)}
@@ -382,9 +382,9 @@ function Salons() {
                   className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500"
                 >
                   <option value="">Tous</option>
-                  <option value="low">‚â§ 5‚ÄØ000 F</option>
-                  <option value="mid">5‚ÄØ000‚Äì15‚ÄØ000 F</option>
-                  <option value="high">‚â• 15‚ÄØ000 F</option>
+                  <option value="low">= 5?000 F</option>
+                  <option value="mid">5?000ñ15?000 F</option>
+                  <option value="high">= 15?000 F</option>
                 </select>
               </div>
 
@@ -397,9 +397,9 @@ function Salons() {
                   className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500"
                 >
                   <option value="">Toutes</option>
-                  <option value="4.5">‚≠ê 4.5+</option>
-                  <option value="4">‚≠ê 4+</option>
-                  <option value="3.5">‚≠ê 3.5+</option>
+                  <option value="4.5">? 4.5+</option>
+                  <option value="4">? 4+</option>
+                  <option value="3.5">? 3.5+</option>
                 </select>
               </div>
 
@@ -411,9 +411,9 @@ function Salons() {
                   onChange={(e) => updateFilter('sortBy', e.target.value)}
                   className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500"
                 >
-                  <option value="rating">Mieux not√©s</option>
-                  <option value="reviews">Plus d‚Äôavis</option>
-                  <option value="name">Nom A‚ÄìZ</option>
+                  <option value="rating">Mieux notÈs</option>
+                  <option value="reviews">Plus díavis</option>
+                  <option value="name">Nom AñZ</option>
                 </select>
               </div>
             </div>
@@ -424,7 +424,7 @@ function Salons() {
                   className="mt-4 flex items-center space-x-2 text-sm text-primary-600 hover:text-primary-700"
                 >
                   <FiX className="w-4 h-4" />
-                  <span>R√©initialiser les filtres</span>
+                  <span>RÈinitialiser les filtres</span>
                 </button>
               )}
             </div>
@@ -454,15 +454,15 @@ function Salons() {
             <div className="w-24 h-24 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <FiSearch className="w-12 h-12 text-primary-400" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Aucun salon trouv√©</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Aucun salon trouvÈ</h3>
             <p className="text-gray-500 mb-6">
-              Essayez de modifier vos crit√®res de recherche
+              Essayez de modifier vos critËres de recherche
             </p>
             <button
               onClick={clearFilters}
               className="btn-primary"
             >
-              R√©initialiser les filtres
+              RÈinitialiser les filtres
             </button>
           </motion.div>
         ) : (

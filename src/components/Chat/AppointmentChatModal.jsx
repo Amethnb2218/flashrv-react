@@ -96,7 +96,7 @@ function AppointmentChatModal({
   useEffect(() => {
     if (!isOpen || !appointmentId) return
     loadMessages()
-    const token = localStorage.getItem('flashrv_token')
+    const token = sessionStorage.getItem('flashrv_token')
     if (token) connectRealtime(token)
     const unsubscribe = subscribeRealtime((event) => {
       if (event?.type !== 'chat:new') return

@@ -1,4 +1,5 @@
-Ôªøimport { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { FiSearch, FiMapPin, FiCalendar, FiStar, FiArrowRight, FiCheck, FiNavigation, FiShield, FiUsers, FiClock, FiZap, FiMessageSquare, FiAlertTriangle, FiX, FiShoppingBag } from 'react-icons/fi'
@@ -74,43 +75,43 @@ function Home() {
     ? (totalReviews > 0
       ? (salons.reduce((sum, s) => sum + (s.rating || 0), 0) / salons.length).toFixed(1)
       : 'Nouveau')
-    : '‚Äî'
+    : 'ó'
   const stats = [
     { value: `${onlySalons.length}`, label: 'Salons partenaires', show: onlySalons.length > 0 },
     { value: `${onlyBoutiques.length}`, label: 'Boutiques', show: onlyBoutiques.length > 0 },
     { value: `${totalReviews}`, label: 'Avis clients', show: totalReviews > 0 },
-    { value: avgRating, label: 'Note moyenne', show: avgRating !== 'Nouveau' && avgRating !== '‚Äî' }
+    { value: avgRating, label: 'Note moyenne', show: avgRating !== 'Nouveau' && avgRating !== 'ó' }
   ].filter(s => s.show)
 
   const steps = [
     {
       icon: <FiSearch className="w-6 h-6" />,
       title: 'Recherchez',
-      description: 'Filtrez par quartier, sp√©cialit√©, avis ou disponibilit√©. Comparez les prix et photos en un coup d\'≈ìil.'
+      description: 'Filtrez par quartier, spÈcialitÈ, avis ou disponibilitÈ. Comparez les prix et photos en un coup d\'úil.'
     },
     {
       icon: <FiCalendar className="w-6 h-6" />,
-      title: 'R√©servez',
-      description: 'Choisissez vos services, votre coiffeur et un cr√©neau libre. Confirmation instantan√©e, z√©ro appel t√©l√©phonique.'
+      title: 'RÈservez',
+      description: 'Choisissez vos services, votre coiffeur et un crÈneau libre. Confirmation instantanÈe, zÈro appel tÈlÈphonique.'
     },
     {
       icon: <FiStar className="w-6 h-6" />,
       title: 'Profitez',
-      description: 'Rappel automatique avant le rendez-vous. Apr√®s votre visite, notez le salon pour aider la communaut√©.'
+      description: 'Rappel automatique avant le rendez-vous. AprËs votre visite, notez le salon pour aider la communautÈ.'
     }
   ]
 
   const trustItems = [
-    { icon: <FiShield className="w-5 h-5" />, title: 'Paiement s√©curis√©', desc: 'Transactions fiables et prot√©g√©es.' },
-    { icon: <FiUsers className="w-5 h-5" />, title: 'Salons v√©rifi√©s', desc: 'Professionnels contr√¥l√©s et not√©s.' },
-    { icon: <FiClock className="w-5 h-5" />, title: 'Gain de temps', desc: 'R√©servation rapide en quelques clics.' },
+    { icon: <FiShield className="w-5 h-5" />, title: 'Paiement sÈcurisÈ', desc: 'Transactions fiables et protÈgÈes.' },
+    { icon: <FiUsers className="w-5 h-5" />, title: 'Salons vÈrifiÈs', desc: 'Professionnels contrÙlÈs et notÈs.' },
+    { icon: <FiClock className="w-5 h-5" />, title: 'Gain de temps', desc: 'RÈservation rapide en quelques clics.' },
   ]
 
   const quickFilters = [
-    { label: 'Aujourd‚Äôhui', icon: <FiCalendar className="w-4 h-4" />, params: { day: 'today' } },
+    { label: 'Aujourdíhui', icon: <FiCalendar className="w-4 h-4" />, params: { day: 'today' } },
     { label: 'Dispo maintenant', icon: <FiClock className="w-4 h-4" />, params: { openNow: '1' } },
     { label: '< 2 km', icon: <FiNavigation className="w-4 h-4" />, params: { radius: '2' } },
-    { label: 'Top not√©s', icon: <FiStar className="w-4 h-4" />, params: { sortBy: 'rating' } },
+    { label: 'Top notÈs', icon: <FiStar className="w-4 h-4" />, params: { sortBy: 'rating' } },
   ]
 
   const suggestions = useMemo(() => {
@@ -133,12 +134,12 @@ function Home() {
 
   const handleGeolocation = () => {
     if (!navigator.geolocation) {
-      toast.error("La g√©olocalisation n'est pas support√©e par votre navigateur")
+      toast.error("La gÈolocalisation n'est pas supportÈe par votre navigateur")
       return
     }
 
     if (window.isSecureContext === false) {
-      toast.error("La g√©olocalisation n√©cessite une connexion s√©curis√©e (HTTPS).", { duration: 5000 })
+      toast.error("La gÈolocalisation nÈcessite une connexion sÈcurisÈe (HTTPS).", { duration: 5000 })
       return
     }
 
@@ -146,8 +147,8 @@ function Home() {
 
     const onSuccess = (position) => {
       const { latitude, longitude } = position.coords
-      toast.success('Position trouv√©e !')
-      localStorage.setItem('flashrv_location', JSON.stringify({ lat: latitude, lng: longitude }))
+      toast.success('Position trouvÈe !')
+      sessionStorage.setItem('flashrv_location', JSON.stringify({ lat: latitude, lng: longitude }))
       navigate(`/salons?lat=${latitude}&lng=${longitude}`)
       setIsLocating(false)
     }
@@ -165,7 +166,7 @@ function Home() {
 
       setIsLocating(false)
       // Redirect to salons page anyway so the user isn't stuck
-      toast('Position non disponible ‚Äî affichage de tous les salons.', { id: 'geo-fallback', icon: 'üìç', duration: 3000 })
+      toast('Position non disponible ó affichage de tous les salons.', { id: 'geo-fallback', icon: '??', duration: 3000 })
       navigate('/salons')
     }
 
@@ -174,6 +175,15 @@ function Home() {
       (err) => onError(err, false),
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
     )
+  }
+
+  const openFeedback = (type = 'suggestion') => {
+    setFeedbackModal({ open: true, type })
+    setFeedbackModalKey((k) => k + 1)
+  }
+
+  const closeFeedback = () => {
+    setFeedbackModal((prev) => ({ ...prev, open: false }))
   }
 
   return (
@@ -192,17 +202,17 @@ function Home() {
               transition={{ duration: reduceMotion ? 0 : 0.6 }}
             >
               <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">
-                ‚ú® Gratuit ¬∑ Sans engagement
+                ? Gratuit ∑ Sans engagement
               </span>
               <h1 className="mt-4 text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
-                R√©servez votre{' '}
+                RÈservez votre{' '}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-yellow-600">
-                  salon de beaut√©
+                  salon de beautÈ
                 </span>{' '}
                 en 30 secondes
               </h1>
               <p className="mt-5 text-lg text-gray-600 max-w-xl leading-relaxed">
-                Trouvez un salon v√©rifi√© pr√®s de chez vous, comparez les services et tarifs, et r√©servez en ligne ‚Äî sans appel ni attente.
+                Trouvez un salon vÈrifiÈ prËs de chez vous, comparez les services et tarifs, et rÈservez en ligne ó sans appel ni attente.
               </p>
 
               <form onSubmit={handleSearch} className="mt-8 bg-white/95 rounded-3xl p-4 shadow-[0_28px_70px_-40px_rgba(15,23,42,0.6)] border border-white/70 backdrop-blur">
@@ -246,7 +256,7 @@ function Home() {
                                   <p className="text-xs text-gray-500">{salon.city || salon.address}</p>
                                 </div>
                                 <span className="text-xs font-semibold text-gray-600">
-                                  {salon.reviewCount ? `${Number(salon.rating || 0).toFixed(1)}‚òÖ` : 'Nouveau'}
+                                  {salon.reviewCount ? `${Number(salon.rating || 0).toFixed(1)}?` : 'Nouveau'}
                                 </span>
                               </div>
                             </button>
@@ -317,8 +327,8 @@ function Home() {
                 )}
               <div className="mt-6 flex flex-wrap items-center gap-3 text-xs text-gray-600">
                 {[
-                  { icon: <FiShield className="w-4 h-4" />, label: 'Paiement s√©curis√©' },
-                  { icon: <FiCheck className="w-4 h-4" />, label: 'Salons v√©rifi√©s' },
+                  { icon: <FiShield className="w-4 h-4" />, label: 'Paiement sÈcurisÈ' },
+                  { icon: <FiCheck className="w-4 h-4" />, label: 'Salons vÈrifiÈs' },
                   { icon: <FiStar className="w-4 h-4" />, label: 'Avis clients authentiques' },
                 ].map((item) => (
                   <div
@@ -350,7 +360,7 @@ function Home() {
                     <span className="font-semibold text-gray-900">4.9</span>
                     <span className="text-xs text-gray-500">+{totalReviews} avis</span>
                   </div>
-                  <p className="text-xs text-gray-500 mt-2">Salons pl√©biscit√©s par la communaut√©</p>
+                  <p className="text-xs text-gray-500 mt-2">Salons plÈbiscitÈs par la communautÈ</p>
                 </div>
               </div>
             </motion.div>
@@ -388,12 +398,12 @@ function Home() {
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-10">
             <div>
               <span className="inline-block px-4 py-2 bg-amber-100 text-amber-700 rounded-full text-sm font-medium mb-4">
-                S√©lection premium
+                SÈlection premium
               </span>
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
                 Salons en vedette
               </h2>
-              <p className="mt-2 text-gray-600">Les meilleurs salons pour d√©marrer votre exp√©rience.</p>
+              <p className="mt-2 text-gray-600">Les meilleurs salons pour dÈmarrer votre expÈrience.</p>
             </div>
             <Link
               to="/salons"
@@ -429,12 +439,12 @@ function Home() {
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-10">
             <div>
               <span className="inline-block px-4 py-2 bg-amber-50 text-amber-700 rounded-full text-sm font-medium mb-4">
-                <span className="mr-1">üõçÔ∏è</span> Shopping
+                <span className="mr-1">???</span> Shopping
               </span>
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
                 Boutiques en vedette
               </h2>
-              <p className="mt-2 text-gray-600">D√©couvrez les boutiques partenaires et commandez en ligne.</p>
+              <p className="mt-2 text-gray-600">DÈcouvrez les boutiques partenaires et commandez en ligne.</p>
             </div>
             <Link
               to="/salons?businessType=BOUTIQUE"
@@ -473,7 +483,7 @@ function Home() {
               <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">
                 Services populaires
               </span>
-              <h2 className="mt-3 text-2xl md:text-3xl font-bold text-gray-900">Explorez par cat√©gorie</h2>
+              <h2 className="mt-3 text-2xl md:text-3xl font-bold text-gray-900">Explorez par catÈgorie</h2>
               <p className="text-gray-600 mt-1">Choisissez votre service en un clic.</p>
             </div>
             <motion.button
@@ -514,7 +524,7 @@ function Home() {
                       <div className="mt-4 font-semibold text-gray-900 group-hover:text-amber-700">
                         {cat.name}
                       </div>
-                      <div className="text-sm text-gray-500 mt-1">D√©couvrir</div>
+                      <div className="text-sm text-gray-500 mt-1">DÈcouvrir</div>
                     </div>
                   </Link>
                 </motion.div>
@@ -532,7 +542,7 @@ function Home() {
               Simple & Rapide
             </span>
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
-              Comment √ßa marche ?
+              Comment Áa marche ?
             </h2>
           </div>
           <div className="relative">
@@ -574,15 +584,15 @@ function Home() {
               Pour les professionnels
             </span>
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              D√©veloppez votre salon avec StyleFlow
+              DÈveloppez votre salon avec StyleFlow
             </h2>
             <p className="text-gray-400 max-w-xl mx-auto mb-6 leading-relaxed">
-              Inscription gratuite. Sans commission. Gardez le contr√¥le total sur votre planning et votre client√®le.
+              Inscription gratuite. Sans commission. Gardez le contrÙle total sur votre planning et votre clientËle.
             </p>
             <div className="flex flex-wrap justify-center gap-4 mb-8 text-sm text-gray-300">
               {[
-                'Profil v√©rifi√© & visible',
-                'R√©servations en ligne 24/7',
+                'Profil vÈrifiÈ & visible',
+                'RÈservations en ligne 24/7',
                 'Rappels automatiques',
                 'Tableau de bord & stats',
               ].map((b) => (
@@ -616,12 +626,12 @@ function Home() {
               Votre avis compte
             </span>
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
-              Aidez-nous √† am√©liorer
+              Aidez-nous ‡ amÈliorer
             </h2>
           </motion.div>
           <div className="bg-white rounded-3xl border border-gray-100 shadow-lg p-8 text-center">
             <p className="text-gray-600">
-              Partagez un bug, une suggestion ou une am√©lioration. Nous lisons chaque retour.
+              Partagez un bug, une suggestion ou une amÈlioration. Nous lisons chaque retour.
             </p>
             <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
               <button
@@ -629,7 +639,7 @@ function Home() {
                 onClick={() => openFeedback('suggestion')}
                 className="btn-primary"
               >
-                Proposer une am√©lioration
+                Proposer une amÈlioration
               </button>
               <button
                 type="button"
@@ -639,38 +649,41 @@ function Home() {
                 Signaler un bug
               </button>
             </div>
-            <p className="text-xs text-gray-400 mt-4">R√©ponse sous 24‚Äì48h ouvr√©es.</p>
+            <p className="text-xs text-gray-400 mt-4">RÈponse sous 24ñ48h ouvrÈes.</p>
           </div>
-
-          <AnimatePresence>
-            {feedbackModal.open && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: reduceMotion ? 0 : 0.2 }}
-                className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
-                onClick={closeFeedback}
-              >
-                <motion.div
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  exit={{ y: 20, opacity: 0 }}
-                  transition={{ duration: reduceMotion ? 0 : 0.25 }}
-                  className="w-full max-w-3xl"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <FeedbackWidget
-                    key={feedbackModalKey}
-                    defaultType={feedbackModal.type}
-                    onClose={closeFeedback}
-                  />
-                </motion.div>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
       </section>
+
+      {createPortal(
+        <AnimatePresence>
+          {feedbackModal.open && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: reduceMotion ? 0 : 0.2 }}
+              className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+              onClick={closeFeedback}
+            >
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: 20, opacity: 0 }}
+                transition={{ duration: reduceMotion ? 0 : 0.25 }}
+                className="w-full max-w-3xl"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <FeedbackWidget
+                  key={feedbackModalKey}
+                  defaultType={feedbackModal.type}
+                  onClose={closeFeedback}
+                />
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   )
 }
@@ -685,7 +698,7 @@ function FeedbackWidget({ onClose, defaultType = 'suggestion' }) {
     idea: '',
     benefit: '',
     problem: '',
-    impact: 'g√™nant',
+    impact: 'gÍnant',
     contact: ''
   })
   const [errors, setErrors] = useState({})
@@ -697,22 +710,13 @@ function FeedbackWidget({ onClose, defaultType = 'suggestion' }) {
   }, [defaultType])
 
   const types = [
-    { id: 'bug', label: 'Bug', icon: <FiAlertTriangle className="w-4 h-4" />, hint: 'Signalez un dysfonctionnement pr√©cis.' },
-    { id: 'suggestion', label: 'Suggestion', icon: <FiMessageSquare className="w-4 h-4" />, hint: 'Proposez une am√©lioration utile.' },
-    { id: 'problem', label: 'Probl√®me', icon: <FiZap className="w-4 h-4" />, hint: 'Indiquez un point bloquant ou frustrant.' }
+    { id: 'bug', label: 'Bug', icon: <FiAlertTriangle className="w-4 h-4" />, hint: 'Signalez un dysfonctionnement prÈcis.' },
+    { id: 'suggestion', label: 'Suggestion', icon: <FiMessageSquare className="w-4 h-4" />, hint: 'Proposez une amÈlioration utile.' },
+    { id: 'problem', label: 'ProblËme', icon: <FiZap className="w-4 h-4" />, hint: 'Indiquez un point bloquant ou frustrant.' }
   ]
 
   const updateField = (key, value) => {
     setForm((prev) => ({ ...prev, [key]: value }))
-  }
-
-  const openFeedback = (type = 'suggestion') => {
-    setFeedbackModal({ open: true, type })
-    setFeedbackModalKey((k) => k + 1)
-  }
-
-  const closeFeedback = () => {
-    setFeedbackModal((prev) => ({ ...prev, open: false }))
   }
 
   const validate = () => {
@@ -734,7 +738,7 @@ function FeedbackWidget({ onClose, defaultType = 'suggestion' }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!validate()) {
-      toast.error('Merci de compl√©ter les champs requis.')
+      toast.error('Merci de complÈter les champs requis.')
       return
     }
     const feedbackData = {
@@ -748,9 +752,9 @@ function FeedbackWidget({ onClose, defaultType = 'suggestion' }) {
       await apiFetch('/feedback', { method: 'POST', body: { type: feedbackType, payload: form, contact: form.contact } })
       setSubmitted(true)
     } catch (err) {
-      const existingFeedback = JSON.parse(localStorage.getItem('flashrv_feedback') || '[]')
-      localStorage.setItem('flashrv_feedback', JSON.stringify([...existingFeedback, feedbackData]))
-      toast.error("Erreur lors de l‚Äôenvoi. Nous avons gard√© une copie locale.")
+      const existingFeedback = JSON.parse(sessionStorage.getItem('flashrv_feedback') || '[]')
+      sessionStorage.setItem('flashrv_feedback', JSON.stringify([...existingFeedback, feedbackData]))
+      toast.error("Erreur lors de líenvoi. Nous avons gardÈ une copie locale.")
     } finally {
       setIsSubmitting(false)
     }
@@ -766,9 +770,9 @@ function FeedbackWidget({ onClose, defaultType = 'suggestion' }) {
         <div className="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
           <FiCheck className="w-8 h-8 text-white" />
         </div>
-        <h3 className="text-2xl font-bold text-gray-800 mb-2">Envoy√©</h3>
+        <h3 className="text-2xl font-bold text-gray-800 mb-2">EnvoyÈ</h3>
         <p className="text-gray-600 mb-6">
-          Merci ! Votre retour nous aide √† am√©liorer StyleFlow pour tous.
+          Merci ! Votre retour nous aide ‡ amÈliorer StyleFlow pour tous.
         </p>
         <button
           onClick={() => {
@@ -781,7 +785,7 @@ function FeedbackWidget({ onClose, defaultType = 'suggestion' }) {
               idea: '',
               benefit: '',
               problem: '',
-              impact: 'g√™nant',
+              impact: 'gÍnant',
               contact: ''
             })
             setErrors({})
@@ -838,7 +842,7 @@ function FeedbackWidget({ onClose, defaultType = 'suggestion' }) {
         {feedbackType === 'bug' && (
           <div className="grid md:grid-cols-2 gap-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Page concern√©e</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Page concernÈe</label>
               <input
                 value={form.page}
                 onChange={(e) => updateField('page', e.target.value)}
@@ -848,7 +852,7 @@ function FeedbackWidget({ onClose, defaultType = 'suggestion' }) {
               {errors.page && <p className="text-xs text-red-600 mt-1">{errors.page}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">√âtapes pour reproduire</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">…tapes pour reproduire</label>
               <input
                 value={form.steps}
                 onChange={(e) => updateField('steps', e.target.value)}
@@ -858,7 +862,7 @@ function FeedbackWidget({ onClose, defaultType = 'suggestion' }) {
               {errors.steps && <p className="text-xs text-red-600 mt-1">{errors.steps}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">R√©sultat attendu</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">RÈsultat attendu</label>
               <textarea
                 value={form.expected}
                 onChange={(e) => updateField('expected', e.target.value)}
@@ -869,13 +873,13 @@ function FeedbackWidget({ onClose, defaultType = 'suggestion' }) {
               {errors.expected && <p className="text-xs text-red-600 mt-1">{errors.expected}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">R√©sultat obtenu</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">RÈsultat obtenu</label>
               <textarea
                 value={form.actual}
                 onChange={(e) => updateField('actual', e.target.value)}
                 rows={3}
                 className="w-full resize-none px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                placeholder="Ce qui s'est r√©ellement pass√©"
+                placeholder="Ce qui s'est rÈellement passÈ"
               />
               {errors.actual && <p className="text-xs text-red-600 mt-1">{errors.actual}</p>}
             </div>
@@ -885,18 +889,18 @@ function FeedbackWidget({ onClose, defaultType = 'suggestion' }) {
         {feedbackType === 'suggestion' && (
           <div className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Votre id√©e</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Votre idÈe</label>
               <textarea
                 value={form.idea}
                 onChange={(e) => updateField('idea', e.target.value)}
                 rows={4}
                 className="w-full resize-none px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                placeholder="D√©crivez l'am√©lioration que vous aimeriez"
+                placeholder="DÈcrivez l'amÈlioration que vous aimeriez"
               />
               {errors.idea && <p className="text-xs text-red-600 mt-1">{errors.idea}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">B√©n√©fice attendu</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">BÈnÈfice attendu</label>
               <textarea
                 value={form.benefit}
                 onChange={(e) => updateField('benefit', e.target.value)}
@@ -911,13 +915,13 @@ function FeedbackWidget({ onClose, defaultType = 'suggestion' }) {
         {feedbackType === 'problem' && (
           <div className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Quel probl√®me rencontrez-vous ?</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Quel problËme rencontrez-vous ?</label>
               <textarea
                 value={form.problem}
                 onChange={(e) => updateField('problem', e.target.value)}
                 rows={4}
                 className="w-full resize-none px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                placeholder="D√©crivez ce qui vous bloque"
+                placeholder="DÈcrivez ce qui vous bloque"
               />
               {errors.problem && <p className="text-xs text-red-600 mt-1">{errors.problem}</p>}
             </div>
@@ -929,7 +933,7 @@ function FeedbackWidget({ onClose, defaultType = 'suggestion' }) {
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
               >
                 <option value="bloquant">Bloquant</option>
-                <option value="g√™nant">G√™nant</option>
+                <option value="gÍnant">GÍnant</option>
                 <option value="mineur">Mineur</option>
               </select>
               {errors.impact && <p className="text-xs text-red-600 mt-1">{errors.impact}</p>}
@@ -949,14 +953,14 @@ function FeedbackWidget({ onClose, defaultType = 'suggestion' }) {
 
         <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <p className="text-xs text-gray-400">
-            Nous r√©pondons aux probl√®mes critiques sous 48h ouvr√©es.
+            Nous rÈpondons aux problËmes critiques sous 48h ouvrÈes.
           </p>
           <button
             type="submit"
             disabled={isSubmitting}
             className="bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 px-6 rounded-xl transition-all disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? 'Envoi‚Ä¶' : 'Envoyer'}
+            {isSubmitting ? 'EnvoiÖ' : 'Envoyer'}
           </button>
         </div>
       </form>

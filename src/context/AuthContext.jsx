@@ -60,8 +60,8 @@ export function AuthProvider({ children }) {
 
   // Check for saved auth on mount et synchronise le cookie "token"
   useEffect(() => {
-    const savedUser = localStorage.getItem('flashrv_user')
-    const savedToken = localStorage.getItem('flashrv_token')
+    const savedUser = sessionStorage.getItem('flashrv_user')
+    const savedToken = sessionStorage.getItem('flashrv_token')
     // Synchronise le token dans un cookie pour Express backend
     if (savedToken) {
       document.cookie = `token=${savedToken}; path=/`;
@@ -77,8 +77,8 @@ export function AuthProvider({ children }) {
         subscribeToPush().catch(() => {})
       } catch (error) {
         console.error('Error parsing saved user:', error)
-        localStorage.removeItem('flashrv_user')
-        localStorage.removeItem('flashrv_token')
+        sessionStorage.removeItem('flashrv_user')
+        sessionStorage.removeItem('flashrv_token')
         dispatch({ type: 'SET_LOADING', payload: false })
       }
     } else {
@@ -102,8 +102,8 @@ export function AuthProvider({ children }) {
       const user = data.data?.user;
       const token = data.data?.token || null;
       if (user && token) {
-        localStorage.setItem('flashrv_user', JSON.stringify(normalizeUserShape(user)));
-        localStorage.setItem('flashrv_token', token);
+        sessionStorage.setItem('flashrv_user', JSON.stringify(normalizeUserShape(user)));
+        sessionStorage.setItem('flashrv_token', token);
         document.cookie = `token=${token}; path=/`;
         dispatch({
           type: 'LOGIN',
@@ -135,8 +135,8 @@ export function AuthProvider({ children }) {
       let user = data.data?.user;
       let token = data.data?.token || null;
       if (user && token) {
-        localStorage.setItem('flashrv_user', JSON.stringify(normalizeUserShape(user)));
-        localStorage.setItem('flashrv_token', token);
+        sessionStorage.setItem('flashrv_user', JSON.stringify(normalizeUserShape(user)));
+        sessionStorage.setItem('flashrv_token', token);
         document.cookie = `token=${token}; path=/; SameSite=Lax`;
         dispatch({
           type: 'LOGIN',
@@ -167,8 +167,8 @@ export function AuthProvider({ children }) {
     const user = data.data?.user;
     const token = data.data?.token || null;
     if (user && token) {
-      localStorage.setItem('flashrv_user', JSON.stringify(normalizeUserShape(user)));
-      localStorage.setItem('flashrv_token', token);
+      sessionStorage.setItem('flashrv_user', JSON.stringify(normalizeUserShape(user)));
+      sessionStorage.setItem('flashrv_token', token);
       // Pose le cookie token sur le domaine courant, path /, SameSite=Lax
       document.cookie = `token=${token}; path=/; SameSite=Lax`;
       dispatch({
@@ -192,9 +192,9 @@ export function AuthProvider({ children }) {
     } catch (error) {
       console.error('Logout error:', error)
     }
-    localStorage.removeItem('flashrv_user')
-    localStorage.removeItem('flashrv_token')
-    localStorage.removeItem('flashrv_booking')
+    sessionStorage.removeItem('flashrv_user')
+    sessionStorage.removeItem('flashrv_token')
+    sessionStorage.removeItem('flashrv_booking')
     disconnectRealtime()
     unsubscribeFromPush().catch(() => {})
     dispatch({ type: 'LOGOUT' })
@@ -219,8 +219,8 @@ export function AuthProvider({ children }) {
       if (!user || !token) {
         throw new Error('Utilisateur ou token Google manquant');
       }
-      localStorage.setItem('flashrv_user', JSON.stringify(normalizeUserShape(user)));
-      localStorage.setItem('flashrv_token', token);
+      sessionStorage.setItem('flashrv_user', JSON.stringify(normalizeUserShape(user)));
+      sessionStorage.setItem('flashrv_token', token);
       document.cookie = `token=${token}; path=/; SameSite=Lax`;
       dispatch({
         type: 'LOGIN',
@@ -237,14 +237,14 @@ export function AuthProvider({ children }) {
 
   // Basic checkAuth implementation
   const checkAuth = () => {
-    const user = localStorage.getItem('flashrv_user');
-    const token = localStorage.getItem('flashrv_token');
+    const user = sessionStorage.getItem('flashrv_user');
+    const token = sessionStorage.getItem('flashrv_token');
     return !!(user && token);
   };
 
   const updateUser = (userData) => {
     const updatedUser = { ...state.user, ...userData }
-    localStorage.setItem('flashrv_user', JSON.stringify(normalizeUserShape(updatedUser)))
+    sessionStorage.setItem('flashrv_user', JSON.stringify(normalizeUserShape(updatedUser)))
     dispatch({ type: 'UPDATE_USER', payload: userData })
   }
 

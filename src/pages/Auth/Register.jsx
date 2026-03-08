@@ -42,7 +42,7 @@ function Register() {
     else if (!isValidPhone(formData.phone)) newErrors.phone = 'Numéro de téléphone invalide'
     
     if (!formData.password) newErrors.password = 'Le mot de passe est requis'
-    else if (formData.password.length < 6) newErrors.password = 'Le mot de passe doit avoir au moins 6 caractères'
+    else if (formData.password.length < 8) newErrors.password = 'Le mot de passe doit avoir au moins 8 caractères'
     
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Les mots de passe ne correspondent pas'
@@ -304,7 +304,7 @@ function Register() {
                   value={formData.password}
                   onChange={(e) => handleChange('password', e.target.value)}
                   className={`input-field pr-12 ${errors.password ? 'border-red-500' : ''}`}
-                  placeholder="Minimum 6 caractères"
+                  placeholder="Minimum 8 caractères"
                   autoComplete="off"
                 />
                 <button

@@ -1,4 +1,4 @@
-Ôªøimport { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { 
@@ -162,7 +162,7 @@ function SalonDetail() {
       setCart([])
       setShowCartModal(false)
       setOrderForm({ deliveryMode: 'PICKUP', deliveryAddress: '', clientPhone: '', clientName: '', notes: '' })
-      alert('Commande envoy√©e ! Le vendeur va la confirmer.')
+      alert('Commande envoyÈe ! Le vendeur va la confirmer.')
     } catch (e) {
       alert(e.message || 'Erreur lors de la commande')
     } finally {
@@ -172,11 +172,11 @@ function SalonDetail() {
 
   const amenityIcons = {
     wifi: <FiWifi />,
-    caf√©: <FiCoffee />,
-    climatisation: '‚ùÑÔ∏è',
-    parking: 'üÖøÔ∏è',
-    'cartes accept√©es': 'üí≥',
-    spa: 'üßñ‚Äç‚ôÄÔ∏è'
+    cafÈ: <FiCoffee />,
+    climatisation: '??',
+    parking: '???',
+    'cartes acceptÈes': '??',
+    spa: '?????'
   }
 
   const handleBookNow = () => {
@@ -212,7 +212,7 @@ function SalonDetail() {
       return
     }
     if (reviewRating < 1 || reviewRating > 5) {
-      setReviewError('Veuillez s√©lectionner une note entre 1 et 5')
+      setReviewError('Veuillez sÈlectionner une note entre 1 et 5')
       return
     }
     setReviewSubmitting(true)
@@ -300,7 +300,7 @@ function SalonDetail() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Salon non trouv√©</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Salon non trouvÈ</h2>
           <Link to="/salons" className="btn-primary">Retour aux salons</Link>
         </div>
       </div>
@@ -312,14 +312,14 @@ function SalonDetail() {
   const minPrice = salon.minPrice ?? servicesMinPrice
   const maxPrice = salon.maxPrice ?? servicesMaxPrice
   const priceLabel = formatPriceRange(minPrice, maxPrice)
-  const priceText = priceLabel === '‚Äî' ? 'Tarifs sur place' : priceLabel
+  const priceText = priceLabel === 'ó' ? 'Tarifs sur place' : priceLabel
   const reviewCount = salon.reviewCount ?? salonReviews.length
   const computedRating = typeof salon.rating === 'number'
     ? salon.rating
     : (reviewCount ? salonReviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviewCount : 0)
   const hasRating = reviewCount > 0 && computedRating > 0
   const ratingLabel = hasRating ? computedRating.toFixed(1) : 'Nouveau'
-  const ratingHint = hasRating ? `${reviewCount} avis` : 'Soyez le premier √† noter'
+  const ratingHint = hasRating ? `${reviewCount} avis` : 'Soyez le premier ‡ noter'
   const activeServiceImages = activeService ? getServiceImages(activeService) : []
 
   return (
@@ -343,7 +343,7 @@ function SalonDetail() {
         ) : null}
         <div className={`img-fallback w-full h-full flex flex-col items-center justify-center text-slate-400 absolute inset-0 ${galleryImages.length > 0 ? 'hidden' : ''}`}>
           <svg className="w-16 h-16 mb-3 text-slate-300" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" /></svg>
-          <span className="text-sm font-medium">Photo bient√¥t disponible</span>
+          <span className="text-sm font-medium">Photo bientÙt disponible</span>
         </div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.18),_transparent_55%)]" />
@@ -353,7 +353,7 @@ function SalonDetail() {
             <button
               onClick={() => setCurrentImageIndex(prev => prev === 0 ? galleryImages.length - 1 : prev - 1)}
               className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 rounded-full flex items-center justify-center hover:bg-white"
-              aria-label="Image pr√©c√©dente"
+              aria-label="Image prÈcÈdente"
             >
               <FiChevronLeft className="w-6 h-6" />
             </button>
@@ -425,7 +425,7 @@ function SalonDetail() {
                       ) : (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-600">
                           <span className="w-2 h-2 rounded-full bg-red-400" />
-                          Ferm√©
+                          FermÈ
                         </span>
                       )
                     ) : null}
@@ -454,7 +454,7 @@ function SalonDetail() {
                 <span className="px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">
                   {isBoutique ? `${boutiqueProducts.length} article${boutiqueProducts.length > 1 ? 's' : ''}` : `${services.length} services`}
                 </span>
-                {priceLabel !== '‚Äî' && (
+                {priceLabel !== 'ó' && (
                   <span className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700">
                     {priceLabel}
                   </span>
@@ -465,7 +465,7 @@ function SalonDetail() {
                   </span>
                 ) : (
                   <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700">
-                    Soyez le premier √† noter
+                    Soyez le premier ‡ noter
                   </span>
                 )}
               </div>
@@ -483,7 +483,7 @@ function SalonDetail() {
               <div className="flex flex-wrap gap-3">
                 {(salon.amenities || []).map((amenity, i) => (
                   <div key={i} className="flex items-center space-x-1 text-gray-600 text-sm">
-                    <span>{amenityIcons[amenity] || '‚úì'}</span>
+                    <span>{amenityIcons[amenity] || '?'}</span>
                     <span className="capitalize">{amenity}</span>
                   </div>
                 ))}
@@ -505,7 +505,7 @@ function SalonDetail() {
                   >
                     {tab === 'services' && 'Services'}
                     {tab === 'articles' && 'Articles'}
-                    {tab === 'equipe' && '√âquipe'}
+                    {tab === 'equipe' && '…quipe'}
                     {tab === 'avis' && `Avis (${salonReviews.length})`}
                   </button>
                 ))}
@@ -549,7 +549,7 @@ function SalonDetail() {
                                 </div>
                                 <div className="flex items-center gap-3">
                                   <span className="font-semibold text-primary-600">{formatPrice(service.price)}</span>
-                                  <span className="text-xs text-gray-400 group-hover:text-primary-600">Voir d√©tails</span>
+                                  <span className="text-xs text-gray-400 group-hover:text-primary-600">Voir dÈtails</span>
                                 </div>
                               </button>
                             )
@@ -639,8 +639,8 @@ function SalonDetail() {
                         <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                           <FiUsers className="w-8 h-8 text-gray-400" />
                         </div>
-                        <p className="text-gray-500 mb-2">√âquipe non renseign√©e</p>
-                        <p className="text-sm text-gray-400">Les membres de l'√©quipe seront bient√¥t ajout√©s.</p>
+                        <p className="text-gray-500 mb-2">…quipe non renseignÈe</p>
+                        <p className="text-sm text-gray-400">Les membres de l'Èquipe seront bientÙt ajoutÈs.</p>
                       </div>
                     ) : (
                     <div className="grid md:grid-cols-2 gap-4">
@@ -679,9 +679,9 @@ function SalonDetail() {
                               <p className="text-sm text-gray-500 truncate">{coiffeur.specialty || 'Expert'}</p>
                               <div className="flex items-center gap-2 mt-2 text-sm">
                                 <FiStar className="w-4 h-4 text-yellow-500 fill-current" />
-                                <span className="font-semibold text-gray-700">{rating != null ? rating.toFixed(1) : '‚Äî'}</span>
-                                <span className="text-gray-300">‚Ä¢</span>
-                                <span className="text-gray-500">{coiffeur.experience || '‚Äî'}</span>
+                                <span className="font-semibold text-gray-700">{rating != null ? rating.toFixed(1) : 'ó'}</span>
+                                <span className="text-gray-300">ï</span>
+                                <span className="text-gray-500">{coiffeur.experience || 'ó'}</span>
                               </div>
                             </div>
                           </div>
@@ -699,13 +699,13 @@ function SalonDetail() {
                     <div className="bg-gray-50 rounded-2xl p-5 border border-gray-100">
                       <div className="flex items-center justify-between mb-4">
                         <h4 className="font-semibold text-gray-900">Laisser un avis</h4>
-                        <span className="text-xs text-gray-500">Votre avis aide la communaut√©</span>
+                        <span className="text-xs text-gray-500">Votre avis aide la communautÈ</span>
                       </div>
 
                       {!isAuthenticated ? (
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                           <p className="text-sm text-gray-600">
-                            Connectez-vous pour noter ce salon et partager votre exp√©rience.
+                            Connectez-vous pour noter ce salon et partager votre expÈrience.
                           </p>
                           <button
                             onClick={() => navigate('/login', { state: { from: { pathname: `/salons/${id}` } } })}
@@ -728,7 +728,7 @@ function SalonDetail() {
                                     onMouseLeave={() => setHoverRating(0)}
                                     onClick={() => setReviewRating(star)}
                                     className="p-1"
-                                    aria-label={`Noter ${star} √©toile${star > 1 ? 's' : ''}`}
+                                    aria-label={`Noter ${star} Ètoile${star > 1 ? 's' : ''}`}
                                   >
                                     <FiStar className={`${active ? 'text-yellow-500 fill-current' : 'text-gray-300'} w-6 h-6`} />
                                   </button>
@@ -743,7 +743,7 @@ function SalonDetail() {
                             rows={4}
                             value={reviewComment}
                             onChange={(e) => setReviewComment(e.target.value)}
-                            placeholder="D√©crivez votre exp√©rience : accueil, ponctualit√©, r√©sultat, ambiance."
+                            placeholder="DÈcrivez votre expÈrience : accueil, ponctualitÈ, rÈsultat, ambiance."
                             className="w-full resize-none rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                           />
                           {reviewError && (
@@ -769,7 +769,7 @@ function SalonDetail() {
                           <FiStar className="w-8 h-8 text-gray-400" />
                         </div>
                         <p className="text-gray-500 mb-2">Aucun avis pour le moment</p>
-                        <p className="text-sm text-gray-400">Soyez le premier √† laisser un avis apr√®s votre visite !</p>
+                        <p className="text-sm text-gray-400">Soyez le premier ‡ laisser un avis aprËs votre visite !</p>
                       </div>
                     ) : (
                       salonReviews.map(review => {
@@ -787,13 +787,13 @@ function SalonDetail() {
                               <div className="flex items-center space-x-2">
                                 <h4 className="font-medium text-gray-900">{reviewerName}</h4>
                                 {review.verified && (
-                                  <span className="bg-green-100 text-green-600 text-xs px-2 py-0.5 rounded-full">V√©rifi√©</span>
+                                  <span className="bg-green-100 text-green-600 text-xs px-2 py-0.5 rounded-full">VÈrifiÈ</span>
                                 )}
                               </div>
                               <div className="flex items-center space-x-2">
                                 <div className="flex text-yellow-500">
                                   {[...Array(review.rating)].map((_, i) => (
-                                    <span key={i}>‚òÖ</span>
+                                    <span key={i}>?</span>
                                   ))}
                                 </div>
                                 <span className="text-sm text-gray-400">{reviewDate}</span>
@@ -835,7 +835,7 @@ function SalonDetail() {
                       </div>
                       {cart.map(c => (
                         <div key={c.product.id} className="flex items-center justify-between text-sm py-1">
-                          <span className="text-gray-700">{c.product.name} √ó {c.quantity}</span>
+                          <span className="text-gray-700">{c.product.name} ◊ {c.quantity}</span>
                           <span className="text-gray-500">{formatPrice(c.product.price * c.quantity)}</span>
                         </div>
                       ))}
@@ -852,10 +852,10 @@ function SalonDetail() {
               ) : (
                 <>
                   <div className="text-center mb-6">
-                    <span className="text-xs uppercase tracking-wide text-gray-500">√Ä partir de</span>
+                    <span className="text-xs uppercase tracking-wide text-gray-500">¿ partir de</span>
                     <p className="text-3xl font-extrabold text-gray-900 mt-1">{priceText}</p>
                     <p className="text-xs text-gray-500 mt-2">
-                      {services.length} service{services.length > 1 ? 's' : ''} ¬∑ {ratingHint}
+                      {services.length} service{services.length > 1 ? 's' : ''} ∑ {ratingHint}
                     </p>
                   </div>
 
@@ -863,7 +863,7 @@ function SalonDetail() {
                     onClick={handleBookNow}
                     className="w-full mb-4 rounded-xl bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white font-semibold py-3.5 shadow-lg hover:shadow-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
                   >
-                    R√©server maintenant
+                    RÈserver maintenant
                   </button>
                 </>
               )}
@@ -876,7 +876,7 @@ function SalonDetail() {
                   rel="noopener noreferrer"
                   className="w-full flex items-center justify-center space-x-2 py-3 bg-green-500 hover:bg-green-600 text-white font-medium rounded-full transition-colors mb-4"
                 >
-                  <span>üí¨</span>
+                  <span>??</span>
                   <span>Contacter sur WhatsApp</span>
                 </a>
               )}
@@ -918,7 +918,7 @@ function SalonDetail() {
               {salon.paymentMethods?.length > 0 && (
                 <div className="mb-6">
                   <h4 className="font-medium text-gray-900 mb-3 flex items-center text-sm">
-                    üí≥ Moyens de paiement accept√©s
+                    ?? Moyens de paiement acceptÈs
                   </h4>
                   <div className="flex flex-wrap gap-2">
                     {salon.paymentMethods.map((pm) => {
@@ -927,7 +927,7 @@ function SalonDetail() {
                         WAVE: { label: 'Wave', color: 'bg-blue-50 text-blue-700' },
                         ORANGE_MONEY: { label: 'Orange Money', color: 'bg-orange-50 text-orange-700' },
                         FREE_MONEY: { label: 'Free Money', color: 'bg-green-50 text-green-700' },
-                        CASH: { label: 'Esp√®ces', color: 'bg-gray-100 text-gray-700' },
+                        CASH: { label: 'EspËces', color: 'bg-gray-100 text-gray-700' },
                         CARD: { label: 'Carte bancaire', color: 'bg-purple-50 text-purple-700' },
                       }
                       const info = labels[method] || { label: method, color: 'bg-gray-100 text-gray-600' }
@@ -949,7 +949,7 @@ function SalonDetail() {
                     <div key={day} className="flex justify-between">
                       <span className="text-gray-600">{getDayName(day)}</span>
                       <span className={hours ? 'text-gray-900' : 'text-red-500'}>
-                        {hours ? `${hours.open} - ${hours.close}` : 'Ferm√©'}
+                        {hours ? `${hours.open} - ${hours.close}` : 'FermÈ'}
                       </span>
                     </div>
                   ))}
@@ -1073,7 +1073,7 @@ function SalonDetail() {
                     onClick={() => handleReserveService(activeService)}
                     className="w-full btn-primary"
                   >
-                    R√©server ce service
+                    RÈserver ce service
                   </button>
                   <button
                     onClick={() => setActiveService(null)}
@@ -1107,7 +1107,7 @@ function SalonDetail() {
               onClick={handleBookNow}
               className="flex-shrink-0 rounded-xl bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white font-semibold py-3 px-6 shadow-lg text-sm"
             >
-              R√©server
+              RÈserver
             </button>
           )}
         </div>
@@ -1131,7 +1131,7 @@ function SalonDetail() {
                 <div key={c.product.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
                   <div>
                     <p className="font-semibold text-gray-900">{c.product.name}</p>
-                    <p className="text-sm text-gray-500">{formatPrice(c.product.price)} √ó {c.quantity}</p>
+                    <p className="text-sm text-gray-500">{formatPrice(c.product.price)} ◊ {c.quantity}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <button onClick={() => removeFromCart(c.product.id)} className="w-8 h-8 rounded-full bg-white border flex items-center justify-center"><FiMinus className="w-4 h-4" /></button>
@@ -1180,12 +1180,12 @@ function SalonDetail() {
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">T√©l√©phone</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">TÈlÈphone</label>
                 <input
                   value={orderForm.clientPhone}
                   onChange={e => setOrderForm(f => ({ ...f, clientPhone: e.target.value }))}
                   className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
-                  placeholder="Num√©ro de t√©l√©phone"
+                  placeholder="NumÈro de tÈlÈphone"
                 />
               </div>
 
@@ -1196,7 +1196,7 @@ function SalonDetail() {
                   onChange={e => setOrderForm(f => ({ ...f, notes: e.target.value }))}
                   rows={2}
                   className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
-                  placeholder="Instructions sp√©ciales‚Ä¶"
+                  placeholder="Instructions spÈcialesÖ"
                 />
               </div>
 
@@ -1205,7 +1205,7 @@ function SalonDetail() {
                 disabled={orderSubmitting || cart.length === 0}
                 className="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-60"
               >
-                {orderSubmitting ? 'Envoi en cours‚Ä¶' : `Confirmer la commande (${formatPrice(cartTotal)})`}
+                {orderSubmitting ? 'Envoi en coursÖ' : `Confirmer la commande (${formatPrice(cartTotal)})`}
               </button>
             </div>
           </div>

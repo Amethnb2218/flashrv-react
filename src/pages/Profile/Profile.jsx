@@ -502,7 +502,7 @@ function Profile() {
                             method: 'PUT',
                             headers: {
                               'Content-Type': 'application/json',
-                              'Authorization': `Bearer ${localStorage.getItem('flashrv_token')}`
+                              'Authorization': `Bearer ${sessionStorage.getItem('flashrv_token')}`
                             },
                             body: JSON.stringify(notifications)
                           })

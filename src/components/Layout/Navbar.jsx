@@ -1,4 +1,4 @@
-ï»¿import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
@@ -68,7 +68,7 @@ function Navbar() {
               </a>
               <span className="flex items-center space-x-1.5">
                 <FiMapPin className="w-3 h-3 text-amber-400" />
-                <span>Dakar, SÃ©nÃ©gal</span>
+                <span>Dakar, Sénégal</span>
               </span>
             </div>
             <div className="flex items-center space-x-4">
@@ -78,7 +78,7 @@ function Navbar() {
               </span>
               <span className="flex items-center space-x-1.5 bg-amber-500/20 px-2 py-0.5 rounded-full">
                 <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span>
-                <span className="text-amber-400 font-medium">RÃ©servation 24h/24</span>
+                <span className="text-amber-400 font-medium">Réservation 24h/24</span>
               </span>
             </div>
           </div>
@@ -128,14 +128,6 @@ function Navbar() {
               >
                 Boutiques
               </Link>
-              
-              <button
-                onClick={() => navigate('/salons?focus=search')}
-                className="flex items-center space-x-2 px-3 py-2 text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
-              >
-                <FiSearch className="w-4 h-4" />
-                <span className="text-sm">Rechercher</span>
-              </button>
             </div>
 
             {/* Right side */}
@@ -194,7 +186,7 @@ function Navbar() {
                           className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
                         >
                           <FiCalendar className="w-4 h-4" />
-                          <span>{user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' ? 'Dashboard admin' : user.role === 'PRO' ? 'Mon dashboard' : 'Mes rÃ©servations'}</span>
+                          <span>{user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' ? 'Dashboard admin' : user.role === 'PRO' ? 'Mon dashboard' : 'Mes réservations'}</span>
                         </Link>
                         
                         <Link
@@ -203,7 +195,7 @@ function Navbar() {
                           className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
                         >
                           <FiSettings className="w-4 h-4" />
-                          <span>ParamÃ¨tres</span>
+                          <span>Paramètres</span>
                         </Link>
                         
                         <button
@@ -211,7 +203,7 @@ function Navbar() {
                           className="flex items-center space-x-2 px-4 py-2 text-red-600 hover:bg-red-50 w-full transition-colors"
                         >
                           <FiLogOut className="w-4 h-4" />
-                          <span>DÃ©connexion</span>
+                          <span>Déconnexion</span>
                         </button>
                       </motion.div>
                     )}
@@ -247,7 +239,7 @@ function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Drawer â€” rendered via Portal outside nav for stable positioning */}
+      {/* Mobile Drawer — rendered via Portal outside nav for stable positioning */}
       {createPortal(
         <AnimatePresence mode="wait">
           {isOpen && (
@@ -358,7 +350,7 @@ function Navbar() {
                         className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                       >
                         <FiCalendar className="w-5 h-5" />
-                        <span>{user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' ? 'Dashboard admin' : user.role === 'PRO' ? 'Mon dashboard' : 'Mes rÃ©servations'}</span>
+                        <span>{user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' ? 'Dashboard admin' : user.role === 'PRO' ? 'Mon dashboard' : 'Mes réservations'}</span>
                       </Link>
                       <Link
                         to="/profile"
@@ -366,7 +358,7 @@ function Navbar() {
                         className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                       >
                         <FiSettings className="w-5 h-5" />
-                        <span>ParamÃ¨tres</span>
+                        <span>Paramètres</span>
                       </Link>
                     </div>
                   ) : (
@@ -389,7 +381,7 @@ function Navbar() {
                   )}
                 </div>
 
-                {/* Drawer footer â€” logout */}
+                {/* Drawer footer — logout */}
                 {isAuthenticated && (
                   <div className="border-t border-gray-100 px-4 py-4">
                     <button
@@ -397,7 +389,7 @@ function Navbar() {
                       className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
                     >
                       <FiLogOut className="w-5 h-5" />
-                      <span>DÃ©connexion</span>
+                      <span>Déconnexion</span>
                     </button>
                   </div>
                 )}
