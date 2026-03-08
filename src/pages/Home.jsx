@@ -76,27 +76,27 @@ function Home() {
       : 'Nouveau')
     : '—'
   const stats = [
-    { value: `${onlySalons.length}`, label: 'Salons partenaires' },
-    { value: `${onlyBoutiques.length}`, label: 'Boutiques' },
-    { value: `${totalReviews}`, label: 'Avis clients' },
-    { value: avgRating, label: 'Note moyenne' }
-  ]
+    { value: `${onlySalons.length}`, label: 'Salons partenaires', show: onlySalons.length > 0 },
+    { value: `${onlyBoutiques.length}`, label: 'Boutiques', show: onlyBoutiques.length > 0 },
+    { value: `${totalReviews}`, label: 'Avis clients', show: totalReviews > 0 },
+    { value: avgRating, label: 'Note moyenne', show: avgRating !== 'Nouveau' && avgRating !== '—' }
+  ].filter(s => s.show)
 
   const steps = [
     {
       icon: <FiSearch className="w-6 h-6" />,
       title: 'Recherchez',
-      description: 'Trouvez le salon idéal près de chez vous, selon vos critères.'
+      description: 'Filtrez par quartier, spécialité, avis ou disponibilité. Comparez les prix et photos en un coup d\'œil.'
     },
     {
       icon: <FiCalendar className="w-6 h-6" />,
       title: 'Réservez',
-      description: "Choisissez vos services, la date et l'heure qui vous conviennent."
+      description: 'Choisissez vos services, votre coiffeur et un créneau libre. Confirmation instantanée, zéro appel téléphonique.'
     },
     {
       icon: <FiStar className="w-6 h-6" />,
       title: 'Profitez',
-      description: "Rendez-vous au salon et profitez d'une expérience premium."
+      description: 'Rappel automatique avant le rendez-vous. Après votre visite, notez le salon pour aider la communauté.'
     }
   ]
 
@@ -192,16 +192,17 @@ function Home() {
               transition={{ duration: reduceMotion ? 0 : 0.6 }}
             >
               <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">
-                Réservez. Brillez.
+                ✨ Gratuit · Sans engagement
               </span>
               <h1 className="mt-4 text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
-                Salons & Boutiques,{' '}
+                Réservez votre{' '}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-yellow-600">
-                  en quelques clics
-                </span>
+                  salon de beauté
+                </span>{' '}
+                en 30 secondes
               </h1>
               <p className="mt-5 text-lg text-gray-600 max-w-xl leading-relaxed">
-                StyleFlow connecte clients, salons et boutiques. Réservez un rendez-vous ou commandez vos articles préférés en toute simplicité.
+                Trouvez un salon vérifié près de chez vous, comparez les services et tarifs, et réservez en ligne — sans appel ni attente.
               </p>
 
               <form onSubmit={handleSearch} className="mt-8 bg-white/95 rounded-3xl p-4 shadow-[0_28px_70px_-40px_rgba(15,23,42,0.6)] border border-white/70 backdrop-blur">
@@ -304,7 +305,8 @@ function Home() {
                 </div>
               </form>
 
-                <div className="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-2xl">
+                {stats.length > 0 && (
+                <div className={`mt-10 grid gap-4 max-w-2xl ${stats.length >= 4 ? 'grid-cols-2 sm:grid-cols-4' : stats.length === 3 ? 'grid-cols-3' : stats.length === 2 ? 'grid-cols-2' : 'grid-cols-1'}`}>
                   {stats.map((stat, i) => (
                     <div key={i} className="bg-white/80 border border-gray-100 rounded-2xl p-4 text-center shadow-sm">
                       <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
@@ -312,6 +314,7 @@ function Home() {
                     </div>
                   ))}
                 </div>
+                )}
               <div className="mt-6 flex flex-wrap items-center gap-3 text-xs text-gray-600">
                 {[
                   { icon: <FiShield className="w-4 h-4" />, label: 'Paiement sécurisé' },
@@ -571,11 +574,24 @@ function Home() {
               Pour les professionnels
             </span>
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Vous êtes professionnel de la beauté ?
+              Développez votre salon avec StyleFlow
             </h2>
-            <p className="text-gray-400 max-w-xl mx-auto mb-8 leading-relaxed">
-              Rejoignez StyleFlow et développez votre activité. Plus de visibilité, gestion simple, clients fidélisés.
+            <p className="text-gray-400 max-w-xl mx-auto mb-6 leading-relaxed">
+              Inscription gratuite. Sans commission. Gardez le contrôle total sur votre planning et votre clientèle.
             </p>
+            <div className="flex flex-wrap justify-center gap-4 mb-8 text-sm text-gray-300">
+              {[
+                'Profil vérifié & visible',
+                'Réservations en ligne 24/7',
+                'Rappels automatiques',
+                'Tableau de bord & stats',
+              ].map((b) => (
+                <div key={b} className="flex items-center gap-2">
+                  <FiCheck className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                  <span>{b}</span>
+                </div>
+              ))}
+            </div>
             <Link
               to="/register?role=pro"
               className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-gray-900 font-bold py-4 px-8 rounded-full transition-all hover:shadow-lg"

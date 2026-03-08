@@ -209,14 +209,14 @@ function SiteAssistantWidget() {
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className={`fixed right-4 z-50 inline-flex items-center gap-2 rounded-full border border-cyan-200/60 bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-[0_14px_40px_rgba(37,99,235,0.45)] transition hover:scale-[1.02] sm:right-6 ${
+          className={`fixed right-4 z-50 inline-flex items-center gap-1.5 rounded-full border border-slate-200/80 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 shadow-md transition hover:shadow-lg hover:bg-slate-50 sm:right-6 ${
             isBookingPage
               ? 'bottom-[calc(env(safe-area-inset-bottom)+6rem)] sm:bottom-[calc(env(safe-area-inset-bottom)+1rem)]'
-              : 'bottom-[calc(env(safe-area-inset-bottom)+1rem)]'
+              : 'bottom-[calc(env(safe-area-inset-bottom)+5rem)] lg:bottom-[calc(env(safe-area-inset-bottom)+1rem)]'
           }`}
         >
-          <FiHelpCircle className="h-4 w-4" />
-          Assistant
+          <FiHelpCircle className="h-4 w-4 text-blue-500" />
+          Aide
         </button>
       ) : null}
 
@@ -225,7 +225,7 @@ function SiteAssistantWidget() {
           className={`fixed right-4 z-[60] w-[min(92vw,390px)] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl sm:right-6 ${
             isBookingPage
               ? 'bottom-[calc(env(safe-area-inset-bottom)+6rem)] sm:bottom-[calc(env(safe-area-inset-bottom)+1rem)]'
-              : 'bottom-[calc(env(safe-area-inset-bottom)+1rem)]'
+              : 'bottom-[calc(env(safe-area-inset-bottom)+5rem)] lg:bottom-[calc(env(safe-area-inset-bottom)+1rem)]'
           }`}
         >
           <div className="flex items-center justify-between bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 px-4 py-3 text-white">

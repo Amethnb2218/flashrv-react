@@ -4,7 +4,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { 
   FiMapPin, FiPhone, FiMail, FiClock, FiStar, FiCheck, 
   FiWifi, FiCoffee, FiChevronLeft, FiChevronRight, FiShare2,
-  FiHeart, FiX, FiShoppingCart, FiBox, FiPlus, FiMinus
+  FiHeart, FiX, FiShoppingCart, FiBox, FiPlus, FiMinus, FiUsers
 } from 'react-icons/fi'
 // import { salons, servicesBySalon, coiffeursBySalon, reviews } from '../../data/salons'
 import { formatPrice, formatDuration, formatPriceRange } from '../../utils/helpers'
@@ -115,6 +115,22 @@ function SalonDetail() {
   }
 
   const isBoutique = salonData?.businessType === 'BOUTIQUE'
+
+  // Open/closed status
+  const todayDayName = (() => {
+    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+    return days[new Date().getDay()]
+  })()
+  const todayHoursDetail = useMemo(() => {
+    if (!openingHoursMap || typeof openingHoursMap !== 'object') return null
+    return openingHoursMap[todayDayName] || null
+  }, [openingHoursMap, todayDayName])
+  const isOpenNow = useMemo(() => {
+    if (!todayHoursDetail) return false
+    const now = new Date()
+    const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+    return currentTime >= todayHoursDetail.open && currentTime <= todayHoursDetail.close
+  }, [todayHoursDetail])
 
   const addToCart = (product) => {
     setCart(prev => {
@@ -400,6 +416,19 @@ function SalonDetail() {
                         <FiCheck className="w-4 h-4" />
                       </span>
                     )}
+                    {todayHoursDetail ? (
+                      isOpenNow ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                          Ouvert
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-600">
+                          <span className="w-2 h-2 rounded-full bg-red-400" />
+                          Fermé
+                        </span>
+                      )
+                    ) : null}
                   </div>
                   <div className="flex items-center space-x-4 text-gray-500">
                     <div className="flex items-center">
@@ -604,7 +633,17 @@ function SalonDetail() {
 
                 {/* Team Tab */}
                 {activeTab === 'equipe' && (
-                  <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    {coiffeurs.length === 0 ? (
+                      <div className="text-center py-12">
+                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <FiUsers className="w-8 h-8 text-gray-400" />
+                        </div>
+                        <p className="text-gray-500 mb-2">Équipe non renseignée</p>
+                        <p className="text-sm text-gray-400">Les membres de l'équipe seront bientôt ajoutés.</p>
+                      </div>
+                    ) : (
+                    <div className="grid md:grid-cols-2 gap-4">
                     {coiffeurs.map((coiffeur, idx) => {
                       const name = coiffeur.user?.name || coiffeur.name || 'Coiffeur'
                       const avatar = coiffeur.user?.picture || coiffeur.picture || coiffeur.avatar
@@ -649,6 +688,8 @@ function SalonDetail() {
                         </motion.div>
                       )
                     })}
+                  </div>
+                    )}
                   </div>
                 )}
 
@@ -872,6 +913,33 @@ function SalonDetail() {
 
               {/* Opening Hours */}
               <div className="mt-6 pt-4 border-t border-gray-100">
+
+              {/* Payment Methods */}
+              {salon.paymentMethods?.length > 0 && (
+                <div className="mb-6">
+                  <h4 className="font-medium text-gray-900 mb-3 flex items-center text-sm">
+                    💳 Moyens de paiement acceptés
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {salon.paymentMethods.map((pm) => {
+                      const method = pm.method || pm
+                      const labels = {
+                        WAVE: { label: 'Wave', color: 'bg-blue-50 text-blue-700' },
+                        ORANGE_MONEY: { label: 'Orange Money', color: 'bg-orange-50 text-orange-700' },
+                        FREE_MONEY: { label: 'Free Money', color: 'bg-green-50 text-green-700' },
+                        CASH: { label: 'Espèces', color: 'bg-gray-100 text-gray-700' },
+                        CARD: { label: 'Carte bancaire', color: 'bg-purple-50 text-purple-700' },
+                      }
+                      const info = labels[method] || { label: method, color: 'bg-gray-100 text-gray-600' }
+                      return (
+                        <span key={method} className={`px-3 py-1.5 rounded-full text-xs font-semibold ${info.color}`}>
+                          {info.label}
+                        </span>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
                 <h4 className="font-medium text-gray-900 mb-3 flex items-center">
                   <FiClock className="w-5 h-5 mr-2" />
                   Horaires d'ouverture
@@ -1019,6 +1087,34 @@ function SalonDetail() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Sticky mobile CTA bar */}
+      <div className="fixed bottom-0 inset-x-0 z-40 lg:hidden bg-white/95 backdrop-blur border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] px-4 py-3 safe-area-pb">
+        <div className="flex items-center justify-between gap-3 max-w-lg mx-auto">
+          <div className="min-w-0">
+            <p className="text-xs text-gray-500 truncate">{salon.name}</p>
+            <p className="font-bold text-gray-900">{isBoutique ? `${boutiqueProducts.length} article${boutiqueProducts.length > 1 ? 's' : ''}` : priceText}</p>
+          </div>
+          {isBoutique ? (
+            <button
+              onClick={() => cartCount > 0 ? setShowCartModal(true) : setActiveTab('articles')}
+              className="flex-shrink-0 rounded-xl bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 text-white font-semibold py-3 px-6 shadow-lg text-sm"
+            >
+              {cartCount > 0 ? `Commander (${formatPrice(cartTotal)})` : 'Voir articles'}
+            </button>
+          ) : (
+            <button
+              onClick={handleBookNow}
+              className="flex-shrink-0 rounded-xl bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white font-semibold py-3 px-6 shadow-lg text-sm"
+            >
+              Réserver
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Spacer for sticky mobile bar */}
+      <div className="h-20 lg:hidden" />
 
       {/* Cart / Order Modal (Boutique) */}
       {showCartModal && isBoutique && (

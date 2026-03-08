@@ -148,6 +148,9 @@ function SalonCard({ salon, index = 0, variant = 'featured' }) {
           }`}>
             <FiStar className={`w-4 h-4 ${hasRating ? 'text-amber-400 fill-current' : 'text-white'}`} />
             <span className="font-bold text-sm">{ratingLabel}</span>
+            {hasRating && reviewCount > 0 && (
+              <span className="text-xs text-gray-500">({reviewCount})</span>
+            )}
           </div>
         </div>
 
@@ -193,9 +196,14 @@ function SalonCard({ salon, index = 0, variant = 'featured' }) {
 
           {/* Price */}
           <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
-            <span className="text-sm text-gray-500">
-              À partir de <span className="font-bold text-gray-900">{minPriceLabel}</span>
-            </span>
+            <div>
+              <span className="text-sm text-gray-500">
+                À partir de <span className="font-bold text-gray-900">{minPriceLabel}</span>
+              </span>
+              {Array.isArray(salon.services) && salon.services.length > 0 && !isBoutique && (
+                <span className="block text-xs text-gray-400 mt-0.5">{salon.services.length} service{salon.services.length > 1 ? 's' : ''}</span>
+              )}
+            </div>
             <span className="inline-flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-full bg-gray-900 text-white shadow-sm group-hover:translate-x-1 transition-transform">
               {ctaLabel} →
             </span>

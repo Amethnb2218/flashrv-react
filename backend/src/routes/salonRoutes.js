@@ -446,6 +446,10 @@ router.get('/:id', optionalAuth, async (req, res, next) => {
         gallery: {
           orderBy: { createdAt: 'desc' },
         },
+        paymentMethods: {
+          where: { enabled: true },
+          select: { method: true },
+        },
       },
     });
 
