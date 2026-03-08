@@ -42,6 +42,7 @@ FiShoppingCart,
 FiBox,
 } from "react-icons/fi";
 import AppointmentChatModal from "../../components/Chat/AppointmentChatModal";
+import QuartierSelector from "../../components/UI/QuartierSelector";
 
 /* ----------------------------
 Constants
@@ -668,6 +669,7 @@ name: "",
 phone: "",
 whatsapp: "",
 address: "",
+neighborhood: "",
 description: "",
 image: "",
 openingHours: {
@@ -2055,6 +2057,7 @@ const applySalonSettingsFromApi = (salon) => {
     name: salon.name ?? prev.name,
     phone: salon.phone ?? prev.phone,
     whatsapp: prefs.whatsapp ?? prev.whatsapp,
+    neighborhood: salon.neighborhood ?? prev.neighborhood,
     address: salon.address ?? prev.address,
     description: salon.description ?? prev.description,
     image: salon.image ?? prev.image,
@@ -2082,6 +2085,7 @@ const saveSettings = async () => {
       name: salonSettings.name,
       phone: salonSettings.phone,
       whatsapp: salonSettings.whatsapp,
+      neighborhood: salonSettings.neighborhood,
       address: salonSettings.address,
       description: salonSettings.description,
       openingHours: openingHoursToApi(salonSettings.openingHours),
@@ -4452,6 +4456,15 @@ right={
 <Input label="Téléphone" value={salonSettings.phone} onChange={(e) => setSalonSettings((p) => ({ ...p, phone: e.target.value }))} />
 <Input label="WhatsApp" value={salonSettings.whatsapp} onChange={(e) => setSalonSettings((p) => ({ ...p, whatsapp: e.target.value }))} />
 <Input label="Adresse" value={salonSettings.address} onChange={(e) => setSalonSettings((p) => ({ ...p, address: e.target.value }))} />
+<div>
+  <label className="block text-sm font-semibold text-gray-700 mb-1">Quartier</label>
+  <QuartierSelector
+    value={salonSettings.neighborhood}
+    onChange={(v) => setSalonSettings((p) => ({ ...p, neighborhood: v }))}
+    placeholder="Sélectionner votre quartier"
+    variant="form"
+  />
+</div>
 <Textarea className="md:col-span-2" label="Description" rows={4} value={salonSettings.description} onChange={(e) => setSalonSettings((p) => ({ ...p, description: e.target.value }))} />
 <div className="md:col-span-2">
   <label className="block text-sm font-semibold text-gray-700 mb-2">Photo du salon</label>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { FiShoppingBag, FiScissors } from 'react-icons/fi';
+import QuartierSelector from '../../components/UI/QuartierSelector';
 
 const salonTypes = [
   { value: 'coiffure', label: 'Salon de coiffure' },
@@ -27,6 +28,7 @@ export default function ProOnboarding({ onComplete }) {
   const [form, setForm] = useState({
     name: '',
     type: '',
+    neighborhood: '',
     address: '',
     city: '',
     phone: '',
@@ -47,6 +49,7 @@ export default function ProOnboarding({ onComplete }) {
     if (!form.name.trim()) e.name = isBoutique ? 'Nom de la boutique requis' : 'Nom du salon requis';
     if (!form.type) e.type = 'Type requis';
     if (!form.address.trim()) e.address = 'Adresse requise';
+    if (!form.neighborhood) e.neighborhood = 'Quartier requis';
     if (!form.city.trim()) e.city = 'Ville requise';
     if (!form.phone.trim()) e.phone = 'Téléphone requis';
     setErrors(e);
@@ -67,6 +70,7 @@ export default function ProOnboarding({ onComplete }) {
           name: form.name,
           salonType: form.type,
           businessType,
+          neighborhood: form.neighborhood,
           address: form.address,
           city: form.city,
           phone: form.phone,
@@ -161,8 +165,20 @@ export default function ProOnboarding({ onComplete }) {
           <label className="block font-medium mb-1 text-gray-700" htmlFor="address">
             Adresse <span className="text-primary-500">*</span>
           </label>
-          <input id="address" className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-primary-500 outline-none transition placeholder-gray-400 text-base bg-gray-50" placeholder="Quartier, rue, point de repère..." value={form.address} onChange={e => handleChange('address', e.target.value)} autoComplete="off" />
+          <input id="address" className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-primary-500 outline-none transition placeholder-gray-400 text-base bg-gray-50" placeholder="Rue, point de repère..." value={form.address} onChange={e => handleChange('address', e.target.value)} autoComplete="off" />
           {errors.address && <div className="text-red-500 text-xs mt-1">{errors.address}</div>}
+        </div>
+        <div>
+          <label className="block font-medium mb-1 text-gray-700">
+            Quartier <span className="text-primary-500">*</span>
+          </label>
+          <QuartierSelector
+            value={form.neighborhood}
+            onChange={(v) => handleChange('neighborhood', v)}
+            placeholder="Sélectionner votre quartier"
+            variant="form"
+          />
+          {errors.neighborhood && <div className="text-red-500 text-xs mt-1">{errors.neighborhood}</div>}
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1">

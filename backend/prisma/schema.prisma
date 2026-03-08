@@ -223,6 +223,7 @@ model Salon {
   id          String   @id @default(uuid())
   name        String
   description String?
+  neighborhood String?
   address     String
   city        String
   phone       String?

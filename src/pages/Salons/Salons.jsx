@@ -1,10 +1,11 @@
-﻿import { neighborhoods, categories } from '../../data/salons'
+﻿import { categories } from '../../data/salons'
 import SalonCard from '../../components/Salon/SalonCard'
 import { useEffect, useState, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { FiSearch, FiMapPin, FiFilter, FiX, FiStar, FiCamera, FiShoppingBag } from 'react-icons/fi'
 import apiFetch from '@/api/client'
+import QuartierSelector from '../../components/UI/QuartierSelector'
 
 function Salons() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -61,7 +62,8 @@ function Salons() {
     if (filters.neighborhood) {
       const n = filters.neighborhood.toLowerCase()
       result = result.filter(s =>
-        (s.neighborhood || s.address || '').toLowerCase().includes(n)
+        (s.neighborhood || s.address || '').toLowerCase().includes(n) ||
+        (s.city || '').toLowerCase().includes(n)
       )
     }
     if (filters.category) {
@@ -286,19 +288,10 @@ function Salons() {
                   className="w-full pl-12 pr-4 py-3 rounded-xl bg-white/95 shadow-sm border border-white/30 focus:ring-2 focus:ring-amber-400 focus:border-transparent"
                 />
               </div>
-              <div className="relative">
-                <FiMapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <select
-                  value={filters.neighborhood}
-                  onChange={(e) => updateFilter('neighborhood', e.target.value)}
-                  className="w-full md:w-48 pl-12 pr-4 py-3 rounded-xl bg-white/95 shadow-sm border border-white/30 focus:ring-2 focus:ring-amber-400 focus:border-transparent appearance-none"
-                >
-                  <option value="">Tous les quartiers</option>
-                  {neighborhoods.map(n => (
-                    <option key={n} value={n}>{n}</option>
-                  ))}
-                </select>
-              </div>
+              <QuartierSelector
+                value={filters.neighborhood}
+                onChange={(v) => updateFilter('neighborhood', v)}
+              />
               <button
                 onClick={() => setShowFilters(!showFilters)}
                 className={`flex items-center justify-center space-x-2 px-6 py-3 rounded-xl font-medium transition-colors ${

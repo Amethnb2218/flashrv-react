@@ -648,12 +648,10 @@ export const coiffeursBySalon = {
 // Avis clients - Vides pour la production (les vrais avis seront collectés via l'API)
 export const reviews = []
 
-// Quartiers de Dakar
-export const neighborhoods = [
-  "Plateau", "Mermoz", "Médina", "Point E", "Grand Dakar", "Almadies",
-  "Ouakam", "Ngor", "Yoff", "Parcelles Assainies", "Grand Yoff", 
-  "Liberté", "Sacré-Cœur", "Fann", "HLM", "Pikine", "Guédiawaye"
-]
+// Quartiers de Dakar — Liste complète dans zones.js
+// Import + re-export pour compatibilité
+import { neighborhoods } from './zones'
+export { neighborhoods }
 
 // Catégories de services
 export const categories = [

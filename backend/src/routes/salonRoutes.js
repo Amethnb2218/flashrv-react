@@ -215,6 +215,7 @@ router.patch('/me', authenticate, async (req, res, next) => {
       isOpen,
       whatsapp,
       openingHours,
+      neighborhood,
     } = req.body || {};
 
     await prisma.salon.update({
@@ -222,6 +223,7 @@ router.patch('/me', authenticate, async (req, res, next) => {
       data: {
         ...(name && { name }),
         ...(description !== undefined && { description }),
+        ...(neighborhood !== undefined && { neighborhood: neighborhood || null }),
         ...(address && { address }),
         ...(city && { city }),
         ...(phone && { phone }),
@@ -324,6 +326,7 @@ router.get('/', optionalAuth, async (req, res, next) => {
           { description: { contains: term } },
           { city: { contains: term } },
           { address: { contains: term } },
+          { neighborhood: { contains: term } },
           { phone: { contains: term } },
           { email: { contains: term } },
         ])),
@@ -496,7 +499,7 @@ router.get('/:id', optionalAuth, async (req, res, next) => {
  */
 router.post('/', authenticate, authorize('PRO', 'SALON_OWNER', 'ADMIN'), async (req, res, next) => {
   try {
-    const { name, description, address, city, phone, salonType, businessType, image, status } = req.body;
+    const { name, description, address, city, phone, salonType, businessType, image, status, neighborhood } = req.body;
 
     // Validate required fields
     if (!name || !address || !city) {
@@ -527,6 +530,7 @@ router.post('/', authenticate, authorize('PRO', 'SALON_OWNER', 'ADMIN'), async (
       data: {
         name,
         description,
+        neighborhood: neighborhood || null,
         address,
         city,
         phone,
@@ -577,13 +581,14 @@ router.patch('/:id', authenticate, async (req, res, next) => {
       });
     }
 
-    const { name, description, address, city, phone, email, salonType, image, isOpen } = req.body;
+    const { name, description, address, city, phone, email, salonType, image, isOpen, neighborhood } = req.body;
 
     const updatedSalon = await prisma.salon.update({
       where: { id },
       data: {
         ...(name && { name }),
         ...(description !== undefined && { description }),
+        ...(neighborhood !== undefined && { neighborhood: neighborhood || null }),
         ...(address && { address }),
         ...(city && { city }),
         ...(phone && { phone }),
