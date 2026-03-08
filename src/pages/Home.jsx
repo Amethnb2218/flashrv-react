@@ -131,10 +131,36 @@ function Home() {
     navigate(`/salons${qs ? `?${qs}` : ''}`)
   }
 
-  const handleGeolocation = () => {
+  const handleGeolocation = async () => {
     if (!navigator.geolocation) {
       toast.error("La géolocalisation n'est pas supportée par votre navigateur")
       return
+    }
+
+    // Check if we're on an insecure origin (http://) — geolocation is blocked
+    if (window.isSecureContext === false) {
+      toast.error("La géolocalisation nécessite une connexion sécurisée (HTTPS).", { duration: 5000 })
+      return
+    }
+
+    // Check if permission was previously denied (so we can show a helpful message
+    // instead of silently failing)
+    if (navigator.permissions) {
+      try {
+        const permStatus = await navigator.permissions.query({ name: 'geolocation' })
+        if (permStatus.state === 'denied') {
+          toast.error(
+            'La géolocalisation est bloquée. Pour la réactiver :\n' +
+            '1. Cliquez sur l\'icône 🔒 à gauche de l\'URL\n' +
+            '2. Autorisez la localisation\n' +
+            '3. Rechargez la page',
+            { duration: 8000 }
+          )
+          return
+        }
+      } catch {
+        // permissions.query not supported for geolocation, continue normally
+      }
     }
 
     setIsLocating(true)
@@ -160,7 +186,13 @@ function Home() {
 
       setIsLocating(false)
       if (error.code === 1) {
-        toast.error('Géolocalisation refusée. Activez-la dans les paramètres de votre navigateur, puis réessayez.', { duration: 5000 })
+        toast.error(
+          'Géolocalisation refusée. Pour la réactiver :\n' +
+          '1. Cliquez sur l\'icône 🔒 à gauche de l\'URL\n' +
+          '2. Autorisez la localisation\n' +
+          '3. Rechargez la page',
+          { duration: 8000 }
+        )
       } else if (error.code === 2) {
         toast.error('Position non disponible. Vérifiez que le GPS est activé.')
       } else {
@@ -168,8 +200,6 @@ function Home() {
       }
     }
 
-    // Always call getCurrentPosition directly — this triggers the browser's
-    // native "Autoriser / Bloquer" permission dialog automatically.
     navigator.geolocation.getCurrentPosition(
       onSuccess,
       (err) => onError(err, false),
