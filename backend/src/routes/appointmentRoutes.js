@@ -8,6 +8,7 @@ const fs = require('fs');
 const { uploadsSubdir } = require('../utils/paths');
 const { pushNotification, pushChatMessage } = require('../realtime/hub');
 const { sendBookingConfirmationEmail } = require('../services/emailService');
+const { sendPushToUser } = require('../services/pushService');
 
 const chatVoiceDir = uploadsSubdir('chat-voices');
 if (!fs.existsSync(chatVoiceDir)) fs.mkdirSync(chatVoiceDir, { recursive: true });
@@ -316,6 +317,22 @@ router.post('/', authenticate, async (req, res, next) => {
         time: startTime,
         services,
         totalPrice,
+      }).catch(() => {});
+    }
+
+    // Push notification to client
+    sendPushToUser(req.user.id, {
+      title: '✅ Réservation confirmée',
+      body: `RDV chez ${appointment.salon?.name || 'le salon'} le ${new Date(appointmentDate).toLocaleDateString('fr-FR')} à ${startTime}.`,
+      url: '/dashboard',
+    }).catch(() => {});
+
+    // Push notification to salon owner
+    if (appointment?.salon?.ownerId && appointment.salon.ownerId !== req.user.id) {
+      sendPushToUser(appointment.salon.ownerId, {
+        title: '📅 Nouvelle réservation',
+        body: `${fullName} a réservé le ${new Date(appointmentDate).toLocaleDateString('fr-FR')} à ${startTime}.`,
+        url: '/pro/dashboard',
       }).catch(() => {});
     }
 

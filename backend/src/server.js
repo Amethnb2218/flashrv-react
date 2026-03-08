@@ -32,6 +32,10 @@ async function startServer() {
   const server = http.createServer(app);
   initRealtime(server);
 
+  // Start appointment reminder cron
+  const { startReminderCron } = require('./services/reminderCron');
+  startReminderCron();
+
   server.listen(PORT, () => {
     console.log(`FlashRV backend started on http://localhost:${PORT}`);
     console.log('Realtime WebSocket endpoint: ws://localhost:' + PORT + '/realtime');

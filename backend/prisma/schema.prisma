@@ -39,6 +39,22 @@ model Notification {
 
   @@map("notifications")
 }
+
+// ============================================
+// PUSH SUBSCRIPTION MODEL
+// ============================================
+model PushSubscription {
+  id        String   @id @default(uuid())
+  endpoint  String
+  p256dh    String
+  auth      String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, endpoint])
+  @@map("push_subscriptions")
+}
 // ============================================
 // SALON PAYMENT METHOD MODEL
 // ============================================
@@ -188,6 +204,7 @@ model User {
   payments        Payment[]
   loyalty         Loyalty[]
   notifications   Notification[]
+  pushSubscriptions PushSubscription[]
   chatMessages    ChatMessage[]
   feedbacks       Feedback[]
   userSettings    UserSettings?
@@ -351,6 +368,7 @@ model Appointment {
   status    String            @default("PENDING") // PENDING, PENDING_ASSIGNMENT, CONFIRMED, IN_PROGRESS, COMPLETED, CANCELLED, NO_SHOW
   notes     String?
   totalPrice Float
+  reminderSent Boolean       @default(false)
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
 

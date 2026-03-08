@@ -1,5 +1,6 @@
 import { createContext, useContext, useReducer, useEffect } from 'react'
 import { disconnectRealtime } from '../utils/realtime'
+import { subscribeToPush, unsubscribeFromPush } from '../utils/pushNotifications'
 
 const AuthContext = createContext()
 
@@ -72,6 +73,8 @@ export function AuthProvider({ children }) {
           type: 'LOGIN',
           payload: { user, token: savedToken }
         })
+        // Subscribe to push notifications on restore
+        subscribeToPush().catch(() => {})
       } catch (error) {
         console.error('Error parsing saved user:', error)
         localStorage.removeItem('flashrv_user')
@@ -106,6 +109,7 @@ export function AuthProvider({ children }) {
           type: 'LOGIN',
           payload: { user, token }
         });
+        subscribeToPush().catch(() => {});
         return user;
       } else {
         throw new Error('Utilisateur ou token manquant');
@@ -138,6 +142,7 @@ export function AuthProvider({ children }) {
           type: 'LOGIN',
           payload: { user, token }
         });
+        subscribeToPush().catch(() => {});
         return user;
       } else {
         throw new Error('Utilisateur ou token Google manquant');
@@ -170,6 +175,7 @@ export function AuthProvider({ children }) {
         type: 'LOGIN',
         payload: { user, token }
       });
+      subscribeToPush().catch(() => {});
       return user;
     } else {
       throw new Error('Utilisateur ou token manquant');
@@ -190,6 +196,7 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('flashrv_token')
     localStorage.removeItem('flashrv_booking')
     disconnectRealtime()
+    unsubscribeFromPush().catch(() => {})
     dispatch({ type: 'LOGOUT' })
   }
 
@@ -219,6 +226,7 @@ export function AuthProvider({ children }) {
         type: 'LOGIN',
         payload: { user, token },
       });
+      subscribeToPush().catch(() => {});
       return user;
     } catch (error) {
       console.error('Google login error:', error);

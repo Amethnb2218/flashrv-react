@@ -132,6 +132,8 @@ app.use('/api/salon/payment-methods', salonPaymentMethodsRoute);
 app.use('/api/services', serviceRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/api/notifications', notificationRoutes);
+const pushRoutes = require('./routes/pushRoutes');
+app.use('/api/push', pushRoutes);
 app.use('/api/assistant', assistantRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
