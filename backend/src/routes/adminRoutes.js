@@ -2,7 +2,7 @@
 const express = require('express');
 const prisma = require('../lib/prisma');
 const { authenticate, requireAdmin, requireSuperAdmin, ROLES, STATUS } = require('../middleware/auth');
-const { sendProApprovedEmail } = require('../services/emailService');
+const { sendProApprovedEmail, sendAdminPromotionEmail } = require('../services/emailService');
 
 const router = express.Router();
 
@@ -709,6 +709,9 @@ router.post('/admins', authenticate, requireSuperAdmin, async (req, res) => {
 
     console.log(`👑 User promoted to ADMIN by email: ${updatedUser.email} by ${req.user.email}`);
 
+    // Send notification email to the new admin
+    sendAdminPromotionEmail({ to: updatedUser.email, name: updatedUser.name }).catch(() => {});
+
     res.status(200).json({
       status: 'success',
       message: 'Utilisateur promu administrateur',
@@ -766,6 +769,9 @@ router.post('/admins/create', authenticate, requireSuperAdmin, async (req, res) 
     });
 
     console.log(`👑 User promoted to ADMIN: ${updatedUser.email} by ${req.user.email}`);
+
+    // Send notification email to the new admin
+    sendAdminPromotionEmail({ to: updatedUser.email, name: updatedUser.name }).catch(() => {});
 
     res.status(200).json({
       status: 'success',

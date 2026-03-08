@@ -232,4 +232,37 @@ async function sendOrderConfirmationEmail({ to, clientName, boutiqueName, items,
   }
 }
 
-module.exports = { sendWelcomeEmail, sendProPendingNotification, sendProApprovedEmail, sendBookingConfirmationEmail, sendOrderConfirmationEmail };
+async function sendAdminPromotionEmail({ to, name }) {
+  const mailOptions = {
+    from: `"StyleFlow" <${process.env.EMAIL_USER}>`,
+    to,
+    subject: '👑 Vous êtes désormais Administrateur — StyleFlow',
+    html: `
+      <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:520px;margin:auto;padding:32px;border-radius:16px;border:1px solid #e0e7ff;background:#f8fafc">
+        <h2 style="color:#4f46e5;margin:0 0 16px">Félicitations${name ? `, ${name}` : ''} !</h2>
+        <p style="color:#334155;font-size:15px;line-height:1.6;margin:0 0 16px">
+          Vous avez été promu(e) <strong>Administrateur</strong> sur la plateforme <strong>StyleFlow</strong>.
+        </p>
+        <p style="color:#334155;font-size:15px;line-height:1.6;margin:0 0 16px">
+          Vous avez désormais accès au tableau de bord d'administration pour gérer les salons, les professionnels et les utilisateurs.
+        </p>
+        <a href="${process.env.FRONTEND_URL || 'https://styleflow.fr'}/admin"
+           style="display:inline-block;padding:12px 28px;background:#4f46e5;color:#fff;text-decoration:none;border-radius:10px;font-weight:600;font-size:14px;margin-top:8px">
+           Accéder au dashboard admin
+        </a>
+        <p style="margin-top:24px;font-size:13px;color:#6b7280">
+          Si vous pensez que c'est une erreur, contactez le support.
+        </p>
+      </div>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`📧 Admin promotion email sent to ${to}`);
+  } catch (err) {
+    console.error('❌ Failed to send admin promotion email:', err.message);
+  }
+}
+
+module.exports = { sendWelcomeEmail, sendProPendingNotification, sendProApprovedEmail, sendBookingConfirmationEmail, sendOrderConfirmationEmail, sendAdminPromotionEmail };
