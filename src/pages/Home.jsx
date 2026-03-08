@@ -131,36 +131,15 @@ function Home() {
     navigate(`/salons${qs ? `?${qs}` : ''}`)
   }
 
-  const handleGeolocation = async () => {
+  const handleGeolocation = () => {
     if (!navigator.geolocation) {
       toast.error("La géolocalisation n'est pas supportée par votre navigateur")
       return
     }
 
-    // Check if we're on an insecure origin (http://) — geolocation is blocked
     if (window.isSecureContext === false) {
       toast.error("La géolocalisation nécessite une connexion sécurisée (HTTPS).", { duration: 5000 })
       return
-    }
-
-    // Check if permission was previously denied (so we can show a helpful message
-    // instead of silently failing)
-    if (navigator.permissions) {
-      try {
-        const permStatus = await navigator.permissions.query({ name: 'geolocation' })
-        if (permStatus.state === 'denied') {
-          toast.error(
-            'La géolocalisation est bloquée. Pour la réactiver :\n' +
-            '1. Cliquez sur l\'icône 🔒 à gauche de l\'URL\n' +
-            '2. Autorisez la localisation\n' +
-            '3. Rechargez la page',
-            { duration: 8000 }
-          )
-          return
-        }
-      } catch {
-        // permissions.query not supported for geolocation, continue normally
-      }
     }
 
     setIsLocating(true)
@@ -187,16 +166,13 @@ function Home() {
       setIsLocating(false)
       if (error.code === 1) {
         toast.error(
-          'Géolocalisation refusée. Pour la réactiver :\n' +
-          '1. Cliquez sur l\'icône 🔒 à gauche de l\'URL\n' +
-          '2. Autorisez la localisation\n' +
-          '3. Rechargez la page',
-          { duration: 8000 }
+          'Géolocalisation refusée. Cliquez sur l\'icône 🔒 dans la barre d\'adresse, autorisez la localisation, puis rechargez la page.',
+          { id: 'geo-denied', duration: 6000 }
         )
       } else if (error.code === 2) {
-        toast.error('Position non disponible. Vérifiez que le GPS est activé.')
+        toast.error('Position non disponible. Vérifiez que le GPS est activé.', { id: 'geo-unavailable' })
       } else {
-        toast.error('Délai dépassé. Réessayez ou entrez votre ville manuellement.')
+        toast.error('Délai dépassé. Réessayez ou entrez votre ville manuellement.', { id: 'geo-timeout' })
       }
     }
 
