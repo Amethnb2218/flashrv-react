@@ -131,7 +131,7 @@ router.patch('/:id', authenticate, uploadProductImages, async (req, res, next) =
     const imageUrls = [];
     const files = [...(req.files?.image || []), ...(req.files?.images || [])];
     for (const file of files) {
-      imageUrls.push(`/uploads/${file.filename}`);
+      imageUrls.push(file.path || file.secure_url || file.url);
     }
 
     if (imageUrls.length > 0) {

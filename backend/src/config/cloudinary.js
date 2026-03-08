@@ -56,10 +56,28 @@ const productImageStorage = new CloudinaryStorage({
   },
 });
 
+// Voice messages storage (audio files)
+const voiceStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'styleflow/chat-voices',
+    resource_type: 'auto',
+    allowed_formats: ['webm', 'ogg', 'mp3', 'wav', 'm4a', 'aac'],
+  },
+});
+
 const uploadGallery = multer({ storage: galleryStorage, fileFilter: imageFileFilter, limits: { fileSize: 5 * 1024 * 1024 } });
 const uploadSalonImage = multer({ storage: salonImageStorage, fileFilter: imageFileFilter, limits: { fileSize: 5 * 1024 * 1024 } });
 const uploadServiceImages = multer({ storage: serviceImageStorage, fileFilter: imageFileFilter, limits: { fileSize: 5 * 1024 * 1024 } });
 const uploadProductImages = multer({ storage: productImageStorage, fileFilter: imageFileFilter, limits: { fileSize: 5 * 1024 * 1024 } });
+const uploadVoice = multer({
+  storage: voiceStorage,
+  limits: { fileSize: 12 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (String(file.mimetype || '').startsWith('audio/')) return cb(null, true);
+    cb(new Error('Only audio files are allowed'));
+  },
+});
 
 module.exports = {
   cloudinary,
@@ -67,4 +85,5 @@ module.exports = {
   uploadSalonImage,
   uploadServiceImages,
   uploadProductImages,
+  uploadVoice,
 };

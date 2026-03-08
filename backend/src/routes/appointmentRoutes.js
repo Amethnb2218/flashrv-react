@@ -2,31 +2,10 @@ const express = require('express');
 const router = express.Router();
 const prisma = require('../lib/prisma');
 const { authenticate, authorize } = require('../middleware/auth');
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
-const { uploadsSubdir } = require('../utils/paths');
 const { pushNotification, pushChatMessage } = require('../realtime/hub');
 const { sendBookingConfirmationEmail } = require('../services/emailService');
 const { sendPushToUser } = require('../services/pushService');
-
-const chatVoiceDir = uploadsSubdir('chat-voices');
-if (!fs.existsSync(chatVoiceDir)) fs.mkdirSync(chatVoiceDir, { recursive: true });
-const chatVoiceStorage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, chatVoiceDir),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname || '.webm') || '.webm';
-    cb(null, `voice-${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`);
-  },
-});
-const uploadVoice = multer({
-  storage: chatVoiceStorage,
-  limits: { fileSize: 12 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    if (String(file.mimetype || '').startsWith('audio/')) return cb(null, true);
-    cb(new Error('Only audio files are allowed'));
-  },
-});
+const { uploadVoice } = require('../config/cloudinary');
 
 const canAccessAppointment = (appointment, user) => {
   if (!appointment || !user) return false;
@@ -388,7 +367,7 @@ router.post('/:id/messages', authenticate, uploadVoice.single('voice'), async (r
   try {
     const { id } = req.params;
     const text = String(req.body?.text || '').trim();
-    const voiceUrl = req.file ? `/uploads/chat-voices/${req.file.filename}` : null;
+    const voiceUrl = req.file ? (req.file.path || req.file.secure_url || req.file.url) : null;
     if (!text && !voiceUrl) {
       return res.status(400).json({ status: 'error', message: 'Message text or voice is required' });
     }
