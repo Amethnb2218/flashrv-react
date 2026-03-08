@@ -164,17 +164,9 @@ function Home() {
       }
 
       setIsLocating(false)
-      if (error.code === 1) {
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
-        const msg = isIOS
-          ? 'Géolocalisation refusée. Allez dans Réglages > Confidentialité > Service de localisation > Safari, puis autorisez l\'accès.'
-          : 'Géolocalisation refusée. Cliquez sur l\'icône 🔒 dans la barre d\'adresse, autorisez la localisation, puis rechargez la page.'
-        toast.error(msg, { id: 'geo-denied', duration: 6000 })
-      } else if (error.code === 2) {
-        toast.error('Position non disponible. Vérifiez que le GPS est activé.', { id: 'geo-unavailable' })
-      } else {
-        toast.error('Délai dépassé. Réessayez ou entrez votre ville manuellement.', { id: 'geo-timeout' })
-      }
+      // Redirect to salons page anyway so the user isn't stuck
+      toast('Position non disponible — affichage de tous les salons.', { id: 'geo-fallback', icon: '📍', duration: 3000 })
+      navigate('/salons')
     }
 
     navigator.geolocation.getCurrentPosition(
