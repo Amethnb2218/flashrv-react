@@ -185,13 +185,13 @@ function AppointmentChatModal({
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={title} size="lg">
-      <div className="p-4">
-        <div className={`grid gap-4 ${showThreadList ? 'md:grid-cols-[260px_1fr]' : 'grid-cols-1'}`}>
+    <Modal isOpen={isOpen} onClose={onClose} title={title} size="mobile-full">
+      <div className="p-2 sm:p-4 h-full flex flex-col">
+        <div className={`grid gap-2 sm:gap-4 flex-1 min-h-0 ${showThreadList ? 'md:grid-cols-[260px_1fr]' : 'grid-cols-1'}`}>
           {showThreadList ? (
             <aside className="rounded-xl border border-gray-100 bg-white p-2">
               <p className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-gray-500">Conversations</p>
-              <div className="mt-1 max-h-80 overflow-y-auto space-y-1">
+              <div className="mt-1 max-h-40 sm:max-h-80 overflow-y-auto space-y-1">
                 {threads.length === 0 ? (
                   <p className="px-2 py-2 text-sm text-gray-500">Aucun client pour le moment.</p>
                 ) : null}
@@ -215,8 +215,8 @@ function AppointmentChatModal({
             </aside>
           ) : null}
 
-          <div className="space-y-4">
-            <div className="h-80 overflow-y-auto border border-gray-100 rounded-xl bg-white p-3 space-y-3">
+          <div className="flex flex-col gap-2 sm:gap-4 min-h-0 flex-1">
+            <div className="flex-1 min-h-[200px] max-h-[60vh] sm:max-h-[400px] overflow-y-auto border border-gray-100 rounded-xl bg-white p-2 sm:p-3 space-y-3">
               {!appointmentId ? (
                 <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
                   Selectionnez une conversation pour demarrer le chat.
@@ -258,39 +258,41 @@ function AppointmentChatModal({
               </div>
             ) : null}
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               <input
                 value={text}
                 onChange={(e) => setText(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
                 placeholder="Ecrire un message..."
-                className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+                className="flex-1 min-w-0 px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none text-sm sm:text-base"
               />
               {!recording ? (
                 <button
                   type="button"
                   onClick={startRecording}
-                  className="px-3 py-3 rounded-xl border border-gray-200 hover:bg-gray-50"
+                  className="shrink-0 p-2.5 sm:px-3 sm:py-3 rounded-xl border border-gray-200 hover:bg-gray-50"
                   title="Enregistrer un vocal"
                 >
-                  <FiMic />
+                  <FiMic className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
               ) : (
                 <button
                   type="button"
                   onClick={stopRecording}
-                  className="px-3 py-3 rounded-xl border border-red-300 text-red-600 hover:bg-red-50"
+                  className="shrink-0 p-2.5 sm:px-3 sm:py-3 rounded-xl border border-red-300 text-red-600 hover:bg-red-50"
                   title="Arreter l'enregistrement"
                 >
-                  <FiStopCircle />
+                  <FiStopCircle className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
               )}
               <button
                 type="button"
                 disabled={!appointmentId || sending || (!text.trim() && !voiceBlob)}
                 onClick={sendMessage}
-                className="px-4 py-3 rounded-xl bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
+                className="shrink-0 p-2.5 sm:px-4 sm:py-3 rounded-xl bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
               >
-                <FiSend /> Envoyer
+                <FiSend className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="hidden sm:inline">Envoyer</span>
               </button>
             </div>
           </div>
