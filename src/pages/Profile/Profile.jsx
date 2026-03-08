@@ -99,15 +99,10 @@ function Profile() {
     }
     setLoading(true)
     try {
-      const res = await fetch('/api/users/change-password', {
+      await apiFetch('/users/change-password', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('flashrv_token')}`
-        },
-        body: JSON.stringify(passwordData)
+        body: passwordData,
       })
-      if (!res.ok) throw new Error('Erreur lors de la modification du mot de passe')
       setPasswordData({
         currentPassword: '',
         newPassword: '',
@@ -115,7 +110,7 @@ function Profile() {
       })
       setSuccess(true)
     } catch (err) {
-      toast.error('Erreur lors de la modification du mot de passe')
+      toast.error(err.message || 'Erreur lors de la modification du mot de passe')
     }
     setLoading(false)
     setTimeout(() => setSuccess(false), 3000)
@@ -126,13 +121,11 @@ function Profile() {
     const file = e.target.files?.[0]
     if (!file) return
 
-    // Validate file type
     if (!file.type.startsWith('image/')) {
       toast.error('Veuillez sélectionner une image valide')
       return
     }
 
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast.error('L\'image ne doit pas dépasser 5 Mo')
       return
@@ -142,22 +135,17 @@ function Profile() {
     setShowPhotoMenu(false)
 
     try {
-      // Envoi réel vers l'API backend
-      const formData = new FormData()
-      formData.append('avatar', file)
-      const res = await fetch('/api/users/upload-avatar', {
+      const fd = new FormData()
+      fd.append('avatar', file)
+      const data = await apiFetch('/users/upload-avatar', {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('flashrv_token')}`
-        },
-        body: formData
+        body: fd,
       })
-      if (!res.ok) throw new Error('Erreur lors du téléchargement')
-      const data = await res.json()
-      updateUser({ avatar: data.avatarUrl })
+      const url = data?.avatarUrl || data?.data?.avatarUrl
+      updateUser({ picture: url, avatar: url })
       toast.success('Photo de profil mise à jour !')
     } catch (error) {
-      toast.error('Erreur lors du téléchargement')
+      toast.error(error.message || 'Erreur lors du téléchargement')
     }
     setUploadingPhoto(false)
   }
@@ -167,17 +155,11 @@ function Profile() {
     setUploadingPhoto(true)
     setShowPhotoMenu(false)
     try {
-      const res = await fetch('/api/users/delete-avatar', {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('flashrv_token')}`
-        }
-      })
-      if (!res.ok) throw new Error('Erreur lors de la suppression')
-      updateUser({ avatar: null })
+      await apiFetch('/users/delete-avatar', { method: 'DELETE' })
+      updateUser({ picture: null, avatar: null })
       toast.success('Photo de profil supprimée')
     } catch (error) {
-      toast.error('Erreur lors de la suppression')
+      toast.error(error.message || 'Erreur lors de la suppression')
     } finally {
       setUploadingPhoto(false)
     }

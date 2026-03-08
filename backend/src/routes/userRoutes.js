@@ -2,6 +2,26 @@ const express = require('express');
 const router = express.Router();
 const prisma = require('../lib/prisma');
 const { authenticate, authorize } = require('../middleware/auth');
+const { cloudinary } = require('../config/cloudinary');
+const multer = require('multer');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+
+const avatarStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'styleflow/avatars',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
+    transformation: [{ width: 400, height: 400, crop: 'fill', gravity: 'face', quality: 'auto' }],
+  },
+});
+const uploadAvatar = multer({
+  storage: avatarStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (!file.mimetype.startsWith('image/')) return cb(new Error('Seules les images sont autorisées'));
+    cb(null, true);
+  },
+});
 
 /**
  * Get all users (admin only)
@@ -82,6 +102,48 @@ router.get('/:id', authenticate, async (req, res, next) => {
  * Update current user profile
  * PUT /api/users/update-profile
  */
+/**
+ * Upload avatar
+ * POST /api/users/upload-avatar
+ */
+router.post('/upload-avatar', authenticate, uploadAvatar.single('avatar'), async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ status: 'error', message: 'Aucun fichier envoyé' });
+    }
+    const avatarUrl = req.file.path || req.file.secure_url || req.file.url;
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data: { picture: avatarUrl },
+    });
+    res.json({ status: 'success', avatarUrl });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * Delete avatar
+ * DELETE /api/users/delete-avatar
+ */
+router.delete('/delete-avatar', authenticate, async (req, res, next) => {
+  try {
+    const user = await prisma.user.findUnique({ where: { id: req.user.id }, select: { picture: true } });
+    if (user?.picture && user.picture.includes('cloudinary')) {
+      const parts = user.picture.split('/');
+      const publicId = 'styleflow/avatars/' + parts[parts.length - 1].split('.')[0];
+      try { await cloudinary.uploader.destroy(publicId); } catch (e) { /* ignore */ }
+    }
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data: { picture: null },
+    });
+    res.json({ status: 'success', message: 'Avatar supprimé' });
+  } catch (error) {
+    next(error);
+  }
+});
+
 router.put('/update-profile', authenticate, async (req, res, next) => {
   try {
     const { name, username, email, phoneNumber, address, picture } = req.body || {};
