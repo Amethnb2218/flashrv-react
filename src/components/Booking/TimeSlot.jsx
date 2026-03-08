@@ -71,7 +71,7 @@ function TimeSlot({
   const nextDate = dateUnavailable ? getNextAvailableDate?.(selectedDate) : null
 
   return (
-    <section className="box-border w-full min-w-0 max-w-full overflow-hidden rounded-2xl border border-gray-100 bg-white p-3 sm:p-4">
+    <section className="box-border w-full min-w-0 max-w-full overflow-clip rounded-2xl border border-gray-100 bg-white p-3 sm:p-4">
       <div className="mb-3 flex items-center justify-between gap-2">
         <p className="text-sm font-semibold text-gray-900">Heure</p>
         {selectedTime && (

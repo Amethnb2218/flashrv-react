@@ -169,7 +169,7 @@ function Booking() {
   }
 
   return (
-    <div className="relative min-h-screen w-full max-w-[100vw] overflow-x-hidden bg-gradient-to-br from-gray-50 via-white to-amber-50/20 py-4 sm:py-8">
+    <div className="relative min-h-screen w-full max-w-[100vw] overflow-x-clip bg-gradient-to-br from-gray-50 via-white to-amber-50/20 py-4 sm:py-8">
       {/* Decorative background elements */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-amber-100/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none"></div>
       <div className="absolute bottom-0 left-0 w-80 h-80 bg-yellow-100/30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4 pointer-events-none"></div>
@@ -248,7 +248,7 @@ function Booking() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="box-border w-full min-w-0 overflow-x-hidden rounded-2xl bg-white p-3 shadow-sm sm:p-6"
+                className="box-border w-full min-w-0 overflow-x-clip rounded-2xl bg-white p-3 shadow-sm sm:p-6"
               >
                 {/* Step 1: Services */}
                 {state.step === 1 && (
