@@ -167,12 +167,12 @@ function Navbar() {
                         </div>
                         
                         <Link
-                          to={user.role === 'PRO' ? '/pro/dashboard' : '/dashboard'}
+                          to={user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' ? '/admin' : user.role === 'PRO' ? '/pro/dashboard' : '/dashboard'}
                           onClick={() => setShowUserMenu(false)}
                           className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
                         >
                           <FiCalendar className="w-4 h-4" />
-                          <span>{user.role === 'PRO' ? 'Mon dashboard' : 'Mes réservations'}</span>
+                          <span>{user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' ? 'Dashboard admin' : user.role === 'PRO' ? 'Mon dashboard' : 'Mes réservations'}</span>
                         </Link>
                         
                         <Link
@@ -282,11 +282,11 @@ function Navbar() {
                         </div>
                       </div>
                       <Link
-                        to={user.role === 'PRO' ? '/pro/dashboard' : '/dashboard'}
+                        to={user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' ? '/admin' : user.role === 'PRO' ? '/pro/dashboard' : '/dashboard'}
                         onClick={() => setIsOpen(false)}
                         className="block py-2 px-4 text-gray-700 hover:bg-gray-100 rounded-lg"
                       >
-                        {user.role === 'PRO' ? 'Mon dashboard' : 'Mes réservations'}
+                        {user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' ? 'Dashboard admin' : user.role === 'PRO' ? 'Mon dashboard' : 'Mes réservations'}
                       </Link>
                       <button
                         onClick={() => { handleLogout(); setIsOpen(false) }}
