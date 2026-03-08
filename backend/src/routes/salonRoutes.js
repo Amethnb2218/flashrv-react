@@ -453,6 +453,7 @@ router.get('/:id', optionalAuth, async (req, res, next) => {
           where: { enabled: true },
           select: { method: true },
         },
+        salonSettings: true,
       },
     });
 
@@ -482,6 +483,14 @@ router.get('/:id', optionalAuth, async (req, res, next) => {
       rating: computedRating,
       reviewCount: reviewAgg._count._all || 0,
     };
+
+    // Extract whatsapp from salonSettings preferences
+    if (salon.salonSettings?.preferences) {
+      try {
+        const prefs = JSON.parse(salon.salonSettings.preferences);
+        if (prefs.whatsapp) salon.whatsapp = prefs.whatsapp;
+      } catch (_) {}
+    }
 
     res.status(200).json({
       status: 'success',

@@ -869,9 +869,9 @@ function SalonDetail() {
               )}
 
               {/* WhatsApp Button */}
-              {salon.whatsapp && (
+              {(salon.whatsapp || salon.phone) && (
                 <a
-                  href={`https://wa.me/${salon.whatsapp.replace(/[^0-9]/g, '')}`}
+                  href={`https://wa.me/${(salon.whatsapp || salon.phone).replace(/[^0-9]/g, '')}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full flex items-center justify-center space-x-2 py-3 bg-green-500 hover:bg-green-600 text-white font-medium rounded-full transition-colors mb-4"
