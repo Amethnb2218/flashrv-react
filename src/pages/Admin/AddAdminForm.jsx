@@ -13,7 +13,7 @@ export default function AddAdminForm({ onAdminAdded }) {
     setMessage('')
     setIsSuccess(false)
     try {
-      const token = localStorage.getItem('token') || ''
+      const token = localStorage.getItem('flashrv_token') || ''
       const res = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/admin/admins`, {
         method: 'POST',
         headers: {
