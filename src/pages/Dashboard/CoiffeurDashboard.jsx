@@ -551,6 +551,7 @@ const [newProduct, setNewProduct] = useState({
   category: "",
   image: "",
   imageFile: null,
+  imageFiles: [],
 });
 const [productQuery, setProductQuery] = useState("");
 const [orderFilter, setOrderFilter] = useState("all");
@@ -617,10 +618,6 @@ type: "gallery",
 title: "",
 media: "",
 mediaFile: null,
-beforeMedia: "",
-beforeFile: null,
-afterMedia: "",
-afterFile: null,
 });
 
 // Reviews
@@ -1678,19 +1675,13 @@ Actions - Salon (portfolio)
 const addPortfolioItem = async () => {
 const title = portfolioForm.title.trim();
 if (!title) return toast.error("Titre requis.");
-if (portfolioForm.type === "gallery" && !portfolioForm.media && !portfolioForm.mediaFile)
-return toast.error("Ajoute une photo/vidéo.");
-if (
-portfolioForm.type === "beforeAfter" &&
-((!portfolioForm.beforeMedia && !portfolioForm.beforeFile) || (!portfolioForm.afterMedia && !portfolioForm.afterFile))
-)
-return toast.error("Ajoute AVANT et APRÈS.");
+if (!portfolioForm.media && !portfolioForm.mediaFile)
+  return toast.error(portfolioForm.type === "video" ? "Ajoute une vidéo." : "Ajoute une photo.");
 
 try {
-  if (portfolioForm.type === "gallery") {
     const form = new FormData();
     form.append("caption", title);
-    form.append("category", "gallery");
+    form.append("category", portfolioForm.type === "video" ? "video" : "gallery");
     if (portfolioForm.mediaFile) {
       form.append("image", portfolioForm.mediaFile);
     } else {
@@ -1699,52 +1690,15 @@ try {
     const res = await apiFetch("/portfolio", { method: "POST", body: form });
     const createdRaw = res?.data ?? res;
     const created = normalizePortfolioList([createdRaw])[0];
+    if (created) created.type = portfolioForm.type === "video" ? "video" : "gallery";
     setPortfolio((p) => [created, ...p]);
-  } else {
-    const groupId = uuid("pf");
-    const caption = `${title}||${groupId}`;
-    const formBefore = new FormData();
-    formBefore.append("caption", caption);
-    formBefore.append("category", "before");
-    if (portfolioForm.beforeFile) {
-      formBefore.append("image", portfolioForm.beforeFile);
-    } else {
-      formBefore.append("url", portfolioForm.beforeMedia);
-    }
-    const resBefore = await apiFetch("/portfolio", { method: "POST", body: formBefore });
-    const formAfter = new FormData();
-    formAfter.append("caption", caption);
-    formAfter.append("category", "after");
-    if (portfolioForm.afterFile) {
-      formAfter.append("image", portfolioForm.afterFile);
-    } else {
-      formAfter.append("url", portfolioForm.afterMedia);
-    }
-    const resAfter = await apiFetch("/portfolio", { method: "POST", body: formAfter });
-    const beforeItem = resBefore?.data ?? resBefore;
-    const afterItem = resAfter?.data ?? resAfter;
-    const created = {
-      id: groupId,
-      type: "beforeAfter",
-      title,
-      beforeMedia: beforeItem.url || portfolioForm.beforeMedia,
-      afterMedia: afterItem.url || portfolioForm.afterMedia,
-      ids: [beforeItem.id, afterItem.id].filter(Boolean),
-      createdAt: beforeItem.createdAt || Date.now(),
-    };
-    setPortfolio((p) => [created, ...p]);
-  }
-  toast.success("Ajouté au salon.");
+  toast.success(isBoutique ? "Ajouté à la boutique." : "Ajouté au salon.");
   setShowPortfolioModal(false);
   setPortfolioForm({
     type: "gallery",
     title: "",
     media: "",
     mediaFile: null,
-    beforeMedia: "",
-    beforeFile: null,
-    afterMedia: "",
-    afterFile: null,
   });
 } catch (err) {
   toast.error(err.message || "Erreur lors de l'ajout");
@@ -1923,7 +1877,7 @@ setSavingClientAddress(false);
 Boutique: Product & Order handlers
 ----------------------------- */
 const resetProductForm = () => {
-  setNewProduct({ name: "", description: "", price: "", stock: "", category: "", image: "", imageFile: null });
+  setNewProduct({ name: "", description: "", price: "", stock: "", category: "", image: "", imageFile: null, imageFiles: [] });
   setEditingProduct(null);
 };
 
@@ -1940,7 +1894,11 @@ const handleSaveProduct = async () => {
     formData.append("price", Number(form.price));
     formData.append("stock", form.stock ? Number(form.stock) : 0);
     formData.append("category", form.category || "");
-    if (form.imageFile) formData.append("image", form.imageFile);
+    if (form.imageFiles?.length > 0) {
+      form.imageFiles.forEach((file) => formData.append("images", file));
+    } else if (form.imageFile) {
+      formData.append("image", form.imageFile);
+    }
 
     if (editingProduct?.id) {
       const res = await apiFetch(`/products/${editingProduct.id}`, { method: "PATCH", body: formData });
@@ -2382,7 +2340,11 @@ active
     ) : (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {filteredProducts.map((product) => {
-          const img = resolveMediaUrl(product.imageUrl || product.image);
+          const allImages = [
+            product.imageUrl || product.image,
+            ...(Array.isArray(product.images) ? product.images.map((i) => i.url || i) : []),
+          ].map(resolveMediaUrl).filter(Boolean);
+          const img = allImages[0];
           return (
             <motion.div
               key={product.id}
@@ -2391,8 +2353,13 @@ active
               className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
             >
               {img ? (
-                <div className="w-full h-56 bg-gray-50 flex items-center justify-center">
+                <div className="relative w-full h-56 bg-gray-50 flex items-center justify-center">
                   <img src={img} alt={product.name} className="w-full h-full object-contain p-2" />
+                  {allImages.length > 1 && (
+                    <span className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-0.5 rounded-full">
+                      {allImages.length} photos
+                    </span>
+                  )}
                 </div>
               ) : (
                 <div className="w-full h-56 bg-gray-100 flex items-center justify-center">
@@ -2532,19 +2499,27 @@ active
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Image</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Photos (plusieurs possibles)</label>
           <input
             type="file"
             accept="image/*"
+            multiple
             onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (!file) return;
+              const files = Array.from(e.target.files || []);
+              if (!files.length) return;
               editingProduct
-                ? setEditingProduct((p) => ({ ...p, imageFile: file }))
-                : setNewProduct((p) => ({ ...p, imageFile: file }));
+                ? setEditingProduct((p) => ({ ...p, imageFiles: files, imageFile: files[0] }))
+                : setNewProduct((p) => ({ ...p, imageFiles: files, imageFile: files[0] }));
             }}
             className="w-full text-sm"
           />
+          {(() => {
+            const currentFiles = (editingProduct || newProduct).imageFiles || [];
+            if (currentFiles.length <= 1) return null;
+            return (
+              <p className="text-xs text-gray-500 mt-1">{currentFiles.length} photos sélectionnées</p>
+            );
+          })()}
         </div>
       </div>
       <div className="flex justify-end gap-3 mt-6">
@@ -3815,8 +3790,8 @@ Voulez-vous vraiment supprimer le moyen de paiement{" "}
 <Card>
 <CardHeader
 icon={<FiCamera />}
-title="Salon"
-subtitle="Photos / vidéos + avant / après"
+title={isBoutique ? "Boutique" : "Salon"}
+subtitle="Photos / vidéos"
 right={
 <Button onClick={() => setShowPortfolioModal(true)}>
 <FiPlus className="mr-2" /> Ajouter
@@ -3825,7 +3800,7 @@ right={
 />
 <div className="p-6">
 {portfolio.length === 0 ? (
-<EmptyState icon={<FiCamera />} title="Salon vide" subtitle="Ajoute des photos ou des avant/après." />
+<EmptyState icon={<FiCamera />} title={isBoutique ? "Boutique vide" : "Salon vide"} subtitle="Ajoute des photos ou vidéos." />
 ) : (
 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
 {portfolio.map((p) => {
@@ -3836,7 +3811,7 @@ return (
 <div key={p.id} className="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm">
 <div className="flex items-start justify-between gap-2">
 <div className="min-w-0">
-<Badge tone="purple">{p.type === "beforeAfter" ? "Avant/Après" : "Galerie"}</Badge>
+<Badge tone="purple">{p.type === "video" ? "Vidéo" : "Galerie"}</Badge>
 <h4 className="mt-2 text-base font-extrabold text-gray-900 truncate">{p.title}</h4>
 <p className="text-xs text-gray-500 mt-1">{formatDate(p.createdAt)}</p>
 </div>
@@ -3867,48 +3842,15 @@ return (
 </div>
 
 <div className="mt-3">
-{p.type === "gallery" ? (
-p.media ? (
+{p.media ? (
 isImage(mediaUrl) ? (
-<img src={mediaUrl} alt="salon" className="w-full h-44 object-cover rounded-2xl" />
+<img src={mediaUrl} alt={isBoutique ? "boutique" : "salon"} className="w-full h-44 object-cover rounded-2xl" />
 ) : (
 <video src={mediaUrl} controls className="w-full h-44 object-cover rounded-2xl" />
 )
 ) : (
 <div className="w-full h-44 rounded-2xl bg-gray-50 border border-dashed border-gray-200 flex items-center justify-center">
 <FiImage className="w-8 h-8 text-gray-300" />
-</div>
-)
-) : (
-<div className="grid grid-cols-2 gap-3">
-<div>
-<p className="text-xs font-extrabold text-gray-700 mb-2">Avant</p>
-{p.beforeMedia ? (
-isImage(beforeUrl) ? (
-<img src={beforeUrl} alt="avant" className="w-full h-44 object-cover rounded-2xl" />
-) : (
-<video src={beforeUrl} controls className="w-full h-44 object-cover rounded-2xl" />
-)
-) : (
-<div className="w-full h-44 rounded-2xl bg-gray-50 border border-dashed border-gray-200 flex items-center justify-center">
-<FiImage className="w-6 h-6 text-gray-300" />
-</div>
-)}
-</div>
-<div>
-<p className="text-xs font-extrabold text-gray-700 mb-2">Après</p>
-{p.afterMedia ? (
-isImage(afterUrl) ? (
-<img src={afterUrl} alt="après" className="w-full h-44 object-cover rounded-2xl" />
-) : (
-<video src={afterUrl} controls className="w-full h-44 object-cover rounded-2xl" />
-)
-) : (
-<div className="w-full h-44 rounded-2xl bg-gray-50 border border-dashed border-gray-200 flex items-center justify-center">
-<FiImage className="w-6 h-6 text-gray-300" />
-</div>
-)}
-</div>
 </div>
 )}
 </div>
@@ -3922,7 +3864,7 @@ isImage(afterUrl) ? (
 
 <Modal
 open={showPortfolioModal}
-title="Ajouter au salon"
+title={isBoutique ? "Ajouter à la boutique" : "Ajouter au salon"}
 onClose={() => setShowPortfolioModal(false)}
 footer={
 <div className="flex gap-3 justify-end">
@@ -3942,7 +3884,7 @@ value={portfolioForm.type}
 onChange={(e) => setPortfolioForm((p) => ({ ...p, type: e.target.value }))}
 >
 <option value="gallery">Galerie</option>
-<option value="beforeAfter">Avant/Après</option>
+<option value="video">Vidéo</option>
 </Select>
 
 <Input
@@ -3951,12 +3893,11 @@ value={portfolioForm.title}
 onChange={(e) => setPortfolioForm((p) => ({ ...p, title: e.target.value }))}
 />
 
-{portfolioForm.type === "gallery" ? (
 <div>
-<label className="block text-sm font-semibold text-gray-700 mb-1">Photo/vidéo *</label>
+<label className="block text-sm font-semibold text-gray-700 mb-1">{portfolioForm.type === "video" ? "Vidéo *" : "Photo *"}</label>
 <input
 type="file"
-accept="image/*,video/*"
+accept={portfolioForm.type === "video" ? "video/*" : "image/*"}
 onChange={(e) => {
 const file = e.target.files?.[0];
 if (!file) return;
@@ -3966,38 +3907,6 @@ readMediaAsDataUrl(file, (dataUrl) => setPortfolioForm((p) => ({ ...p, media: da
 className="w-full px-4 py-2.5 border border-gray-200 rounded-2xl"
 />
 </div>
-) : (
-<div className="grid grid-cols-2 gap-4">
-<div>
-<label className="block text-sm font-semibold text-gray-700 mb-1">Avant *</label>
-<input
-type="file"
-accept="image/*,video/*"
-onChange={(e) => {
-const file = e.target.files?.[0];
-if (!file) return;
-if (!validateMedia(file)) return;
-readMediaAsDataUrl(file, (dataUrl) => setPortfolioForm((p) => ({ ...p, beforeMedia: dataUrl, beforeFile: file })));
-}}
-className="w-full px-4 py-2.5 border border-gray-200 rounded-2xl"
-/>
-</div>
-<div>
-<label className="block text-sm font-semibold text-gray-700 mb-1">Après *</label>
-<input
-type="file"
-accept="image/*,video/*"
-onChange={(e) => {
-const file = e.target.files?.[0];
-if (!file) return;
-if (!validateMedia(file)) return;
-readMediaAsDataUrl(file, (dataUrl) => setPortfolioForm((p) => ({ ...p, afterMedia: dataUrl, afterFile: file })));
-}}
-className="w-full px-4 py-2.5 border border-gray-200 rounded-2xl"
-/>
-</div>
-</div>
-)}
 </div>
 </Modal>
 </motion.div>
