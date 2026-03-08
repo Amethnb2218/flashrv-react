@@ -3,6 +3,7 @@ const router = express.Router();
 const prisma = require('../lib/prisma');
 const { authenticate } = require('../middleware/auth');
 const { pushNotification } = require('../realtime/hub');
+const { sendOrderConfirmationEmail } = require('../services/emailService');
 
 /**
  * POST /api/orders
@@ -119,6 +120,18 @@ router.post('/', authenticate, async (req, res, next) => {
       } catch (e) {
         console.error('Notification order error:', e.message);
       }
+    }
+
+    // Send confirmation email to client
+    if (order.client?.email) {
+      sendOrderConfirmationEmail({
+        to: order.client.email,
+        clientName: order.clientName || order.client.name || 'Client',
+        boutiqueName: order.salon?.name || 'la boutique',
+        items: order.items || [],
+        totalPrice,
+        deliveryMode: order.deliveryMode,
+      }).catch(() => {});
     }
 
     res.status(201).json({

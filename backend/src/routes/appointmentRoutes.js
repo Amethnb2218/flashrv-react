@@ -7,6 +7,7 @@ const path = require('path');
 const fs = require('fs');
 const { uploadsSubdir } = require('../utils/paths');
 const { pushNotification, pushChatMessage } = require('../realtime/hub');
+const { sendBookingConfirmationEmail } = require('../services/emailService');
 
 const chatVoiceDir = uploadsSubdir('chat-voices');
 if (!fs.existsSync(chatVoiceDir)) fs.mkdirSync(chatVoiceDir, { recursive: true });
@@ -303,6 +304,19 @@ router.post('/', authenticate, async (req, res, next) => {
       } catch (e) {
         console.error('Notification booking error:', e.message);
       }
+    }
+
+    // Send confirmation email to client
+    if (appointment?.client?.email) {
+      sendBookingConfirmationEmail({
+        to: appointment.client.email,
+        clientName: fullName,
+        salonName: appointment.salon?.name || 'le salon',
+        date: appointmentDate,
+        time: startTime,
+        services,
+        totalPrice,
+      }).catch(() => {});
     }
 
     res.status(201).json({

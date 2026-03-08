@@ -2057,19 +2057,20 @@ const saveSettings = async () => {
   if (savingSettings) return;
   try {
     setSavingSettings(true);
-    const safeImage =
-      salonSettings.image && String(salonSettings.image).startsWith("data:")
-        ? null
-        : salonSettings.image || null;
+    const isDataUrl = salonSettings.image && String(salonSettings.image).startsWith("data:");
     const payload = {
       name: salonSettings.name,
       phone: salonSettings.phone,
       whatsapp: salonSettings.whatsapp,
       address: salonSettings.address,
       description: salonSettings.description,
-      image: safeImage,
       openingHours: openingHoursToApi(salonSettings.openingHours),
     };
+    // Only send image field when it's a real URL or explicit empty string (delete)
+    // Never send data: URLs or null (which would clear the stored Cloudinary URL)
+    if (!isDataUrl) {
+      payload.image = salonSettings.image || null;
+    }
     const res = await apiFetch("/salons/me", { method: "PATCH", body: payload });
     const data = res?.data ?? res;
     const salon = data?.salon ?? data;
