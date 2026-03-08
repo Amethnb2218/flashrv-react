@@ -60,8 +60,8 @@ export default function InstallPrompt() {
                       sm:left-auto sm:right-5 sm:bottom-5
                       bg-gray-900/95 backdrop-blur-md text-white rounded-xl shadow-2xl
                       p-3 flex items-start gap-2.5 animate-slide-up">
-        <div className="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex items-center justify-center mt-0.5">
-          <IoShareOutline className="w-3.5 h-3.5" />
+        <div className="flex-shrink-0 w-7 h-7 bg-gray-700 rounded-lg flex items-center justify-center mt-0.5">
+          <IoShareOutline className="w-3.5 h-3.5 text-gray-300" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-xs">Installer StyleFlow</p>
@@ -83,13 +83,13 @@ export default function InstallPrompt() {
                     sm:left-auto sm:right-5 sm:bottom-5 sm:max-w-[240px]">
       <div className="bg-gray-900/95 backdrop-blur-md text-white rounded-xl shadow-2xl
                       p-2.5 flex items-center gap-2">
-        <div className="flex-shrink-0 w-7 h-7 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-          <HiDownload className="w-3.5 h-3.5" />
+        <div className="flex-shrink-0 w-7 h-7 bg-gray-700 rounded-lg flex items-center justify-center">
+          <HiDownload className="w-3.5 h-3.5 text-gray-300" />
         </div>
         <p className="flex-1 font-semibold text-xs truncate">StyleFlow</p>
         <button onClick={handleInstall}
-                className="px-2.5 py-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg text-[11px] font-semibold
-                           hover:opacity-90 transition-opacity flex-shrink-0">
+                className="px-2.5 py-1 bg-gray-600 hover:bg-gray-500 rounded-lg text-[11px] font-semibold
+                           transition-colors flex-shrink-0">
           Installer
         </button>
         <button onClick={dismiss} className="p-0.5 text-gray-500 hover:text-white flex-shrink-0">
