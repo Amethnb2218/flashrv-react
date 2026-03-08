@@ -61,14 +61,6 @@ function DatePicker({ selectedDate, onDateSelect, onSelect, isDateDisabled, days
   const canGoPrev = pageStart > 0
   const canGoNext = pageStart + PAGE_SIZE < allDays.length
 
-  useEffect(() => {
-    if (!selectedDate || !scrollRef.current) return
-    const selectedButton = scrollRef.current.querySelector(`[data-date="${selectedDate}"]`)
-    if (selectedButton) {
-      selectedButton.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
-    }
-  }, [selectedDate, pageStart])
-
   const pickFromOffset = (offsetDays) => {
     const idx = Math.min(Math.max(offsetDays, 0), allDays.length - 1)
     let candidate = idx
@@ -149,11 +141,10 @@ function DatePicker({ selectedDate, onDateSelect, onSelect, isDateDisabled, days
         </button>
       </div>
 
-      <div className="relative w-full min-w-0 overflow-hidden">
+      <div className="relative w-full min-w-0">
         <div
           ref={scrollRef}
-          className="scrollbar-hide flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain pb-1"
-          style={{ WebkitOverflowScrolling: 'touch' }}
+          className="flex flex-wrap gap-2 pb-1"
         >
           {visibleDays.map((day) => {
             const isSelected = selectedDate === day.date
@@ -169,7 +160,7 @@ function DatePicker({ selectedDate, onDateSelect, onSelect, isDateDisabled, days
                   handleSelect(day.date)
                 }}
                 disabled={isDisabled}
-                className={`snap-start w-[68px] flex-shrink-0 rounded-2xl border px-1.5 py-2 text-center transition-all duration-200 sm:w-[78px] sm:px-2 sm:py-2.5 ${
+                className={`w-[calc(25%-6px)] min-w-[64px] max-w-[90px] flex-shrink-0 rounded-2xl border px-1.5 py-2 text-center transition-colors duration-200 sm:px-2 sm:py-2.5 ${
                   isDisabled
                     ? 'cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400'
                     : isSelected

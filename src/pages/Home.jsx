@@ -168,33 +168,13 @@ function Home() {
       }
     }
 
-    // Check permission state first (if supported) to give better feedback
-    if (navigator.permissions && navigator.permissions.query) {
-      navigator.permissions.query({ name: 'geolocation' }).then((result) => {
-        if (result.state === 'denied') {
-          setIsLocating(false)
-          toast.error('La géolocalisation est bloquée. Allez dans les paramètres de votre navigateur pour l\'autoriser.', { duration: 5000 })
-          return
-        }
-        navigator.geolocation.getCurrentPosition(
-          onSuccess,
-          (err) => onError(err, false),
-          { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
-        )
-      }).catch(() => {
-        navigator.geolocation.getCurrentPosition(
-          onSuccess,
-          (err) => onError(err, false),
-          { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
-        )
-      })
-    } else {
-      navigator.geolocation.getCurrentPosition(
-        onSuccess,
-        (err) => onError(err, false),
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
-      )
-    }
+    // Always call getCurrentPosition directly — this triggers the browser's
+    // native "Autoriser / Bloquer" permission dialog automatically.
+    navigator.geolocation.getCurrentPosition(
+      onSuccess,
+      (err) => onError(err, false),
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
+    )
   }
 
   return (
