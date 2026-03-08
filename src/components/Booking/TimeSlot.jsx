@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { FiClock, FiMoon, FiSun, FiSunset } from 'react-icons/fi'
 
@@ -130,27 +129,25 @@ function TimeSlot({
       ) : (
         <div
           ref={scrollRef}
-          className="max-h-[42vh] w-full min-w-0 overflow-x-hidden overflow-y-auto rounded-xl border border-gray-100 bg-gray-50/60 p-2"
-          style={{ WebkitOverflowScrolling: 'touch' }}
+          className="w-full min-w-0 rounded-xl border border-gray-100 bg-gray-50/60 p-2"
         >
           <div className="grid grid-cols-[repeat(auto-fit,minmax(72px,1fr))] gap-2 sm:grid-cols-[repeat(auto-fit,minmax(90px,1fr))] sm:gap-2.5">
             {currentPeriod.slots.map((time) => {
               const isSelected = selectedTime === time
 
               return (
-                <motion.button
+                <button
                   key={time}
                   data-time={time}
-                  whileTap={{ scale: 0.97 }}
                   onClick={() => onTimeSelect(time)}
-                  className={`w-full min-w-0 rounded-xl border py-2.5 text-center text-sm font-semibold transition-all ${
+                  className={`w-full min-w-0 rounded-xl border py-2.5 text-center text-sm font-semibold transition-colors ${
                     isSelected
                       ? 'border-primary-500 bg-primary-600 text-white shadow-md shadow-primary-500/25'
                       : 'border-gray-200 bg-white text-gray-800 active:bg-gray-100'
                   }`}
                 >
                   {time}
-                </motion.button>
+                </button>
               )
             })}
           </div>

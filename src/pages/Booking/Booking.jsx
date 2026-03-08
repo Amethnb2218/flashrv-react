@@ -240,7 +240,7 @@ function Booking() {
 
         <div className="grid lg:grid-cols-3 gap-4 sm:gap-8 w-full min-w-0">
           {/* Main Content */}
-          <div className="lg:col-span-2 min-w-0 overflow-hidden">
+          <div className="lg:col-span-2 min-w-0">
             <AnimatePresence mode="wait">
               <motion.div
                 key={state.step}
@@ -248,7 +248,7 @@ function Booking() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="box-border w-full min-w-0 overflow-hidden rounded-2xl bg-white p-3 shadow-sm sm:p-6"
+                className="box-border w-full min-w-0 overflow-x-hidden rounded-2xl bg-white p-3 shadow-sm sm:p-6"
               >
                 {/* Step 1: Services */}
                 {state.step === 1 && (

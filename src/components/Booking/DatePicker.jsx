@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi'
 
@@ -151,10 +150,9 @@ function DatePicker({ selectedDate, onDateSelect, onSelect, isDateDisabled, days
             const isDisabled = day.disabled
 
             return (
-              <motion.button
+              <button
                 key={day.date}
                 data-date={day.date}
-                whileTap={{ scale: isDisabled ? 1 : 0.97 }}
                 onClick={() => {
                   if (isDisabled) return
                   handleSelect(day.date)
@@ -177,7 +175,7 @@ function DatePicker({ selectedDate, onDateSelect, onSelect, isDateDisabled, days
                   <p className={`mt-1 text-[10px] font-semibold ${isSelected ? 'text-primary-100' : 'text-primary-600'}`}>Aujourd&apos;hui</p>
                 )}
                 {isDisabled && <p className="mt-1 text-[10px] font-semibold text-gray-400">Indispo</p>}
-              </motion.button>
+              </button>
             )
           })}
         </div>
