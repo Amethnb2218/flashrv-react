@@ -1,6 +1,6 @@
 ﻿import { categories } from '../../data/salons'
 import SalonCard from '../../components/Salon/SalonCard'
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { FiSearch, FiMapPin, FiFilter, FiX, FiStar, FiCamera, FiShoppingBag } from 'react-icons/fi'
@@ -10,6 +10,7 @@ import QuartierSelector from '../../components/UI/QuartierSelector'
 function Salons() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [showFilters, setShowFilters] = useState(false)
+  const searchInputRef = useRef(null)
   const [filters, setFilters] = useState({
     search: searchParams.get('search') || '',
     neighborhood: searchParams.get('neighborhood') || '',
@@ -24,6 +25,23 @@ function Salons() {
   const [salons, setSalons] = useState([])
   const [loading, setLoading] = useState(true)
   const reduceMotion = useReducedMotion()
+
+  // Sync businessType from URL when navigating (e.g. Navbar Salons/Boutiques links)
+  useEffect(() => {
+    const urlBt = searchParams.get('businessType') || ''
+    setFilters(prev => {
+      if (prev.businessType !== urlBt) {
+        return { ...prev, businessType: urlBt, type: urlBt ? '' : prev.type, salonType: urlBt ? '' : prev.salonType }
+      }
+      return prev
+    })
+    // Handle focus=search from Navbar Rechercher button
+    if (searchParams.get('focus') === 'search') {
+      searchParams.delete('focus')
+      setSearchParams(searchParams, { replace: true })
+      setTimeout(() => searchInputRef.current?.focus(), 300)
+    }
+  }, [searchParams])
 
   useEffect(() => {
     const fetchSalons = async () => {
@@ -281,6 +299,7 @@ function Salons() {
               <div className="flex-1 relative">
                 <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
+                  ref={searchInputRef}
                   type="text"
                   value={filters.search}
                   onChange={(e) => updateFilter('search', e.target.value)}

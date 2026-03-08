@@ -48,9 +48,11 @@ function Navbar() {
 
   const closeDrawer = useCallback(() => setIsOpen(false), [])
 
+  const isSalonPage = location.pathname === '/salons' && searchParams.get('businessType') !== 'BOUTIQUE'
+
   const navLinks = [
     { to: '/', label: 'Accueil' },
-    { to: '/salons', label: 'Salons' },
+    { to: '/salons?businessType=SALON', label: 'Salons' },
   ]
 
   return (
@@ -96,24 +98,25 @@ function Navbar() {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-1">
-              {navLinks.map(link => (
-                <NavLink
-                  key={link.to}
-                  to={link.to}
-                  end={link.to === '/salons'}
-                  className={({ isActive }) => {
-                    const active = link.to === '/salons' ? (isActive && !isBoutiquePage) : isActive
-                    return `
+              {navLinks.map(link => {
+                const isSalonLink = link.to.includes('businessType=SALON')
+                const active = isSalonLink ? (isSalonPage && !isBoutiquePage) : (location.pathname === link.to)
+                return (
+                  <Link
+                    key={link.to}
+                    to={link.to}
+                    className={`
                     px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2
                     ${active 
                       ? 'text-gray-900 bg-gray-100' 
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                     }
-                  `}}
-                >
-                  {link.label}
-                </NavLink>
-              ))}
+                  `}
+                  >
+                    {link.label}
+                  </Link>
+                )
+              })}
 
               <Link
                 to="/salons?businessType=BOUTIQUE"
@@ -127,7 +130,7 @@ function Navbar() {
               </Link>
               
               <button
-                onClick={() => navigate('/salons')}
+                onClick={() => navigate('/salons?focus=search')}
                 className="flex items-center space-x-2 px-3 py-2 text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
               >
                 <FiSearch className="w-4 h-4" />
@@ -298,22 +301,18 @@ function Navbar() {
                       <FiHome className="w-5 h-5" />
                       Accueil
                     </NavLink>
-                    <NavLink
-                      to="/salons"
-                      end
+                    <Link
+                      to="/salons?businessType=SALON"
                       onClick={closeDrawer}
-                      className={({ isActive }) => {
-                        const active = isActive && !isBoutiquePage
-                        return `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
-                          active
-                            ? 'bg-amber-50 text-amber-700'
-                            : 'text-gray-700 hover:bg-gray-50'
-                        }`
-                      }}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
+                        isSalonPage && !isBoutiquePage
+                          ? 'bg-amber-50 text-amber-700'
+                          : 'text-gray-700 hover:bg-gray-50'
+                      }`}
                     >
                       <FiScissors className="w-5 h-5" />
                       Salons
-                    </NavLink>
+                    </Link>
                     <Link
                       to="/salons?businessType=BOUTIQUE"
                       onClick={closeDrawer}
