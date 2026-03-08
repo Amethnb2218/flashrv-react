@@ -4422,42 +4422,56 @@ right={
         <FiImage className="w-10 h-10 text-gray-300" />
       )}
     </div>
-    <div className="flex flex-col gap-2">
-      <input
-        type="file"
-        accept="image/*"
-        onChange={async (e) => {
-          const file = e.target.files?.[0];
-          if (!file) return;
-          if (!validateMedia(file)) return;
-          readMediaAsDataUrl(file, (dataUrl) =>
-            setSalonSettings((p) => ({ ...p, image: dataUrl }))
-          );
-          try {
-            const imageUrl = await uploadSalonImage(file);
-            if (imageUrl) {
-              setSalonSettings((p) => ({ ...p, image: imageUrl }));
-              toast.success("Photo du salon mise à jour.");
-            }
-          } catch (err) {
-            toast.error(err.message || "Erreur lors de l'upload de l'image.");
+    <input
+      type="file"
+      accept="image/*"
+      ref={(el) => (window._salonImageInput = el)}
+      className="hidden"
+      onChange={async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (!validateMedia(file)) return;
+        readMediaAsDataUrl(file, (dataUrl) =>
+          setSalonSettings((p) => ({ ...p, image: dataUrl }))
+        );
+        try {
+          const imageUrl = await uploadSalonImage(file);
+          if (imageUrl) {
+            setSalonSettings((p) => ({ ...p, image: imageUrl }));
+            toast.success("Photo du salon mise à jour.");
           }
-        }}
-        className="block text-sm text-gray-600"
-      />
-      <div className="flex gap-2">
+        } catch (err) {
+          toast.error(err.message || "Erreur lors de l'upload de l'image.");
+        }
+        e.target.value = "";
+      }}
+    />
+    <div className="flex flex-col gap-2 justify-center">
+      {salonSettings.image ? (
+        <div className="flex gap-2">
+          <Button
+            variant="secondary"
+            onClick={() => window._salonImageInput?.click()}
+          >
+            <FiEdit2 className="mr-2" /> Modifier
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => setSalonSettings((p) => ({ ...p, image: "" }))}
+          >
+            <FiTrash2 className="mr-2" /> Supprimer
+          </Button>
+        </div>
+      ) : (
         <Button
           variant="secondary"
-          onClick={() => setSalonSettings((p) => ({ ...p, image: "" }))}
+          onClick={() => window._salonImageInput?.click()}
         >
-          Supprimer
+          <FiImage className="mr-2" /> Ajouter une photo
         </Button>
-        <Button variant="secondary" onClick={saveSettings} disabled={savingSettings}>
-          <FiSave className="mr-2" /> Sauvegarder
-        </Button>
-      </div>
+      )}
       <p className="text-xs text-gray-500">
-        Ajoute une image carrée ou paysage. Elle sera affichée sur la page d’accueil et la fiche salon.
+        Image carrée ou paysage. Affichée sur la page d'accueil et la fiche salon.
       </p>
     </div>
   </div>
