@@ -11,7 +11,7 @@ function TimeSlot({
   onDateSelect,
 }) {
   const scrollRef = useRef(null)
-  const [activePeriod, setActivePeriod] = useState(null)
+  const [activePeriod, setActivePeriod] = useState('matin')
 
   const timeSlots = useMemo(() => {
     const slots = []
@@ -56,12 +56,8 @@ function TimeSlot({
       if (hour < 12) setActivePeriod('matin')
       else if (hour < 17) setActivePeriod('aprem')
       else setActivePeriod('soir')
-      return
     }
-    if (!activePeriod) {
-      setActivePeriod('matin')
-    }
-  }, [selectedTime, activePeriod])
+  }, [selectedTime])
 
   useEffect(() => {
     if (!selectedTime || !scrollRef.current) return
