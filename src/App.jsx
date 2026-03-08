@@ -18,9 +18,12 @@ import ProOnboarding from './pages/Auth/ProOnboarding'
 import AdminDashboard from './pages/Admin/AdminDashboard'
 import NotFound from './pages/NotFound'
 import ProtectedRoute from './components/Auth/ProtectedRoute'
+import InstallPrompt from './components/PWA/InstallPrompt'
 
 function App() {
   return (
+    <>
+    <InstallPrompt />
     <Routes>
       <Route path="/" element={<Layout />}>
         {/* Public routes */}
@@ -87,6 +90,7 @@ function App() {
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
+    </>
   )
 }
 

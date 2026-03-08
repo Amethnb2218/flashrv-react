@@ -9,6 +9,6 @@
     }
   ],
   "rewrites": [
-    { "source": "/((?!assets|favicon|robots\\.txt|sitemap\\.xml).*)", "destination": "/index.html" }
+    { "source": "/((?!assets|favicon|icons|manifest\\.json|sw\\.js|robots\\.txt|sitemap\\.xml).*)", "destination": "/index.html" }
   ]
 }
