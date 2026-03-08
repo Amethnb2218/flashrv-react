@@ -1,4 +1,5 @@
 ﻿import { useState, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { FiMenu, FiX, FiUser, FiLogOut, FiCalendar, FiSettings, FiPhone, FiMapPin, FiSearch, FiHeart, FiStar, FiHome, FiScissors, FiShoppingBag } from 'react-icons/fi'
@@ -29,6 +30,11 @@ function Navbar() {
     setIsOpen(false)
     navigate('/')
   }
+
+  // Close drawer on route change
+  useEffect(() => {
+    setIsOpen(false)
+  }, [location.pathname, location.search])
 
   // Lock body scroll when mobile drawer is open
   useEffect(() => {
@@ -238,10 +244,11 @@ function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Drawer — rendered outside main navbar div for stable positioning */}
-      <AnimatePresence>
-        {isOpen && (
-          <>
+      {/* Mobile Drawer — rendered via Portal outside nav for stable positioning */}
+      {createPortal(
+        <AnimatePresence mode="wait">
+          {isOpen && (
+            <>
             {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
@@ -398,7 +405,9 @@ function Navbar() {
             </motion.div>
           </>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+      document.body
+      )}
     </nav>
   )
 }
