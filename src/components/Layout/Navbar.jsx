@@ -284,15 +284,25 @@ function Navbar() {
                       <Link
                         to={user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' ? '/admin' : user.role === 'PRO' ? '/pro/dashboard' : '/dashboard'}
                         onClick={() => setIsOpen(false)}
-                        className="block py-2 px-4 text-gray-700 hover:bg-gray-100 rounded-lg"
+                        className="flex items-center space-x-2 py-2 px-4 text-gray-700 hover:bg-gray-100 rounded-lg"
                       >
-                        {user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' ? 'Dashboard admin' : user.role === 'PRO' ? 'Mon dashboard' : 'Mes réservations'}
+                        <FiCalendar className="w-4 h-4" />
+                        <span>{user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' ? 'Dashboard admin' : user.role === 'PRO' ? 'Mon dashboard' : 'Mes réservations'}</span>
+                      </Link>
+                      <Link
+                        to="/profile"
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center space-x-2 py-2 px-4 text-gray-700 hover:bg-gray-100 rounded-lg"
+                      >
+                        <FiSettings className="w-4 h-4" />
+                        <span>Paramètres</span>
                       </Link>
                       <button
                         onClick={() => { handleLogout(); setIsOpen(false) }}
-                        className="block w-full text-left py-2 px-4 text-red-600 hover:bg-red-50 rounded-lg"
+                        className="flex items-center space-x-2 w-full text-left py-2 px-4 text-red-600 hover:bg-red-50 rounded-lg"
                       >
-                        Déconnexion
+                        <FiLogOut className="w-4 h-4" />
+                        <span>Déconnexion</span>
                       </button>
                     </>
                   ) : (
