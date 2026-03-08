@@ -116,22 +116,6 @@ function SalonDetail() {
 
   const isBoutique = salonData?.businessType === 'BOUTIQUE'
 
-  // Open/closed status
-  const todayDayName = (() => {
-    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
-    return days[new Date().getDay()]
-  })()
-  const todayHoursDetail = useMemo(() => {
-    if (!openingHoursMap || typeof openingHoursMap !== 'object') return null
-    return openingHoursMap[todayDayName] || null
-  }, [openingHoursMap, todayDayName])
-  const isOpenNow = useMemo(() => {
-    if (!todayHoursDetail) return false
-    const now = new Date()
-    const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
-    return currentTime >= todayHoursDetail.open && currentTime <= todayHoursDetail.close
-  }, [todayHoursDetail])
-
   const addToCart = (product) => {
     setCart(prev => {
       const existing = prev.find(c => c.product.id === product.id)
@@ -287,6 +271,22 @@ function SalonDetail() {
     })
     return map
   }, [salonData])
+
+  // Open/closed status
+  const todayDayName = (() => {
+    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+    return days[new Date().getDay()]
+  })()
+  const todayHoursDetail = useMemo(() => {
+    if (!openingHoursMap || typeof openingHoursMap !== 'object') return null
+    return openingHoursMap[todayDayName] || null
+  }, [openingHoursMap, todayDayName])
+  const isOpenNow = useMemo(() => {
+    if (!todayHoursDetail) return false
+    const now = new Date()
+    const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+    return currentTime >= todayHoursDetail.open && currentTime <= todayHoursDetail.close
+  }, [todayHoursDetail])
 
   if (isLoading) {
     return (
