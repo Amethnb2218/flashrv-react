@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import AddAdminForm from './AddAdminForm';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  FiUsers, FiUserCheck, FiUserX, FiClock, 
-  FiBarChart2, FiSearch, FiFilter, FiRefreshCw,
-  FiCheck, FiX, FiAlertTriangle, FiShield,
-  FiMail, FiPhone, FiCalendar, FiMoreVertical, FiMessageSquare
+  FiUsers, FiUserCheck, FiClock, 
+  FiBarChart2, FiRefreshCw, FiShield,
+  FiCalendar, FiMessageSquare,
+  FiBell, FiMapPin
 } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 import StatCard from '../../components/UI/StatCard';
@@ -27,157 +27,9 @@ function authFetchOpts(extra = {}) {
       ...(extra.headers || {}),
     },
     ...extra,
-    // ensure headers aren't overwritten
   };
 }
 
-// Composant Client Row avec menu d'actions
-export function ClientRow({ client }) {
-  const [showMenu, setShowMenu] = useState(false);
-  return (
-    <tr className="group border-b border-blue-100 hover:bg-blue-50 transition-all duration-150">
-      <td className="py-3 px-3 sm:px-6">
-        <div>
-          <p className="text-xs font-extrabold tracking-widest uppercase text-blue-700 font-poppins">{client.name}</p>
-          <p className="text-xs font-extrabold tracking-widest lowercase text-blue-700 font-poppins">{client.email?.toLowerCase()}</p>
-        </div>
-      </td>
-      <td className="py-3 px-3 sm:px-6 text-xs font-extrabold tracking-widest uppercase text-blue-700 font-poppins">{client.phoneNumber || '-'}</td>
-      <td className="py-4 px-6 text-xs font-extrabold tracking-widest uppercase text-blue-700 font-poppins">{new Date(client.createdAt).toLocaleDateString('fr-FR')}</td>
-      <td className="py-4 px-6 relative">
-        <div className="relative flex items-center gap-2">
-          <button
-            onClick={() => setShowMenu(!showMenu)}
-            className="p-2 rounded-full bg-white/10 hover:bg-blue-800/40 shadow-lg hover:shadow-yellow-400/40 transition-all duration-200 border border-white/10 backdrop-blur-xl focus:outline-none focus:ring-2 focus:ring-yellow-400"
-          >
-            <FiMoreVertical className="w-5 h-5 text-blue-200 group-hover:text-yellow-400 transition-colors duration-200 drop-shadow-glow" />
-          </button>
-          <AnimatePresence>
-            {showMenu && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="absolute right-0 mt-2 w-44 bg-white/10 backdrop-blur-2xl rounded-2xl shadow-2xl border border-white/10 z-10 animate-fade-in"
-                style={{ boxShadow: '0 8px 32px 0 rgba(255, 255, 0, 0.10)' }}
-                onClick={() => setShowMenu(false)}
-              >
-                <button className="w-full flex items-center gap-2 px-5 py-3 text-sm text-red-200 hover:bg-red-900/30 font-poppins tracking-wide transition-all duration-150 rounded-xl"><FiX className="w-4 h-4" />Supprimer</button>
-                <button className="w-full flex items-center gap-2 px-5 py-3 text-sm text-orange-200 hover:bg-orange-900/30 font-poppins tracking-wide transition-all duration-150 rounded-xl"><FiShield className="w-4 h-4" />Restreindre</button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </td>
-    </tr>
-  )
-}
-
-// Composant Admin Row
-export function AdminRow({ admin, onRestrict }) {
-  const [showMenu, setShowMenu] = useState(false);
-  const [showRestrictModal, setShowRestrictModal] = useState(false);
-  const isRestricted = admin.isRestricted === true;
-
-  return (
-    <tr className="group border-b border-blue-100 hover:bg-blue-50 transition-all duration-150">
-      <td className="py-4 px-6">
-        <div>
-          <p className="font-bold text-[#1E293B] text-lg md:text-xl font-poppins tracking-wide">{admin.name}</p>
-          <p className="text-sm text-[#334155] font-semibold font-inter tracking-wide">{admin.email}</p>
-          {isRestricted && (
-            <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-xs bg-orange-400/20 text-orange-200 font-semibold shadow">Restreint</span>
-          )}
-        </div>
-      </td>
-      <td className="py-4 px-6 text-xs font-extrabold tracking-widest uppercase text-blue-700 font-poppins">{admin.createdAt ? new Date(admin.createdAt).toLocaleDateString('fr-FR') : '-'}</td>
-      <td className="py-4 px-6">
-        <span className="inline-block px-4 py-1 rounded-full text-xs font-bold font-poppins tracking-wider border bg-white text-blue-900">{admin.adminType || '-'}</span>
-      </td>
-      <td className="py-4 px-6 text-xs font-extrabold tracking-widest uppercase text-blue-700 font-poppins">{admin.adminType || '-'}</td>
-      <td className="py-4 px-6 relative">
-        <div className="relative flex items-center gap-2">
-          <button
-            onClick={() => setShowMenu(!showMenu)}
-            className="p-2 rounded-full bg-white/10 hover:bg-blue-800/40 shadow-lg hover:shadow-yellow-400/40 transition-all duration-200 border border-white/10 backdrop-blur-xl focus:outline-none focus:ring-2 focus:ring-yellow-400"
-          >
-            <FiMoreVertical className="w-5 h-5 text-blue-200 group-hover:text-yellow-400 transition-colors duration-200 drop-shadow-glow" />
-          </button>
-          <AnimatePresence>
-            {showMenu && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow-lg border border-gray-100 z-10"
-                onClick={() => setShowMenu(false)}
-              >
-                <button className="w-full flex items-center gap-2 px-4 py-3 text-sm text-orange-700 hover:bg-orange-50" onClick={() => setShowRestrictModal(true)}>Restreindre</button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </td>
-    </tr>
-  );
-}
-// Composant User Row
-export function UserRow({ user, onAction, isLoading, onRestrict, isSuperAdmin }) {
-  const [showMenu, setShowMenu] = useState(false);
-  const [showRestrictModal, setShowRestrictModal] = useState(false);
-  const [confirmAction, setConfirmAction] = useState(null); // { type: 'approve'|'reject'|'suspend'|'reactivate', userId }
-
-  const statusConfig = {
-    PENDING: { label: 'En attente', color: 'bg-gradient-to-r from-yellow-400/30 to-yellow-200/20 text-yellow-200 border border-yellow-300/30 shadow-yellow-400/20' },
-    APPROVED: { label: 'Approuvé', color: 'bg-gradient-to-r from-green-400/30 to-green-200/20 text-green-200 border border-green-300/30 shadow-green-400/20' },
-    REJECTED: { label: 'Refusé', color: 'bg-gradient-to-r from-red-400/30 to-red-200/20 text-red-200 border border-red-300/30 shadow-red-400/20' },
-    SUSPENDED: { label: 'Suspendu', color: 'bg-gradient-to-r from-gray-400/30 to-gray-200/20 text-gray-200 border border-gray-300/30 shadow-gray-400/20' },
-  };
-  const status = statusConfig[user.status] || statusConfig.PENDING;
-  const isRestricted = user.canCreateService === false || user.canBook === false || user.isPublic === false;
-
-  return (
-    <tr className="group border-b border-blue-100 hover:bg-blue-50 transition-all duration-150 text-blue-600">
-      <td className="py-3 px-4">
-        <div>
-          <p className="font-bold text-blue-800 text-base md:text-lg font-montserrat tracking-wide uppercase">{user.name}</p>
-          <p className="text-xs md:text-sm text-blue-500 font-inter tracking-wide lowercase">{user.email?.toLowerCase()}</p>
-          {isRestricted && (
-            <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-xs bg-yellow-100 text-yellow-700 font-semibold font-inter shadow">Restreint</span>
-          )}
-        </div>
-      </td>
-      <td className="py-3 px-4 text-xs md:text-sm font-semibold tracking-widest uppercase text-blue-500 font-inter">{user.phoneNumber || '-'}</td>
-      <td className="py-3 px-4">
-        <span className={`inline-block px-3 py-0.5 rounded-full text-xs md:text-sm font-bold font-montserrat tracking-wider border text-blue-600 bg-blue-50 ${status.color}`}>{status.label}</span>
-      </td>
-      <td className="py-3 px-4 text-xs md:text-sm font-semibold tracking-widest uppercase text-blue-500 font-inter">{user.createdAt ? new Date(user.createdAt).toLocaleDateString('fr-FR') : '-'}</td>
-      <td className="py-3 px-4 relative">
-        <div className="relative flex items-center gap-2">
-          <button
-            onClick={() => setShowMenu(!showMenu)}
-            className="p-2 rounded-full bg-white/10 hover:bg-blue-200/40 shadow-lg hover:shadow-blue-400/40 transition-all duration-200 border border-white/10 backdrop-blur-xl focus:outline-none focus:ring-2 focus:ring-blue-400"
-          >
-            <FiMoreVertical className="w-5 h-5 text-blue-600 group-hover:text-blue-800 transition-colors duration-200 drop-shadow-glow" />
-          </button>
-          <AnimatePresence>
-            {showMenu && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="absolute right-0 mt-2 w-40 bg-white rounded-xl shadow-lg border border-gray-100 z-10"
-                onClick={() => setShowMenu(false)}
-              >
-                <button className="w-full flex items-center gap-2 px-4 py-2 text-xs md:text-sm text-blue-700 hover:bg-blue-100 font-montserrat" onClick={() => setShowRestrictModal(true)}>Restreindre</button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </td>
-    </tr>
-  );
-}
 export default function AdminDashboard() {
   const { user } = useAuth()
   const [activeTab, setActiveTab] = useState('pending')
@@ -192,6 +44,48 @@ export default function AdminDashboard() {
   const [clientSearch, setClientSearch] = useState('')
   const [feedbacks, setFeedbacks] = useState([])
   const [feedbackLoading, setFeedbackLoading] = useState(false)
+
+  // Notification bell state
+  const [notifOpen, setNotifOpen] = useState(false)
+  const [pendingPros, setPendingPros] = useState([])
+  const notifRef = useRef(null)
+
+  // Track "last seen" pending count in localStorage
+  const NOTIF_KEY = 'flashrv_admin_last_seen_pending'
+  const getLastSeen = () => parseInt(localStorage.getItem(NOTIF_KEY) || '0', 10)
+  const pendingCount = stats?.pros?.pending || 0
+  const unreadCount = Math.max(0, pendingCount - getLastSeen())
+
+  // Close notification dropdown on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (notifRef.current && !notifRef.current.contains(e.target)) {
+        setNotifOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  // Fetch pending pros for notification dropdown
+  const fetchPendingForNotif = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_URL}/admin/pro/pending`, authFetchOpts())
+      if (res.ok) {
+        const data = await res.json()
+        setPendingPros(data.data?.pros || [])
+      }
+    } catch {}
+  }, [])
+
+  // When bell is opened, mark as seen and load pending data
+  const toggleNotif = () => {
+    if (!notifOpen) {
+      fetchPendingForNotif()
+      localStorage.setItem(NOTIF_KEY, String(pendingCount))
+    }
+    setNotifOpen(prev => !prev)
+  }
 
   const isSuperAdmin = user?.role === 'SUPER_ADMIN'
   const feedbackTypeLabels = {
@@ -393,19 +287,96 @@ export default function AdminDashboard() {
       <div className="max-w-7xl mx-auto px-4">
         {/* Header */}
         <header className="sticky top-0 z-20 flex flex-col gap-2 py-5 sm:py-8 mb-6 sm:mb-8 bg-white rounded-2xl shadow-md border border-gray-200 px-4 sm:px-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+          <div className="flex items-center justify-between gap-2">
             <h1 className="text-xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-[#1E293B] font-poppins">Dashboard Style • Flow</h1>
-            {isSuperAdmin && (
-              <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold border border-blue-300">
-                <FiShield className="w-5 h-5 text-blue-500" />
-                Super Admin
-              </span>
-            )}
-            {!isSuperAdmin && (
-              <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-green-100 text-green-700 rounded-full text-sm font-semibold border border-green-200">
-                Admin
-              </span>
-            )}
+            <div className="flex items-center gap-3">
+              {/* Notification bell */}
+              <div className="relative" ref={notifRef}>
+                <button
+                  onClick={toggleNotif}
+                  className="relative p-2.5 rounded-xl bg-slate-50 border border-slate-200 hover:bg-slate-100 transition"
+                  title="Notifications"
+                >
+                  <FiBell className="w-5 h-5 text-slate-600" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[20px] h-5 flex items-center justify-center px-1 rounded-full bg-rose-500 text-white text-[11px] font-bold ring-2 ring-white">
+                      {unreadCount > 99 ? '99+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+                <AnimatePresence>
+                  {notifOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-200 z-50 overflow-hidden"
+                    >
+                      <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+                        <h3 className="text-sm font-bold text-slate-800">Nouvelles inscriptions PRO</h3>
+                        <span className="text-xs text-slate-400">{pendingCount} en attente</span>
+                      </div>
+                      <div className="max-h-80 overflow-y-auto divide-y divide-slate-50">
+                        {pendingPros.length === 0 ? (
+                          <div className="px-4 py-8 text-center text-sm text-slate-400">Aucune inscription en attente</div>
+                        ) : (
+                          pendingPros.slice(0, 10).map(pro => (
+                            <button
+                              key={pro.id}
+                              onClick={() => {
+                                setActiveTab('pending')
+                                setNotifOpen(false)
+                              }}
+                              className="w-full text-left px-4 py-3 hover:bg-slate-50 transition flex items-start gap-3"
+                            >
+                              <div className="w-9 h-9 shrink-0 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center text-sm font-bold text-amber-600">
+                                {pro.name?.[0]?.toUpperCase() || pro.email?.[0]?.toUpperCase()}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="text-sm font-semibold text-slate-800 truncate">{pro.salon?.name || pro.name || pro.email}</div>
+                                <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
+                                  {pro.salon?.city && <span className="flex items-center gap-0.5"><FiMapPin className="w-3 h-3" />{pro.salon.city}</span>}
+                                  <span>{pro.email}</span>
+                                </div>
+                                <div className="text-[11px] text-slate-400 mt-0.5">
+                                  {pro.createdAt ? new Date(pro.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}
+                                </div>
+                              </div>
+                              <span className="shrink-0 mt-1 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                                <FiClock className="w-3 h-3 mr-0.5" />En attente
+                              </span>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                      {pendingPros.length > 0 && (
+                        <div className="px-4 py-2.5 border-t border-slate-100">
+                          <button
+                            onClick={() => { setActiveTab('pending'); setNotifOpen(false); }}
+                            className="w-full text-center text-sm font-semibold text-blue-600 hover:text-blue-700 transition"
+                          >
+                            Voir tous les PROs en attente →
+                          </button>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+              {/* Role badge */}
+              {isSuperAdmin && (
+                <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold border border-blue-300">
+                  <FiShield className="w-5 h-5 text-blue-500" />
+                  Super Admin
+                </span>
+              )}
+              {!isSuperAdmin && (
+                <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-green-100 text-green-700 rounded-full text-sm font-semibold border border-green-200">
+                  Admin
+                </span>
+              )}
+            </div>
           </div>
           <p className="text-sm sm:text-base text-[#64748B] font-normal mt-2 ml-1">Plateforme de gestion intelligente et monitoring temps réel</p>
         </header>

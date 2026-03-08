@@ -40,57 +40,59 @@ export default function AdminsSection({ admins, loading, onRefresh, onDelete, on
 
   /* ── Action buttons (shared) ── */
   const ActionButtons = ({ row }) => (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex items-center gap-1.5">
       <button
         onClick={() => handleRestrict(row)}
-        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-500 text-white font-semibold text-xs shadow-sm hover:bg-amber-600 active:scale-95 transition"
+        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-amber-500 text-white font-semibold text-xs hover:bg-amber-600 active:scale-95 transition"
         title="Restreindre les droits"
       >
-        <FiShield className="w-4 h-4" />
+        <FiShield className="w-3.5 h-3.5" />
         Restreindre
       </button>
       <button
         onClick={() => handleDelete(row)}
-        className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-500 text-white font-semibold text-xs shadow-sm hover:bg-rose-600 active:scale-95 transition"
+        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-rose-500 text-white font-semibold text-xs hover:bg-rose-600 active:scale-95 transition"
         title="Supprimer l'admin"
       >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
         Supprimer
       </button>
     </div>
   );
 
-  /* ── Mobile card ── */
+  /* ── Mobile card (modern SaaS style) ── */
   const AdminCard = ({ row }) => (
-    <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-4 flex flex-col gap-3">
-      <div className="flex items-center gap-3">
+    <div className="group rounded-xl border border-slate-200 bg-white hover:border-slate-300 hover:shadow-md transition-all duration-200 overflow-hidden">
+      <div className="px-4 pt-4 pb-3 flex items-start gap-3">
         <button
           type="button"
           onClick={() => setSelectedUser(row)}
-          className="w-11 h-11 shrink-0 rounded-full bg-indigo-50 border-2 border-indigo-100 flex items-center justify-center text-lg text-indigo-600 font-bold"
+          className="w-10 h-10 shrink-0 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-sm text-white font-bold shadow-sm"
         >
           {row.name?.[0]?.toUpperCase() || row.email?.[0]?.toUpperCase()}
         </button>
         <div className="flex-1 min-w-0">
-          <button
-            type="button"
-            onClick={() => setSelectedUser(row)}
-            className="text-sm font-semibold text-slate-800 truncate block max-w-full text-left hover:text-indigo-700 transition"
-          >
-            {row.name || row.email}
-          </button>
-          <div className="text-xs text-slate-500 truncate">{row.email}</div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setSelectedUser(row)}
+              className="text-sm font-semibold text-slate-900 truncate hover:text-indigo-600 transition"
+            >
+              {row.name || row.email}
+            </button>
+            {row.adminType && (
+              <span className="shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                {row.adminType}
+              </span>
+            )}
+          </div>
+          <div className="text-xs text-slate-500 truncate mt-0.5">{row.email}</div>
         </div>
-        {row.adminType && (
-          <span className="shrink-0 inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border bg-slate-100 text-slate-700 border-slate-200">
-            {row.adminType}
-          </span>
-        )}
       </div>
-      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
+      <div className="px-4 pb-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
         <span className="flex items-center gap-1"><FiCalendar className="w-3 h-3 text-slate-400" /> {row.createdAt ? new Date(row.createdAt).toLocaleDateString("fr-FR") : "-"}</span>
       </div>
-      <div className="pt-1 border-t border-slate-100">
+      <div className="px-4 py-2.5 border-t border-slate-100 bg-slate-50/50">
         <ActionButtons row={row} />
       </div>
     </div>
@@ -146,17 +148,21 @@ export default function AdminsSection({ admins, loading, onRefresh, onDelete, on
           columns={[
             {
               key: "email",
-              label: (
-                <div className="flex justify-start w-full pl-6">Email</div>
-              ),
+              label: "Administrateur",
               render: row => (
                 <button
                   type="button"
                   onClick={() => setSelectedUser(row)}
-                  className="inline-block px-4 py-2 rounded-xl bg-emerald-50 border border-emerald-100 shadow-sm hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-200 transition cursor-pointer"
+                  className="flex items-center gap-3 hover:opacity-80 transition"
                   title="Voir le profil complet"
                 >
-                  <span className="text-xs text-emerald-700 font-inter tracking-wide underline underline-offset-2">{row.email}</span>
+                  <div className="w-8 h-8 shrink-0 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-xs text-white font-bold">
+                    {row.name?.[0]?.toUpperCase() || row.email?.[0]?.toUpperCase()}
+                  </div>
+                  <div className="text-left min-w-0">
+                    <div className="text-sm font-semibold text-slate-800 truncate">{row.name || row.email}</div>
+                    <div className="text-xs text-slate-500 truncate">{row.email}</div>
+                  </div>
                 </button>
               ),
             },
@@ -173,7 +179,7 @@ export default function AdminsSection({ admins, loading, onRefresh, onDelete, on
               key: "adminType",
               label: "Type",
               render: row => (
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border bg-slate-100 text-slate-800 border-slate-200">
+                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border bg-indigo-50 text-indigo-700 border-indigo-200">
                   {row.adminType || "-"}
                 </span>
               ),
@@ -187,27 +193,34 @@ export default function AdminsSection({ admins, loading, onRefresh, onDelete, on
           pagination={null}
         />
       </div>
-    {/* Carte modale premium infos admin */}
+    {/* Modern detail modal */}
     {selectedUser && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-        <div className="bg-white rounded-3xl shadow-2xl border border-emerald-100 max-w-md w-full p-8 relative animate-fade-in">
-          <button
-            onClick={() => setSelectedUser(null)}
-            className="absolute top-4 right-4 p-2 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-            title="Fermer"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-          </button>
-          <div className="flex flex-col items-center gap-4">
-            <div className="w-20 h-20 rounded-full bg-emerald-50 border-4 border-emerald-100 flex items-center justify-center text-4xl text-emerald-500 font-montserrat shadow">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setSelectedUser(null)}>
+        <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-md w-full mx-4 overflow-hidden" onClick={e => e.stopPropagation()}>
+          <div className="relative bg-gradient-to-r from-indigo-500 to-purple-500 px-6 pt-6 pb-10">
+            <button
+              onClick={() => setSelectedUser(null)}
+              className="absolute top-3 right-3 p-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-white transition"
+              title="Fermer"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          </div>
+          <div className="flex flex-col items-center -mt-8 px-6 pb-6">
+            <div className="w-16 h-16 rounded-full bg-white border-4 border-white shadow-lg flex items-center justify-center text-2xl font-bold text-indigo-600 bg-indigo-50">
               {selectedUser.name?.[0]?.toUpperCase() || selectedUser.email?.[0]?.toUpperCase()}
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-montserrat text-emerald-700 mb-1">{selectedUser.name || <span className='italic text-slate-400'>(Nom inconnu)</span>}</div>
-              <div className="text-base font-inter text-emerald-600 mb-2">{selectedUser.email}</div>
-              <div className="flex flex-col gap-1 text-sm text-slate-500 font-inter">
-                <span><b>Type :</b> {selectedUser.adminType || '-'}</span>
-                <span><b>Inscription :</b> {selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString('fr-FR') : '-'}</span>
+            <h3 className="mt-3 text-lg font-bold text-slate-900">{selectedUser.name || <span className="italic text-slate-400">Nom inconnu</span>}</h3>
+            <p className="text-sm text-slate-500">{selectedUser.email}</p>
+            {selectedUser.adminType && (
+              <span className="mt-2 inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                {selectedUser.adminType}
+              </span>
+            )}
+            <div className="w-full mt-5 space-y-3">
+              <div className="flex items-center gap-3 text-sm">
+                <FiCalendar className="w-4 h-4 text-slate-400 shrink-0" />
+                <span className="text-slate-600">{selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}</span>
               </div>
             </div>
           </div>

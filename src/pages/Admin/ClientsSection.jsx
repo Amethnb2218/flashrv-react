@@ -31,14 +31,14 @@ export default function ClientsSection({ clients, loading, onRefresh }) {
     </div>
   );
 
-  /* ── Mobile card ── */
+  /* ── Mobile card (modern SaaS style) ── */
   const ClientCard = ({ row }) => (
-    <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-4 flex flex-col gap-3">
-      <div className="flex items-center gap-3">
+    <div className="group rounded-xl border border-slate-200 bg-white hover:border-slate-300 hover:shadow-md transition-all duration-200 overflow-hidden">
+      <div className="px-4 py-3.5 flex items-center gap-3">
         <button
           type="button"
           onClick={() => setSelectedUser(row)}
-          className="w-11 h-11 shrink-0 rounded-full bg-blue-50 border-2 border-blue-100 flex items-center justify-center text-lg text-blue-600 font-bold"
+          className="w-10 h-10 shrink-0 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-sm text-white font-bold shadow-sm"
         >
           {row.name?.[0]?.toUpperCase() || row.email?.[0]?.toUpperCase()}
         </button>
@@ -46,16 +46,16 @@ export default function ClientsSection({ clients, loading, onRefresh }) {
           <button
             type="button"
             onClick={() => setSelectedUser(row)}
-            className="text-sm font-semibold text-slate-800 truncate block max-w-full text-left hover:text-blue-700 transition"
+            className="text-sm font-semibold text-slate-900 truncate block max-w-full text-left hover:text-blue-600 transition"
           >
             {row.name || row.email}
           </button>
-          <div className="text-xs text-slate-500 truncate flex items-center gap-1">
-            <FiMail className="w-3 h-3 shrink-0" /> {row.email}
+          <div className="text-xs text-slate-500 truncate flex items-center gap-1 mt-0.5">
+            <FiMail className="w-3 h-3 shrink-0 text-slate-400" /> {row.email}
           </div>
         </div>
       </div>
-      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600">
+      <div className="px-4 pb-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
         <span className="flex items-center gap-1"><FiPhone className="w-3 h-3 text-slate-400" /> {row.phoneNumber || "-"}</span>
         <span className="flex items-center gap-1"><FiCalendar className="w-3 h-3 text-slate-400" /> {row.createdAt ? new Date(row.createdAt).toLocaleDateString("fr-FR") : "-"}</span>
       </div>
@@ -113,17 +113,21 @@ export default function ClientsSection({ clients, loading, onRefresh }) {
             columns={[ 
               {
                 key: "email",
-                label: (
-                  <span className="flex justify-start w-full pl-6">Email</span>
-                ),
+                label: "Client",
                 render: row => (
                   <button
                     type="button"
                     onClick={() => setSelectedUser(row)}
-                    className="inline-block px-4 py-2 rounded-xl bg-emerald-50 border border-emerald-100 shadow-sm hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-emerald-200 transition cursor-pointer text-left w-full"
+                    className="flex items-center gap-3 hover:opacity-80 transition"
                     title="Voir le profil complet"
                   >
-                    <span className="text-xs text-emerald-700 font-inter tracking-wide underline underline-offset-2 text-left w-full">{row.email}</span>
+                    <div className="w-8 h-8 shrink-0 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-xs text-white font-bold">
+                      {row.name?.[0]?.toUpperCase() || row.email?.[0]?.toUpperCase()}
+                    </div>
+                    <div className="text-left min-w-0">
+                      <div className="text-sm font-semibold text-slate-800 truncate">{row.name || row.email}</div>
+                      <div className="text-xs text-slate-500 truncate">{row.email}</div>
+                    </div>
                   </button>
                 ),
               },
@@ -150,27 +154,33 @@ export default function ClientsSection({ clients, loading, onRefresh }) {
           />
         </div>
       </SectionCard>
-      {/* Carte modale premium infos client */}
+      {/* Modern detail modal */}
       {selectedUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl shadow-2xl border border-emerald-100 max-w-md w-full p-8 relative animate-fade-in">
-            <button
-              onClick={() => setSelectedUser(null)}
-              className="absolute top-4 right-4 p-2 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-200"
-              title="Fermer"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-            </button>
-            <div className="flex flex-col items-center gap-4">
-              <div className="w-20 h-20 rounded-full bg-emerald-50 border-4 border-emerald-100 flex items-center justify-center text-4xl text-emerald-500 font-montserrat shadow">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setSelectedUser(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-md w-full mx-4 overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="relative bg-gradient-to-r from-blue-500 to-indigo-500 px-6 pt-6 pb-10">
+              <button
+                onClick={() => setSelectedUser(null)}
+                className="absolute top-3 right-3 p-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-white transition"
+                title="Fermer"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="flex flex-col items-center -mt-8 px-6 pb-6">
+              <div className="w-16 h-16 rounded-full bg-white border-4 border-white shadow-lg flex items-center justify-center text-2xl font-bold text-blue-600 bg-blue-50">
                 {selectedUser.name?.[0]?.toUpperCase() || selectedUser.email?.[0]?.toUpperCase()}
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-montserrat text-emerald-700 mb-1">{selectedUser.name || <span className='italic text-slate-400'>(Nom inconnu)</span>}</div>
-                <div className="text-base font-inter text-emerald-600 mb-2">{selectedUser.email}</div>
-                <div className="flex flex-col gap-1 text-sm text-slate-500 font-inter">
-                  <span><b>Téléphone :</b> {selectedUser.phoneNumber || <span className='italic text-slate-400'>Non renseigné</span>}</span>
-                  <span><b>Inscription :</b> {selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString('fr-FR') : '-'}</span>
+              <h3 className="mt-3 text-lg font-bold text-slate-900">{selectedUser.name || <span className="italic text-slate-400">Nom inconnu</span>}</h3>
+              <p className="text-sm text-slate-500">{selectedUser.email}</p>
+              <div className="w-full mt-5 space-y-3">
+                <div className="flex items-center gap-3 text-sm">
+                  <FiPhone className="w-4 h-4 text-slate-400 shrink-0" />
+                  <span className="text-slate-600">{selectedUser.phoneNumber || <span className="italic text-slate-400">Non renseigné</span>}</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm">
+                  <FiCalendar className="w-4 h-4 text-slate-400 shrink-0" />
+                  <span className="text-slate-600">{selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}</span>
                 </div>
               </div>
             </div>
