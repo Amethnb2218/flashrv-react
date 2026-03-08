@@ -1,7 +1,7 @@
-﻿import { useState, useEffect } from 'react'
+﻿import { useState, useEffect, useCallback } from 'react'
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { FiMenu, FiX, FiUser, FiLogOut, FiCalendar, FiSettings, FiPhone, FiMapPin, FiSearch, FiHeart, FiStar } from 'react-icons/fi'
+import { FiMenu, FiX, FiUser, FiLogOut, FiCalendar, FiSettings, FiPhone, FiMapPin, FiSearch, FiHeart, FiStar, FiHome, FiScissors, FiShoppingBag } from 'react-icons/fi'
 import { motion, AnimatePresence } from 'framer-motion'
 import Logo from '../UI/Logo'
 
@@ -26,8 +26,21 @@ function Navbar() {
   const handleLogout = () => {
     logout()
     setShowUserMenu(false)
+    setIsOpen(false)
     navigate('/')
   }
+
+  // Lock body scroll when mobile drawer is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [isOpen])
+
+  const closeDrawer = useCallback(() => setIsOpen(false), [])
 
   const navLinks = [
     { to: '/', label: 'Accueil' },
@@ -224,108 +237,165 @@ function Navbar() {
           </div>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile Drawer */}
         <AnimatePresence>
           {isOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="md:hidden bg-white rounded-b-2xl shadow-lg overflow-hidden border-t border-gray-100"
-            >
-              <div className="px-4 py-4 space-y-2">
-                {navLinks.map(link => (
-                  <NavLink
-                    key={link.to}
-                    to={link.to}
-                    end={link.to === '/salons'}
-                    onClick={() => setIsOpen(false)}
-                    className={({ isActive }) => {
-                      const active = link.to === '/salons' ? (isActive && !isBoutiquePage) : isActive
-                      return `
-                      block py-3 px-4 rounded-xl font-medium transition-colors
-                      ${active ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50'}
-                    `}}
-                  >
-                    {link.label}
-                  </NavLink>
-                ))}
+            <>
+              {/* Backdrop */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden"
+                onClick={closeDrawer}
+              />
 
-                <Link
-                  to="/salons?businessType=BOUTIQUE"
-                  onClick={() => setIsOpen(false)}
-                  className={`block py-3 px-4 rounded-xl font-medium transition-colors ${
-                    isBoutiquePage ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-50'
-                  }`}
-                >
-                  Boutiques
-                </Link>
-                
-                <div className="border-t border-gray-100 pt-4 mt-4">
+              {/* Drawer panel */}
+              <motion.div
+                initial={{ x: '100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '100%' }}
+                transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+                className="fixed top-0 right-0 bottom-0 z-50 w-[80%] max-w-xs bg-white shadow-2xl md:hidden flex flex-col"
+              >
+                {/* Drawer header */}
+                <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+                  <Logo variant="default" size="sm" />
+                  <button
+                    onClick={closeDrawer}
+                    className="p-2 rounded-xl text-gray-500 hover:bg-gray-100 transition-colors"
+                    aria-label="Fermer le menu"
+                  >
+                    <FiX className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Drawer body */}
+                <div className="flex-1 overflow-y-auto py-4 px-4">
+                  {/* Navigation links */}
+                  <div className="space-y-1">
+                    <NavLink
+                      to="/"
+                      end
+                      onClick={closeDrawer}
+                      className={({ isActive }) =>
+                        `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
+                          isActive
+                            ? 'bg-amber-50 text-amber-700'
+                            : 'text-gray-700 hover:bg-gray-50'
+                        }`
+                      }
+                    >
+                      <FiHome className="w-5 h-5" />
+                      Accueil
+                    </NavLink>
+                    <NavLink
+                      to="/salons"
+                      end
+                      onClick={closeDrawer}
+                      className={({ isActive }) => {
+                        const active = isActive && !isBoutiquePage
+                        return `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
+                          active
+                            ? 'bg-amber-50 text-amber-700'
+                            : 'text-gray-700 hover:bg-gray-50'
+                        }`
+                      }}
+                    >
+                      <FiScissors className="w-5 h-5" />
+                      Salons
+                    </NavLink>
+                    <Link
+                      to="/salons?businessType=BOUTIQUE"
+                      onClick={closeDrawer}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
+                        isBoutiquePage
+                          ? 'bg-amber-50 text-amber-700'
+                          : 'text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      <FiShoppingBag className="w-5 h-5" />
+                      Boutiques
+                    </Link>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="my-4 border-t border-gray-100" />
+
+                  {/* User section */}
                   {isAuthenticated ? (
-                    <>
-                      <div className="flex items-center space-x-3 px-4 py-2">
+                    <div className="space-y-1">
+                      {/* User info */}
+                      <div className="flex items-center gap-3 px-4 py-3 mb-2">
                         {(user.avatar || user.picture) ? (
                           <img
                             src={user.avatar || user.picture}
                             alt={user.name}
-                            className="w-10 h-10 rounded-full"
+                            className="w-10 h-10 rounded-full border-2 border-white shadow-sm object-cover"
                           />
                         ) : (
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center text-white font-bold text-lg">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center text-white font-bold text-sm shadow-sm">
                             {user.name?.charAt(0)?.toUpperCase() || 'U'}
                           </div>
                         )}
-                        <div>
-                          <p className="font-medium">{user.name}</p>
-                          <p className="text-sm text-gray-500">{user.email}</p>
+                        <div className="min-w-0">
+                          <p className="font-semibold text-gray-900 text-sm truncate">{user.name}</p>
+                          <p className="text-xs text-gray-500 truncate">{user.email}</p>
                         </div>
                       </div>
+
                       <Link
                         to={user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' ? '/admin' : user.role === 'PRO' ? '/pro/dashboard' : '/dashboard'}
-                        onClick={() => setIsOpen(false)}
-                        className="flex items-center space-x-2 py-2 px-4 text-gray-700 hover:bg-gray-100 rounded-lg"
+                        onClick={closeDrawer}
+                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                       >
-                        <FiCalendar className="w-4 h-4" />
+                        <FiCalendar className="w-5 h-5" />
                         <span>{user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' ? 'Dashboard admin' : user.role === 'PRO' ? 'Mon dashboard' : 'Mes réservations'}</span>
                       </Link>
                       <Link
                         to="/profile"
-                        onClick={() => setIsOpen(false)}
-                        className="flex items-center space-x-2 py-2 px-4 text-gray-700 hover:bg-gray-100 rounded-lg"
+                        onClick={closeDrawer}
+                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                       >
-                        <FiSettings className="w-4 h-4" />
+                        <FiSettings className="w-5 h-5" />
                         <span>Paramètres</span>
                       </Link>
-                      <button
-                        onClick={() => { handleLogout(); setIsOpen(false) }}
-                        className="flex items-center space-x-2 w-full text-left py-2 px-4 text-red-600 hover:bg-red-50 rounded-lg"
-                      >
-                        <FiLogOut className="w-4 h-4" />
-                        <span>Déconnexion</span>
-                      </button>
-                    </>
+                    </div>
                   ) : (
-                    <div className="space-y-2">
+                    <div className="space-y-2 px-1">
                       <Link
                         to="/login"
-                        onClick={() => setIsOpen(false)}
-                        className="block py-2 px-4 text-center text-gray-700 hover:bg-gray-100 rounded-lg font-medium"
+                        onClick={closeDrawer}
+                        className="block py-2.5 px-4 text-center text-sm font-semibold text-gray-700 hover:bg-gray-50 rounded-xl transition-colors border border-gray-200"
                       >
                         Connexion
                       </Link>
                       <Link
                         to="/register"
-                        onClick={() => setIsOpen(false)}
-                        className="block py-2 px-4 text-center bg-gray-900 text-white rounded-lg font-medium"
+                        onClick={closeDrawer}
+                        className="block py-2.5 px-4 text-center text-sm font-semibold bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-colors"
                       >
-                        Inscription
+                        S'inscrire gratuitement
                       </Link>
                     </div>
                   )}
                 </div>
-              </div>
-            </motion.div>
+
+                {/* Drawer footer — logout */}
+                {isAuthenticated && (
+                  <div className="border-t border-gray-100 px-4 py-4">
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+                    >
+                      <FiLogOut className="w-5 h-5" />
+                      <span>Déconnexion</span>
+                    </button>
+                  </div>
+                )}
+              </motion.div>
+            </>
           )}
         </AnimatePresence>
       </div>
