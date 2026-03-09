@@ -202,7 +202,7 @@ function Home() {
               transition={{ duration: reduceMotion ? 0 : 0.6 }}
             >
               <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">
-                ? Gratuit · Sans engagement
+                Gratuit · Sans engagement
               </span>
               <h1 className="mt-4 text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
                 Réservez votre{' '}
