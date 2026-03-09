@@ -1,6 +1,6 @@
 import apiFetch, { isRetryableHttpError } from '../api/client';
 
-const PUSH_AUTO_SUBSCRIBE_ENABLED = String(import.meta.env.VITE_ENABLE_PUSH_SUBSCRIPTION ?? 'true').toLowerCase() !== 'false';
+const PUSH_AUTO_SUBSCRIBE_ENABLED = String(import.meta.env.VITE_ENABLE_PUSH_SUBSCRIPTION ?? 'false').toLowerCase() === 'true';
 const VAPID_PUBLIC_KEY_CACHE = 'flashrv_vapid_public_key';
 const VAPID_RETRY_AFTER_CACHE = 'flashrv_vapid_retry_after';
 const VAPID_RETRY_COOLDOWN_MS = 10 * 60 * 1000;

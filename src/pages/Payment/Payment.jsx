@@ -5,7 +5,7 @@ import { FiCheck, FiLock, FiSmartphone, FiChevronLeft, FiAlertCircle } from 'rea
 import { useBooking } from '../../context/BookingContext'
 import { useAuth } from '../../context/AuthContext'
 import LoadingSpinner from '../../components/UI/LoadingSpinner'
-import apiFetch, { isRetryableHttpError } from '../../api/client'
+import apiFetch from '../../api/client'
 import { pushSiteNotification } from '../../utils/siteNotifications'
 import { resolveMediaUrl } from '../../utils/media'
 import { buildPaydunyaPaymentPayload } from '../../utils/payments'
@@ -65,34 +65,6 @@ function Payment() {
       : ''
 
     return [baseNotes, extraNote].filter(Boolean).join('\n')
-  }
-
-  const wait = (delayMs) => new Promise((resolve) => setTimeout(resolve, delayMs))
-
-  const createPaydunyaInvoiceWithRetry = async (paymentPayload) => {
-    const retryDelays = [0, 1200]
-    let lastError = null
-
-    for (let attempt = 0; attempt < retryDelays.length; attempt += 1) {
-      if (retryDelays[attempt] > 0) {
-        await wait(retryDelays[attempt])
-      }
-
-      try {
-        return await apiFetch('/payments/create', {
-          method: 'POST',
-          body: paymentPayload,
-          timeoutMs: 20000,
-        })
-      } catch (err) {
-        lastError = err
-        if (!isRetryableHttpError(err) || attempt === retryDelays.length - 1) {
-          throw err
-        }
-      }
-    }
-
-    throw lastError || new Error('Impossible de creer la facture PayDunya')
   }
 
   const ensureAppointment = async (paymentMethod) => {
@@ -205,8 +177,10 @@ function Payment() {
       }
 
       const serviceLabel = bookingState.services.map((service) => service.name).filter(Boolean).join(', ')
-      const result = await createPaydunyaInvoiceWithRetry(
-        buildPaydunyaPaymentPayload({
+      const result = await apiFetch('/payments/create', {
+        method: 'POST',
+        timeoutMs: 20000,
+        body: buildPaydunyaPaymentPayload({
           bookingId: appointmentId,
           amount: depositAmount,
           customerName: `${bookingState.clientFirstName || ''} ${bookingState.clientLastName || ''}`.trim() || user?.name || '',
@@ -214,8 +188,8 @@ function Payment() {
           customerPhone: bookingState.clientPhone || user?.phoneNumber || user?.phone || '',
           salonName: bookingState.salon?.name,
           serviceLabel,
-        })
-      )
+        }),
+      })
 
       const payload = result?.data || result
       if (!payload?.invoiceUrl) {
@@ -226,25 +200,15 @@ function Payment() {
       window.location.href = payload.invoiceUrl
     } catch (err) {
       const hasPendingPaydunyaBooking = selectedMethod === 'paydunya' && Boolean(appointmentId)
-
       if (hasPendingPaydunyaBooking) {
-        const query = `?appointmentId=${encodeURIComponent(appointmentId)}`
-        navigate(`/payment/cancel${query}`, {
-          replace: true,
-          state: {
-            reason: err?.message || '',
-            retryable: isRetryableHttpError(err),
-          },
-        })
-        return
+        setError(`${err?.message || 'Le paiement est indisponible pour le moment.'} Votre reservation est conservee, reessayez dans un instant.`)
+      } else {
+        setError(
+          selectedMethod === 'paydunya'
+            ? (err.message || 'Une erreur est survenue.')
+            : (err.message || 'Une erreur est survenue. Veuillez reessayer.')
+        )
       }
-
-      console.error('Payment error:', err)
-      setError(
-        selectedMethod === 'paydunya'
-          ? (err.message || 'Une erreur est survenue.')
-          : (err.message || 'Une erreur est survenue. Veuillez reessayer.')
-      )
       setPaymentStatus(null)
     } finally {
       setLoading(false)
