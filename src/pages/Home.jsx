@@ -194,8 +194,8 @@ function Home() {
           <div className="absolute -top-12 right-12 w-72 h-72 bg-amber-100/50 rounded-full blur-3xl"></div>
           <div className="absolute bottom-10 left-8 w-80 h-80 bg-yellow-100/40 rounded-full blur-3xl"></div>
         </div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-6">
-          <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 items-start">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-4">
+          <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 items-center">
             <motion.div
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
@@ -307,21 +307,20 @@ function Home() {
               initial={{ opacity: 0, x: 40 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: reduceMotion ? 0 : 0.8, delay: reduceMotion ? 0 : 0.2 }}
-              className="hidden lg:block lg:-mt-2"
+              className="hidden lg:block"
             >
               <div className="relative">
                 <img
                   src="https://images.unsplash.com/photo-1560066984-138dadb4c035?w=800"
                   alt="Salon premium"
-                  className="rounded-3xl shadow-2xl w-full object-cover aspect-[4/3]"
+                  className="rounded-2xl shadow-2xl w-full object-cover aspect-[4/3]"
                 />
-                <div className="absolute -bottom-6 -left-6 bg-white rounded-2xl shadow-lg p-4 border border-gray-100">
-                  <div className="flex items-center gap-2">
-                    <FiStar className="w-5 h-5 text-amber-400 fill-current" />
-                    <span className="font-semibold text-gray-900">4.9</span>
+                <div className="absolute -bottom-3 -left-3 bg-white rounded-xl shadow-lg p-3 border border-gray-100">
+                  <div className="flex items-center gap-1.5">
+                    <FiStar className="w-4 h-4 text-amber-400 fill-current" />
+                    <span className="font-semibold text-gray-900 text-sm">4.9</span>
                     <span className="text-xs text-gray-500">+{totalReviews} avis</span>
                   </div>
-                  <p className="text-xs text-gray-500 mt-2">Salons plébiscités par la communauté</p>
                 </div>
               </div>
             </motion.div>
@@ -330,7 +329,7 @@ function Home() {
       </section>
 
       {/* Featured Salons */}
-      <section className="py-4 bg-gray-50">
+      <section className="py-3 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between mb-3">
             <div>
