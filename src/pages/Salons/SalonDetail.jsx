@@ -1523,6 +1523,7 @@ function SalonDetail() {
             transition={{ duration: reduceMotion ? 0 : 0.2 }}
             className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm p-0 md:p-4"
             onClick={closeProductDetail}
+            onTouchMove={(e) => { if (e.target === e.currentTarget) e.preventDefault() }}
           >
             {(() => {
               const product = activeProduct
@@ -1576,7 +1577,9 @@ function SalonDetail() {
                   exit={{ y: 40, opacity: 0 }}
                   transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 250, damping: 28 }}
                   className="w-full md:max-w-2xl bg-white rounded-t-3xl md:rounded-3xl shadow-2xl overflow-hidden max-h-[92vh] md:max-h-[88vh] overflow-y-auto"
+                  style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain', touchAction: 'pan-y' }}
                   onClick={(e) => e.stopPropagation()}
+                  onTouchMove={(e) => e.stopPropagation()}
                 >
                   <div className="sticky top-0 z-10 bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between">
                     <h3 className="font-bold text-gray-900 truncate pr-3">{product.name}</h3>
@@ -1593,7 +1596,9 @@ function SalonDetail() {
                       <img
                         src={productImages[productImageIndex]}
                         alt={product.name}
-                        className="w-full h-72 md:h-80 object-contain p-3"
+                        draggable={false}
+                        className="w-full h-72 md:h-80 object-contain p-3 select-none"
+                        style={{ touchAction: 'pan-y' }}
                       />
                     ) : (
                       <div className="w-full h-72 md:h-80 flex items-center justify-center">
