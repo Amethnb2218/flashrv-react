@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { FiMic, FiSend, FiStopCircle, FiTrash2 } from 'react-icons/fi'
+import { FiChevronLeft, FiMic, FiSend, FiStopCircle, FiTrash2 } from 'react-icons/fi'
 import Modal from '../UI/Modal'
 import apiFetch from '@/api/client'
 import { resolveMediaUrl } from '../../utils/media'
@@ -26,12 +26,15 @@ function AppointmentChatModal({
   }, [showThreadList, appointments, appointment])
 
   const [selectedAppointmentId, setSelectedAppointmentId] = useState(appointment?.id || null)
+  const [mobileChatOpen, setMobileChatOpen] = useState(false)
+
   const activeAppointment = useMemo(() => {
     if (!showThreadList) return appointment || null
     if (!threads.length) return null
     const selected = threads.find((t) => String(t.id) === String(selectedAppointmentId))
     return selected || threads[0]
   }, [showThreadList, appointment, threads, selectedAppointmentId])
+
   const appointmentId = activeAppointment?.id || null
 
   const [messages, setMessages] = useState([])
@@ -46,27 +49,6 @@ function AppointmentChatModal({
   const chunksRef = useRef([])
   const bottomRef = useRef(null)
 
-  useEffect(() => {
-    if (!isOpen) return
-    if (!showThreadList) {
-      setSelectedAppointmentId(appointment?.id || null)
-      return
-    }
-    if (appointment?.id) {
-      setSelectedAppointmentId(appointment.id)
-      return
-    }
-    if (!selectedAppointmentId && threads.length > 0) {
-      setSelectedAppointmentId(threads[0].id)
-    }
-  }, [isOpen, showThreadList, appointment, threads, selectedAppointmentId])
-
-  const title = useMemo(() => {
-    if (showThreadList) return 'Chat clients'
-    const salonName = activeAppointment?.salon?.name
-    return salonName ? `Chat reservation - ${salonName}` : 'Chat reservation'
-  }, [showThreadList, activeAppointment])
-
   const getThreadPrimary = (item) => {
     if (showThreadList) return item?.clientName || item?.client?.name || 'Client'
     return item?.salon?.name || 'Salon'
@@ -76,8 +58,38 @@ function AppointmentChatModal({
     const service = item?.serviceName || item?.service?.name || ''
     const date = item?.date ? new Date(item.date).toLocaleDateString('fr-FR') : ''
     const time = item?.time || item?.startTime || ''
-    return [service, date, time].filter(Boolean).join(' • ')
+    return [service, date, time].filter(Boolean).join(' - ')
   }
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    if (!showThreadList) {
+      setSelectedAppointmentId(appointment?.id || null)
+      setMobileChatOpen(false)
+      return
+    }
+
+    if (appointment?.id) {
+      setSelectedAppointmentId(appointment.id)
+      setMobileChatOpen(true)
+      return
+    }
+
+    if (threads.length > 0) {
+      setSelectedAppointmentId((prev) => prev || threads[0].id)
+    }
+    setMobileChatOpen(false)
+  }, [isOpen, showThreadList, appointment, threads])
+
+  const title = useMemo(() => {
+    if (showThreadList) {
+      const partner = activeAppointment ? getThreadPrimary(activeAppointment) : ''
+      return partner ? `Discussion - ${partner}` : 'Discussions clients'
+    }
+    const salonName = activeAppointment?.salon?.name
+    return salonName ? `Chat reservation - ${salonName}` : 'Chat reservation'
+  }, [showThreadList, activeAppointment])
 
   const loadMessages = async () => {
     if (!appointmentId) return
@@ -96,8 +108,10 @@ function AppointmentChatModal({
   useEffect(() => {
     if (!isOpen || !appointmentId) return
     loadMessages()
+
     const token = sessionStorage.getItem('flashrv_token')
     if (token) connectRealtime(token)
+
     const unsubscribe = subscribeRealtime((event) => {
       if (event?.type !== 'chat:new') return
       const payload = event?.payload || {}
@@ -107,6 +121,7 @@ function AppointmentChatModal({
         return [...prev, payload.message]
       })
     })
+
     return unsubscribe
   }, [isOpen, appointmentId])
 
@@ -119,6 +134,7 @@ function AppointmentChatModal({
       setText('')
       setVoiceBlob(null)
       setVoicePreview('')
+      setMobileChatOpen(false)
     }
   }, [isOpen])
 
@@ -166,6 +182,7 @@ function AppointmentChatModal({
     if (!appointmentId) return
     const cleanText = text.trim()
     if (!cleanText && !voiceBlob) return
+
     setSending(true)
     try {
       const form = new FormData()
@@ -184,119 +201,155 @@ function AppointmentChatModal({
     }
   }
 
+  const renderThreadList = ({ mobile = false } = {}) => (
+    <aside className={`rounded-xl border border-gray-100 bg-white p-2 ${mobile ? 'h-full' : ''}`}>
+      <p className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-gray-500">Discussions</p>
+      <div className={`mt-1 ${mobile ? 'h-[60vh]' : 'max-h-80'} overflow-y-auto space-y-1`}>
+        {threads.length === 0 ? (
+          <p className="px-2 py-2 text-sm text-gray-500">Aucune reservation disponible pour ouvrir le chat.</p>
+        ) : null}
+        {threads.map((thread) => {
+          const active = String(thread.id) === String(appointmentId)
+          return (
+            <button
+              key={thread.id}
+              type="button"
+              onClick={() => {
+                setSelectedAppointmentId(thread.id)
+                setMobileChatOpen(true)
+              }}
+              className={`w-full rounded-lg px-3 py-2 text-left transition ${
+                active ? 'bg-amber-50 border border-amber-200' : 'hover:bg-gray-50 border border-transparent'
+              }`}
+            >
+              <p className="text-sm font-semibold text-gray-900">{getThreadPrimary(thread)}</p>
+              <p className="mt-1 line-clamp-2 text-xs text-gray-500">{getThreadSecondary(thread) || 'Reservation'}</p>
+            </button>
+          )
+        })}
+      </div>
+    </aside>
+  )
+
+  const renderChatPanel = ({ mobile = false } = {}) => (
+    <div className="flex flex-col gap-2 sm:gap-4 min-h-0 flex-1">
+      {showThreadList && mobile ? (
+        <div className="flex items-center gap-2 rounded-xl border border-gray-100 bg-white px-3 py-2">
+          <button
+            type="button"
+            onClick={() => setMobileChatOpen(false)}
+            className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-sm text-gray-600 hover:bg-gray-100"
+          >
+            <FiChevronLeft className="w-4 h-4" />
+            Retour
+          </button>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-gray-900">{activeAppointment ? getThreadPrimary(activeAppointment) : 'Discussion'}</p>
+            <p className="truncate text-xs text-gray-500">{activeAppointment ? getThreadSecondary(activeAppointment) : 'Selectionnez une discussion'}</p>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="flex-1 min-h-[200px] max-h-[60vh] sm:max-h-[400px] overflow-y-auto border border-gray-100 rounded-xl bg-white p-2 sm:p-3 space-y-3">
+        {!appointmentId ? (
+          <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+            Selectionnez une conversation pour demarrer le chat.
+          </p>
+        ) : null}
+        {loading ? <p className="text-sm text-gray-500">Chargement...</p> : null}
+        {!loading && appointmentId && messages.length === 0 ? <p className="text-sm text-gray-500">Aucun message.</p> : null}
+
+        {messages.map((m) => {
+          const mine = m.senderId === currentUserId
+          return (
+            <div key={m.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
+              <div className={`max-w-[80%] rounded-xl px-3 py-2 ${mine ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'}`}>
+                <p className={`text-xs mb-1 ${mine ? 'text-gray-300' : 'text-gray-500'}`}>{m.sender?.name || 'Utilisateur'}</p>
+                {m.text ? <p className="text-sm whitespace-pre-wrap">{m.text}</p> : null}
+                {m.audioUrl ? <audio controls src={resolveMediaUrl(m.audioUrl)} className="mt-2 w-full" /> : null}
+                <p className={`text-[11px] mt-1 ${mine ? 'text-gray-400' : 'text-gray-500'}`}>{new Date(m.createdAt).toLocaleString('fr-FR')}</p>
+              </div>
+            </div>
+          )
+        })}
+        <div ref={bottomRef} />
+      </div>
+
+      {voicePreview ? (
+        <div className="border border-gray-200 rounded-xl p-3 bg-gray-50">
+          <p className="text-sm font-medium text-gray-700 mb-2">Message vocal pret</p>
+          <audio controls src={voicePreview} className="w-full" />
+          <button
+            type="button"
+            onClick={clearVoice}
+            className="mt-2 inline-flex items-center gap-2 text-sm text-red-600 hover:text-red-700"
+          >
+            <FiTrash2 /> Supprimer l'audio
+          </button>
+        </div>
+      ) : null}
+
+      <div className="flex items-center gap-1.5 sm:gap-2">
+        <input
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault()
+              sendMessage()
+            }
+          }}
+          placeholder="Ecrire un message..."
+          className="flex-1 min-w-0 px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none text-sm sm:text-base"
+        />
+        {!recording ? (
+          <button
+            type="button"
+            onClick={startRecording}
+            className="shrink-0 p-2.5 sm:px-3 sm:py-3 rounded-xl border border-gray-200 hover:bg-gray-50"
+            title="Enregistrer un vocal"
+          >
+            <FiMic className="w-4 h-4 sm:w-5 sm:h-5" />
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={stopRecording}
+            className="shrink-0 p-2.5 sm:px-3 sm:py-3 rounded-xl border border-red-300 text-red-600 hover:bg-red-50"
+            title="Arreter l'enregistrement"
+          >
+            <FiStopCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+          </button>
+        )}
+        <button
+          type="button"
+          disabled={!appointmentId || sending || (!text.trim() && !voiceBlob)}
+          onClick={sendMessage}
+          className="shrink-0 p-2.5 sm:px-4 sm:py-3 rounded-xl bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
+        >
+          <FiSend className="w-4 h-4 sm:w-5 sm:h-5" />
+          <span className="hidden sm:inline">Envoyer</span>
+        </button>
+      </div>
+    </div>
+  )
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title} size="mobile-full">
       <div className="p-2 sm:p-4 h-full flex flex-col">
-        <div className={`grid gap-2 sm:gap-4 flex-1 min-h-0 ${showThreadList ? 'md:grid-cols-[260px_1fr]' : 'grid-cols-1'}`}>
-          {showThreadList ? (
-            <aside className="rounded-xl border border-gray-100 bg-white p-2">
-              <p className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-gray-500">Conversations</p>
-              <div className="mt-1 max-h-40 sm:max-h-80 overflow-y-auto space-y-1">
-                {threads.length === 0 ? (
-                  <p className="px-2 py-2 text-sm text-gray-500">Aucun client pour le moment.</p>
-                ) : null}
-                {threads.map((thread) => {
-                  const active = String(thread.id) === String(appointmentId)
-                  return (
-                    <button
-                      key={thread.id}
-                      type="button"
-                      onClick={() => setSelectedAppointmentId(thread.id)}
-                      className={`w-full rounded-lg px-3 py-2 text-left transition ${
-                        active ? 'bg-amber-50 border border-amber-200' : 'hover:bg-gray-50 border border-transparent'
-                      }`}
-                    >
-                      <p className="text-sm font-semibold text-gray-900">{getThreadPrimary(thread)}</p>
-                      <p className="mt-1 line-clamp-2 text-xs text-gray-500">{getThreadSecondary(thread) || 'Reservation'}</p>
-                    </button>
-                  )
-                })}
-              </div>
-            </aside>
-          ) : null}
-
-          <div className="flex flex-col gap-2 sm:gap-4 min-h-0 flex-1">
-            <div className="flex-1 min-h-[200px] max-h-[60vh] sm:max-h-[400px] overflow-y-auto border border-gray-100 rounded-xl bg-white p-2 sm:p-3 space-y-3">
-              {!appointmentId ? (
-                <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-                  Selectionnez une conversation pour demarrer le chat.
-                </p>
-              ) : null}
-              {loading ? <p className="text-sm text-gray-500">Chargement...</p> : null}
-              {!loading && appointmentId && messages.length === 0 ? <p className="text-sm text-gray-500">Aucun message.</p> : null}
-              {messages.map((m) => {
-                const mine = m.senderId === currentUserId
-                return (
-                  <div key={m.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[80%] rounded-xl px-3 py-2 ${mine ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'}`}>
-                      <p className={`text-xs mb-1 ${mine ? 'text-gray-300' : 'text-gray-500'}`}>{m.sender?.name || 'Utilisateur'}</p>
-                      {m.text ? <p className="text-sm whitespace-pre-wrap">{m.text}</p> : null}
-                      {m.audioUrl ? (
-                        <audio controls src={resolveMediaUrl(m.audioUrl)} className="mt-2 w-full" />
-                      ) : null}
-                      <p className={`text-[11px] mt-1 ${mine ? 'text-gray-400' : 'text-gray-500'}`}>
-                        {new Date(m.createdAt).toLocaleString('fr-FR')}
-                      </p>
-                    </div>
-                  </div>
-                )
-              })}
-              <div ref={bottomRef} />
+        {showThreadList ? (
+          <>
+            <div className="md:hidden flex-1 min-h-0">
+              {mobileChatOpen ? renderChatPanel({ mobile: true }) : renderThreadList({ mobile: true })}
             </div>
-
-            {voicePreview ? (
-              <div className="border border-gray-200 rounded-xl p-3 bg-gray-50">
-                <p className="text-sm font-medium text-gray-700 mb-2">Message vocal pret</p>
-                <audio controls src={voicePreview} className="w-full" />
-                <button
-                  type="button"
-                  onClick={clearVoice}
-                  className="mt-2 inline-flex items-center gap-2 text-sm text-red-600 hover:text-red-700"
-                >
-                  <FiTrash2 /> Supprimer l'audio
-                </button>
-              </div>
-            ) : null}
-
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <input
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
-                placeholder="Ecrire un message..."
-                className="flex-1 min-w-0 px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none text-sm sm:text-base"
-              />
-              {!recording ? (
-                <button
-                  type="button"
-                  onClick={startRecording}
-                  className="shrink-0 p-2.5 sm:px-3 sm:py-3 rounded-xl border border-gray-200 hover:bg-gray-50"
-                  title="Enregistrer un vocal"
-                >
-                  <FiMic className="w-4 h-4 sm:w-5 sm:h-5" />
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={stopRecording}
-                  className="shrink-0 p-2.5 sm:px-3 sm:py-3 rounded-xl border border-red-300 text-red-600 hover:bg-red-50"
-                  title="Arreter l'enregistrement"
-                >
-                  <FiStopCircle className="w-4 h-4 sm:w-5 sm:h-5" />
-                </button>
-              )}
-              <button
-                type="button"
-                disabled={!appointmentId || sending || (!text.trim() && !voiceBlob)}
-                onClick={sendMessage}
-                className="shrink-0 p-2.5 sm:px-4 sm:py-3 rounded-xl bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
-              >
-                <FiSend className="w-4 h-4 sm:w-5 sm:h-5" />
-                <span className="hidden sm:inline">Envoyer</span>
-              </button>
+            <div className="hidden md:grid gap-2 sm:gap-4 flex-1 min-h-0 md:grid-cols-[260px_1fr]">
+              {renderThreadList()}
+              {renderChatPanel()}
             </div>
-          </div>
-        </div>
+          </>
+        ) : (
+          <div className="grid gap-2 sm:gap-4 flex-1 min-h-0 grid-cols-1">{renderChatPanel()}</div>
+        )}
       </div>
     </Modal>
   )

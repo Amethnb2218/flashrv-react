@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import apiFetch from "@/api/client";
 import { useAuth } from "../../context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -524,6 +525,7 @@ Main Component
 ----------------------------- */
 export default function CoiffeurDashboard() {
 const { isAuthenticated, checkAuth, user } = useAuth();
+const location = useLocation();
 
 // IMPORTANT: on garde l'onglet "portfolio" MAIS le label est "Salon".
 // Donc activeTab doit toujours être "portfolio" (et surtout PAS "salon").
@@ -709,6 +711,8 @@ const [serviceCategory, setServiceCategory] = useState("all");
 const [serviceSort, setServiceSort] = useState("recent");
 
 const fileInputRef = useRef(null);
+const notificationsPanelRef = useRef(null);
+const navStateHandledRef = useRef("");
 
 const tabs = useMemo(
 () => isBoutique ? [
@@ -2163,14 +2167,39 @@ const upcomingCount = appointments.filter((a) => a.status === "upcoming").length
 const completedCount = appointments.filter((a) => a.status === "completed").length;
 const cancelledCount = appointments.filter((a) => a.status === "cancelled").length;
 const openFloatingChat = () => {
-  const preferred =
-    appointments.find((a) => {
-      const status = String(a?.status || "").toLowerCase();
-      return !["cancelled", "completed", "no_show"].includes(status);
-    }) || appointments[0];
-  setChatAppointment(preferred || null);
+  setChatAppointment(null);
   setShowChatModal(true);
 };
+
+useEffect(() => {
+  const state = location.state;
+  if (!state || typeof state !== "object") return;
+
+  const notificationTabId = tabs.some((t) => t.id === "appointments")
+    ? "appointments"
+    : tabs[0]?.id;
+  const requestedTab = typeof state.dashboardTab === "string" ? state.dashboardTab : "";
+  const stateKey = String(
+    state.ts || `${state.source || "nav"}:${requestedTab}:${state.focusNotifications ? "notif" : "none"}`
+  );
+  if (navStateHandledRef.current === stateKey) return;
+
+  let handled = false;
+  if (requestedTab && tabs.some((t) => t.id === requestedTab)) {
+    setActiveTab(requestedTab);
+    handled = true;
+  }
+
+  if (state.focusNotifications && notificationTabId) {
+    setActiveTab(notificationTabId);
+    handled = true;
+    setTimeout(() => {
+      notificationsPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 260);
+  }
+
+  if (handled) navStateHandledRef.current = stateKey;
+}, [location.state, tabs]);
 
 /* ----------------------------
 Render
@@ -2738,7 +2767,7 @@ active
   );
 })()}
 
-<div className="mb-5 border border-gray-200 rounded-2xl p-4 bg-gray-50">
+<div ref={notificationsPanelRef} className="mb-5 border border-gray-200 rounded-2xl p-4 bg-gray-50">
   <div className="flex items-center justify-between mb-3">
     <p className="font-semibold text-gray-900">Notifications</p>
     <div className="flex items-center gap-2">

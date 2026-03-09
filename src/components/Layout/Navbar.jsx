@@ -67,6 +67,32 @@ function Navbar() {
   }, [isOpen])
 
   const closeDrawer = useCallback(() => setIsOpen(false), [])
+  const getDashboardPath = useCallback(() => {
+    if (!isAuthenticated) return '/login'
+    if (user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') return '/admin'
+    if (user?.role === 'PRO') return '/pro/dashboard'
+    return '/dashboard'
+  }, [isAuthenticated, user?.role])
+
+  const openNotificationsPage = useCallback(() => {
+    closeDrawer()
+    if (!isAuthenticated) {
+      navigate('/login')
+      return
+    }
+    if (user?.role === 'PRO') {
+      navigate('/pro/dashboard', {
+        state: {
+          dashboardTab: 'appointments',
+          focusNotifications: true,
+          source: 'mobile-notifications',
+          ts: Date.now(),
+        },
+      })
+      return
+    }
+    navigate(getDashboardPath())
+  }, [closeDrawer, getDashboardPath, isAuthenticated, navigate, user?.role])
 
   const fetchNotifications = useCallback(async () => {
     if (!isAuthenticated) {
@@ -505,7 +531,7 @@ function Navbar() {
                         <span>{user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' ? 'Dashboard admin' : user.role === 'PRO' ? 'Mon dashboard' : 'Mes réservations'}</span>
                       </Link>
                       <button
-                        onClick={() => { closeDrawer(); navigate('/dashboard') }}
+                        onClick={openNotificationsPage}
                         className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors w-full"
                       >
                         <div className="relative">
