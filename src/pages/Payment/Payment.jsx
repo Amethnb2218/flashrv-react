@@ -67,7 +67,7 @@ function Payment() {
     return [baseNotes, extraNote].filter(Boolean).join('\n')
   }
 
-  const ensureAppointment = async () => {
+  const ensureAppointment = async (paymentMethod) => {
     if (bookingState.bookingId) return bookingState.bookingId
 
     const serviceIds = bookingState.services.map((s) => s.id).filter(Boolean)
@@ -107,6 +107,16 @@ function Payment() {
       clientAddress: clientAddress || null,
     }
 
+    if (paymentMethod === 'paydunya') {
+      payload.status = 'PENDING_PAYMENT'
+      payload.paymentMethod = 'PAYDUNYA'
+      payload.paymentStatus = 'PENDING'
+      payload.requiresOnlinePayment = true
+      payload.skipConfirmationEmail = true
+      payload.skipNotifications = true
+      payload.sendConfirmation = false
+    }
+
     if (bookingState.coiffeur?.id) {
       payload.coiffeurId = bookingState.coiffeur.id
     }
@@ -120,6 +130,21 @@ function Payment() {
 
     bookingDispatch({ type: 'SET_BOOKING_ID', payload: appointment.id })
     return appointment.id
+  }
+
+  const rollbackPendingAppointment = async (appointmentId) => {
+    if (!appointmentId) return
+
+    try {
+      await apiFetch(`/appointments/${appointmentId}/status`, {
+        method: 'PATCH',
+        body: { status: 'CANCELLED' },
+      })
+    } catch (_) {
+      // Ignore rollback errors; the user-facing flow is handled below.
+    } finally {
+      bookingDispatch({ type: 'SET_BOOKING_ID', payload: null })
+    }
   }
 
   const handlePaymentSuccess = (paymentData, appointmentIdOverride) => {
@@ -148,9 +173,10 @@ function Payment() {
     setLoading(true)
     setError('')
     setPaymentStatus('processing')
+    let appointmentId = bookingState.bookingId || null
 
     try {
-      const appointmentId = await ensureAppointment()
+      appointmentId = await ensureAppointment(selectedMethod)
 
       if (selectedMethod === 'pay_on_site') {
         const result = await apiFetch('/payments/confirm-on-site', {
@@ -187,8 +213,15 @@ function Payment() {
       setPaymentStatus('pending_confirmation')
       window.location.href = payload.invoiceUrl
     } catch (err) {
+      if (selectedMethod === 'paydunya') {
+        await rollbackPendingAppointment(appointmentId)
+      }
       console.error('Payment error:', err)
-      setError(err.message || 'Une erreur est survenue. Veuillez reessayer.')
+      setError(
+        selectedMethod === 'paydunya'
+          ? `${err.message || 'Une erreur est survenue.'} La reservation provisoire a ete annulee.`
+          : (err.message || 'Une erreur est survenue. Veuillez reessayer.')
+      )
       setPaymentStatus(null)
     } finally {
       setLoading(false)
