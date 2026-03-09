@@ -53,14 +53,16 @@ async function initiateWavePayment({ amount, phoneNumber, reference, description
     }
 
     // Appel API Wave en production
+    const callbackUrl = `${process.env.API_URL || 'http://localhost:4000'}/api/payments/wave/webhook`;
     const response = await axios.post(
       `${WAVE_CONFIG.baseUrl}/checkout/sessions`,
       {
         amount: amount.toString(),
         currency: 'XOF',
-        error_url: `${process.env.FRONTEND_URL}/payment/error`,
-        success_url: `${process.env.FRONTEND_URL}/payment/success?ref=${reference}`,
+        error_url: `${process.env.FRONTEND_URL || process.env.BASE_URL}/payment/error`,
+        success_url: `${process.env.FRONTEND_URL || process.env.BASE_URL}/payment/success?ref=${reference}`,
         client_reference: reference,
+        webhook_url: callbackUrl,
       },
       {
         headers: {

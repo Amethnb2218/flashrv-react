@@ -12,10 +12,16 @@ import { buildPaydunyaPaymentPayload } from '../../utils/payments'
 
 const PAYMENT_METHODS = [
   {
+    id: 'wave',
+    name: 'Wave',
+    icon: '🌊',
+    description: 'Paiement rapide via Wave Mobile Money',
+  },
+  {
     id: 'paydunya',
     name: 'PayDunya',
     icon: 'PD',
-    description: 'Paiement securise (Wave, Orange, Free, Carte bancaire)',
+    description: 'Paiement securise (Orange, Free, Carte bancaire)',
   },
   {
     id: 'pay_on_site',
@@ -107,9 +113,9 @@ function Payment() {
       clientAddress: clientAddress || null,
     }
 
-    if (paymentMethod === 'paydunya') {
+    if (paymentMethod === 'paydunya' || paymentMethod === 'wave') {
       payload.status = 'PENDING_PAYMENT'
-      payload.paymentMethod = 'PAYDUNYA'
+      payload.paymentMethod = paymentMethod === 'wave' ? 'WAVE' : 'PAYDUNYA'
       payload.paymentStatus = 'PENDING'
       payload.requiresOnlinePayment = true
       payload.skipConfirmationEmail = true
@@ -176,6 +182,27 @@ function Payment() {
         return
       }
 
+      if (selectedMethod === 'wave') {
+        const waveResult = await apiFetch('/payments/wave/create', {
+          method: 'POST',
+          timeoutMs: 35000,
+          body: {
+            bookingId: appointmentId,
+            amount: depositAmount,
+            customerPhone: bookingState.clientPhone || user?.phoneNumber || user?.phone || '',
+          },
+        })
+
+        const wavePayload = waveResult?.data || waveResult
+        if (wavePayload?.checkoutUrl) {
+          setPaymentStatus('pending_confirmation')
+          window.location.href = wavePayload.checkoutUrl
+        } else {
+          handlePaymentSuccess(wavePayload, appointmentId)
+        }
+        return
+      }
+
       const serviceLabel = bookingState.services.map((service) => service.name).filter(Boolean).join(', ')
       const paymentBody = buildPaydunyaPaymentPayload({
         bookingId: appointmentId,
@@ -212,15 +239,11 @@ function Payment() {
       setPaymentStatus('pending_confirmation')
       window.location.href = payload.invoiceUrl
     } catch (err) {
-      const hasPendingPaydunyaBooking = selectedMethod === 'paydunya' && Boolean(appointmentId)
-      if (hasPendingPaydunyaBooking) {
+      const hasPendingOnlineBooking = (selectedMethod === 'paydunya' || selectedMethod === 'wave') && Boolean(appointmentId)
+      if (hasPendingOnlineBooking) {
         setError('Le serveur est temporairement indisponible. Reessayez dans un instant. Votre reservation est conservee, reessayez dans un instant.')
       } else {
-        setError(
-          selectedMethod === 'paydunya'
-            ? (err.message || 'Une erreur est survenue.')
-            : (err.message || 'Une erreur est survenue. Veuillez reessayer.')
-        )
+        setError(err.message || 'Une erreur est survenue. Veuillez reessayer.')
       }
       setPaymentStatus(null)
     } finally {

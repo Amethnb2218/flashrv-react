@@ -2,12 +2,13 @@ const express = require('express');
 const prisma = require('../lib/prisma');
 const { authenticate, requireApprovedPro } = require('../middleware/auth');
 const { createPaydunyaInvoice, confirmPaydunyaInvoice } = require('../services/paydunyaService');
+const { initiateWavePayment, checkWavePaymentStatus } = require('../services/paymentService');
 const { pushNotification } = require('../realtime/hub');
 const { sendBookingConfirmationEmail, sendOrderConfirmationEmail } = require('../services/emailService');
 
 const router = express.Router();
 
-const ALLOWED_PROVIDERS = ['PAYDUNYA', 'PAY_ON_SITE'];
+const ALLOWED_PROVIDERS = ['PAYDUNYA', 'WAVE', 'PAY_ON_SITE'];
 const invoiceCreationInFlight = new Map();
 const INFLIGHT_TTL_MS = 25000;
 const ROUTE_TIMEOUT_MS = 28000;
@@ -843,6 +844,128 @@ router.get('/me', authenticate, async (req, res, next) => {
     });
   } catch (error) {
     next(error);
+  }
+});
+
+/**
+ * POST /api/payments/wave/create
+ * Creer un paiement Wave Checkout
+ */
+router.post('/wave/create', authenticate, async (req, res, next) => {
+  try {
+    const { bookingId, orderId, amount, customerPhone } = req.body;
+
+    if (!bookingId && !orderId) {
+      return res.status(400).json({ status: 'error', message: 'bookingId ou orderId requis' });
+    }
+
+    const target = await resolvePaymentTarget({
+      bookingId,
+      orderId,
+      userId: req.user.id,
+    });
+    if (!target) {
+      return res.status(404).json({ status: 'error', message: 'Reservation ou commande introuvable' });
+    }
+
+    const value = Number(amount);
+    if (!Number.isFinite(value) || value <= 0) {
+      return res.status(400).json({ status: 'error', message: 'Montant invalide' });
+    }
+
+    const reference = generateReference();
+    const phone = String(customerPhone || req.user.phoneNumber || req.user.phone || '').trim();
+
+    const waveResult = await initiateWavePayment({
+      amount: value,
+      phoneNumber: phone,
+      reference,
+      description: target.type === 'ORDER'
+        ? `Commande StyleFlow #${target.id.slice(0, 8)}`
+        : `Reservation StyleFlow #${target.id.slice(0, 8)}`,
+    });
+
+    const payment = await upsertPaymentForTarget({
+      appointmentId: target.type === 'APPOINTMENT' ? target.id : null,
+      orderId: target.type === 'ORDER' ? target.id : null,
+      userId: req.user.id,
+      amount: value,
+      reference,
+      transactionId: waveResult.transactionId,
+      status: 'PENDING',
+    });
+
+    if (target.type === 'APPOINTMENT') {
+      await markAppointmentPendingPayment(target.id);
+    } else {
+      await markOrderPendingPayment(target.id);
+    }
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Paiement Wave initie',
+      data: {
+        paymentId: payment.id,
+        bookingId: target.type === 'APPOINTMENT' ? target.id : null,
+        orderId: target.type === 'ORDER' ? target.id : null,
+        checkoutUrl: waveResult.checkoutUrl,
+        transactionId: waveResult.transactionId,
+        provider: 'WAVE',
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * POST /api/payments/wave/webhook
+ * Webhook IPN Wave (callback apres paiement)
+ */
+router.post('/wave/webhook', async (req, res) => {
+  try {
+    const { client_reference, payment_status, id: waveSessionId } = req.body;
+
+    if (!client_reference) {
+      return res.status(400).json({ status: 'error', message: 'Reference manquante' });
+    }
+
+    const payment = await prisma.payment.findFirst({
+      where: {
+        OR: [
+          { reference: client_reference },
+          { transactionId: waveSessionId },
+        ],
+      },
+    });
+
+    if (!payment) {
+      return res.status(404).json({ status: 'error', message: 'Paiement introuvable' });
+    }
+
+    if (String(payment.status || '').toUpperCase() === 'COMPLETED') {
+      return res.status(200).json({ status: 'success', message: 'Deja traite' });
+    }
+
+    if (payment_status === 'succeeded') {
+      const updated = await prisma.payment.update({
+        where: { id: payment.id },
+        data: {
+          status: 'COMPLETED',
+          completedAt: new Date(),
+          transactionId: waveSessionId || payment.transactionId,
+        },
+      });
+
+      await markAppointmentPaid(updated.appointmentId);
+      await markOrderPaid(updated.orderId);
+      await notifyPaymentCompleted(updated);
+    }
+
+    return res.status(200).json({ status: 'success' });
+  } catch (error) {
+    console.error('Wave webhook error:', error.message);
+    return res.status(500).json({ status: 'error', message: 'Erreur traitement webhook' });
   }
 });
 
