@@ -1,12 +1,20 @@
-const paydunya = require('paydunya');
+const https = require('https');
 
-let configured = false;
 const DEFAULT_PAYDUNYA_TIMEOUT_MS = 12000;
+const PAYDUNYA_TEST_BASE_URL = 'https://app.paydunya.com/sandbox-api/v1';
+const PAYDUNYA_LIVE_BASE_URL = 'https://app.paydunya.com/api/v1';
+
+let cachedConfig = null;
 
 const resolveTimeoutMs = () => {
   const parsed = Number(process.env.PAYDUNYA_REQUEST_TIMEOUT_MS);
   if (Number.isFinite(parsed) && parsed > 0) return parsed;
   return DEFAULT_PAYDUNYA_TIMEOUT_MS;
+};
+
+const normalizeMode = (mode) => {
+  const value = String(mode || 'test').trim().toLowerCase();
+  return value === 'live' ? 'live' : 'test';
 };
 
 const withTimeout = async (promise, operationLabel) => {
@@ -30,18 +38,29 @@ const withTimeout = async (promise, operationLabel) => {
   }
 };
 
-const normalizeMode = (mode) => {
-  const value = String(mode || 'test').trim().toLowerCase();
-  return value === 'live' ? 'live' : 'test';
+const isLikelyUrl = (value) => /^https?:\/\//i.test(String(value || '').trim());
+
+const extractResponseMessage = (payload) => {
+  if (!payload || typeof payload !== 'object') return '';
+  if (typeof payload.message === 'string' && payload.message.trim()) {
+    return payload.message.trim();
+  }
+  if (typeof payload.response_text === 'string' && payload.response_text.trim() && !isLikelyUrl(payload.response_text)) {
+    return payload.response_text.trim();
+  }
+  if (typeof payload.error === 'string' && payload.error.trim()) {
+    return payload.error.trim();
+  }
+  return '';
 };
 
 const ensureConfigured = () => {
-  if (configured) return;
+  if (cachedConfig) return cachedConfig;
 
-  const masterKey = process.env.PAYDUNYA_MASTER_KEY;
-  const publicKey = process.env.PAYDUNYA_PUBLIC_KEY;
-  const privateKey = process.env.PAYDUNYA_PRIVATE_KEY;
-  const token = process.env.PAYDUNYA_TOKEN;
+  const masterKey = String(process.env.PAYDUNYA_MASTER_KEY || '').trim();
+  const publicKey = String(process.env.PAYDUNYA_PUBLIC_KEY || '').trim();
+  const privateKey = String(process.env.PAYDUNYA_PRIVATE_KEY || '').trim();
+  const token = String(process.env.PAYDUNYA_TOKEN || '').trim();
 
   if (!masterKey || !publicKey || !privateKey || !token) {
     const err = new Error('PayDunya n est pas configure sur le serveur.');
@@ -50,60 +69,132 @@ const ensureConfigured = () => {
     throw err;
   }
 
-  paydunya.setup({
-    masterKey,
-    publicKey,
-    privateKey,
-    token,
-  });
-
-  paydunya.setTestMode(normalizeMode(process.env.PAYDUNYA_MODE) !== 'live');
-  paydunya.store = {
+  const mode = normalizeMode(process.env.PAYDUNYA_MODE);
+  const baseUrl = mode === 'live' ? PAYDUNYA_LIVE_BASE_URL : PAYDUNYA_TEST_BASE_URL;
+  const store = {
     name: process.env.PAYDUNYA_STORE_NAME || 'StyleFlow',
     tagline: process.env.PAYDUNYA_STORE_TAGLINE || 'Paiement securise des reservations',
-    phoneNumber: process.env.PAYDUNYA_STORE_PHONE || '',
-    postalAddress: process.env.PAYDUNYA_STORE_ADDRESS || '',
-    websiteUrl: process.env.BASE_URL || process.env.FRONTEND_URL || '',
+    phone_number: process.env.PAYDUNYA_STORE_PHONE || '',
+    postal_address: process.env.PAYDUNYA_STORE_ADDRESS || '',
+    website_url: process.env.BASE_URL || process.env.FRONTEND_URL || '',
   };
 
-  configured = true;
+  cachedConfig = {
+    baseUrl,
+    mode,
+    masterKey,
+    privateKey,
+    token,
+    store,
+  };
+  return cachedConfig;
 };
 
-const extractInvoiceUrl = (response, invoice) => {
-  return (
-    response?.response_text ||
-    response?.invoice_url ||
-    response?.url ||
-    invoice?.response_text ||
-    invoice?.invoice_url ||
-    null
-  );
+const requestPaydunya = ({ method, path, body, operationLabel }) => {
+  const config = ensureConfigured();
+  const endpoint = new URL(`${config.baseUrl}${path}`);
+  const payload = body == null ? '' : JSON.stringify(body);
+
+  const requestPromise = new Promise((resolve, reject) => {
+    const headers = {
+      'PAYDUNYA-MASTER-KEY': config.masterKey,
+      'PAYDUNYA-PRIVATE-KEY': config.privateKey,
+      'PAYDUNYA-TOKEN': config.token,
+      'Content-Type': 'application/json',
+    };
+
+    if (payload) {
+      headers['Content-Length'] = Buffer.byteLength(payload);
+    }
+
+    const req = https.request(
+      {
+        protocol: endpoint.protocol,
+        hostname: endpoint.hostname,
+        port: endpoint.port || 443,
+        path: `${endpoint.pathname}${endpoint.search}`,
+        method,
+        headers,
+      },
+      (res) => {
+        let raw = '';
+        res.setEncoding('utf8');
+        res.on('data', (chunk) => {
+          raw += chunk;
+        });
+        res.on('end', () => {
+          const httpStatus = Number(res.statusCode || 0);
+          let parsed = null;
+
+          if (raw.trim()) {
+            try {
+              parsed = JSON.parse(raw);
+            } catch (_) {
+              parsed = null;
+            }
+          } else {
+            parsed = {};
+          }
+
+          if (httpStatus >= 500) {
+            const err = new Error(extractResponseMessage(parsed) || 'PayDunya est temporairement indisponible.');
+            err.statusCode = 502;
+            err.expose = true;
+            err.payload = parsed;
+            return reject(err);
+          }
+
+          if (httpStatus >= 400) {
+            const err = new Error(extractResponseMessage(parsed) || `Requete PayDunya invalide (${httpStatus}).`);
+            err.statusCode = 400;
+            err.expose = true;
+            err.payload = parsed;
+            return reject(err);
+          }
+
+          if (!parsed || typeof parsed !== 'object') {
+            const err = new Error('PayDunya a retourne une reponse invalide.');
+            err.statusCode = 502;
+            err.expose = true;
+            return reject(err);
+          }
+
+          if (String(parsed.response_code || '') !== '00') {
+            const err = new Error(extractResponseMessage(parsed) || 'PayDunya a refuse la requete.');
+            err.statusCode = 502;
+            err.expose = true;
+            err.payload = parsed;
+            return reject(err);
+          }
+
+          return resolve(parsed);
+        });
+      }
+    );
+
+    req.on('error', (error) => {
+      const wrapped = new Error(error?.message || 'Echec de connexion a PayDunya.');
+      wrapped.statusCode = 502;
+      wrapped.expose = true;
+      wrapped.code = error?.code || 'PAYDUNYA_NETWORK_ERROR';
+      reject(wrapped);
+    });
+
+    if (payload) {
+      req.write(payload);
+    }
+    req.end();
+  });
+
+  return withTimeout(requestPromise, operationLabel);
 };
 
-const extractToken = (response, invoice) => {
-  return response?.token || invoice?.token || null;
-};
-
-const deriveStatus = (result, invoice) => {
-  const candidates = [
-    result?.status,
-    result?.invoice_status,
-    result?.payment_status,
-    result?.response_text?.status,
-    result?.response_text?.invoice_status,
-    result?.response_text?.payment_status,
-    result?.response_text?.data?.status,
-    invoice?.status,
-    invoice?.invoice_status,
-    invoice?.payment_status,
-  ]
-    .map((v) => String(v || '').trim().toLowerCase())
-    .filter(Boolean);
-
-  const normalized = candidates[0] || '';
-  const paidValues = ['completed', 'paid', 'success', 'successful', 'approved'];
-  const isPaid = paidValues.includes(normalized) || String(result?.response_code || '') === '00';
-
+const deriveStatus = (result) => {
+  const normalized = String(result?.status || result?.invoice_status || result?.payment_status || '')
+    .trim()
+    .toLowerCase();
+  const paidValues = new Set(['completed', 'paid', 'success', 'successful', 'approved']);
+  const isPaid = paidValues.has(normalized);
   return {
     status: normalized || 'pending',
     isPaid,
@@ -120,44 +211,56 @@ const createPaydunyaInvoice = async ({
   cancelUrl,
   callbackUrl,
 }) => {
-  ensureConfigured();
+  const config = ensureConfigured();
 
   const totalAmount = Number(amount);
   if (!Number.isFinite(totalAmount) || totalAmount <= 0) {
     throw new Error('Invalid amount for PayDunya invoice');
   }
 
-  const invoice = new paydunya.CheckoutInvoice();
-  invoice.addItem(
-    'Reservation StyleFlow',
-    1,
-    totalAmount,
-    totalAmount,
-    description || `Reservation ${bookingId}`
-  );
-  invoice.totalAmount = totalAmount;
-  invoice.description = description || `Paiement reservation ${bookingId}`;
-  invoice.returnUrl = successUrl;
-  invoice.cancelUrl = cancelUrl;
-  invoice.callbackUrl = callbackUrl;
+  const safeDescription = description || `Paiement reservation ${bookingId}`;
+  const requestBody = {
+    invoice: {
+      total_amount: totalAmount,
+      description: safeDescription,
+      items: {
+        item_1: {
+          name: 'Reservation FlashRV',
+          quantity: 1,
+          unit_price: totalAmount,
+          total_price: totalAmount,
+          description: safeDescription,
+        },
+      },
+    },
+    store: config.store,
+    actions: {
+      return_url: successUrl,
+      cancel_url: cancelUrl,
+      callback_url: callbackUrl,
+    },
+    custom_data: {
+      booking_id: String(bookingId || ''),
+      customer_name: String(customerName || ''),
+      customer_email: String(customerEmail || ''),
+    },
+  };
 
-  if (customerName || customerEmail) {
-    invoice.customer = {
-      name: customerName || 'Client StyleFlow',
-      email: customerEmail || '',
-    };
-  }
+  const response = await requestPaydunya({
+    method: 'POST',
+    path: '/checkout-invoice/create',
+    body: requestBody,
+    operationLabel: 'create_invoice',
+  });
 
-  const response = await withTimeout(invoice.create(), 'create_invoice');
-  if (!response || response.response_code !== '00') {
-    throw new Error(response?.response_text || 'PayDunya invoice creation failed');
-  }
-
-  const invoiceUrl = extractInvoiceUrl(response, invoice);
-  const token = extractToken(response, invoice);
+  const invoiceUrl = response?.response_text || response?.invoice_url || response?.url || null;
+  const token = response?.token || null;
 
   if (!invoiceUrl || !token) {
-    throw new Error('PayDunya invoice URL or token is missing');
+    const err = new Error('PayDunya invoice URL or token is missing');
+    err.statusCode = 502;
+    err.expose = true;
+    throw err;
   }
 
   return { invoiceUrl, token, raw: response };
@@ -171,16 +274,18 @@ const confirmPaydunyaInvoice = async (token) => {
     throw new Error('PayDunya token is required');
   }
 
-  const invoice = new paydunya.CheckoutInvoice();
-  invoice.token = invoiceToken;
-  const result = await withTimeout(invoice.confirm(), 'confirm_invoice');
-  const state = deriveStatus(result, invoice);
+  const response = await requestPaydunya({
+    method: 'GET',
+    path: `/checkout-invoice/confirm/${encodeURIComponent(invoiceToken)}`,
+    operationLabel: 'confirm_invoice',
+  });
 
+  const state = deriveStatus(response);
   return {
     token: invoiceToken,
     status: state.status,
     isPaid: state.isPaid,
-    raw: result,
+    raw: response,
   };
 };
 
