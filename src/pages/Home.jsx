@@ -301,32 +301,6 @@ function Home() {
                     ))}
                 </div>
               </form>
-
-                {stats.length > 0 && (
-                <div className={`mt-3 flex flex-wrap gap-2`}>
-                  {stats.map((stat, i) => (
-                    <div key={i} className="inline-flex items-center gap-2 bg-white/80 border border-gray-100 rounded-full px-3 py-1.5 shadow-sm">
-                      <span className="text-sm font-bold text-gray-900">{stat.value}</span>
-                      <span className="text-xs text-gray-500">{stat.label}</span>
-                    </div>
-                  ))}
-                </div>
-                )}
-              <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-gray-600">
-                {[
-                  { icon: <FiShield className="w-4 h-4" />, label: 'Paiement sécurisé' },
-                  { icon: <FiCheck className="w-4 h-4" />, label: 'Salons vérifiés' },
-                  { icon: <FiStar className="w-4 h-4" />, label: 'Avis clients authentiques' },
-                ].map((item) => (
-                  <div
-                    key={item.label}
-                    className="inline-flex items-center gap-2 rounded-full bg-white/80 border border-gray-100 px-3 py-1.5 shadow-sm"
-                  >
-                    <span className="text-amber-500">{item.icon}</span>
-                    <span>{item.label}</span>
-                  </div>
-                ))}
-              </div>
             </motion.div>
 
             <motion.div
@@ -351,20 +325,6 @@ function Home() {
                 </div>
               </div>
             </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Trust Strip */}
-      <section className="py-3 bg-white border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-center gap-6 flex-wrap">
-            {trustItems.map((item, i) => (
-              <div key={i} className="inline-flex items-center gap-2 text-sm text-gray-600">
-                <span className="text-amber-500">{item.icon}</span>
-                <span className="font-medium">{item.title}</span>
-              </div>
-            ))}
           </div>
         </div>
       </section>
