@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { FiAlertCircle, FiRefreshCw } from 'react-icons/fi'
-import apiFetch from '../../api/client'
+import apiFetch, { isRetryableHttpError } from '../../api/client'
 import { buildPaydunyaPaymentPayload } from '../../utils/payments'
 
 function PaymentCancel() {
@@ -15,6 +15,35 @@ function PaymentCancel() {
     const params = new URLSearchParams(location.search)
     return params.get('appointmentId')
   }, [location.search])
+  const errorReason = String(location.state?.reason || '').trim()
+
+  const wait = (delayMs) => new Promise((resolve) => setTimeout(resolve, delayMs))
+
+  const createInvoiceWithRetry = async (paymentPayload) => {
+    const retryDelays = [0, 1200]
+    let lastError = null
+
+    for (let attempt = 0; attempt < retryDelays.length; attempt += 1) {
+      if (retryDelays[attempt] > 0) {
+        await wait(retryDelays[attempt])
+      }
+
+      try {
+        return await apiFetch('/payments/create', {
+          method: 'POST',
+          body: paymentPayload,
+          timeoutMs: 20000,
+        })
+      } catch (err) {
+        lastError = err
+        if (!isRetryableHttpError(err) || attempt === retryDelays.length - 1) {
+          throw err
+        }
+      }
+    }
+
+    throw lastError || new Error('Impossible de relancer le paiement')
+  }
 
   useEffect(() => {
     const loadAppointment = async () => {
@@ -57,9 +86,8 @@ function PaymentCancel() {
         ? appointment.services.map((service) => service?.name).filter(Boolean).join(', ')
         : appointment?.service?.name || 'Reservation'
 
-      const result = await apiFetch('/payments/create', {
-        method: 'POST',
-        body: buildPaydunyaPaymentPayload({
+      const result = await createInvoiceWithRetry(
+        buildPaydunyaPaymentPayload({
           bookingId: appointment.id,
           amount: depositAmount,
           customerName,
@@ -67,8 +95,8 @@ function PaymentCancel() {
           customerPhone,
           salonName: appointment?.salon?.name,
           serviceLabel,
-        }),
-      })
+        })
+      )
 
       const payload = result?.data || result
       if (!payload?.invoiceUrl) {
@@ -77,7 +105,10 @@ function PaymentCancel() {
 
       window.location.href = payload.invoiceUrl
     } catch (err) {
-      setError(err.message || 'Impossible de relancer le paiement')
+      const fallbackMessage = isRetryableHttpError(err)
+        ? 'Le serveur de paiement est indisponible pour le moment. Reessayez dans quelques instants.'
+        : 'Impossible de relancer le paiement'
+      setError(err.message || fallbackMessage)
     } finally {
       setLoading(false)
     }
@@ -113,6 +144,12 @@ function PaymentCancel() {
             <p className="text-gray-600 mt-1">
               Montant: {Number(appointment.totalPrice || appointment.service?.price || 0).toLocaleString('fr-FR')} FCFA
             </p>
+          </div>
+        )}
+
+        {!error && errorReason && (
+          <div className="mb-4 p-3 bg-amber-50 text-amber-700 rounded-xl text-sm">
+            {errorReason}
           </div>
         )}
 

@@ -1,4 +1,6 @@
 const BASE_URL = import.meta.env.VITE_API_URL || '/api'
+const DEFAULT_TIMEOUT_MS = Number(import.meta.env.VITE_API_TIMEOUT_MS || 15000)
+const RETRYABLE_HTTP_STATUSES = new Set([0, 408, 425, 429, 500, 502, 503, 504])
 
 function buildHttpErrorMessage(status, fallbackText = '') {
   if (status === 502 || status === 503 || status === 504) {
@@ -19,7 +21,15 @@ function buildHttpErrorMessage(status, fallbackText = '') {
   return fallbackText || 'La requete a echoue.'
 }
 
-async function apiFetch(path, { method = 'GET', body, headers = {}, ...options } = {}) {
+export function isRetryableHttpStatus(status) {
+  return RETRYABLE_HTTP_STATUSES.has(Number(status))
+}
+
+export function isRetryableHttpError(error) {
+  return isRetryableHttpStatus(error?.status)
+}
+
+async function apiFetch(path, { method = 'GET', body, headers = {}, timeoutMs = DEFAULT_TIMEOUT_MS, ...options } = {}) {
   const url = `${BASE_URL}${path.startsWith('/') ? path : `/${path}`}`
   const token = sessionStorage.getItem('flashrv_token')
   const authHeader = token ? { Authorization: `Bearer ${token}` } : {}
@@ -47,6 +57,11 @@ async function apiFetch(path, { method = 'GET', body, headers = {}, ...options }
     ...options,
   }
 
+  const controller = typeof AbortController !== 'undefined' ? new AbortController() : null
+  if (controller) {
+    fetchOptions.signal = controller.signal
+  }
+
   if (body !== undefined) {
     fetchOptions.body = isFormData
       ? body
@@ -56,13 +71,27 @@ async function apiFetch(path, { method = 'GET', body, headers = {}, ...options }
   }
 
   let res
+  const timeoutValue = Number(timeoutMs)
+  const shouldTimeout = Number.isFinite(timeoutValue) && timeoutValue > 0
+  const timeoutId = controller && shouldTimeout
+    ? setTimeout(() => controller.abort(), timeoutValue)
+    : null
+
   try {
     res = await fetch(url, fetchOptions)
-  } catch (_) {
-    const error = new Error('Impossible de joindre le serveur. Verifiez votre connexion puis reessayez.')
-    error.status = 0
-    error.url = url
-    throw error
+  } catch (fetchError) {
+    if (fetchError?.name === 'AbortError') {
+      const timeoutError = new Error('Le serveur met trop de temps a repondre. Reessayez dans un instant.')
+      timeoutError.status = 408
+      timeoutError.url = url
+      throw timeoutError
+    }
+    const networkError = new Error('Impossible de joindre le serveur. Verifiez votre connexion puis reessayez.')
+    networkError.status = 0
+    networkError.url = url
+    throw networkError
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId)
   }
 
   const contentType = (res.headers.get('content-type') || '').toLowerCase()

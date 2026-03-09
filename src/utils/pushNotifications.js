@@ -1,4 +1,59 @@
-import apiFetch from '../api/client';
+import apiFetch, { isRetryableHttpError } from '../api/client';
+
+const PUSH_AUTO_SUBSCRIBE_ENABLED = String(import.meta.env.VITE_ENABLE_PUSH_SUBSCRIPTION ?? 'true').toLowerCase() !== 'false';
+const VAPID_PUBLIC_KEY_CACHE = 'flashrv_vapid_public_key';
+const VAPID_RETRY_AFTER_CACHE = 'flashrv_vapid_retry_after';
+const VAPID_RETRY_COOLDOWN_MS = 10 * 60 * 1000;
+
+function readStorage(key) {
+  try {
+    return localStorage.getItem(key);
+  } catch (_) {
+    return null;
+  }
+}
+
+function writeStorage(key, value) {
+  try {
+    localStorage.setItem(key, value);
+  } catch (_) {
+    // noop
+  }
+}
+
+function removeStorage(key) {
+  try {
+    localStorage.removeItem(key);
+  } catch (_) {
+    // noop
+  }
+}
+
+async function getVapidPublicKey() {
+  const retryAfter = Number(readStorage(VAPID_RETRY_AFTER_CACHE) || 0);
+  if (retryAfter > Date.now()) {
+    return '';
+  }
+
+  const cached = String(readStorage(VAPID_PUBLIC_KEY_CACHE) || '').trim();
+  if (cached) {
+    return cached;
+  }
+
+  try {
+    const res = await apiFetch('/push/vapid-public-key', { timeoutMs: 10000 });
+    const key = String(res?.key || '').trim();
+    if (!key) return '';
+    writeStorage(VAPID_PUBLIC_KEY_CACHE, key);
+    removeStorage(VAPID_RETRY_AFTER_CACHE);
+    return key;
+  } catch (err) {
+    if (isRetryableHttpError(err) || Number(err?.status) === 503) {
+      writeStorage(VAPID_RETRY_AFTER_CACHE, String(Date.now() + VAPID_RETRY_COOLDOWN_MS));
+    }
+    return '';
+  }
+}
 
 /**
  * Convert a base64 URL-safe string to Uint8Array (for applicationServerKey).
@@ -16,16 +71,8 @@ function urlBase64ToUint8Array(base64String) {
  */
 export async function subscribeToPush() {
   try {
+    if (!PUSH_AUTO_SUBSCRIBE_ENABLED) return;
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
-
-    // Get VAPID public key from backend
-    const res = await apiFetch('/push/vapid-public-key');
-    const vapidKey = res?.key;
-    if (!vapidKey) return;
-
-    // Register service worker
-    const registration = await navigator.serviceWorker.register('/sw-push.js');
-    await navigator.serviceWorker.ready;
 
     // Check permission
     const permission = Notification.permission;
@@ -36,6 +83,14 @@ export async function subscribeToPush() {
       const result = await Notification.requestPermission();
       if (result !== 'granted') return;
     }
+
+    // Register service worker
+    const registration = await navigator.serviceWorker.register('/sw-push.js');
+    await navigator.serviceWorker.ready;
+
+    // Get VAPID public key from backend
+    const vapidKey = await getVapidPublicKey();
+    if (!vapidKey) return;
 
     // Subscribe
     let subscription = await registration.pushManager.getSubscription();
