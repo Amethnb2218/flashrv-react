@@ -68,8 +68,8 @@ export default function PendingProsSection({ pros, loading, onRefresh, onApprove
       >
         <option value="all">Tous</option>
         <option value="PENDING">En attente</option>
-        <option value="APPROVED">Approuvés</option>
-        <option value="REJECTED">Refusés</option>
+        <option value="APPROVED">ApprouvÃ©s</option>
+        <option value="REJECTED">RefusÃ©s</option>
         <option value="SUSPENDED">Suspendus</option>
       </select>
     </div>
@@ -207,7 +207,7 @@ export default function PendingProsSection({ pros, loading, onRefresh, onApprove
             },
             {
               key: "phoneNumber",
-              label: "Téléphone",
+              label: "TÃ©lÃ©phone",
               render: row => <span className="text-xs text-slate-700">{row.phoneNumber || "-"}</span>,
             },
             {
@@ -222,7 +222,7 @@ export default function PendingProsSection({ pros, loading, onRefresh, onApprove
             },
             {
               key: "salonPhone",
-              label: "Tél. salon",
+              label: "TÃ©l. salon",
               render: row => <span className="text-xs text-slate-700">{row.salon?.phone || "-"}</span>,
             },
             {
@@ -281,7 +281,7 @@ export default function PendingProsSection({ pros, loading, onRefresh, onApprove
             <div className="w-full mt-5 space-y-3">
               <div className="flex items-center gap-3 text-sm">
                 <FiPhone className="w-4 h-4 text-slate-400 shrink-0" />
-                <span className="text-slate-600">{selectedUser.phoneNumber || <span className="italic text-slate-400">Non renseigné</span>}</span>
+                <span className="text-slate-600">{selectedUser.phoneNumber || <span className="italic text-slate-400">Non renseignÃ©</span>}</span>
               </div>
               <div className="flex items-center gap-3 text-sm">
                 <FiCalendar className="w-4 h-4 text-slate-400 shrink-0" />

@@ -3,11 +3,11 @@ const BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 async function apiFetch(path, { method = 'GET', body, headers = {}, ...options } = {}) {
   const url = `${BASE_URL}${path.startsWith('/') ? path : '/' + path}`;
-  // Ajout du token Authorization ET cookie si présent dans le sessionStorage
+  // Ajout du token Authorization ET cookie si prÃ©sent dans le sessionStorage
   const token = sessionStorage.getItem('flashrv_token');
   const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
   const hasAuth = Boolean(token);
-  // Forcer le cookie token à chaque requête (pour Express backend)
+  // Forcer le cookie token Ã  chaque requÃªte (pour Express backend)
   if (hasAuth) {
     document.cookie = `token=${token}; path=/; SameSite=Lax`;
   }
@@ -40,14 +40,14 @@ async function apiFetch(path, { method = 'GET', body, headers = {}, ...options }
   try {
     data = text ? JSON.parse(text) : {};
   } catch (e) {
-    console.error('Réponse non JSON:', text);
-    throw new Error(`Réponse non JSON pour ${url}: ${text.slice(0, 200)}`);
+    console.error('RÃ©ponse non JSON:', text);
+    throw new Error(`RÃ©ponse non JSON pour ${url}: ${text.slice(0, 200)}`);
   }
   if (!res.ok) {
     const msg = (data && (data.message || data.error)) || res.statusText;
     throw new Error(msg);
   }
-  // Correction: si la réponse est un tableau, retourne-le directement
+  // Correction: si la rÃ©ponse est un tableau, retourne-le directement
   if (Array.isArray(data)) return data;
   return data;
 }

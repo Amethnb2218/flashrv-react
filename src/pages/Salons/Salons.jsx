@@ -114,9 +114,9 @@ function Salons() {
         return "high"
       }
       const normalized =
-        filters.priceRange === "€" ? "low" :
-        filters.priceRange === "€€" ? "mid" :
-        filters.priceRange === "€€€" ? "high" :
+        filters.priceRange === "Â€" ? "low" :
+        filters.priceRange === "Â€Â€" ? "mid" :
+        filters.priceRange === "Â€Â€Â€" ? "high" :
         filters.priceRange
       result = result.filter(s => priceBucket(s) === normalized)
     }
@@ -173,11 +173,11 @@ function Salons() {
     const chips = []
     if (filters.search) chips.push({ key: 'search', label: `Recherche: ${filters.search}` })
     if (filters.neighborhood) chips.push({ key: 'neighborhood', label: `Quartier: ${filters.neighborhood}` })
-    if (filters.category) chips.push({ key: 'category', label: `Catégorie: ${filters.category}` })
+    if (filters.category) chips.push({ key: 'category', label: `CatÃ©gorie: ${filters.category}` })
     if (filters.priceRange) {
       const priceLabel =
         filters.priceRange === 'low' ? 'Budget: = 5?000 F' :
-        filters.priceRange === 'mid' ? 'Budget: 5?000–15?000 F' :
+        filters.priceRange === 'mid' ? 'Budget: 5?000Â–15?000 F' :
         filters.priceRange === 'high' ? 'Budget: = 15?000 F' :
         `Budget: ${filters.priceRange}`
       chips.push({ key: 'priceRange', label: priceLabel })
@@ -212,10 +212,10 @@ function Salons() {
             transition={{ duration: reduceMotion ? 0 : 0.45 }}
           >
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              {filters.businessType === 'BOUTIQUE' ? 'Trouvez votre boutique' : 'Trouvez votre salon idéal'}
+              {filters.businessType === 'BOUTIQUE' ? 'Trouvez votre boutique' : 'Trouvez votre salon idÃ©al'}
             </h1>
             <p className="text-primary-100 mb-6">
-              {filteredSalons.length} établissement{filteredSalons.length > 1 ? 's' : ''} disponible{filteredSalons.length > 1 ? 's' : ''}
+              {filteredSalons.length} Ã©tablissement{filteredSalons.length > 1 ? 's' : ''} disponible{filteredSalons.length > 1 ? 's' : ''}
             </p>
 
             {/* Type toggle - Categories */}
@@ -248,7 +248,7 @@ function Salons() {
                     : 'bg-white/20 text-white hover:bg-white/30'
                 }`}
               >
-                Salons beauté
+                Salons beautÃ©
               </button>
               <button
                 onClick={() => { updateFilter('type', 'salon'); updateFilter('salonType', 'mixte'); updateFilter('businessType', ''); }}
@@ -258,7 +258,7 @@ function Salons() {
                     : 'bg-white/20 text-white hover:bg-white/30'
                 }`}
               >
-                Coiffure & beauté
+                Coiffure & beautÃ©
               </button>
               <button
                 onClick={() => { updateFilter('type', 'barber'); updateFilter('salonType', ''); updateFilter('businessType', ''); }}
@@ -360,7 +360,7 @@ function Salons() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {/* Category */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Catégorie</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">CatÃ©gorie</label>
                 <select
                   value={filters.category}
                   onChange={(e) => updateFilter('category', e.target.value)}
@@ -383,7 +383,7 @@ function Salons() {
                 >
                   <option value="">Tous</option>
                   <option value="low">= 5?000 F</option>
-                  <option value="mid">5?000–15?000 F</option>
+                  <option value="mid">5?000Â–15?000 F</option>
                   <option value="high">= 15?000 F</option>
                 </select>
               </div>
@@ -411,9 +411,9 @@ function Salons() {
                   onChange={(e) => updateFilter('sortBy', e.target.value)}
                   className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500"
                 >
-                  <option value="rating">Mieux notés</option>
-                  <option value="reviews">Plus d’avis</option>
-                  <option value="name">Nom A–Z</option>
+                  <option value="rating">Mieux notÃ©s</option>
+                  <option value="reviews">Plus dÂ’avis</option>
+                  <option value="name">Nom AÂ–Z</option>
                 </select>
               </div>
             </div>
@@ -424,7 +424,7 @@ function Salons() {
                   className="mt-4 flex items-center space-x-2 text-sm text-primary-600 hover:text-primary-700"
                 >
                   <FiX className="w-4 h-4" />
-                  <span>Réinitialiser les filtres</span>
+                  <span>RÃ©initialiser les filtres</span>
                 </button>
               )}
             </div>
@@ -454,15 +454,15 @@ function Salons() {
             <div className="w-24 h-24 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <FiSearch className="w-12 h-12 text-primary-400" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Aucun salon trouvé</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Aucun salon trouvÃ©</h3>
             <p className="text-gray-500 mb-6">
-              Essayez de modifier vos critères de recherche
+              Essayez de modifier vos critÃ¨res de recherche
             </p>
             <button
               onClick={clearFilters}
               className="btn-primary"
             >
-              Réinitialiser les filtres
+              RÃ©initialiser les filtres
             </button>
           </motion.div>
         ) : (

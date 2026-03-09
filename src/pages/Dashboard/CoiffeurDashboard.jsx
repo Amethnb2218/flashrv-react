@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import apiFetch from "@/api/client";
 import { useAuth } from "../../context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -84,29 +84,29 @@ transition: { duration: 0.2 },
 
 // Traduction statuts (rendez-vous, paiement, avis, etc.)
 const statusLabels = {
-  upcoming: "� venir",
-  completed: "Termin�",
-  cancelled: "Annul�",
-  confirmed: "Confirm�",
-  confirmed_on_site: "Confirm� (sur place)",
+  upcoming: "ï¿½ venir",
+  completed: "Terminï¿½",
+  cancelled: "Annulï¿½",
+  confirmed: "Confirmï¿½",
+  confirmed_on_site: "Confirmï¿½ (sur place)",
   in_progress: "En cours",
   pending: "En attente",
   pending_assignment: "En attente d'assignation",
   pending_cash: "En attente (sur place)",
-  paid: "Pay�",
-  deposit_paid: "Acompte pay�",
-  refunded: "Rembours�",
-  failed: "�chec paiement",
+  paid: "Payï¿½",
+  deposit_paid: "Acompte payï¿½",
+  refunded: "Remboursï¿½",
+  failed: "ï¿½chec paiement",
   on_site: "Sur place",
-  unpaid: "Impay�",
+  unpaid: "Impayï¿½",
   no_show: "Absence",
-  approved: "Approuv�",
-  rejected: "Rejet�",
+  approved: "Approuvï¿½",
+  rejected: "Rejetï¿½",
 };
 
 const getStatusLabel = (value) => {
   const key = String(value || "").toLowerCase();
-  return statusLabels[key] || value || "�";
+  return statusLabels[key] || value || "ï¿½";
 };
 
 const modalAnim = {
@@ -191,7 +191,7 @@ function formatPeriodLabel(period) {
     start = startOfDay(new Date(now.getFullYear(), 0, 1));
     end = endOfDay(new Date(now.getFullYear(), 11, 31));
   }
-  return `${start.toLocaleDateString("fr-FR")} � ${end.toLocaleDateString("fr-FR")}`;
+  return `${start.toLocaleDateString("fr-FR")} ï¿½ ${end.toLocaleDateString("fr-FR")}`;
 }
 
 function toYmd(d) {
@@ -224,7 +224,7 @@ Service: ${invoice.serviceName}
 ---
 Total: ${formatMoney(invoice.totalAmount)}
 Acompte (${invoice.depositPct}%): ${formatMoney(invoice.depositAmount)}
-Reste � payer: ${formatMoney(invoice.remainingAmount)}
+Reste ï¿½ payer: ${formatMoney(invoice.remainingAmount)}
 ---
 Merci de votre confiance !
 `.trim();
@@ -479,7 +479,7 @@ title="Fermer"
 
 function DataTable({ columns, data, emptyLabel }) {
 if (!data?.length) {
-return <EmptyState icon={<FiGrid />} title={emptyLabel || "Aucune donn�e"} />;
+return <EmptyState icon={<FiGrid />} title={emptyLabel || "Aucune donnï¿½e"} />;
 }
 return (
 <div className="overflow-x-auto rounded-2xl border border-gray-100">
@@ -525,7 +525,7 @@ export default function CoiffeurDashboard() {
 const { isAuthenticated, checkAuth, user } = useAuth();
 
 // IMPORTANT: on garde l'onglet "portfolio" MAIS le label est "Salon".
-// Donc activeTab doit toujours �tre "portfolio" (et surtout PAS "salon").
+// Donc activeTab doit toujours ï¿½tre "portfolio" (et surtout PAS "salon").
 const [activeTab, setActiveTab] = useState("appointments");
 
 // data
@@ -604,7 +604,7 @@ label: "Pause",
 open: "09:00",
 close: "18:00",
 closed: false,
-name: "Jour f�ri�",
+name: "Jour fï¿½riï¿½",
 });
 
 // Payments + invoices
@@ -640,7 +640,7 @@ const [loyalty, setLoyalty] = useState({
 enabled: true,
 pointsPerBooking: 10,
 rewardThreshold: 100,
-rewardLabel: "10% de r�duction",
+rewardLabel: "10% de rï¿½duction",
 });
 
 // CRM clients
@@ -710,28 +710,28 @@ const tabs = useMemo(
 () => isBoutique ? [
   { id: "orders", label: "Commandes", icon: FiShoppingCart },
   { id: "products", label: "Articles", icon: FiBox },
-  { id: "team", label: "�quipe", icon: FiUsers },
+  { id: "team", label: "ï¿½quipe", icon: FiUsers },
   { id: "payments", label: "Paiements", icon: FiDollarSign },
   { id: "paymentMethods", label: "Moyens de paiement", icon: FiCreditCard },
   { id: "portfolio", label: "Boutique", icon: FiCamera },
   { id: "reviews", label: "Avis", icon: FiStar },
-  { id: "promos", label: "Promos & Fid�lit�", icon: FiGift },
+  { id: "promos", label: "Promos & Fidï¿½litï¿½", icon: FiGift },
   { id: "crm", label: "CRM Clients", icon: FiUser },
   { id: "stats", label: "Stats", icon: FiBarChart2 },
-  { id: "settings", label: "Param�tres", icon: FiSettings },
+  { id: "settings", label: "Paramï¿½tres", icon: FiSettings },
 ] : [
   { id: "appointments", label: "Rendez-vous", icon: FiCalendar },
   { id: "services", label: "Services", icon: FiScissors },
-  { id: "team", label: "�quipe", icon: FiUsers },
+  { id: "team", label: "ï¿½quipe", icon: FiUsers },
   { id: "planning", label: "Planning", icon: FiClock },
   { id: "payments", label: "Paiements", icon: FiDollarSign },
   { id: "paymentMethods", label: "Moyens de paiement", icon: FiCreditCard },
   { id: "portfolio", label: "Salon", icon: FiCamera },
   { id: "reviews", label: "Avis", icon: FiStar },
-  { id: "promos", label: "Promos & Fid�lit�", icon: FiGift },
+  { id: "promos", label: "Promos & Fidï¿½litï¿½", icon: FiGift },
   { id: "crm", label: "CRM Clients", icon: FiUser },
   { id: "stats", label: "Stats", icon: FiBarChart2 },
-  { id: "settings", label: "Param�tres", icon: FiSettings },
+  { id: "settings", label: "Paramï¿½tres", icon: FiSettings },
 ],
 [isBoutique]
 );
@@ -785,7 +785,7 @@ const normalizePortfolioList = (items = []) => {
       const existing = grouped.get(groupId) || {
         id: groupId,
         type: "beforeAfter",
-        title: title || "Avant/Apr�s",
+        title: title || "Avant/Aprï¿½s",
         beforeMedia: "",
         afterMedia: "",
         ids: [],
@@ -923,8 +923,8 @@ const normalizeException = (ex) => {
 const normalizeHoliday = (h) => {
   if (!h) return h;
   const rawName = h?.name || h?.label || "";
-  let safeName = String(rawName || "Jour f�ri�");
-  if (safeName.includes("�") || safeName.includes("�")) {
+  let safeName = String(rawName || "Jour fï¿½riï¿½");
+  if (safeName.includes("ï¿½") || safeName.includes("ï¿½")) {
     try {
       safeName = decodeURIComponent(escape(safeName));
     } catch {
@@ -934,7 +934,7 @@ const normalizeHoliday = (h) => {
   return {
     ...h,
     date: toYmd(h?.date),
-    name: safeName.includes("?") || safeName.includes("�") ? "Jour f�ri�" : safeName,
+    name: safeName.includes("?") || safeName.includes("ï¿½") ? "Jour fï¿½riï¿½" : safeName,
   };
 };
 
@@ -1029,7 +1029,7 @@ const createdPaymentMethod = res?.data ?? res;
 setPaymentMethods((prev) => [createdPaymentMethod, ...prev]);
 setShowPaymentMethodModal(false);
 setNewPaymentMethod({ method: "", enabled: true });
-toast.success("Moyen de paiement ajout� !");
+toast.success("Moyen de paiement ajoutï¿½ !");
 } catch (e) {
 toast.error(e.message || "Erreur lors de l'ajout");
 }
@@ -1041,7 +1041,7 @@ try {
 setDeletingPaymentMethod(true);
 await apiFetch(`/salon/payment-methods/${id}`, { method: "DELETE" });
 setPaymentMethods((prev) => prev.filter((pm) => pm.id !== id));
-toast.success("Moyen de paiement supprim�.");
+toast.success("Moyen de paiement supprimï¿½.");
 } catch (e) {
 toast.error(e.message || "Erreur lors de la suppression");
 } finally {
@@ -1061,7 +1061,7 @@ const user = await checkAuth();
 authed = !!user;
 }
 if (!authed) {
-toast.error("Vous devez �tre connect� pour voir les moyens de paiement.");
+toast.error("Vous devez ï¿½tre connectï¿½ pour voir les moyens de paiement.");
 window.location.reload();
 return;
 }
@@ -1136,7 +1136,7 @@ setUnreadNotifications(notificationsRes?.data?.unreadCount || 0);
 }
 )
 .catch((err) => {
-let msg = "Erreur lors du chargement des donn�es";
+let msg = "Erreur lors du chargement des donnï¿½es";
 if (err && err.message) msg += ` : ${err.message}`;
 toast.error(msg);
 })
@@ -1251,7 +1251,7 @@ return false;
 }
 const ok = file.type.startsWith("image/") || file.type.startsWith("video/");
 if (!ok) {
-toast.error("Format non support�. (image/* ou video/*)");
+toast.error("Format non supportï¿½. (image/* ou video/*)");
 return false;
 }
 return true;
@@ -1391,7 +1391,7 @@ try {
   const res = await apiFetch("/services", { method: "POST", body: form });
   const created = normalizeService(res?.data || res);
   setServices((prev) => [created, ...prev]);
-  toast.success("Service ajout� !");
+  toast.success("Service ajoutï¿½ !");
   setShowServiceModal(false);
   resetNewService();
 } catch (err) {
@@ -1439,10 +1439,10 @@ try {
   const res = await apiFetch(`/services/${updated.id}`, { method: "PATCH", body: form });
   const saved = normalizeService(res?.data || res);
   setServices((prev) => prev.map((s) => (s.id === updated.id ? { ...s, ...saved } : s)));
-  toast.success("Service mis � jour !");
+  toast.success("Service mis ï¿½ jour !");
   setEditingService(null);
 } catch (err) {
-  toast.error("Erreur mise � jour: " + (err.message || err));
+  toast.error("Erreur mise ï¿½ jour: " + (err.message || err));
 }
 };
 
@@ -1451,7 +1451,7 @@ if (!confirmDelete?.id) return;
 try {
   await apiFetch(`/services/${confirmDelete.id}`, { method: "DELETE" });
   setServices((prev) => prev.filter((s) => s.id !== confirmDelete.id));
-  toast.success("Service supprim�.");
+  toast.success("Service supprimï¿½.");
   setConfirmDelete(null);
 } catch (err) {
   toast.error("Erreur suppression: " + (err.message || err));
@@ -1476,10 +1476,10 @@ const apiStatus = statusMap[status] || String(status || "").toUpperCase();
 apiFetch(`/appointments/${id}/status`, { method: "PATCH", body: { status: apiStatus } })
   .then(() => {
     setAppointments((prev) => prev.map((a) => (a.id === id ? { ...a, status } : a)));
-    toast.success("Statut mis � jour.");
+    toast.success("Statut mis ï¿½ jour.");
   })
   .catch((err) => {
-    toast.error("Erreur mise � jour statut: " + (err.message || err));
+    toast.error("Erreur mise ï¿½ jour statut: " + (err.message || err));
   });
 };
 
@@ -1499,13 +1499,13 @@ depositAmount,
 remainingAmount,
 };
 setInvoices((prev) => [invoice, ...prev]);
-toast.success("Facture g�n�r�e.");
+toast.success("Facture gï¿½nï¿½rï¿½e.");
 downloadInvoiceLikeFile(invoice);
 };
 
 const refundAppointmentDeposit = async (appt) => {
 if (!appt?.depositPaid || (appt.depositPct || 0) <= 0) {
-toast.error("Aucun acompte � rembourser.");
+toast.error("Aucun acompte ï¿½ rembourser.");
 return;
 }
 const paymentId = appt.payment?.id;
@@ -1520,7 +1520,7 @@ prev.map((a) =>
 a.id === appt.id ? { ...a, paymentStatus: "refunded", depositPaid: false } : a
 )
 );
-toast.success("Remboursement effectu�.");
+toast.success("Remboursement effectuï¿½.");
 } catch (err) {
 toast.error("Erreur remboursement: " + (err.message || err));
 }
@@ -1559,7 +1559,7 @@ try {
   const res = await apiFetch("/team", { method: "POST", body: payload });
   const created = res?.data ?? res;
   setTeam((prev) => [created, ...prev]);
-  toast.success("Membre ajout�.");
+  toast.success("Membre ajoutï¿½.");
   setShowTeamModal(false);
   resetNewMember();
 } catch (err) {
@@ -1581,10 +1581,10 @@ try {
   const res = await apiFetch(`/team/${editingMember.id}`, { method: "PATCH", body: payload });
   const updated = res?.data ?? res;
   setTeam((prev) => prev.map((m) => (m.id === editingMember.id ? { ...m, ...updated } : m)));
-  toast.success("Membre mis � jour.");
+  toast.success("Membre mis ï¿½ jour.");
   setEditingMember(null);
 } catch (err) {
-  toast.error("Erreur mise � jour: " + (err.message || err));
+  toast.error("Erreur mise ï¿½ jour: " + (err.message || err));
 }
 };
 
@@ -1592,7 +1592,7 @@ const deleteMember = async (id) => {
 try {
   await apiFetch(`/team/${id}`, { method: "DELETE" });
   setTeam((prev) => prev.filter((m) => m.id !== id));
-  toast.success("Membre supprim�.");
+  toast.success("Membre supprimï¿½.");
 } catch (err) {
   toast.error("Erreur suppression: " + (err.message || err));
 }
@@ -1617,7 +1617,7 @@ label: planningForm.label || "Pause",
 });
 const created = normalizeBreak(res?.data ?? res);
 setPlanning((p) => ({ ...p, breaks: [created, ...p.breaks] }));
-toast.success("Pause ajout�e.");
+toast.success("Pause ajoutï¿½e.");
 }
 if (t === "exception") {
 const res = await apiFetch("/planning/exceptions", {
@@ -1631,19 +1631,19 @@ closed: !!planningForm.closed,
 });
 const created = normalizeException(res?.data ?? res);
 setPlanning((p) => ({ ...p, exceptions: [created, ...p.exceptions] }));
-toast.success("Exception ajout�e.");
+toast.success("Exception ajoutï¿½e.");
 }
 if (t === "holiday") {
 const res = await apiFetch("/planning/holidays", {
 method: "POST",
 body: {
 date: planningForm.date,
-name: planningForm.name || "Jour f�ri�",
+name: planningForm.name || "Jour fï¿½riï¿½",
 },
 });
 const created = normalizeHoliday(res?.data ?? res);
 setPlanning((p) => ({ ...p, holidays: [created, ...p.holidays] }));
-toast.success("Jour f�ri� ajout�.");
+toast.success("Jour fï¿½riï¿½ ajoutï¿½.");
 }
 setShowPlanningModal(false);
 } catch (err) {
@@ -1664,7 +1664,7 @@ setPlanning((p) => ({
 ...p,
 [type]: p[type].filter((x) => x.id !== id),
 }));
-toast.success("Supprim�.");
+toast.success("Supprimï¿½.");
 } catch (err) {
 toast.error(err.message || "Erreur lors de la suppression");
 }
@@ -1677,7 +1677,7 @@ const addPortfolioItem = async () => {
 const title = portfolioForm.title.trim();
 if (!title) return toast.error("Titre requis.");
 if (!portfolioForm.media && !portfolioForm.mediaFile)
-  return toast.error(portfolioForm.type === "video" ? "Ajoute une vid�o." : "Ajoute une photo.");
+  return toast.error(portfolioForm.type === "video" ? "Ajoute une vidï¿½o." : "Ajoute une photo.");
 
 try {
     const form = new FormData();
@@ -1693,7 +1693,7 @@ try {
     const created = normalizePortfolioList([createdRaw])[0];
     if (created) created.type = portfolioForm.type === "video" ? "video" : "gallery";
     setPortfolio((p) => [created, ...p]);
-  toast.success(isBoutique ? "Ajout� � la boutique." : "Ajout� au salon.");
+  toast.success(isBoutique ? "Ajoutï¿½ ï¿½ la boutique." : "Ajoutï¿½ au salon.");
   setShowPortfolioModal(false);
   setPortfolioForm({
     type: "gallery",
@@ -1720,9 +1720,9 @@ try {
       x.id === item.id ? { ...x, media: updated.url || x.media } : x
     )
   );
-  toast.success("Image mise � jour.");
+  toast.success("Image mise ï¿½ jour.");
 } catch (err) {
-  toast.error(err.message || "Erreur lors de la mise � jour");
+  toast.error(err.message || "Erreur lors de la mise ï¿½ jour");
 }
 };
 
@@ -1732,7 +1732,7 @@ if (!ids[0]) return;
 try {
   await Promise.all(ids.map((id) => apiFetch(`/portfolio/${id}`, { method: "DELETE" })));
   setPortfolio((p) => p.filter((x) => x.id !== (item?.id || item)));
-  toast.success("Supprim�.");
+  toast.success("Supprimï¿½.");
 } catch (err) {
   toast.error(err.message || "Erreur lors de la suppression");
 }
@@ -1746,9 +1746,9 @@ try {
   const res = await apiFetch(`/reviews/${id}`, { method: "PATCH", body: { status } });
   const updated = normalizeReview(res?.data ?? res);
   setReviews((prev) => prev.map((r) => (r.id === id ? { ...r, ...updated } : r)));
-  toast.success("Avis mis � jour.");
+  toast.success("Avis mis ï¿½ jour.");
 } catch (err) {
-  toast.error(err.message || "Erreur lors de la mise � jour");
+  toast.error(err.message || "Erreur lors de la mise ï¿½ jour");
 }
 };
 
@@ -1771,7 +1771,7 @@ validTo: promoForm.expiresAt || null,
 const res = await apiFetch("/promos", { method: "POST", body: payload });
 const created = normalizePromo(res?.data ?? res);
 setPromos((p) => [created, ...p]);
-toast.success("Promo ajout�e.");
+toast.success("Promo ajoutï¿½e.");
 setShowPromoModal(false);
 setPromoForm({ code: "", type: "percent", value: 10, expiresAt: "", active: true });
 } catch (e) {
@@ -1790,7 +1790,7 @@ body: { isActive: !current.active },
 const updated = normalizePromo(res?.data ?? res);
 setPromos((p) => p.map((x) => (x.id === id ? updated : x)));
 } catch (e) {
-toast.error(e.message || "Erreur lors de la mise � jour");
+toast.error(e.message || "Erreur lors de la mise ï¿½ jour");
 }
 };
 
@@ -1798,7 +1798,7 @@ const deletePromo = async (id) => {
 try {
 await apiFetch(`/promos/${id}`, { method: "DELETE" });
 setPromos((p) => p.filter((x) => x.id !== id));
-toast.success("Promo supprim�e.");
+toast.success("Promo supprimï¿½e.");
 } catch (e) {
 toast.error(e.message || "Erreur lors de la suppression");
 }
@@ -1808,7 +1808,7 @@ try {
   const res = await apiFetch("/loyalty", { method: "PATCH", body: { settings: loyalty } });
   const settings = res?.settings || res?.data?.settings || loyalty;
   if (settings) setLoyalty(settings);
-  toast.success("Fid�lit� sauvegard�e.");
+  toast.success("Fidï¿½litï¿½ sauvegardï¿½e.");
 } catch (e) {
   toast.error(e.message || "Erreur lors de la sauvegarde");
 }
@@ -1826,9 +1826,9 @@ try {
   const updated = normalizeClient(res?.data ?? res);
   setClients((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
   if (selectedClient?.id === updated.id) setSelectedClient(updated);
-  toast.success("No-show ajout�.");
+  toast.success("No-show ajoutï¿½.");
 } catch (err) {
-  toast.error(err.message || "Erreur mise � jour no-show");
+  toast.error(err.message || "Erreur mise ï¿½ jour no-show");
 }
 };
 
@@ -1846,9 +1846,9 @@ try {
   const updated = normalizeClient(res?.data ?? res);
   setClients((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
   setSelectedClient(updated);
-  toast.success("Notes sauvegard�es.");
+  toast.success("Notes sauvegardï¿½es.");
 } catch (e) {
-  toast.error(e.message || "Erreur mise � jour notes");
+  toast.error(e.message || "Erreur mise ï¿½ jour notes");
 } finally {
   setSavingClientAddress(false);
 }
@@ -1866,9 +1866,9 @@ const updated = normalizeClient(res?.data ?? res);
 setClients((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
 setSelectedClient(updated);
 setClientAddressDraft(updated.address || "");
-toast.success("Adresse mise � jour.");
+toast.success("Adresse mise ï¿½ jour.");
 } catch (e) {
-toast.error(e.message || "Erreur mise � jour adresse");
+toast.error(e.message || "Erreur mise ï¿½ jour adresse");
 } finally {
 setSavingClientAddress(false);
 }
@@ -1905,12 +1905,12 @@ const handleSaveProduct = async () => {
       const res = await apiFetch(`/products/${editingProduct.id}`, { method: "PATCH", body: formData });
       const updated = res?.data ?? res;
       setProducts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
-      toast.success("Article mis � jour.");
+      toast.success("Article mis ï¿½ jour.");
     } else {
       const res = await apiFetch("/products", { method: "POST", body: formData });
       const created = res?.data ?? res;
       setProducts((prev) => [created, ...prev]);
-      toast.success("Article ajout�.");
+      toast.success("Article ajoutï¿½.");
     }
     resetProductForm();
     setShowProductModal(false);
@@ -1924,7 +1924,7 @@ const handleDeleteProduct = async (id) => {
   try {
     await apiFetch(`/products/${id}`, { method: "DELETE" });
     setProducts((prev) => prev.filter((p) => p.id !== id));
-    toast.success("Article supprim�.");
+    toast.success("Article supprimï¿½.");
   } catch (e) {
     toast.error(e.message || "Erreur lors de la suppression");
   }
@@ -1938,9 +1938,9 @@ const handleOrderStatus = async (orderId, newStatus) => {
     });
     const updated = res?.data ?? res;
     setOrders((prev) => prev.map((o) => (o.id === updated.id ? updated : o)));
-    toast.success(`Commande ${newStatus === "CANCELLED" ? "annul�e" : "mise � jour"}.`);
+    toast.success(`Commande ${newStatus === "CANCELLED" ? "annulï¿½e" : "mise ï¿½ jour"}.`);
   } catch (e) {
-    toast.error(e.message || "Erreur mise � jour commande");
+    toast.error(e.message || "Erreur mise ï¿½ jour commande");
   }
 };
 
@@ -1960,11 +1960,11 @@ const filteredOrders = useMemo(() => {
 
 const orderStatusOptions = [
   { value: "PENDING", label: "En attente", tone: "amber" },
-  { value: "CONFIRMED", label: "Confirm�e", tone: "blue" },
-  { value: "PREPARING", label: "En pr�paration", tone: "purple" },
-  { value: "READY", label: "Pr�te", tone: "green" },
-  { value: "DELIVERED", label: "Livr�e", tone: "green" },
-  { value: "CANCELLED", label: "Annul�e", tone: "red" },
+  { value: "CONFIRMED", label: "Confirmï¿½e", tone: "blue" },
+  { value: "PREPARING", label: "En prï¿½paration", tone: "purple" },
+  { value: "READY", label: "Prï¿½te", tone: "green" },
+  { value: "DELIVERED", label: "Livrï¿½e", tone: "green" },
+  { value: "CANCELLED", label: "Annulï¿½e", tone: "red" },
 ];
 
 /* ----------------------------
@@ -2031,7 +2031,7 @@ const fetchSalonSettings = async () => {
     const salon = data?.salon ?? data;
     applySalonSettingsFromApi(salon);
   } catch (e) {
-    toast.error("Erreur chargement param�tres: " + (e.message || e));
+    toast.error("Erreur chargement paramï¿½tres: " + (e.message || e));
   }
 };
 
@@ -2058,7 +2058,7 @@ const saveSettings = async () => {
     const data = res?.data ?? res;
     const salon = data?.salon ?? data;
     applySalonSettingsFromApi(salon);
-    toast.success("Param�tres sauvegard�s.");
+    toast.success("Paramï¿½tres sauvegardï¿½s.");
   } catch (e) {
     toast.error(e.message || "Erreur lors de la sauvegarde");
   } finally {
@@ -2108,13 +2108,13 @@ return (
 		/>
 		<StatCard
 			icon={<FiCheck className="text-green-500" />} 
-			label={isBoutique ? "Livr�es" : "Termin�s"}
+			label={isBoutique ? "Livrï¿½es" : "Terminï¿½s"}
 			value={isBoutique ? orders.filter(o => o.status === "DELIVERED").length : stats.completedBookings}
 			color="green"
 		/>
 		<StatCard
 			icon={<FiX className="text-red-500" />} 
-			label="Annul�s"
+			label="Annulï¿½s"
 			value={isBoutique ? orders.filter(o => o.status === "CANCELLED").length : stats.cancelledBookings}
 			color="red"
 		/>
@@ -2128,8 +2128,8 @@ return (
 </h1>
 <p className="text-sm text-gray-500 mt-1">
 {isBoutique
-  ? "Gestion des commandes, articles, paiements, boutique, avis, promos, CRM et param�tres."
-  : "Gestion des RDV, services, �quipe, planning, paiements, salon, avis, promos, CRM et param�tres."}
+  ? "Gestion des commandes, articles, paiements, boutique, avis, promos, CRM et paramï¿½tres."
+  : "Gestion des RDV, services, ï¿½quipe, planning, paiements, salon, avis, promos, CRM et paramï¿½tres."}
 </p>
 </div>
 
@@ -2140,7 +2140,7 @@ return (
       <FiShoppingCart className="mr-2" /> En attente: {orders.filter(o => o.status === "PENDING").length}
     </Badge>
     <Badge tone="green">
-      <FiCheck className="mr-2" /> Livr�es: {orders.filter(o => o.status === "DELIVERED").length}
+      <FiCheck className="mr-2" /> Livrï¿½es: {orders.filter(o => o.status === "DELIVERED").length}
     </Badge>
     <Badge tone="blue">
       <FiBox className="mr-2" /> Articles: {products.length}
@@ -2149,13 +2149,13 @@ return (
 ) : (
   <>
     <Badge tone="blue">
-      <FiCalendar className="mr-2" /> � venir: {upcomingCount}
+      <FiCalendar className="mr-2" /> ï¿½ venir: {upcomingCount}
     </Badge>
     <Badge tone="green">
-      <FiCheck className="mr-2" /> Termin�s: {completedCount}
+      <FiCheck className="mr-2" /> Terminï¿½s: {completedCount}
     </Badge>
     <Badge tone="red">
-      <FiX className="mr-2" /> Annul�s: {cancelledCount}
+      <FiX className="mr-2" /> Annulï¿½s: {cancelledCount}
     </Badge>
   </>
 )}
@@ -2258,7 +2258,7 @@ active
               <div className="mt-4 space-y-1.5">
                 {(order.items || []).map((item, i) => (
                   <div key={i} className="flex justify-between text-sm">
-                    <span className="text-gray-700">{item.product?.name || "Article"} × {item.quantity}</span>
+                    <span className="text-gray-700">{item.product?.name || "Article"} Ã {item.quantity}</span>
                     <span className="font-medium">{formatMoney(item.unitPrice * item.quantity)}</span>
                   </div>
                 ))}
@@ -2285,13 +2285,13 @@ active
                   <div>
                     <p className="text-xs text-gray-500">Paiement</p>
                     <p className="font-semibold text-gray-900 text-sm">
-                      {order.paymentMethod === "wave" ? "🌊 Wave" : order.paymentMethod === "orange_money" ? "🟠 Orange Money" : "💵 Espèces"}
+                      {order.paymentMethod === "wave" ? "ð Wave" : order.paymentMethod === "orange_money" ? "ð  Orange Money" : "ðµ Espèces"}
                     </p>
                   </div>
                 )}
               </div>
               {order.notes && (
-                <p className="mt-3 text-sm text-gray-600 italic bg-amber-50 px-3 py-2 rounded-lg">📝 {order.notes}</p>
+                <p className="mt-3 text-sm text-gray-600 italic bg-amber-50 px-3 py-2 rounded-lg">ð {order.notes}</p>
               )}
 
               {order.status !== "DELIVERED" && order.status !== "CANCELLED" && (
@@ -2352,16 +2352,16 @@ active
         <input
           value={productQuery}
           onChange={(e) => setProductQuery(e.target.value)}
-          placeholder="Rechercher un article�"
+          placeholder="Rechercher un articleï¿½"
           className="w-full pl-11 pr-4 py-2.5 border border-gray-200 rounded-2xl bg-white focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
         />
       </div>
     </div>
 
     {loading ? (
-      <p className="text-gray-500 font-semibold">Chargement�</p>
+      <p className="text-gray-500 font-semibold">Chargementï¿½</p>
     ) : filteredProducts.length === 0 ? (
-      <EmptyState icon={<FiBox />} title="Aucun article" subtitle="Ajoutez vos articles pour commencer � vendre." />
+      <EmptyState icon={<FiBox />} title="Aucun article" subtitle="Ajoutez vos articles pour commencer ï¿½ vendre." />
     ) : (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {filteredProducts.map((product) => {
@@ -2510,7 +2510,7 @@ active
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Cat�gorie</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Catï¿½gorie</label>
           <input
             value={(editingProduct || newProduct).category}
             onChange={(e) => {
@@ -2520,7 +2520,7 @@ active
                 : setNewProduct((p) => ({ ...p, category: val }));
             }}
             className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
-            placeholder="ex: Accessoires, V�tements�"
+            placeholder="ex: Accessoires, Vï¿½tementsï¿½"
           />
         </div>
         <div>
@@ -2542,7 +2542,7 @@ active
             const currentFiles = (editingProduct || newProduct).imageFiles || [];
             if (currentFiles.length <= 1) return null;
             return (
-              <p className="text-xs text-gray-500 mt-1">{currentFiles.length} photos s�lectionn�es</p>
+              <p className="text-xs text-gray-500 mt-1">{currentFiles.length} photos sï¿½lectionnï¿½es</p>
             );
           })()}
         </div>
@@ -2568,7 +2568,7 @@ active
 <CardHeader icon={<FiCalendar />} title="Rendez-vous" subtitle={`${appointments.length} rendez-vous au total`} />
 <div className="p-6">
 
-{/* ── Stat cards ── */}
+{/* ââ Stat cards ââ */}
 {(() => {
   const total = appointments.length;
   const upcoming = appointments.filter((a) => a.status === "confirmed" || a.status === "confirmed_on_site" || a.status === "pending" || a.status === "pending_assignment").length;
@@ -2614,12 +2614,12 @@ active
   )}
 </div>
 {loading ? (
-<p className="text-gray-500 font-semibold">Chargement�</p>
+<p className="text-gray-500 font-semibold">Chargementï¿½</p>
 ) : appointments.length === 0 ? (
 <EmptyState
 icon={<FiCalendar />}
 title="Aucun rendez-vous"
-subtitle="Les r�servations appara�tront ici."
+subtitle="Les rï¿½servations apparaï¿½tront ici."
 />
 ) : (
 <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
@@ -2851,7 +2851,7 @@ right={
 <input
 value={serviceQuery}
 onChange={(e) => setServiceQuery(e.target.value)}
-placeholder="Rechercher un service�"
+placeholder="Rechercher un serviceï¿½"
 className={cx(
 "w-full pl-11 pr-4 py-2.5 border border-gray-200 rounded-2xl bg-white",
 "focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
@@ -2862,7 +2862,7 @@ className={cx(
 
 <div className="md:col-span-4">
 <Select
-label="Cat�gorie"
+label="Catï¿½gorie"
 value={serviceCategory}
 onChange={(e) => setServiceCategory(e.target.value)}
 >
@@ -2877,17 +2877,17 @@ onChange={(e) => setServiceCategory(e.target.value)}
 
 <div className="md:col-span-4">
 <Select label="Trier par" value={serviceSort} onChange={(e) => setServiceSort(e.target.value)}>
-<option value="recent">Plus r�cents</option>
+<option value="recent">Plus rï¿½cents</option>
 <option value="priceAsc">Prix ?</option>
 <option value="priceDesc">Prix ?</option>
-<option value="durationAsc">Dur�e ?</option>
-<option value="durationDesc">Dur�e ?</option>
+<option value="durationAsc">Durï¿½e ?</option>
+<option value="durationDesc">Durï¿½e ?</option>
 </Select>
 </div>
 </div>
 
 {loading ? (
-<p className="text-gray-500 font-semibold">Chargement�</p>
+<p className="text-gray-500 font-semibold">Chargementï¿½</p>
 ) : filteredServices.length === 0 ? (
 <EmptyState
 icon={<FiFilter />}
@@ -2911,7 +2911,7 @@ className="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm hover:shado
 <div className="mb-3">
 {service.media ? (
 isImage(mediaUrl) ? (
-<img src={mediaUrl} alt="aper�u" className="w-full h-64 object-cover rounded-2xl" />
+<img src={mediaUrl} alt="aperï¿½u" className="w-full h-64 object-cover rounded-2xl" />
 ) : isVideo(mediaUrl) ? (
 <video src={mediaUrl} controls className="w-full h-64 object-cover rounded-2xl" />
 ) : (
@@ -3051,7 +3051,7 @@ type="button"
 onClick={() => removeServiceMediaAt(idx, setNewService)}
 className="w-7 h-7 rounded-full bg-white/90 shadow flex items-center justify-center text-xs"
 >
-�
+ï¿½
 </button>
 </div>
 {idx === 0 && (
@@ -3064,7 +3064,7 @@ Couverture
 </div>
 ) : (
 <p className="text-xs text-gray-500 mt-2">
-Max {MAX_MEDIA_MB}MB par fichier � jusqu�� {MAX_SERVICE_MEDIA} photos
+Max {MAX_MEDIA_MB}MB par fichier ï¿½ jusquï¿½ï¿½ {MAX_SERVICE_MEDIA} photos
 </p>
 )}
 </div>
@@ -3077,7 +3077,7 @@ onChange={(e) => setNewService((p) => ({ ...p, name: e.target.value }))}
 />
 
 <Select
-label="Cat�gorie"
+label="Catï¿½gorie"
 value={newService.category}
 onChange={(e) => setNewService((p) => ({ ...p, category: e.target.value }))}
 >
@@ -3091,7 +3091,7 @@ onChange={(e) => setNewService((p) => ({ ...p, category: e.target.value }))}
 <Textarea
 label="Description"
 rows={3}
-placeholder="Description optionnelle�"
+placeholder="Description optionnelleï¿½"
 value={newService.description}
 onChange={(e) => setNewService((p) => ({ ...p, description: e.target.value }))}
 />
@@ -3105,7 +3105,7 @@ value={newService.price}
 onChange={(e) => setNewService((p) => ({ ...p, price: e.target.value }))}
 />
 <Select
-label="Dur�e"
+label="Durï¿½e"
 value={newService.duration}
 onChange={(e) => setNewService((p) => ({ ...p, duration: Number(e.target.value) }))}
 >
@@ -3185,7 +3185,7 @@ type="button"
 onClick={() => removeServiceMediaAt(idx, setEditingService)}
 className="w-7 h-7 rounded-full bg-white/90 shadow flex items-center justify-center text-xs"
 >
-�
+ï¿½
 </button>
 </div>
 {idx === 0 && (
@@ -3198,7 +3198,7 @@ Couverture
 </div>
 ) : (
 <p className="text-xs text-gray-500 mt-2">
-Max {MAX_MEDIA_MB}MB par fichier � jusqu�� {MAX_SERVICE_MEDIA} photos
+Max {MAX_MEDIA_MB}MB par fichier ï¿½ jusquï¿½ï¿½ {MAX_SERVICE_MEDIA} photos
 </p>
 )}
 </div>
@@ -3206,7 +3206,7 @@ Max {MAX_MEDIA_MB}MB par fichier � jusqu�� {MAX_SERVICE_MEDIA} photos
 <Input label="Nom *" value={editingService.name || ""} onChange={(e) => setEditingService((p) => ({ ...p, name: e.target.value }))} />
 
 <Select
-label="Cat�gorie"
+label="Catï¿½gorie"
 value={editingService.category || serviceCategories[0]}
 onChange={(e) => setEditingService((p) => ({ ...p, category: e.target.value }))}
 >
@@ -3232,7 +3232,7 @@ value={editingService.price ?? ""}
 onChange={(e) => setEditingService((p) => ({ ...p, price: Number(e.target.value) }))}
 />
 <Select
-label="Dur�e"
+label="Durï¿½e"
 value={editingService.duration ?? 30}
 onChange={(e) => setEditingService((p) => ({ ...p, duration: Number(e.target.value) }))}
 >
@@ -3281,7 +3281,7 @@ Annuler
 </div>
 <div>
 <p className="font-extrabold text-gray-900">Supprimer "{confirmDelete?.name}" ?</p>
-<p className="text-sm text-gray-500 mt-1">Cette action est irr�versible.</p>
+<p className="text-sm text-gray-500 mt-1">Cette action est irrï¿½versible.</p>
 </div>
 </div>
 </Modal>
@@ -3294,7 +3294,7 @@ Annuler
 <Card>
 <CardHeader
 icon={<FiUsers />}
-title="�quipe"
+title="ï¿½quipe"
 right={
 <Button onClick={() => setShowTeamModal(true)}>
 <FiPlus className="mr-2" /> Ajouter
@@ -3303,9 +3303,9 @@ right={
 />
 <div className="p-6">
 {loading ? (
-<p className="text-gray-500 font-semibold">Chargement�</p>
+<p className="text-gray-500 font-semibold">Chargementï¿½</p>
 ) : team.length === 0 ? (
-<EmptyState icon={<FiUsers />} title="Aucun employ�" subtitle="Ajoutez les membres de votre �quipe." />
+<EmptyState icon={<FiUsers />} title="Aucun employï¿½" subtitle="Ajoutez les membres de votre ï¿½quipe." />
 ) : (
 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
 {team.map((m) => {
@@ -3353,14 +3353,14 @@ className="w-14 h-14 rounded-2xl object-cover ring-2 ring-white shadow"
 </div>
 
 <div className="mt-4 pt-4 border-t border-gray-100">
-<p className="text-xs font-extrabold text-gray-700 mb-2">Disponibilit�s</p>
+<p className="text-xs font-extrabold text-gray-700 mb-2">Disponibilitï¿½s</p>
 <div className="space-y-1.5">
 {weekDays.map(([label, key]) => {
 const h = m.availability?.[key];
 return (
 <div key={key} className="flex items-center justify-between text-xs">
 <span className="font-semibold text-gray-700">{label}</span>
-<span className="text-gray-500">{h ? `${h.open} - ${h.close}` : "Ferm�"}</span>
+<span className="text-gray-500">{h ? `${h.open} - ${h.close}` : "Fermï¿½"}</span>
 </div>
 );
 })}
@@ -3377,7 +3377,7 @@ return (
 {/* Add member modal */}
 <Modal
 open={showTeamModal}
-title="Ajouter un employ�"
+title="Ajouter un employï¿½"
 onClose={() => {
 setShowTeamModal(false);
 resetNewMember();
@@ -3395,14 +3395,14 @@ Annuler
 >
 <div className="space-y-4">
 <Input label="Nom *" value={newMember.name} onChange={(e) => setNewMember((p) => ({ ...p, name: e.target.value }))} />
-<Select label="R�le" value={newMember.role} onChange={(e) => setNewMember((p) => ({ ...p, role: e.target.value }))}>
+<Select label="Rï¿½le" value={newMember.role} onChange={(e) => setNewMember((p) => ({ ...p, role: e.target.value }))}>
 {roles.map((r) => (
 <option key={r} value={r}>
 {r}
 </option>
 ))}
 </Select>
-<Input label="T�l�phone" value={newMember.phone} onChange={(e) => setNewMember((p) => ({ ...p, phone: e.target.value }))} />
+<Input label="Tï¿½lï¿½phone" value={newMember.phone} onChange={(e) => setNewMember((p) => ({ ...p, phone: e.target.value }))} />
 
 <div className="flex items-center gap-2">
 <input type="checkbox" checked={newMember.active} onChange={(e) => setNewMember((p) => ({ ...p, active: e.target.checked }))} />
@@ -3410,7 +3410,7 @@ Annuler
 </div>
 
 <div className="pt-2">
-<p className="text-sm font-extrabold text-gray-900 mb-2">Disponibilit�s</p>
+<p className="text-sm font-extrabold text-gray-900 mb-2">Disponibilitï¿½s</p>
 <div className="space-y-3">
 {weekDays.map(([label, key]) => {
 const h = newMember.availability[key];
@@ -3430,7 +3430,7 @@ availability: { ...p.availability, [key]: { ...h, open: e.target.value } },
 }
 className="px-3 py-2 border border-gray-200 rounded-xl bg-white"
 />
-<span className="text-gray-500 font-semibold">�</span>
+<span className="text-gray-500 font-semibold">ï¿½</span>
 <input
 type="time"
 value={h.close}
@@ -3451,7 +3451,7 @@ availability: { ...p.availability, [key]: null },
 }
 className="text-red-600 hover:text-red-700 font-semibold text-sm"
 >
-Ferm�
+Fermï¿½
 </button>
 </>
 ) : (
@@ -3478,7 +3478,7 @@ Ajouter horaires
 {/* Edit member modal */}
 <Modal
 open={!!editingMember}
-title="Modifier employ�"
+title="Modifier employï¿½"
 onClose={() => setEditingMember(null)}
 footer={
 <div className="flex gap-3 justify-end">
@@ -3494,14 +3494,14 @@ Annuler
 {editingMember ? (
 <div className="space-y-4">
 <Input label="Nom *" value={editingMember.name} onChange={(e) => setEditingMember((p) => ({ ...p, name: e.target.value }))} />
-<Select label="R�le" value={editingMember.role} onChange={(e) => setEditingMember((p) => ({ ...p, role: e.target.value }))}>
+<Select label="Rï¿½le" value={editingMember.role} onChange={(e) => setEditingMember((p) => ({ ...p, role: e.target.value }))}>
 {roles.map((r) => (
 <option key={r} value={r}>
 {r}
 </option>
 ))}
 </Select>
-<Input label="T�l�phone" value={editingMember.phone || ""} onChange={(e) => setEditingMember((p) => ({ ...p, phone: e.target.value }))} />
+<Input label="Tï¿½lï¿½phone" value={editingMember.phone || ""} onChange={(e) => setEditingMember((p) => ({ ...p, phone: e.target.value }))} />
 
 <div className="flex items-center gap-2">
 <input type="checkbox" checked={!!editingMember.active} onChange={(e) => setEditingMember((p) => ({ ...p, active: e.target.checked }))} />
@@ -3509,7 +3509,7 @@ Annuler
 </div>
 
 <div className="pt-2">
-<p className="text-sm font-extrabold text-gray-900 mb-2">Disponibilit�s</p>
+<p className="text-sm font-extrabold text-gray-900 mb-2">Disponibilitï¿½s</p>
 <div className="space-y-3">
 {weekDays.map(([label, key]) => {
 const h = editingMember.availability?.[key] || null;
@@ -3529,7 +3529,7 @@ availability: { ...p.availability, [key]: { ...h, open: e.target.value } },
 }
 className="px-3 py-2 border border-gray-200 rounded-xl bg-white"
 />
-<span className="text-gray-500 font-semibold">�</span>
+<span className="text-gray-500 font-semibold">ï¿½</span>
 <input
 type="time"
 value={h.close}
@@ -3550,7 +3550,7 @@ availability: { ...p.availability, [key]: null },
 }
 className="text-red-600 hover:text-red-700 font-semibold text-sm"
 >
-Ferm�
+Fermï¿½
 </button>
 </>
 ) : (
@@ -3602,7 +3602,7 @@ right={
 <div key={b.id} className="p-3 bg-gray-50 rounded-2xl flex items-center justify-between">
 <div>
 <p className="text-sm font-extrabold text-gray-900">{b.label}</p>
-<p className="text-xs text-gray-500">{b.date} � {b.start}-{b.end}</p>
+<p className="text-xs text-gray-500">{b.date} ï¿½ {b.start}-{b.end}</p>
 </div>
 <IconButton title="Supprimer" onClick={() => removePlanningItem("breaks", b.id)}>
 <FiTrash2 />
@@ -3623,7 +3623,7 @@ right={
 <div key={ex.id} className="p-3 bg-gray-50 rounded-2xl flex items-center justify-between">
 <div>
 <p className="text-sm font-extrabold text-gray-900">{ex.date}</p>
-<p className="text-xs text-gray-500">{ex.closed ? "Ferm�" : `${ex.open}-${ex.close}`}</p>
+<p className="text-xs text-gray-500">{ex.closed ? "Fermï¿½" : `${ex.open}-${ex.close}`}</p>
 </div>
 <IconButton title="Supprimer" onClick={() => removePlanningItem("exceptions", ex.id)}>
 <FiTrash2 />
@@ -3635,9 +3635,9 @@ right={
 </Card>
 
 <Card className="p-5">
-<h4 className="font-extrabold text-gray-900 mb-3">Jours f�ri�s</h4>
+<h4 className="font-extrabold text-gray-900 mb-3">Jours fï¿½riï¿½s</h4>
 {planning.holidays.length === 0 ? (
-<p className="text-sm text-gray-500">Aucun jour f�ri�.</p>
+<p className="text-sm text-gray-500">Aucun jour fï¿½riï¿½.</p>
 ) : (
 <div className="space-y-2">
 {planning.holidays.map((h) => (
@@ -3677,16 +3677,16 @@ Annuler
 <Select label="Type" value={planningForm.type} onChange={(e) => setPlanningForm((p) => ({ ...p, type: e.target.value }))}>
 <option value="break">Pause</option>
 <option value="exception">Exception</option>
-<option value="holiday">Jour f�ri�</option>
+<option value="holiday">Jour fï¿½riï¿½</option>
 </Select>
 
 <Input label="Date *" type="date" value={planningForm.date} onChange={(e) => setPlanningForm((p) => ({ ...p, date: e.target.value }))} />
 
 {planningForm.type === "break" && (
 <>
-<Input label="Libell�" value={planningForm.label} onChange={(e) => setPlanningForm((p) => ({ ...p, label: e.target.value }))} />
+<Input label="Libellï¿½" value={planningForm.label} onChange={(e) => setPlanningForm((p) => ({ ...p, label: e.target.value }))} />
 <div className="grid grid-cols-2 gap-4">
-<Input label="D�but" type="time" value={planningForm.start} onChange={(e) => setPlanningForm((p) => ({ ...p, start: e.target.value }))} />
+<Input label="Dï¿½but" type="time" value={planningForm.start} onChange={(e) => setPlanningForm((p) => ({ ...p, start: e.target.value }))} />
 <Input label="Fin" type="time" value={planningForm.end} onChange={(e) => setPlanningForm((p) => ({ ...p, end: e.target.value }))} />
 </div>
 </>
@@ -3696,7 +3696,7 @@ Annuler
 <>
 <div className="flex items-center gap-2">
 <input type="checkbox" checked={planningForm.closed} onChange={(e) => setPlanningForm((p) => ({ ...p, closed: e.target.checked }))} />
-<span className="text-sm font-semibold text-gray-700">Ferm� ce jour</span>
+<span className="text-sm font-semibold text-gray-700">Fermï¿½ ce jour</span>
 </div>
 {!planningForm.closed ? (
 <div className="grid grid-cols-2 gap-4">
@@ -3721,7 +3721,7 @@ Annuler
 <Card>
 <CardHeader icon={<FiDollarSign />} title="Paiements" />
 <div className="p-6">
-{/* ? petit fix: afficher payments si dispo, sinon fallback appointments (tu ne perds aucune donn�e) */}
+{/* ? petit fix: afficher payments si dispo, sinon fallback appointments (tu ne perds aucune donnï¿½e) */}
 <DataTable
 emptyLabel="Aucun paiement"
 columns={[
@@ -3786,12 +3786,12 @@ data={payments.length ? payments : appointments}
 <CardHeader icon={<FiCreditCard />} title="Moyens de paiement du salon" right={null} />
 <div className="p-6">
 {loadingPaymentMethods ? (
-<p className="text-gray-500 font-semibold">Chargement�</p>
+<p className="text-gray-500 font-semibold">Chargementï¿½</p>
 ) : paymentMethods.length === 0 ? (
 <EmptyState
 icon={<FiCreditCard />}
 title="Aucun moyen de paiement"
-subtitle="Configurez les moyens de paiement accept�s par votre salon."
+subtitle="Configurez les moyens de paiement acceptï¿½s par votre salon."
 action={
 <Button onClick={() => setShowPaymentMethodModal(true)}>
 <FiPlus className="mr-2" /> Ajouter un moyen de paiement
@@ -3814,7 +3814,7 @@ className="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm flex items-
 <FiCreditCard className="w-8 h-8 text-amber-500" />
 <div className="flex-1">
 <div className="font-bold text-gray-900 text-base">{pm.method}</div>
-<div className="text-xs text-gray-500">{pm.enabled ? "Activ�" : "D�sactiv�"}</div>
+<div className="text-xs text-gray-500">{pm.enabled ? "Activï¿½" : "Dï¿½sactivï¿½"}</div>
 </div>
 <div className="flex items-center gap-2">
 <Badge tone={pm.enabled ? "green" : "gray"}>{pm.enabled ? "OK" : "OFF"}</Badge>
@@ -3850,15 +3850,15 @@ Annuler
 label="Nom du moyen de paiement"
 value={newPaymentMethod.method}
 onChange={(e) => setNewPaymentMethod((p) => ({ ...p, method: e.target.value }))}
-placeholder="Ex: Orange Money, Wave, Esp�ces..."
+placeholder="Ex: Orange Money, Wave, Espï¿½ces..."
 />
 <Select
 label="Statut"
 value={newPaymentMethod.enabled ? "1" : "0"}
 onChange={(e) => setNewPaymentMethod((p) => ({ ...p, enabled: e.target.value === "1" }))}
 >
-<option value="1">Activ�</option>
-<option value="0">D�sactiv�</option>
+<option value="1">Activï¿½</option>
+<option value="0">Dï¿½sactivï¿½</option>
 </Select>
 </div>
 </Modal>
@@ -3886,7 +3886,7 @@ Supprimer
 <FiAlertTriangle />
 </span>
 <div>
-<p className="font-semibold text-gray-900">Cette action est d�finitive.</p>
+<p className="font-semibold text-gray-900">Cette action est dï¿½finitive.</p>
 <p className="text-sm text-gray-500">
 Voulez-vous vraiment supprimer le moyen de paiement{" "}
 <span className="font-semibold text-gray-700">{confirmPaymentMethod?.method}</span> ?
@@ -3903,7 +3903,7 @@ Voulez-vous vraiment supprimer le moyen de paiement{" "}
 <CardHeader
 icon={<FiCamera />}
 title={isBoutique ? "Boutique" : "Salon"}
-subtitle="Photos / vid�os"
+subtitle="Photos / vidï¿½os"
 right={
 <Button onClick={() => setShowPortfolioModal(true)}>
 <FiPlus className="mr-2" /> Ajouter
@@ -3912,7 +3912,7 @@ right={
 />
 <div className="p-6">
 {portfolio.length === 0 ? (
-<EmptyState icon={<FiCamera />} title={isBoutique ? "Boutique vide" : "Salon vide"} subtitle="Ajoute des photos ou vid�os." />
+<EmptyState icon={<FiCamera />} title={isBoutique ? "Boutique vide" : "Salon vide"} subtitle="Ajoute des photos ou vidï¿½os." />
 ) : (
 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
 {portfolio.map((p) => {
@@ -3923,7 +3923,7 @@ return (
 <div key={p.id} className="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm">
 <div className="flex items-start justify-between gap-2">
 <div className="min-w-0">
-<Badge tone="purple">{p.type === "video" ? "Vid�o" : "Galerie"}</Badge>
+<Badge tone="purple">{p.type === "video" ? "Vidï¿½o" : "Galerie"}</Badge>
 <h4 className="mt-2 text-base font-extrabold text-gray-900 truncate">{p.title}</h4>
 <p className="text-xs text-gray-500 mt-1">{formatDate(p.createdAt)}</p>
 </div>
@@ -3976,7 +3976,7 @@ isImage(mediaUrl) ? (
 
 <Modal
 open={showPortfolioModal}
-title={isBoutique ? "Ajouter � la boutique" : "Ajouter au salon"}
+title={isBoutique ? "Ajouter ï¿½ la boutique" : "Ajouter au salon"}
 onClose={() => setShowPortfolioModal(false)}
 footer={
 <div className="flex gap-3 justify-end">
@@ -3996,7 +3996,7 @@ value={portfolioForm.type}
 onChange={(e) => setPortfolioForm((p) => ({ ...p, type: e.target.value }))}
 >
 <option value="gallery">Galerie</option>
-<option value="video">Vid�o</option>
+<option value="video">Vidï¿½o</option>
 </Select>
 
 <Input
@@ -4006,7 +4006,7 @@ onChange={(e) => setPortfolioForm((p) => ({ ...p, title: e.target.value }))}
 />
 
 <div>
-<label className="block text-sm font-semibold text-gray-700 mb-1">{portfolioForm.type === "video" ? "Vid�o *" : "Photo *"}</label>
+<label className="block text-sm font-semibold text-gray-700 mb-1">{portfolioForm.type === "video" ? "Vidï¿½o *" : "Photo *"}</label>
 <input
 type="file"
 accept={portfolioForm.type === "video" ? "video/*" : "image/*"}
@@ -4035,14 +4035,14 @@ right={
 <Select value={reviewFilter} onChange={(e) => setReviewFilter(e.target.value)}>
 <option value="all">Tous</option>
 <option value="pending">En attente</option>
-<option value="approved">Approuv�s</option>
-<option value="rejected">Rejet�s</option>
+<option value="approved">Approuvï¿½s</option>
+<option value="rejected">Rejetï¿½s</option>
 </Select>
 }
 />
 <div className="p-6">
 {filteredReviews.length === 0 ? (
-<EmptyState icon={<FiStar />} title="Aucun avis" subtitle="Les avis appara�tront ici." />
+<EmptyState icon={<FiStar />} title="Aucun avis" subtitle="Les avis apparaï¿½tront ici." />
 ) : (
 <div className="space-y-3">
 {filteredReviews.map((r) => (
@@ -4104,11 +4104,11 @@ right={
 <Badge tone="purple">{p.type === "percent" ? `${p.value}%` : `${formatMoney(p.value)}`}</Badge>
 {p.active ? <Badge tone="green">Active</Badge> : <Badge tone="red">Inactive</Badge>}
 </div>
-<p className="text-xs text-gray-500 mt-2">Expire: {p.expiresAt || "�"}</p>
+<p className="text-xs text-gray-500 mt-2">Expire: {p.expiresAt || "ï¿½"}</p>
 </div>
 <div className="flex gap-2">
 <Button variant="secondary" className="px-3 py-2" onClick={() => togglePromo(p.id)}>
-{p.active ? "D�sactiver" : "Activer"}
+{p.active ? "Dï¿½sactiver" : "Activer"}
 </Button>
 <IconButton title="Supprimer" onClick={() => deletePromo(p.id)}>
 <FiTrash2 />
@@ -4122,21 +4122,21 @@ right={
 </Card>
 
 <Card>
-<CardHeader icon={<FiGift />} title="Fid�lit�" subtitle="Points + r�compense" />
+<CardHeader icon={<FiGift />} title="Fidï¿½litï¿½" subtitle="Points + rï¿½compense" />
 <div className="p-6 space-y-4">
 <div className="flex items-center gap-2">
 <input type="checkbox" checked={!!loyalty.enabled} onChange={(e) => setLoyalty((p) => ({ ...p, enabled: e.target.checked }))} />
-<span className="text-sm font-semibold text-gray-700">Activer la fid�lit�</span>
+<span className="text-sm font-semibold text-gray-700">Activer la fidï¿½litï¿½</span>
 </div>
 
 <div className="grid grid-cols-2 gap-4">
-<Input label="Points / r�servation" type="number" value={loyalty.pointsPerBooking} onChange={(e) => setLoyalty((p) => ({ ...p, pointsPerBooking: Number(e.target.value) }))} />
+<Input label="Points / rï¿½servation" type="number" value={loyalty.pointsPerBooking} onChange={(e) => setLoyalty((p) => ({ ...p, pointsPerBooking: Number(e.target.value) }))} />
 <Input label="Seuil points" type="number" value={loyalty.rewardThreshold} onChange={(e) => setLoyalty((p) => ({ ...p, rewardThreshold: Number(e.target.value) }))} />
 </div>
 
-<Input label="R�compense" value={loyalty.rewardLabel} onChange={(e) => setLoyalty((p) => ({ ...p, rewardLabel: e.target.value }))} />
+<Input label="Rï¿½compense" value={loyalty.rewardLabel} onChange={(e) => setLoyalty((p) => ({ ...p, rewardLabel: e.target.value }))} />
 
-<Button variant="secondary" onClick={() => toast.success("Fid�lit� sauvegard�e ")}>
+<Button variant="secondary" onClick={() => toast.success("Fidï¿½litï¿½ sauvegardï¿½e ")}>
 <FiSave className="mr-2" /> Sauvegarder
 </Button>
 </div>
@@ -4187,7 +4187,7 @@ Annuler
 <input
 value={clientQuery}
 onChange={(e) => setClientQuery(e.target.value)}
-placeholder="Rechercher client�"
+placeholder="Rechercher clientï¿½"
 className={cx(
 "w-full pl-11 pr-4 py-2.5 border border-gray-200 rounded-2xl bg-white",
 "focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
@@ -4210,7 +4210,7 @@ selectedClient?.id === c.id
 <div className="flex items-center justify-between gap-2">
 <div>
 <p className="font-extrabold text-gray-900">{c.name}</p>
-<p className="text-xs text-gray-500 mt-1">{c.phone || "�"}</p>
+<p className="text-xs text-gray-500 mt-1">{c.phone || "ï¿½"}</p>
 <p className="text-xs text-gray-400">{c.address || ""}</p>
 </div>
 <Badge tone={c.noShowCount > 0 ? "red" : "green"}>No-show: {c.noShowCount}</Badge>
@@ -4235,14 +4235,14 @@ selectedClient ? (
 />
 <div className="p-6">
 {!selectedClient ? (
-<EmptyState icon={<FiUser />} title="S�lectionne un client" subtitle="Clique sur un client � gauche pour voir sa fiche." />
+<EmptyState icon={<FiUser />} title="Sï¿½lectionne un client" subtitle="Clique sur un client ï¿½ gauche pour voir sa fiche." />
 ) : (
 <div className="space-y-5">
 <div className="flex items-start justify-between gap-3">
 <div>
 <h3 className="text-xl font-extrabold text-gray-900">{selectedClient.name}</h3>
-<p className="text-sm text-gray-500 mt-1">{selectedClient.phone || "�"}</p>
-<p className="text-sm text-gray-500">{selectedClient.email || "�"}</p>
+<p className="text-sm text-gray-500 mt-1">{selectedClient.phone || "ï¿½"}</p>
+<p className="text-sm text-gray-500">{selectedClient.email || "ï¿½"}</p>
 </div>
 <Badge tone={selectedClient.noShowCount > 0 ? "red" : "green"}>No-show: {selectedClient.noShowCount}</Badge>
 </div>
@@ -4266,7 +4266,7 @@ Sauvegarder l'adresse
 </div>
 </div>
 <Textarea
-label="Pr�f�rences"
+label="Prï¿½fï¿½rences"
 rows={4}
 value={selectedClient.preferences || ""}
 onChange={(e) => {
@@ -4297,7 +4297,7 @@ setSelectedClient((p) => ({ ...p, notes: e.target.value }));
 <div key={h.id} className="p-4 bg-gray-50 rounded-2xl flex items-center justify-between">
 <div>
 <p className="font-extrabold text-gray-900">{h.service}</p>
-<p className="text-xs text-gray-500 mt-1">{h.date} � {getStatusLabel(h.status)}</p>
+<p className="text-xs text-gray-500 mt-1">{h.date} ï¿½ {getStatusLabel(h.status)}</p>
 </div>
 <span className="font-extrabold text-gray-900">{formatMoney(h.amount)}</span>
 </div>
@@ -4321,7 +4321,7 @@ setSelectedClient((p) => ({ ...p, notes: e.target.value }));
 { id: "today", label: "Aujourd'hui" },
 { id: "week", label: "Cette semaine" },
 { id: "month", label: "Ce mois" },
-{ id: "year", label: "Cette ann�e" },
+{ id: "year", label: "Cette annï¿½e" },
 ].map((p) => (
 <button
 key={p.id}
@@ -4335,7 +4335,7 @@ statsPeriod === p.id ? "bg-gray-900 text-white" : "bg-white text-gray-700 border
 </button>
 ))}
 </div>
-<p className="text-xs text-gray-500 mt-2">P�riode : {formatPeriodLabel(statsPeriod)}</p>
+<p className="text-xs text-gray-500 mt-2">Pï¿½riode : {formatPeriodLabel(statsPeriod)}</p>
 </div>
 
 <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -4354,7 +4354,7 @@ statsPeriod === p.id ? "bg-gray-900 text-white" : "bg-white text-gray-700 border
 <div className="bg-white rounded-3xl p-5 shadow-sm border border-gray-100">
 <div className="flex items-center justify-between">
 <div>
-<p className="text-gray-500 text-sm font-semibold">R�servations</p>
+<p className="text-gray-500 text-sm font-semibold">Rï¿½servations</p>
 <p className="text-2xl font-extrabold text-gray-900 mt-1">{stats.totalBookings}</p>
 </div>
 <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center">
@@ -4414,19 +4414,19 @@ return (
 })}
 </div>
 ) : (
-<p className="text-gray-500 text-center py-8">Pas encore de donn�es pour cette p�riode.</p>
+<p className="text-gray-500 text-center py-8">Pas encore de donnï¿½es pour cette pï¿½riode.</p>
 )}
 </div>
 
 <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
-<h3 className="font-extrabold text-gray-900 mb-4">R�sum� d'activit�</h3>
+<h3 className="font-extrabold text-gray-900 mb-4">Rï¿½sumï¿½ d'activitï¿½</h3>
 <div className="space-y-3">
 <div className="flex items-center justify-between p-4 bg-green-50 rounded-2xl">
 <div className="flex items-center">
 <div className="w-10 h-10 bg-green-600 rounded-2xl flex items-center justify-center mr-3">
 <FiCheck className="w-5 h-5 text-white" />
 </div>
-<span className="font-bold text-gray-900">RDV termin�s</span>
+<span className="font-bold text-gray-900">RDV terminï¿½s</span>
 </div>
 <span className="text-xl font-extrabold text-green-700">{stats.completedBookings}</span>
 </div>
@@ -4436,7 +4436,7 @@ return (
 <div className="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center mr-3">
 <FiClock className="w-5 h-5 text-white" />
 </div>
-<span className="font-bold text-gray-900">RDV � venir</span>
+<span className="font-bold text-gray-900">RDV ï¿½ venir</span>
 </div>
 <span className="text-xl font-extrabold text-blue-700">
 {appointments.filter((a) => a.status === "upcoming").length}
@@ -4464,7 +4464,7 @@ return (
 <Card>
 <CardHeader
 icon={<FiSettings />}
-title="Param�tres du salon"
+title="Paramï¿½tres du salon"
 right={
 <Button onClick={saveSettings} disabled={savingSettings}>
 <FiSave className="mr-2" /> Sauvegarder
@@ -4474,7 +4474,7 @@ right={
 <div className="p-6">
 <div className="grid md:grid-cols-2 gap-6">
 <Input label="Nom du salon" value={salonSettings.name} onChange={(e) => setSalonSettings((p) => ({ ...p, name: e.target.value }))} />
-<Input label="T�l�phone" value={salonSettings.phone} onChange={(e) => setSalonSettings((p) => ({ ...p, phone: e.target.value }))} />
+<Input label="Tï¿½lï¿½phone" value={salonSettings.phone} onChange={(e) => setSalonSettings((p) => ({ ...p, phone: e.target.value }))} />
 <Input label="WhatsApp" value={salonSettings.whatsapp} onChange={(e) => setSalonSettings((p) => ({ ...p, whatsapp: e.target.value }))} />
 <Input label="Adresse" value={salonSettings.address} onChange={(e) => setSalonSettings((p) => ({ ...p, address: e.target.value }))} />
 <div>
@@ -4482,7 +4482,7 @@ right={
   <QuartierSelector
     value={salonSettings.neighborhood}
     onChange={(v) => setSalonSettings((p) => ({ ...p, neighborhood: v }))}
-    placeholder="S�lectionner votre quartier"
+    placeholder="Sï¿½lectionner votre quartier"
     variant="form"
   />
 </div>
@@ -4513,7 +4513,7 @@ right={
           const imageUrl = await uploadSalonImage(file);
           if (imageUrl) {
             setSalonSettings((p) => ({ ...p, image: imageUrl }));
-            toast.success("Photo du salon mise � jour.");
+            toast.success("Photo du salon mise ï¿½ jour.");
           }
         } catch (err) {
           toast.error(err.message || "Erreur lors de l'upload de l'image.");
@@ -4546,7 +4546,7 @@ right={
         </Button>
       )}
       <p className="text-xs text-gray-500">
-        Image carr�e ou paysage. Affich�e sur la page d'accueil et la fiche salon.
+        Image carrï¿½e ou paysage. Affichï¿½e sur la page d'accueil et la fiche salon.
       </p>
     </div>
   </div>
@@ -4584,7 +4584,7 @@ openingHours: { ...p.openingHours, [key]: { ...hours, open: e.target.value } },
 }
 className="px-3 py-2 border border-gray-200 rounded-xl bg-white"
 />
-<span className="text-gray-500 font-semibold">�</span>
+<span className="text-gray-500 font-semibold">ï¿½</span>
 <input
 type="time"
 value={hours.close}
@@ -4600,12 +4600,12 @@ className="px-3 py-2 border border-gray-200 rounded-xl bg-white"
 onClick={() => setSalonSettings((p) => ({ ...p, openingHours: { ...p.openingHours, [key]: null } }))}
 className="text-red-600 hover:text-red-700 font-semibold text-sm"
 >
-Marquer ferm�
+Marquer fermï¿½
 </button>
 </>
 ) : (
 <>
-<span className="text-gray-400 font-semibold">Ferm�</span>
+<span className="text-gray-400 font-semibold">Fermï¿½</span>
 <button
 onClick={() =>
 setSalonSettings((p) => ({

@@ -2,7 +2,7 @@ import { format, parseISO, isToday, isTomorrow, addDays } from 'date-fns'
 import { fr } from 'date-fns/locale'
 
 // ============================================
-// FORMATAGE PRIX FCFA - UTILISÉ PARTOUT
+// FORMATAGE PRIX FCFA - UTILISÃ‰ PARTOUT
 // ============================================
 
 /**
@@ -49,7 +49,7 @@ export const formatPriceRange = (min, max) => {
   const hasMin = min != null && !isNaN(min)
   const hasMax = max != null && !isNaN(max)
 
-  if (!hasMin && !hasMax) return '—'
+  if (!hasMin && !hasMax) return 'Â—'
   if (hasMin && !hasMax) return formatPrice(min)
   if (!hasMin && hasMax) return formatPrice(max)
 
@@ -181,7 +181,7 @@ export const calculateDistance = (lat1, lng1, lat2, lng2) => {
 export const getGreeting = () => {
   const hour = new Date().getHours()
   if (hour < 12) return 'Bonjour'
-  if (hour < 18) return 'Bon après-midi'
+  if (hour < 18) return 'Bon aprÃ¨s-midi'
   return 'Bonsoir'
 }
 

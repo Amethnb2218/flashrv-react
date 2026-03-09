@@ -75,43 +75,43 @@ function Home() {
     ? (totalReviews > 0
       ? (salons.reduce((sum, s) => sum + (s.rating || 0), 0) / salons.length).toFixed(1)
       : 'Nouveau')
-    : '—'
+    : 'Â—'
   const stats = [
     { value: `${onlySalons.length}`, label: 'Salons partenaires', show: onlySalons.length > 0 },
     { value: `${onlyBoutiques.length}`, label: 'Boutiques', show: onlyBoutiques.length > 0 },
     { value: `${totalReviews}`, label: 'Avis clients', show: totalReviews > 0 },
-    { value: avgRating, label: 'Note moyenne', show: avgRating !== 'Nouveau' && avgRating !== '—' }
+    { value: avgRating, label: 'Note moyenne', show: avgRating !== 'Nouveau' && avgRating !== 'Â—' }
   ].filter(s => s.show)
 
   const steps = [
     {
       icon: <FiSearch className="w-6 h-6" />,
       title: 'Recherchez',
-      description: 'Filtrez par quartier, spécialité, avis ou disponibilité. Comparez les prix et photos en un coup d\'œil.'
+      description: 'Filtrez par quartier, spÃ©cialitÃ©, avis ou disponibilitÃ©. Comparez les prix et photos en un coup d\'Âœil.'
     },
     {
       icon: <FiCalendar className="w-6 h-6" />,
-      title: 'Réservez',
-      description: 'Choisissez vos services, votre coiffeur et un créneau libre. Confirmation instantanée, zéro appel téléphonique.'
+      title: 'RÃ©servez',
+      description: 'Choisissez vos services, votre coiffeur et un crÃ©neau libre. Confirmation instantanÃ©e, zÃ©ro appel tÃ©lÃ©phonique.'
     },
     {
       icon: <FiStar className="w-6 h-6" />,
       title: 'Profitez',
-      description: 'Rappel automatique avant le rendez-vous. Après votre visite, notez le salon pour aider la communauté.'
+      description: 'Rappel automatique avant le rendez-vous. AprÃ¨s votre visite, notez le salon pour aider la communautÃ©.'
     }
   ]
 
   const trustItems = [
-    { icon: <FiShield className="w-5 h-5" />, title: 'Paiement sécurisé', desc: 'Transactions fiables et protégées.' },
-    { icon: <FiUsers className="w-5 h-5" />, title: 'Salons vérifiés', desc: 'Professionnels contrôlés et notés.' },
-    { icon: <FiClock className="w-5 h-5" />, title: 'Gain de temps', desc: 'Réservation rapide en quelques clics.' },
+    { icon: <FiShield className="w-5 h-5" />, title: 'Paiement sÃ©curisÃ©', desc: 'Transactions fiables et protÃ©gÃ©es.' },
+    { icon: <FiUsers className="w-5 h-5" />, title: 'Salons vÃ©rifiÃ©s', desc: 'Professionnels contrÃ´lÃ©s et notÃ©s.' },
+    { icon: <FiClock className="w-5 h-5" />, title: 'Gain de temps', desc: 'RÃ©servation rapide en quelques clics.' },
   ]
 
   const quickFilters = [
-    { label: 'Aujourd’hui', icon: <FiCalendar className="w-4 h-4" />, params: { day: 'today' } },
+    { label: 'AujourdÂ’hui', icon: <FiCalendar className="w-4 h-4" />, params: { day: 'today' } },
     { label: 'Dispo maintenant', icon: <FiClock className="w-4 h-4" />, params: { openNow: '1' } },
     { label: '< 2 km', icon: <FiNavigation className="w-4 h-4" />, params: { radius: '2' } },
-    { label: 'Top notés', icon: <FiStar className="w-4 h-4" />, params: { sortBy: 'rating' } },
+    { label: 'Top notÃ©s', icon: <FiStar className="w-4 h-4" />, params: { sortBy: 'rating' } },
   ]
 
   const suggestions = useMemo(() => {
@@ -134,12 +134,12 @@ function Home() {
 
   const handleGeolocation = () => {
     if (!navigator.geolocation) {
-      toast.error("La géolocalisation n'est pas supportée par votre navigateur")
+      toast.error("La gÃ©olocalisation n'est pas supportÃ©e par votre navigateur")
       return
     }
 
     if (window.isSecureContext === false) {
-      toast.error("La géolocalisation nécessite une connexion sécurisée (HTTPS).", { duration: 5000 })
+      toast.error("La gÃ©olocalisation nÃ©cessite une connexion sÃ©curisÃ©e (HTTPS).", { duration: 5000 })
       return
     }
 
@@ -147,7 +147,7 @@ function Home() {
 
     const onSuccess = (position) => {
       const { latitude, longitude } = position.coords
-      toast.success('Position trouvée !')
+      toast.success('Position trouvÃ©e !')
       sessionStorage.setItem('flashrv_location', JSON.stringify({ lat: latitude, lng: longitude }))
       navigate(`/salons?lat=${latitude}&lng=${longitude}`)
       setIsLocating(false)
@@ -166,7 +166,7 @@ function Home() {
 
       setIsLocating(false)
       // Redirect to salons page anyway so the user isn't stuck
-      toast('Position non disponible — affichage de tous les salons.', { id: 'geo-fallback', icon: '??', duration: 3000 })
+      toast('Position non disponible Â— affichage de tous les salons.', { id: 'geo-fallback', icon: '??', duration: 3000 })
       navigate('/salons')
     }
 
@@ -202,17 +202,17 @@ function Home() {
               transition={{ duration: reduceMotion ? 0 : 0.6 }}
             >
               <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">
-                ? Gratuit · Sans engagement
+                ? Gratuit Â· Sans engagement
               </span>
               <h1 className="mt-4 text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
-                Réservez votre{' '}
+                RÃ©servez votre{' '}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-yellow-600">
-                  salon de beauté
+                  salon de beautÃ©
                 </span>{' '}
                 en 30 secondes
               </h1>
               <p className="mt-5 text-lg text-gray-600 max-w-xl leading-relaxed">
-                Trouvez un salon vérifié près de chez vous, comparez les services et tarifs, et réservez en ligne — sans appel ni attente.
+                Trouvez un salon vÃ©rifiÃ© prÃ¨s de chez vous, comparez les services et tarifs, et rÃ©servez en ligne Â— sans appel ni attente.
               </p>
 
               <form onSubmit={handleSearch} className="mt-8 bg-white/95 rounded-3xl p-4 shadow-[0_28px_70px_-40px_rgba(15,23,42,0.6)] border border-white/70 backdrop-blur">
@@ -327,8 +327,8 @@ function Home() {
                 )}
               <div className="mt-6 flex flex-wrap items-center gap-3 text-xs text-gray-600">
                 {[
-                  { icon: <FiShield className="w-4 h-4" />, label: 'Paiement sécurisé' },
-                  { icon: <FiCheck className="w-4 h-4" />, label: 'Salons vérifiés' },
+                  { icon: <FiShield className="w-4 h-4" />, label: 'Paiement sÃ©curisÃ©' },
+                  { icon: <FiCheck className="w-4 h-4" />, label: 'Salons vÃ©rifiÃ©s' },
                   { icon: <FiStar className="w-4 h-4" />, label: 'Avis clients authentiques' },
                 ].map((item) => (
                   <div
@@ -360,7 +360,7 @@ function Home() {
                     <span className="font-semibold text-gray-900">4.9</span>
                     <span className="text-xs text-gray-500">+{totalReviews} avis</span>
                   </div>
-                  <p className="text-xs text-gray-500 mt-2">Salons plébiscités par la communauté</p>
+                  <p className="text-xs text-gray-500 mt-2">Salons plÃ©biscitÃ©s par la communautÃ©</p>
                 </div>
               </div>
             </motion.div>
@@ -398,12 +398,12 @@ function Home() {
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-10">
             <div>
               <span className="inline-block px-4 py-2 bg-amber-100 text-amber-700 rounded-full text-sm font-medium mb-4">
-                Sélection premium
+                SÃ©lection premium
               </span>
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
                 Salons en vedette
               </h2>
-              <p className="mt-2 text-gray-600">Les meilleurs salons pour démarrer votre expérience.</p>
+              <p className="mt-2 text-gray-600">Les meilleurs salons pour dÃ©marrer votre expÃ©rience.</p>
             </div>
             <Link
               to="/salons"
@@ -444,7 +444,7 @@ function Home() {
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
                 Boutiques en vedette
               </h2>
-              <p className="mt-2 text-gray-600">Découvrez les boutiques partenaires et commandez en ligne.</p>
+              <p className="mt-2 text-gray-600">DÃ©couvrez les boutiques partenaires et commandez en ligne.</p>
             </div>
             <Link
               to="/salons?businessType=BOUTIQUE"
@@ -483,7 +483,7 @@ function Home() {
               <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">
                 Services populaires
               </span>
-              <h2 className="mt-3 text-2xl md:text-3xl font-bold text-gray-900">Explorez par catégorie</h2>
+              <h2 className="mt-3 text-2xl md:text-3xl font-bold text-gray-900">Explorez par catÃ©gorie</h2>
               <p className="text-gray-600 mt-1">Choisissez votre service en un clic.</p>
             </div>
             <motion.button
@@ -524,7 +524,7 @@ function Home() {
                       <div className="mt-4 font-semibold text-gray-900 group-hover:text-amber-700">
                         {cat.name}
                       </div>
-                      <div className="text-sm text-gray-500 mt-1">Découvrir</div>
+                      <div className="text-sm text-gray-500 mt-1">DÃ©couvrir</div>
                     </div>
                   </Link>
                 </motion.div>
@@ -542,7 +542,7 @@ function Home() {
               Simple & Rapide
             </span>
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
-              Comment ça marche ?
+              Comment Ã§a marche ?
             </h2>
           </div>
           <div className="relative">
@@ -584,15 +584,15 @@ function Home() {
               Pour les professionnels
             </span>
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Développez votre salon avec StyleFlow
+              DÃ©veloppez votre salon avec StyleFlow
             </h2>
             <p className="text-gray-400 max-w-xl mx-auto mb-6 leading-relaxed">
-              Inscription gratuite. Sans commission. Gardez le contrôle total sur votre planning et votre clientèle.
+              Inscription gratuite. Sans commission. Gardez le contrÃ´le total sur votre planning et votre clientÃ¨le.
             </p>
             <div className="flex flex-wrap justify-center gap-4 mb-8 text-sm text-gray-300">
               {[
-                'Profil vérifié & visible',
-                'Réservations en ligne 24/7',
+                'Profil vÃ©rifiÃ© & visible',
+                'RÃ©servations en ligne 24/7',
                 'Rappels automatiques',
                 'Tableau de bord & stats',
               ].map((b) => (
@@ -626,12 +626,12 @@ function Home() {
               Votre avis compte
             </span>
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
-              Aidez-nous à améliorer
+              Aidez-nous Ã  amÃ©liorer
             </h2>
           </motion.div>
           <div className="bg-white rounded-3xl border border-gray-100 shadow-lg p-8 text-center">
             <p className="text-gray-600">
-              Partagez un bug, une suggestion ou une amélioration. Nous lisons chaque retour.
+              Partagez un bug, une suggestion ou une amÃ©lioration. Nous lisons chaque retour.
             </p>
             <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
               <button
@@ -639,7 +639,7 @@ function Home() {
                 onClick={() => openFeedback('suggestion')}
                 className="btn-primary"
               >
-                Proposer une amélioration
+                Proposer une amÃ©lioration
               </button>
               <button
                 type="button"
@@ -649,7 +649,7 @@ function Home() {
                 Signaler un bug
               </button>
             </div>
-            <p className="text-xs text-gray-400 mt-4">Réponse sous 24–48h ouvrées.</p>
+            <p className="text-xs text-gray-400 mt-4">RÃ©ponse sous 24Â–48h ouvrÃ©es.</p>
           </div>
         </div>
       </section>
@@ -698,7 +698,7 @@ function FeedbackWidget({ onClose, defaultType = 'suggestion' }) {
     idea: '',
     benefit: '',
     problem: '',
-    impact: 'gênant',
+    impact: 'gÃªnant',
     contact: ''
   })
   const [errors, setErrors] = useState({})
@@ -710,9 +710,9 @@ function FeedbackWidget({ onClose, defaultType = 'suggestion' }) {
   }, [defaultType])
 
   const types = [
-    { id: 'bug', label: 'Bug', icon: <FiAlertTriangle className="w-4 h-4" />, hint: 'Signalez un dysfonctionnement précis.' },
-    { id: 'suggestion', label: 'Suggestion', icon: <FiMessageSquare className="w-4 h-4" />, hint: 'Proposez une amélioration utile.' },
-    { id: 'problem', label: 'Problème', icon: <FiZap className="w-4 h-4" />, hint: 'Indiquez un point bloquant ou frustrant.' }
+    { id: 'bug', label: 'Bug', icon: <FiAlertTriangle className="w-4 h-4" />, hint: 'Signalez un dysfonctionnement prÃ©cis.' },
+    { id: 'suggestion', label: 'Suggestion', icon: <FiMessageSquare className="w-4 h-4" />, hint: 'Proposez une amÃ©lioration utile.' },
+    { id: 'problem', label: 'ProblÃ¨me', icon: <FiZap className="w-4 h-4" />, hint: 'Indiquez un point bloquant ou frustrant.' }
   ]
 
   const updateField = (key, value) => {
@@ -738,7 +738,7 @@ function FeedbackWidget({ onClose, defaultType = 'suggestion' }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!validate()) {
-      toast.error('Merci de compléter les champs requis.')
+      toast.error('Merci de complÃ©ter les champs requis.')
       return
     }
     const feedbackData = {
@@ -754,7 +754,7 @@ function FeedbackWidget({ onClose, defaultType = 'suggestion' }) {
     } catch (err) {
       const existingFeedback = JSON.parse(sessionStorage.getItem('flashrv_feedback') || '[]')
       sessionStorage.setItem('flashrv_feedback', JSON.stringify([...existingFeedback, feedbackData]))
-      toast.error("Erreur lors de l’envoi. Nous avons gardé une copie locale.")
+      toast.error("Erreur lors de lÂ’envoi. Nous avons gardÃ© une copie locale.")
     } finally {
       setIsSubmitting(false)
     }
@@ -770,9 +770,9 @@ function FeedbackWidget({ onClose, defaultType = 'suggestion' }) {
         <div className="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
           <FiCheck className="w-8 h-8 text-white" />
         </div>
-        <h3 className="text-2xl font-bold text-gray-800 mb-2">Envoyé</h3>
+        <h3 className="text-2xl font-bold text-gray-800 mb-2">EnvoyÃ©</h3>
         <p className="text-gray-600 mb-6">
-          Merci ! Votre retour nous aide à améliorer StyleFlow pour tous.
+          Merci ! Votre retour nous aide Ã  amÃ©liorer StyleFlow pour tous.
         </p>
         <button
           onClick={() => {
@@ -785,7 +785,7 @@ function FeedbackWidget({ onClose, defaultType = 'suggestion' }) {
               idea: '',
               benefit: '',
               problem: '',
-              impact: 'gênant',
+              impact: 'gÃªnant',
               contact: ''
             })
             setErrors({})
@@ -842,7 +842,7 @@ function FeedbackWidget({ onClose, defaultType = 'suggestion' }) {
         {feedbackType === 'bug' && (
           <div className="grid md:grid-cols-2 gap-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Page concernée</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Page concernÃ©e</label>
               <input
                 value={form.page}
                 onChange={(e) => updateField('page', e.target.value)}
@@ -852,7 +852,7 @@ function FeedbackWidget({ onClose, defaultType = 'suggestion' }) {
               {errors.page && <p className="text-xs text-red-600 mt-1">{errors.page}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Étapes pour reproduire</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Ã‰tapes pour reproduire</label>
               <input
                 value={form.steps}
                 onChange={(e) => updateField('steps', e.target.value)}
@@ -862,7 +862,7 @@ function FeedbackWidget({ onClose, defaultType = 'suggestion' }) {
               {errors.steps && <p className="text-xs text-red-600 mt-1">{errors.steps}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Résultat attendu</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">RÃ©sultat attendu</label>
               <textarea
                 value={form.expected}
                 onChange={(e) => updateField('expected', e.target.value)}
@@ -873,13 +873,13 @@ function FeedbackWidget({ onClose, defaultType = 'suggestion' }) {
               {errors.expected && <p className="text-xs text-red-600 mt-1">{errors.expected}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Résultat obtenu</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">RÃ©sultat obtenu</label>
               <textarea
                 value={form.actual}
                 onChange={(e) => updateField('actual', e.target.value)}
                 rows={3}
                 className="w-full resize-none px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                placeholder="Ce qui s'est réellement passé"
+                placeholder="Ce qui s'est rÃ©ellement passÃ©"
               />
               {errors.actual && <p className="text-xs text-red-600 mt-1">{errors.actual}</p>}
             </div>
@@ -889,18 +889,18 @@ function FeedbackWidget({ onClose, defaultType = 'suggestion' }) {
         {feedbackType === 'suggestion' && (
           <div className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Votre idée</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Votre idÃ©e</label>
               <textarea
                 value={form.idea}
                 onChange={(e) => updateField('idea', e.target.value)}
                 rows={4}
                 className="w-full resize-none px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                placeholder="Décrivez l'amélioration que vous aimeriez"
+                placeholder="DÃ©crivez l'amÃ©lioration que vous aimeriez"
               />
               {errors.idea && <p className="text-xs text-red-600 mt-1">{errors.idea}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Bénéfice attendu</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">BÃ©nÃ©fice attendu</label>
               <textarea
                 value={form.benefit}
                 onChange={(e) => updateField('benefit', e.target.value)}
@@ -915,13 +915,13 @@ function FeedbackWidget({ onClose, defaultType = 'suggestion' }) {
         {feedbackType === 'problem' && (
           <div className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Quel problème rencontrez-vous ?</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Quel problÃ¨me rencontrez-vous ?</label>
               <textarea
                 value={form.problem}
                 onChange={(e) => updateField('problem', e.target.value)}
                 rows={4}
                 className="w-full resize-none px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                placeholder="Décrivez ce qui vous bloque"
+                placeholder="DÃ©crivez ce qui vous bloque"
               />
               {errors.problem && <p className="text-xs text-red-600 mt-1">{errors.problem}</p>}
             </div>
@@ -933,7 +933,7 @@ function FeedbackWidget({ onClose, defaultType = 'suggestion' }) {
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent"
               >
                 <option value="bloquant">Bloquant</option>
-                <option value="gênant">Gênant</option>
+                <option value="gÃªnant">GÃªnant</option>
                 <option value="mineur">Mineur</option>
               </select>
               {errors.impact && <p className="text-xs text-red-600 mt-1">{errors.impact}</p>}
@@ -953,14 +953,14 @@ function FeedbackWidget({ onClose, defaultType = 'suggestion' }) {
 
         <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <p className="text-xs text-gray-400">
-            Nous répondons aux problèmes critiques sous 48h ouvrées.
+            Nous rÃ©pondons aux problÃ¨mes critiques sous 48h ouvrÃ©es.
           </p>
           <button
             type="submit"
             disabled={isSubmitting}
             className="bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 px-6 rounded-xl transition-all disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? 'Envoi…' : 'Envoyer'}
+            {isSubmitting ? 'EnvoiÂ…' : 'Envoyer'}
           </button>
         </div>
       </form>

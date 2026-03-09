@@ -245,7 +245,7 @@ function Navbar() {
                           className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
                         >
                           <FiCalendar className="w-4 h-4" />
-                          <span>{user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' ? 'Dashboard admin' : user.role === 'PRO' ? 'Mon dashboard' : 'Mes r�servations'}</span>
+                          <span>{user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' ? 'Dashboard admin' : user.role === 'PRO' ? 'Mon dashboard' : 'Mes rï¿½servations'}</span>
                         </Link>
                         
                         <Link
@@ -254,7 +254,7 @@ function Navbar() {
                           className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
                         >
                           <FiSettings className="w-4 h-4" />
-                          <span>Param�tres</span>
+                          <span>Paramï¿½tres</span>
                         </Link>
                         
                         <button
@@ -262,7 +262,7 @@ function Navbar() {
                           className="flex items-center space-x-2 px-4 py-2 text-red-600 hover:bg-red-50 w-full transition-colors"
                         >
                           <FiLogOut className="w-4 h-4" />
-                          <span>D�connexion</span>
+                          <span>Dï¿½connexion</span>
                         </button>
                       </motion.div>
                     )}
@@ -298,7 +298,7 @@ function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Drawer � rendered via Portal outside nav for stable positioning */}
+      {/* Mobile Drawer ï¿½ rendered via Portal outside nav for stable positioning */}
       {createPortal(
         <AnimatePresence mode="wait">
           {isOpen && (
@@ -409,7 +409,7 @@ function Navbar() {
                         className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                       >
                         <FiCalendar className="w-5 h-5" />
-                        <span>{user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' ? 'Dashboard admin' : user.role === 'PRO' ? 'Mon dashboard' : 'Mes r�servations'}</span>
+                        <span>{user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' ? 'Dashboard admin' : user.role === 'PRO' ? 'Mon dashboard' : 'Mes rï¿½servations'}</span>
                       </Link>
                       <button
                         onClick={() => { closeDrawer(); navigate('/dashboard') }}
@@ -431,7 +431,7 @@ function Navbar() {
                         className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                       >
                         <FiSettings className="w-5 h-5" />
-                        <span>Param�tres</span>
+                        <span>Paramï¿½tres</span>
                       </Link>
                     </div>
                   ) : (
@@ -454,7 +454,7 @@ function Navbar() {
                   )}
                 </div>
 
-                {/* Drawer footer � logout */}
+                {/* Drawer footer ï¿½ logout */}
                 {isAuthenticated && (
                   <div className="border-t border-gray-100 px-4 py-4">
                     <button
@@ -462,7 +462,7 @@ function Navbar() {
                       className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
                     >
                       <FiLogOut className="w-5 h-5" />
-                      <span>D�connexion</span>
+                      <span>Dï¿½connexion</span>
                     </button>
                   </div>
                 )}
