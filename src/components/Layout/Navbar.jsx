@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { FiMenu, FiX, FiUser, FiLogOut, FiCalendar, FiSettings, FiPhone, FiMapPin, FiSearch, FiHeart, FiStar, FiHome, FiScissors, FiShoppingBag, FiBell } from 'react-icons/fi'
+import { FiMenu, FiX, FiUser, FiLogOut, FiCalendar, FiSettings, FiSearch, FiHeart, FiHome, FiScissors, FiShoppingBag, FiBell } from 'react-icons/fi'
 import { motion, AnimatePresence } from 'framer-motion'
 import Logo from '../UI/Logo'
 import apiFetch from '../../api/client'
@@ -86,34 +86,6 @@ function Navbar() {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50">
-      {/* Top bar avec infos utiles */}
-      <div className="bg-gray-950 text-white text-[11px]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-6">
-            <div className="hidden sm:flex items-center space-x-6">
-              <a href="tel:+221338001234" className="flex items-center space-x-1.5 hover:text-amber-400 transition-colors">
-                <FiPhone className="w-3 h-3" />
-                <span>+221 33 800 12 34</span>
-              </a>
-              <span className="flex items-center space-x-1.5">
-                <FiMapPin className="w-3 h-3 text-amber-400" />
-                <span>Dakar, S�n�gal</span>
-              </span>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="hidden sm:flex items-center space-x-1 text-amber-400">
-                <FiStar className="w-3 h-3 fill-current" />
-                <span className="text-white">4.8/5 - Plus de 500 avis</span>
-              </span>
-              <span className="flex items-center space-x-1.5 bg-amber-500/20 px-2 py-0.5 rounded-full">
-                <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span>
-                <span className="text-amber-400 font-medium">R�servation 24h/24</span>
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-      
       {/* Main navbar */}
       <div className={`transition-all duration-300 ${
         isScrolled 
