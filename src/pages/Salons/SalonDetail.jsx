@@ -146,21 +146,145 @@ function SalonDetail() {
     return cart.filter(c => c.product.id === productId)
   }
 
+  const normalizeOptionList = (value) => {
+    if (value == null) return []
+
+    const asStringArray = (arr) =>
+      arr
+        .map((item) => String(item ?? '').trim())
+        .filter(Boolean)
+
+    if (Array.isArray(value)) return asStringArray(value)
+
+    if (typeof value === 'string') {
+      const raw = value.trim()
+      if (!raw) return []
+
+      if ((raw.startsWith('[') && raw.endsWith(']')) || (raw.startsWith('{') && raw.endsWith('}'))) {
+        try {
+          return normalizeOptionList(JSON.parse(raw))
+        } catch (_) {
+          // Fallback to delimited parsing
+        }
+      }
+
+      return asStringArray(raw.split(/[;,|/]/g))
+    }
+
+    if (typeof value === 'object') {
+      if (Array.isArray(value.values)) return normalizeOptionList(value.values)
+      if (Array.isArray(value.options)) return normalizeOptionList(value.options)
+      return asStringArray(Object.values(value))
+    }
+
+    return []
+  }
+
+  const uniqueOptions = (list) => Array.from(new Set(normalizeOptionList(list)))
+
+  const isVariantProductCategory = (product) => {
+    const normalized = String(`${product?.name || ''} ${product?.category || ''}`)
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+
+    const keywords = [
+      'vetement',
+      'maillot',
+      'jersey',
+      't-shirt',
+      'shirt',
+      'pull',
+      'pantalon',
+      'short',
+      'robe',
+      'tenue',
+      'chaussure',
+      'basket',
+      'sneaker',
+    ]
+
+    return keywords.some((k) => normalized.includes(k))
+  }
+
   const getVariantEntries = (product) => {
-    const combosRaw = Array.isArray(product?.variantCombinations)
-      ? product.variantCombinations
-      : Array.isArray(product?.variants)
-        ? product.variants
-        : []
+    const rawSource =
+      product?.variantCombinations ??
+      product?.variants?.combinations ??
+      product?.variantOptions?.combinations ??
+      product?.variants ??
+      []
+
+    let combosRaw = []
+    if (Array.isArray(rawSource)) {
+      combosRaw = rawSource
+    } else if (typeof rawSource === 'string') {
+      const parsed = (() => {
+        try {
+          return JSON.parse(rawSource)
+        } catch (_) {
+          return []
+        }
+      })()
+      combosRaw = Array.isArray(parsed) ? parsed : []
+    } else if (rawSource && typeof rawSource === 'object') {
+      combosRaw = Array.isArray(rawSource.values) ? rawSource.values : []
+    }
 
     return combosRaw
       .map((v) => ({
-        size: v?.size || null,
-        color: v?.color || null,
+        size: v?.size || v?.taille || v?.labelSize || null,
+        color: v?.color || v?.couleur || v?.labelColor || null,
         stock: Number(v?.stock ?? v?.quantity ?? 0),
         isAvailable: v?.isAvailable !== false && Number(v?.stock ?? v?.quantity ?? 0) > 0,
       }))
       .filter((v) => v.size || v.color)
+  }
+
+  const getResolvedVariantOptions = (product, { includeFallback = false } = {}) => {
+    const variantEntries = getVariantEntries(product)
+
+    const availableSizesFromCombos = uniqueOptions(variantEntries.map((v) => v.size))
+    const availableColorsFromCombos = uniqueOptions(variantEntries.map((v) => v.color))
+
+    const explicitSizes = uniqueOptions([
+      ...normalizeOptionList(product?.sizes),
+      ...normalizeOptionList(product?.sizeOptions),
+      ...normalizeOptionList(product?.variants?.sizes),
+      ...normalizeOptionList(product?.variants?.size),
+      ...normalizeOptionList(product?.options?.sizes),
+    ])
+    const explicitColors = uniqueOptions([
+      ...normalizeOptionList(product?.colors),
+      ...normalizeOptionList(product?.colorOptions),
+      ...normalizeOptionList(product?.variants?.colors),
+      ...normalizeOptionList(product?.variants?.color),
+      ...normalizeOptionList(product?.options?.colors),
+    ])
+
+    let resolvedSizes = explicitSizes.length > 0 ? explicitSizes : availableSizesFromCombos
+    let resolvedColors = explicitColors.length > 0 ? explicitColors : availableColorsFromCombos
+    let usesFallbackSizes = false
+    let usesFallbackColors = false
+
+    if (includeFallback && isVariantProductCategory(product)) {
+      if (resolvedSizes.length === 0) {
+        resolvedSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
+        usesFallbackSizes = true
+      }
+      if (resolvedColors.length === 0) {
+        resolvedColors = ['Noir', 'Blanc', 'Rouge', 'Bleu', 'Vert', 'Jaune']
+        usesFallbackColors = true
+      }
+    }
+
+    return {
+      variantEntries,
+      resolvedSizes,
+      resolvedColors,
+      usesFallbackSizes,
+      usesFallbackColors,
+    }
   }
 
   const getProductImages = (product) => {
@@ -624,13 +748,7 @@ function SalonDetail() {
                           const img = resolveMediaUrl(product.imageUrl || product.image)
                           const inCartItems = getCartItemForProduct(product.id)
                           const inCartTotal = inCartItems.reduce((s, c) => s + c.quantity, 0)
-                          const variantEntries = getVariantEntries(product)
-                          const sizes = product.sizes || product.variants?.sizes || []
-                          const colors = product.colors || product.variants?.colors || []
-                          const availableSizesFromCombos = Array.from(new Set(variantEntries.map(v => v.size).filter(Boolean)))
-                          const availableColorsFromCombos = Array.from(new Set(variantEntries.map(v => v.color).filter(Boolean)))
-                          const resolvedSizes = Array.isArray(sizes) && sizes.length > 0 ? sizes : availableSizesFromCombos
-                          const resolvedColors = Array.isArray(colors) && colors.length > 0 ? colors : availableColorsFromCombos
+                          const { variantEntries, resolvedSizes, resolvedColors } = getResolvedVariantOptions(product)
                           const hasSizes = Array.isArray(resolvedSizes) && resolvedSizes.length > 0
                           const hasColors = Array.isArray(resolvedColors) && resolvedColors.length > 0
                           const selSize = variantSelections[product.id]?.size || null
@@ -1275,19 +1393,21 @@ function SalonDetail() {
             {(() => {
               const product = activeProduct
               const productImages = getProductImages(product)
-              const variantEntries = getVariantEntries(product)
-              const sizes = product.sizes || product.variants?.sizes || []
-              const colors = product.colors || product.variants?.colors || []
-              const availableSizesFromCombos = Array.from(new Set(variantEntries.map(v => v.size).filter(Boolean)))
-              const availableColorsFromCombos = Array.from(new Set(variantEntries.map(v => v.color).filter(Boolean)))
-              const resolvedSizes = Array.isArray(sizes) && sizes.length > 0 ? sizes : availableSizesFromCombos
-              const resolvedColors = Array.isArray(colors) && colors.length > 0 ? colors : availableColorsFromCombos
+              const {
+                variantEntries,
+                resolvedSizes,
+                resolvedColors,
+                usesFallbackSizes,
+                usesFallbackColors,
+              } = getResolvedVariantOptions(product, { includeFallback: true })
               const hasSizes = Array.isArray(resolvedSizes) && resolvedSizes.length > 0
               const hasColors = Array.isArray(resolvedColors) && resolvedColors.length > 0
               const selSize = variantSelections[product.id]?.size || null
               const selColor = variantSelections[product.id]?.color || null
-              const needsVariant = hasSizes || hasColors
-              const variantChosen = (!hasSizes || selSize) && (!hasColors || selColor)
+              const sizeRequired = hasSizes && !usesFallbackSizes ? true : usesFallbackSizes
+              const colorRequired = hasColors && !usesFallbackColors
+              const needsVariant = sizeRequired || colorRequired
+              const variantChosen = (!sizeRequired || selSize) && (!colorRequired || selColor)
               const inCartItems = getCartItemForProduct(product.id).filter((c) => c.selectedSize === selSize && c.selectedColor === selColor)
               const inCartTotal = inCartItems.reduce((s, c) => s + c.quantity, 0)
 
@@ -1376,7 +1496,9 @@ function SalonDetail() {
                     {hasSizes && (
                       <div>
                         <div className="flex items-center justify-between mb-2">
-                          <p className="text-sm font-semibold text-gray-900">Taille</p>
+                          <p className="text-sm font-semibold text-gray-900">
+                            Taille {usesFallbackSizes ? <span className="text-gray-500 font-medium">(a choisir)</span> : null}
+                          </p>
                         </div>
                         <div className="flex flex-wrap gap-2">
                           {resolvedSizes.map((s) => {
@@ -1405,7 +1527,9 @@ function SalonDetail() {
 
                     {hasColors && (
                       <div>
-                        <p className="text-sm font-semibold text-gray-900 mb-2">Couleur</p>
+                        <p className="text-sm font-semibold text-gray-900 mb-2">
+                          Couleur {usesFallbackColors ? <span className="text-gray-500 font-medium">(optionnel)</span> : null}
+                        </p>
                         <div className="flex flex-wrap gap-2">
                           {resolvedColors.map((c) => {
                             const colorValue = String(c)
@@ -1433,7 +1557,7 @@ function SalonDetail() {
 
                     {needsVariant && !variantChosen && (
                       <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
-                        Choisissez la taille et/ou la couleur avant d'ajouter au panier.
+                        Choisissez les options requises avant d'ajouter au panier.
                       </p>
                     )}
 
