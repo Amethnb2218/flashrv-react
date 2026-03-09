@@ -3,6 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
+const prisma = require('./lib/prisma');
 
 // Import routes
 const authRoutes = require('./routes/authRoutes');
@@ -109,12 +110,31 @@ if (process.env.NODE_ENV === 'development') {
 // ===========================================
 // HEALTH CHECK
 // ===========================================
-app.get('/health', (req, res) => {
+app.get('/health', async (req, res) => {
+  const start = Date.now();
+  let dbOk = false;
+  let dbMs = 0;
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    dbMs = Date.now() - start;
+    dbOk = true;
+  } catch (e) {
+    dbMs = Date.now() - start;
+  }
+
+  const paydunyaConfigured = Boolean(
+    process.env.PAYDUNYA_MASTER_KEY &&
+    process.env.PAYDUNYA_PRIVATE_KEY &&
+    process.env.PAYDUNYA_TOKEN
+  );
+
   res.status(200).json({
     status: 'success',
     message: 'FlashRV Backend is running',
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
+    db: { connected: dbOk, responseMs: dbMs },
+    paydunya: { configured: paydunyaConfigured, mode: process.env.PAYDUNYA_MODE || 'not set' },
   });
 });
 
