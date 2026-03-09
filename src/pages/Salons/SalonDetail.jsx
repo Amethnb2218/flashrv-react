@@ -331,11 +331,6 @@ function SalonDetail() {
         resolvedSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL']
         usesFallbackSizes = true
       }
-      if (resolvedColors.length === 0) {
-        resolvedColors = ['Noir', 'Blanc', 'Rouge', 'Bleu', 'Vert', 'Jaune']
-        resolvedAvailableColors = resolvedColors
-        usesFallbackColors = true
-      }
     }
 
     return {

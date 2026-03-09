@@ -1953,16 +1953,16 @@ const handleSaveProduct = async () => {
   const deliveryChoice = String(form.deliveryChoice || "").toUpperCase();
   const isDeliverable = deliveryChoice === "DELIVERY";
   const deliveryFee = Number(form.deliveryFee || 0);
+  const normalizedAvailableColors =
+    colors.length > 0
+      ? (availableColors.length > 0 ? availableColors : colors)
+      : [];
 
-  if (colors.length === 0) {
-    toast.error("Ajoutez au moins une couleur.");
+  if (colors.length === 0 && availableColors.length > 0) {
+    toast.error("Ajoutez d'abord les couleurs proposees avant de definir les couleurs disponibles.");
     return;
   }
-  if (availableColors.length === 0) {
-    toast.error("Precisez les couleurs disponibles.");
-    return;
-  }
-  if (availableColors.some((c) => !colors.includes(c))) {
+  if (normalizedAvailableColors.some((c) => !colors.includes(c))) {
     toast.error("Les couleurs disponibles doivent etre dans la liste des couleurs.");
     return;
   }
@@ -1988,7 +1988,7 @@ const handleSaveProduct = async () => {
     formData.append("category", form.category || "");
     formData.append("sizes", JSON.stringify(sizes));
     formData.append("colors", JSON.stringify(colors));
-    formData.append("availableColors", JSON.stringify(availableColors));
+    formData.append("availableColors", JSON.stringify(normalizedAvailableColors));
     formData.append("isDeliverable", String(isDeliverable));
     formData.append("deliveryZones", JSON.stringify(isDeliverable ? deliveryZones : []));
     formData.append("deliveryFee", String(isDeliverable ? deliveryFee : 0));
@@ -2755,7 +2755,7 @@ active
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Couleurs *</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Couleurs</label>
           <input
             value={(editingProduct || newProduct).colorsText}
             onChange={(e) => {
@@ -2767,10 +2767,10 @@ active
             className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
             placeholder="ex: Rouge, Vert, Noir"
           />
-          <p className="text-xs text-gray-500 mt-1">Liste complete des couleurs proposees.</p>
+          <p className="text-xs text-gray-500 mt-1">Optionnel. Laissez vide si l'article n'a pas de declinaison de couleur.</p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Couleurs disponibles *</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Couleurs disponibles</label>
           <input
             value={(editingProduct || newProduct).availableColorsText}
             onChange={(e) => {
@@ -2782,7 +2782,7 @@ active
             className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
             placeholder="ex: Rouge, Noir"
           />
-          <p className="text-xs text-gray-500 mt-1">Les couleurs non listees ici seront grisees cote client.</p>
+          <p className="text-xs text-gray-500 mt-1">Optionnel. Si vide mais que des couleurs sont definies, toutes les couleurs seront disponibles cote client.</p>
         </div>
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700">Livraison *</label>
