@@ -9,32 +9,31 @@ function Footer() {
     <footer className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 relative overflow-hidden">
       <div className="absolute -top-24 right-10 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl"></div>
       <div className="absolute -bottom-24 left-10 w-80 h-80 bg-yellow-400/10 rounded-full blur-3xl"></div>
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 lg:gap-10">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-8">
           {/* Brand */}
-          <div className="space-y-5">
+          <div className="col-span-2 lg:col-span-1 space-y-3">
             <Logo variant="light" size="md" showTagline />
-            <p className="text-gray-400 text-sm leading-relaxed">
+            <p className="text-gray-400 text-xs leading-relaxed">
               La plateforme de réservation de salons de coiffure et beauté au Sénégal.
-              Trouvez les meilleurs professionnels près de chez vous.
             </p>
-            <div className="flex space-x-3">
-              <a href="#" className="w-10 h-10 bg-gray-800 hover:bg-amber-500 rounded-full flex items-center justify-center text-gray-400 hover:text-white transition-all">
-                <FiInstagram className="w-5 h-5" />
+            <div className="flex space-x-2">
+              <a href="#" className="w-8 h-8 bg-gray-800 hover:bg-amber-500 rounded-full flex items-center justify-center text-gray-400 hover:text-white transition-all">
+                <FiInstagram className="w-4 h-4" />
               </a>
-              <a href="#" className="w-10 h-10 bg-gray-800 hover:bg-amber-500 rounded-full flex items-center justify-center text-gray-400 hover:text-white transition-all">
-                <FiFacebook className="w-5 h-5" />
+              <a href="#" className="w-8 h-8 bg-gray-800 hover:bg-amber-500 rounded-full flex items-center justify-center text-gray-400 hover:text-white transition-all">
+                <FiFacebook className="w-4 h-4" />
               </a>
-              <a href="#" className="w-10 h-10 bg-gray-800 hover:bg-amber-500 rounded-full flex items-center justify-center text-gray-400 hover:text-white transition-all">
-                <FiTwitter className="w-5 h-5" />
+              <a href="#" className="w-8 h-8 bg-gray-800 hover:bg-amber-500 rounded-full flex items-center justify-center text-gray-400 hover:text-white transition-all">
+                <FiTwitter className="w-4 h-4" />
               </a>
             </div>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h4 className="font-semibold text-lg mb-5 text-white">Liens rapides</h4>
-            <ul className="space-y-3">
+            <h4 className="font-semibold text-sm mb-3 text-white">Liens rapides</h4>
+            <ul className="space-y-1.5 text-sm">
               <li>
                 <Link to="/salons" className="text-gray-400 hover:text-white transition-colors">
                   Trouver un salon
@@ -60,8 +59,8 @@ function Footer() {
 
           {/* Legal */}
           <div>
-            <h4 className="font-semibold text-lg mb-5 text-white">Légal</h4>
-            <ul className="space-y-3">
+            <h4 className="font-semibold text-sm mb-3 text-white">Légal</h4>
+            <ul className="space-y-1.5 text-sm">
               <li>
                 <a href="#" className="text-gray-400 hover:text-white transition-colors">
                   Conditions d'utilisation
@@ -87,8 +86,8 @@ function Footer() {
 
           {/* Contact */}
           <div>
-            <h4 className="font-semibold text-lg mb-5 text-white">Contact</h4>
-            <ul className="space-y-3">
+            <h4 className="font-semibold text-sm mb-3 text-white">Contact</h4>
+            <ul className="space-y-1.5 text-sm">
               <li className="flex items-center space-x-3 text-gray-400">
                 <FiMapPin className="w-4 h-4" />
                 <span>Dakar, Sénégal</span>
@@ -110,7 +109,7 @@ function Footer() {
               href="https://wa.me/221338001234"
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-5 inline-flex items-center space-x-2 bg-green-500 hover:bg-green-600 text-white px-5 py-2.5 rounded-full text-sm font-medium transition-all"
+              className="mt-3 inline-flex items-center space-x-1.5 bg-green-500 hover:bg-green-600 text-white px-4 py-1.5 rounded-full text-xs font-medium transition-all"
             >
               <FiPhone className="w-4 h-4" />
               <span>WhatsApp</span>
@@ -119,16 +118,10 @@ function Footer() {
         </div>
 
         {/* Bottom */}
-        <div className="mt-12 pt-8 flex flex-col md:flex-row justify-between items-center border-t border-gray-800/70">
-          <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-amber-500/40 to-transparent mb-6 md:mb-0 md:hidden"></div>
-          <p className="text-gray-400 text-sm">
+        <div className="mt-6 pt-4 flex flex-col md:flex-row justify-between items-center border-t border-gray-800/70">
+          <p className="text-gray-500 text-xs">
             © {currentYear} StyleFlow. Tous droits réservés.
           </p>
-          <div className="flex items-center space-x-4 mt-4 md:mt-0">
-            <span className="px-3 py-1 bg-indigo-500/20 text-indigo-300 text-xs font-semibold rounded-full border border-indigo-500/30">PayDunya</span>
-            <span className="px-3 py-1 bg-amber-500/20 text-amber-300 text-xs font-semibold rounded-full border border-amber-500/30">Carte bancaire</span>
-            <span className="px-3 py-1 bg-green-500/20 text-green-400 text-xs font-semibold rounded-full border border-green-500/30">Cash</span>
-          </div>
         </div>
       </div>
     </footer>
