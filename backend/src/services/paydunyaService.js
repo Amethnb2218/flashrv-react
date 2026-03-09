@@ -16,7 +16,10 @@ const ensureConfigured = () => {
   const token = process.env.PAYDUNYA_TOKEN;
 
   if (!masterKey || !publicKey || !privateKey || !token) {
-    throw new Error('PayDunya keys are missing in environment variables');
+    const err = new Error('PayDunya n est pas configure sur le serveur.');
+    err.statusCode = 503;
+    err.expose = true;
+    throw err;
   }
 
   paydunya.setup({

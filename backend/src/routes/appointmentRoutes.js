@@ -128,6 +128,12 @@ router.post('/', authenticate, async (req, res, next) => {
       clientLastName,
       clientPhone,
       clientAddress,
+      status,
+      paymentMethod,
+      requiresOnlinePayment,
+      skipConfirmationEmail,
+      skipNotifications,
+      sendConfirmation,
     } = req.body;
 
     // Validate required fields (coiffeurId is now optional - assigned by salon owner later)
@@ -208,6 +214,20 @@ router.post('/', authenticate, async (req, res, next) => {
       ? `Services additionnels: ${extraServices.map(s => `${s.name} (${s.price} FCFA)`).join(', ')}`
       : '';
     const combinedNotes = [notes && notes.trim(), extraServicesNote].filter(Boolean).join('\n');
+    const requestedStatus = String(status || '').trim().toUpperCase();
+    const normalizedPaymentMethod = String(paymentMethod || '').trim().toUpperCase();
+    const isPaydunyaFlow =
+      Boolean(requiresOnlinePayment) ||
+      normalizedPaymentMethod === 'PAYDUNYA' ||
+      requestedStatus === 'PENDING_PAYMENT';
+    const shouldSkipNotifications = skipNotifications === true;
+    const shouldSendConfirmationEmail =
+      sendConfirmation !== false &&
+      skipConfirmationEmail !== true &&
+      !isPaydunyaFlow;
+    const appointmentInitialStatus = isPaydunyaFlow
+      ? 'PENDING_PAYMENT'
+      : (requestedStatus || 'PENDING');
 
     // Check for conflicting appointments only if coiffeurId is provided
     if (coiffeurId) {
@@ -249,7 +269,7 @@ router.post('/', authenticate, async (req, res, next) => {
         endTime,
         totalPrice: totalPrice,
         notes: combinedNotes || null,
-        status: 'PENDING_PAYMENT',
+        status: appointmentInitialStatus,
         clientId: req.user.id,
         salonId,
         coiffeurId: coiffeurId || null,
@@ -271,7 +291,7 @@ router.post('/', authenticate, async (req, res, next) => {
       },
     });
 
-    if (appointment?.salon?.ownerId && appointment.salon.ownerId !== req.user.id) {
+    if (!shouldSkipNotifications && appointment?.salon?.ownerId && appointment.salon.ownerId !== req.user.id) {
       try {
         const notification = await prisma.notification.create({
           data: {
@@ -287,13 +307,15 @@ router.post('/', authenticate, async (req, res, next) => {
     }
 
     // Store client confirmation notification for in-app bell
-    if (appointment?.clientId) {
+    if (!shouldSkipNotifications && appointment?.clientId) {
       try {
         const notification = await prisma.notification.create({
           data: {
             userId: appointment.clientId,
             type: 'booking',
-            message: `Reservation creee chez ${appointment.salon?.name || 'le salon'} le ${new Date(appointmentDate).toLocaleDateString('fr-FR')} a ${startTime}. Paiement en attente.`,
+            message: isPaydunyaFlow
+              ? `Reservation creee chez ${appointment.salon?.name || 'le salon'} le ${new Date(appointmentDate).toLocaleDateString('fr-FR')} a ${startTime}. Paiement en attente.`
+              : `Reservation enregistree chez ${appointment.salon?.name || 'le salon'} le ${new Date(appointmentDate).toLocaleDateString('fr-FR')} a ${startTime}.`,
           },
         });
         pushNotification(notification.userId, notification);
@@ -303,7 +325,7 @@ router.post('/', authenticate, async (req, res, next) => {
     }
 
     // Send confirmation email to client
-    if (appointment?.client?.email) {
+    if (shouldSendConfirmationEmail && appointment?.client?.email) {
       sendBookingConfirmationEmail({
         to: appointment.client.email,
         clientName: fullName,
@@ -316,14 +338,18 @@ router.post('/', authenticate, async (req, res, next) => {
     }
 
     // Push notification to client
-    sendPushToUser(req.user.id, {
-      title: 'Reservation creee',
-      body: `RDV chez ${appointment.salon?.name || 'le salon'} le ${new Date(appointmentDate).toLocaleDateString('fr-FR')} a ${startTime}. Paiement en attente.`,
-      url: '/dashboard',
-    }).catch(() => {});
+    if (!shouldSkipNotifications) {
+      sendPushToUser(req.user.id, {
+        title: 'Reservation creee',
+        body: isPaydunyaFlow
+          ? `RDV chez ${appointment.salon?.name || 'le salon'} le ${new Date(appointmentDate).toLocaleDateString('fr-FR')} a ${startTime}. Paiement en attente.`
+          : `RDV chez ${appointment.salon?.name || 'le salon'} le ${new Date(appointmentDate).toLocaleDateString('fr-FR')} a ${startTime}.`,
+        url: '/dashboard',
+      }).catch(() => {});
+    }
 
     // Push notification to salon owner
-    if (appointment?.salon?.ownerId && appointment.salon.ownerId !== req.user.id) {
+    if (!shouldSkipNotifications && appointment?.salon?.ownerId && appointment.salon.ownerId !== req.user.id) {
       sendPushToUser(appointment.salon.ownerId, {
         title: '📅 Nouvelle réservation',
         body: `${fullName} a réservé le ${new Date(appointmentDate).toLocaleDateString('fr-FR')} à ${startTime}.`,
@@ -333,9 +359,11 @@ router.post('/', authenticate, async (req, res, next) => {
 
     res.status(201).json({
       status: 'success',
-      message: coiffeurId 
-        ? 'Appointment booked successfully' 
-        : 'Réservation créée. Le salon vous assignera un(e) coiffeur(se).',
+      message: coiffeurId
+        ? 'Appointment booked successfully'
+        : (isPaydunyaFlow
+          ? 'Reservation creee. Paiement requis pour confirmer le rendez-vous.'
+          : 'Reservation creee. Le salon vous assignera un(e) coiffeur(se).'),
       data: { appointment },
     });
   } catch (error) {

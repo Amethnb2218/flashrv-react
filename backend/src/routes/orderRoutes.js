@@ -19,6 +19,7 @@ router.post('/', authenticate, async (req, res, next) => {
       deliveryAddress,
       clientPhone,
       clientName,
+      paymentMethod,
     } = req.body;
 
     if (!salonId || !Array.isArray(items) || items.length === 0) {
@@ -54,6 +55,8 @@ router.post('/', authenticate, async (req, res, next) => {
     const normalizedDeliveryMode = String(deliveryMode || 'PICKUP').toUpperCase() === 'DELIVERY'
       ? 'DELIVERY'
       : 'PICKUP';
+    const normalizedPaymentMethod = String(paymentMethod || '').toUpperCase();
+    const isPaydunyaFlow = normalizedPaymentMethod === 'PAYDUNYA';
     if (normalizedDeliveryMode === 'DELIVERY' && !String(deliveryAddress || '').trim()) {
       return res.status(400).json({
         status: 'error',
@@ -102,7 +105,7 @@ router.post('/', authenticate, async (req, res, next) => {
           deliveryAddress: normalizedDeliveryMode === 'DELIVERY' ? (deliveryAddress || null) : null,
           clientPhone: clientPhone || null,
           clientName: clientName || req.user.name || null,
-          status: 'PENDING',
+          status: isPaydunyaFlow ? 'PENDING_PAYMENT' : 'PENDING',
           items: {
             create: orderItems,
           },
@@ -132,7 +135,9 @@ router.post('/', authenticate, async (req, res, next) => {
           data: {
             userId: order.salon.ownerId,
             type: 'order',
-            message: `Nouvelle commande de ${order.clientName || 'un client'} — ${totalPrice} FCFA`,
+            message: isPaydunyaFlow
+              ? `Nouvelle commande de ${order.clientName || 'un client'} en attente de paiement - ${totalPrice} FCFA`
+              : `Nouvelle commande de ${order.clientName || 'un client'} - ${totalPrice} FCFA`,
           },
         });
         pushNotification(notification.userId, notification);
@@ -148,7 +153,9 @@ router.post('/', authenticate, async (req, res, next) => {
           data: {
             userId: order.clientId,
             type: 'order',
-            message: `Votre commande chez ${order.salon?.name || 'la boutique'} est confirmee.`,
+            message: isPaydunyaFlow
+              ? `Votre commande chez ${order.salon?.name || 'la boutique'} est en attente de paiement.`
+              : `Votre commande chez ${order.salon?.name || 'la boutique'} est confirmee.`,
           },
         });
         pushNotification(notification.userId, notification);
@@ -158,7 +165,7 @@ router.post('/', authenticate, async (req, res, next) => {
     }
 
     // Send confirmation email to client
-    if (order.client?.email) {
+    if (!isPaydunyaFlow && order.client?.email) {
       sendOrderConfirmationEmail({
         to: order.client.email,
         clientName: order.clientName || order.client.name || 'Client',
@@ -171,7 +178,9 @@ router.post('/', authenticate, async (req, res, next) => {
 
     res.status(201).json({
       status: 'success',
-      message: 'Commande créée avec succès',
+      message: isPaydunyaFlow
+        ? 'Commande creee. Paiement requis pour confirmation.'
+        : 'Commande creee avec succes',
       data: { order },
     });
   } catch (error) {
@@ -234,7 +243,7 @@ router.patch('/:id/status', authenticate, async (req, res, next) => {
     const { id } = req.params;
     const { status } = req.body;
 
-    const validStatuses = ['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'DELIVERED', 'CANCELLED'];
+    const validStatuses = ['PENDING', 'PENDING_PAYMENT', 'CONFIRMED', 'PREPARING', 'READY', 'DELIVERED', 'CANCELLED'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ status: 'error', message: 'Statut invalide' });
     }

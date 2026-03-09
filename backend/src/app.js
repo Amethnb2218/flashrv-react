@@ -202,10 +202,14 @@ app.use((err, req, res, next) => {
   // Default error
   const statusCode = err.statusCode || 500;
   const message = err.message || 'Internal server error';
+  const shouldExposeMessage =
+    process.env.NODE_ENV === 'development' ||
+    statusCode < 500 ||
+    err.expose === true;
 
   res.status(statusCode).json({
     status: 'error',
-    message: process.env.NODE_ENV === 'development' ? message : 'Something went wrong',
+    message: shouldExposeMessage ? message : 'Something went wrong',
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
   });
 });

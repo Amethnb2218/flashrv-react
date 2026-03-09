@@ -95,6 +95,8 @@ function OrderCheckout() {
   const handleSubmitOrder = async () => {
     setSubmitting(true)
     setError('')
+    let createdOrder = null
+    let receiptPayload = null
     try {
       const variantNotes = cart
         .map((c) => {
@@ -129,7 +131,8 @@ ${variantNotes.join('\n')}` : '']
         }
       })
       const order = res?.data?.order || res?.order || res?.data || res
-      const receiptPayload = {
+      createdOrder = order
+      receiptPayload = {
         order: {
           ...order,
           clientName: form.clientName || '',
@@ -149,15 +152,15 @@ ${variantNotes.join('\n')}` : '']
         grandTotal,
         deliveryFee,
       }
-      pushSiteNotification({
-        userId: user?.id || user?.email,
-        type: 'order_confirmation',
-        message: `Commande confirmee chez ${salon.name}. Ref: ${order?.id || 'N/A'}`,
-        meta: { orderId: order?.id, salonId: salon.id },
-      })
 
       if (selectedPayment === 'paydunya') {
         saveOrderPaymentSession(receiptPayload)
+        pushSiteNotification({
+          userId: user?.id || user?.email,
+          type: 'order_pending_payment',
+          message: `Commande en attente de paiement chez ${salon.name}. Ref: ${order?.id || 'N/A'}`,
+          meta: { orderId: order?.id, salonId: salon.id },
+        })
 
         const paymentResult = await apiFetch('/payments/create', {
           method: 'POST',
@@ -185,12 +188,24 @@ ${variantNotes.join('\n')}` : '']
         return
       }
 
+      pushSiteNotification({
+        userId: user?.id || user?.email,
+        type: 'order_confirmation',
+        message: `Commande confirmee chez ${salon.name}. Ref: ${order?.id || 'N/A'}`,
+        meta: { orderId: order?.id, salonId: salon.id },
+      })
+
       navigate('/order/receipt', {
         state: receiptPayload,
         replace: true,
       })
       clearCart()
     } catch (e) {
+      if (selectedPayment === 'paydunya' && createdOrder?.id && receiptPayload) {
+        saveOrderPaymentSession(receiptPayload)
+        navigate(`/order/payment/cancel?orderId=${encodeURIComponent(createdOrder.id)}`, { replace: true })
+        return
+      }
       setError(e.message || 'Erreur lors de la commande')
     } finally {
       setSubmitting(false)

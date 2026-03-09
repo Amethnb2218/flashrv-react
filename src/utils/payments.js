@@ -28,10 +28,12 @@ export function buildPaydunyaPaymentPayload({
   const safeServiceLabel = String(serviceLabel || '').trim() || 'Reservation FlashRV'
   const safeSalonName = String(salonName || '').trim() || 'FlashRV'
   const numericAmount = Math.max(1, Number(amount || 0))
+  const isOrderTarget = String(resourceKey || '').trim().toLowerCase() === 'orderid'
 
   return {
     bookingId: safeBookingId,
     appointmentId: safeBookingId,
+    ...(isOrderTarget ? { orderId: safeBookingId } : {}),
     amount: numericAmount,
     currency: 'XOF',
     provider: 'PAYDUNYA',

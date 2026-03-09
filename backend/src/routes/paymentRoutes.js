@@ -3,6 +3,7 @@ const prisma = require('../lib/prisma');
 const { authenticate, requireApprovedPro } = require('../middleware/auth');
 const { createPaydunyaInvoice, confirmPaydunyaInvoice } = require('../services/paydunyaService');
 const { pushNotification } = require('../realtime/hub');
+const { sendBookingConfirmationEmail, sendOrderConfirmationEmail } = require('../services/emailService');
 
 const router = express.Router();
 
@@ -19,6 +20,25 @@ const getBaseUrls = () => {
     frontendBase,
     backendBase,
   };
+};
+
+const toOperationalPaydunyaError = (error, phase = 'create') => {
+  if (error?.statusCode && error?.expose === true) {
+    return error;
+  }
+
+  const normalizedMessage = String(error?.message || '').trim().toLowerCase();
+  const isConfigIssue = normalizedMessage.includes('paydunya') && normalizedMessage.includes('configure');
+  const message = isConfigIssue
+    ? 'PayDunya n est pas configure sur le serveur.'
+    : phase === 'verify'
+      ? 'Impossible de verifier le paiement PayDunya pour le moment.'
+      : 'Impossible d initialiser le paiement PayDunya. Reessayez dans quelques instants.';
+
+  const wrapped = new Error(message);
+  wrapped.statusCode = isConfigIssue ? 503 : 502;
+  wrapped.expose = true;
+  return wrapped;
 };
 
 const markAppointmentPendingPayment = async (bookingId) => {
@@ -41,21 +61,59 @@ const markAppointmentPaid = async (bookingId) => {
   });
 };
 
-const notifyPaymentCompleted = async (payment, bookingId) => {
+const markOrderPendingPayment = async (orderId) => {
+  if (!orderId) return;
+  await prisma.order.update({
+    where: { id: orderId },
+    data: { status: 'PENDING_PAYMENT' },
+  }).catch(() => {
+    // noop when order does not exist
+  });
+};
+
+const markOrderPaid = async (orderId) => {
+  if (!orderId) return;
+  await prisma.order.update({
+    where: { id: orderId },
+    data: { status: 'CONFIRMED' },
+  }).catch(() => {
+    // noop
+  });
+};
+
+const notifyPaymentCompleted = async (payment) => {
   if (!payment?.userId) return;
 
-  const appointment = bookingId
+  const appointment = payment.appointmentId
     ? await prisma.appointment.findUnique({
-        where: { id: bookingId },
+        where: { id: payment.appointmentId },
         include: {
-          salon: { select: { name: true } },
+          salon: { select: { id: true, name: true } },
+          client: { select: { id: true, name: true, email: true } },
+          service: { select: { id: true, name: true, price: true } },
+        },
+      }).catch(() => null)
+    : null;
+  const order = payment.orderId
+    ? await prisma.order.findUnique({
+        where: { id: payment.orderId },
+        include: {
+          salon: { select: { id: true, name: true } },
+          client: { select: { id: true, name: true, email: true } },
+          items: {
+            include: {
+              product: { select: { id: true, name: true, price: true } },
+            },
+          },
         },
       }).catch(() => null)
     : null;
 
   const message = appointment
     ? `Paiement confirme pour votre reservation chez ${appointment.salon?.name || 'le salon'}.`
-    : 'Paiement confirme avec succes.';
+    : order
+      ? `Paiement confirme pour votre commande chez ${order.salon?.name || 'la boutique'}.`
+      : 'Paiement confirme avec succes.';
 
   try {
     const notification = await prisma.notification.create({
@@ -69,10 +127,34 @@ const notifyPaymentCompleted = async (payment, bookingId) => {
   } catch (error) {
     console.error('Payment notification error:', error.message);
   }
+
+  if (appointment?.client?.email) {
+    sendBookingConfirmationEmail({
+      to: appointment.client.email,
+      clientName: appointment.client.name || 'Client',
+      salonName: appointment.salon?.name || 'le salon',
+      date: appointment.date,
+      time: appointment.startTime,
+      services: appointment.service ? [appointment.service] : [],
+      totalPrice: appointment.totalPrice || appointment.service?.price || payment.amount || 0,
+    }).catch(() => {});
+  }
+
+  if (order?.client?.email) {
+    sendOrderConfirmationEmail({
+      to: order.client.email,
+      clientName: order.clientName || order.client.name || 'Client',
+      boutiqueName: order.salon?.name || 'la boutique',
+      items: order.items || [],
+      totalPrice: order.totalPrice || payment.amount || 0,
+      deliveryMode: order.deliveryMode,
+    }).catch(() => {});
+  }
 };
 
-const upsertBookingPayment = async ({
-  bookingId,
+const upsertPaymentForTarget = async ({
+  appointmentId,
+  orderId,
   userId,
   amount,
   reference,
@@ -88,13 +170,16 @@ const upsertBookingPayment = async ({
     method: 'PAYDUNYA',
     status,
     reference,
-    appointmentId: bookingId || null,
+    appointmentId: appointmentId || null,
+    orderId: orderId || null,
     userId,
   };
 
-  const existing = bookingId
-    ? await prisma.payment.findFirst({ where: { appointmentId: bookingId } })
-    : null;
+  const existing = appointmentId
+    ? await prisma.payment.findFirst({ where: { appointmentId } })
+    : orderId
+      ? await prisma.payment.findFirst({ where: { orderId } })
+      : null;
 
   if (existing) {
     return prisma.payment.update({
@@ -111,6 +196,8 @@ const createPaydunyaPaymentForBooking = async ({
   amount,
   customerName,
   customerEmail,
+  successUrl,
+  cancelUrl,
   user,
 }) => {
   const booking = await prisma.appointment.findUnique({
@@ -148,25 +235,115 @@ const createPaydunyaPaymentForBooking = async ({
   }
 
   const { frontendBase, backendBase } = getBaseUrls();
-  const successUrl = `${frontendBase}/payment/success?appointmentId=${encodeURIComponent(bookingId)}`;
-  const cancelUrl = `${frontendBase}/payment/cancel?appointmentId=${encodeURIComponent(bookingId)}`;
+  const resolvedSuccessUrl = successUrl || `${frontendBase}/payment/success?appointmentId=${encodeURIComponent(bookingId)}`;
+  const resolvedCancelUrl = cancelUrl || `${frontendBase}/payment/cancel?appointmentId=${encodeURIComponent(bookingId)}`;
   const callbackUrl = `${backendBase}/api/paydunya/ipn`;
 
-  const invoice = await createPaydunyaInvoice({
-    amount: value,
-    bookingId,
-    customerName: customerName || user.name || 'Client StyleFlow',
-    customerEmail: customerEmail || user.email || '',
-    description: `Reservation ${booking.service?.name || 'Salon'} - ${booking.salon?.name || 'StyleFlow'}`,
-    successUrl,
-    cancelUrl,
-    callbackUrl,
-  });
+  let invoice;
+  try {
+    invoice = await createPaydunyaInvoice({
+      amount: value,
+      bookingId,
+      customerName: customerName || user.name || 'Client StyleFlow',
+      customerEmail: customerEmail || user.email || '',
+      description: `Reservation ${booking.service?.name || 'Salon'} - ${booking.salon?.name || 'StyleFlow'}`,
+      successUrl: resolvedSuccessUrl,
+      cancelUrl: resolvedCancelUrl,
+      callbackUrl,
+    });
+  } catch (error) {
+    throw toOperationalPaydunyaError(error, 'create');
+  }
 
   await markAppointmentPendingPayment(bookingId);
 
-  const payment = await upsertBookingPayment({
-    bookingId,
+  const payment = await upsertPaymentForTarget({
+    appointmentId: bookingId,
+    userId: user.id,
+    amount: value,
+    reference: invoice.token,
+    transactionId: invoice.token,
+    status: 'PENDING',
+  });
+
+  return {
+    payment,
+    invoiceUrl: invoice.invoiceUrl,
+    token: invoice.token,
+  };
+};
+
+const createPaydunyaPaymentForOrder = async ({
+  orderId,
+  amount,
+  customerName,
+  customerEmail,
+  successUrl,
+  cancelUrl,
+  user,
+}) => {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: {
+      salon: { select: { id: true, name: true } },
+      client: { select: { id: true } },
+      items: { include: { product: { select: { id: true, name: true } } } },
+    },
+  });
+
+  if (!order) {
+    const err = new Error('Commande introuvable');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  if (order.clientId !== user.id) {
+    const err = new Error('Acces interdit');
+    err.statusCode = 403;
+    throw err;
+  }
+
+  if (['DELIVERED', 'CANCELLED'].includes(String(order.status || '').toUpperCase())) {
+    const err = new Error('Cette commande ne peut plus etre payee');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const value = Number(amount);
+  if (!Number.isFinite(value) || value <= 0) {
+    const err = new Error('Montant invalide');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const { frontendBase, backendBase } = getBaseUrls();
+  const resolvedSuccessUrl = successUrl || `${frontendBase}/order/payment/success?orderId=${encodeURIComponent(orderId)}`;
+  const resolvedCancelUrl = cancelUrl || `${frontendBase}/order/payment/cancel?orderId=${encodeURIComponent(orderId)}`;
+  const callbackUrl = `${backendBase}/api/paydunya/ipn`;
+  const itemLabel = (order.items || [])
+    .map((entry) => `${entry.product?.name || 'Article'} x${entry.quantity}`)
+    .join(', ');
+
+  let invoice;
+  try {
+    invoice = await createPaydunyaInvoice({
+      amount: value,
+      bookingId: orderId,
+      customerName: customerName || user.name || 'Client StyleFlow',
+      customerEmail: customerEmail || user.email || '',
+      description: `Commande ${itemLabel || 'Boutique'} - ${order.salon?.name || 'StyleFlow'}`,
+      successUrl: resolvedSuccessUrl,
+      cancelUrl: resolvedCancelUrl,
+      callbackUrl,
+    });
+  } catch (error) {
+    throw toOperationalPaydunyaError(error, 'create');
+  }
+
+  await markOrderPendingPayment(orderId);
+
+  const payment = await upsertPaymentForTarget({
+    orderId,
     userId: user.id,
     amount: value,
     reference: invoice.token,
@@ -192,7 +369,12 @@ const verifyPaymentRecord = async (payment) => {
     return payment;
   }
 
-  const verification = await confirmPaydunyaInvoice(payment.reference || payment.transactionId);
+  let verification;
+  try {
+    verification = await confirmPaydunyaInvoice(payment.reference || payment.transactionId);
+  } catch (error) {
+    throw toOperationalPaydunyaError(error, 'verify');
+  }
 
   if (verification.isPaid) {
     const updated = await prisma.payment.update({
@@ -204,11 +386,47 @@ const verifyPaymentRecord = async (payment) => {
       },
     });
     await markAppointmentPaid(updated.appointmentId);
-    await notifyPaymentCompleted(updated, updated.appointmentId);
+    await markOrderPaid(updated.orderId);
+    await notifyPaymentCompleted(updated);
     return updated;
   }
 
   return payment;
+};
+
+const resolvePaymentTarget = async ({ bookingId, orderId, userId }) => {
+  const normalizedOrderId = String(orderId || '').trim();
+  const normalizedBookingId = String(bookingId || '').trim();
+
+  if (normalizedOrderId) {
+    const order = await prisma.order.findUnique({
+      where: { id: normalizedOrderId },
+      select: { id: true, clientId: true },
+    });
+    if (order && order.clientId === userId) {
+      return { type: 'ORDER', id: normalizedOrderId };
+    }
+  }
+
+  if (!normalizedBookingId) return null;
+
+  const appointment = await prisma.appointment.findUnique({
+    where: { id: normalizedBookingId },
+    select: { id: true, clientId: true },
+  });
+  if (appointment && appointment.clientId === userId) {
+    return { type: 'APPOINTMENT', id: normalizedBookingId };
+  }
+
+  const fallbackOrder = await prisma.order.findUnique({
+    where: { id: normalizedBookingId },
+    select: { id: true, clientId: true },
+  });
+  if (fallbackOrder && fallbackOrder.clientId === userId) {
+    return { type: 'ORDER', id: normalizedBookingId };
+  }
+
+  return null;
 };
 
 /**
@@ -223,6 +441,7 @@ router.get('/', authenticate, requireApprovedPro, async (req, res, next) => {
       where: {
         OR: [
           { appointment: { salonId: salon.id } },
+          { order: { salonId: salon.id } },
           { userId: req.user.id },
         ],
       },
@@ -231,6 +450,12 @@ router.get('/', authenticate, requireApprovedPro, async (req, res, next) => {
           include: {
             client: { select: { id: true, name: true, username: true, email: true, phoneNumber: true, picture: true } },
             service: { select: { id: true, name: true, price: true, duration: true, depositPercentage: true } },
+          },
+        },
+        order: {
+          include: {
+            client: { select: { id: true, name: true, username: true, email: true, phoneNumber: true, picture: true } },
+            items: { include: { product: { select: { id: true, name: true, price: true } } } },
           },
         },
       },
@@ -248,26 +473,48 @@ router.get('/', authenticate, requireApprovedPro, async (req, res, next) => {
  */
 router.post('/create', authenticate, async (req, res, next) => {
   try {
-    const { bookingId, amount, customerName, customerEmail } = req.body;
+    const { bookingId, orderId, amount, customerName, customerEmail, successUrl, cancelUrl } = req.body;
 
-    if (!bookingId) {
-      return res.status(400).json({ status: 'error', message: 'bookingId requis' });
+    if (!bookingId && !orderId) {
+      return res.status(400).json({ status: 'error', message: 'bookingId ou orderId requis' });
     }
 
-    const result = await createPaydunyaPaymentForBooking({
+    const target = await resolvePaymentTarget({
       bookingId,
-      amount,
-      customerName,
-      customerEmail,
-      user: req.user,
+      orderId,
+      userId: req.user.id,
     });
+    if (!target) {
+      return res.status(404).json({ status: 'error', message: 'Reservation ou commande introuvable' });
+    }
+
+    const result = target.type === 'ORDER'
+      ? await createPaydunyaPaymentForOrder({
+          orderId: target.id,
+          amount,
+          customerName,
+          customerEmail,
+          successUrl,
+          cancelUrl,
+          user: req.user,
+        })
+      : await createPaydunyaPaymentForBooking({
+          bookingId: target.id,
+          amount,
+          customerName,
+          customerEmail,
+          successUrl,
+          cancelUrl,
+          user: req.user,
+        });
 
     res.status(200).json({
       status: 'success',
       message: 'Facture PayDunya creee',
       data: {
         paymentId: result.payment.id,
-        bookingId,
+        bookingId: target.type === 'APPOINTMENT' ? target.id : null,
+        orderId: target.type === 'ORDER' ? target.id : null,
         invoiceUrl: result.invoiceUrl,
         token: result.token,
         provider: 'PAYDUNYA',
@@ -284,7 +531,7 @@ router.post('/create', authenticate, async (req, res, next) => {
  */
 router.post('/init', authenticate, async (req, res, next) => {
   try {
-    const { provider, amount, bookingId, customerName, customerEmail } = req.body;
+    const { provider, amount, bookingId, orderId, customerName, customerEmail, successUrl, cancelUrl } = req.body;
     const normalizedProvider = String(provider || '').toUpperCase();
 
     if (!ALLOWED_PROVIDERS.includes(normalizedProvider)) {
@@ -301,20 +548,42 @@ router.post('/init', authenticate, async (req, res, next) => {
       });
     }
 
-    const result = await createPaydunyaPaymentForBooking({
+    const target = await resolvePaymentTarget({
       bookingId,
-      amount,
-      customerName,
-      customerEmail,
-      user: req.user,
+      orderId,
+      userId: req.user.id,
     });
+    if (!target) {
+      return res.status(404).json({ status: 'error', message: 'Reservation ou commande introuvable' });
+    }
+
+    const result = target.type === 'ORDER'
+      ? await createPaydunyaPaymentForOrder({
+          orderId: target.id,
+          amount,
+          customerName,
+          customerEmail,
+          successUrl,
+          cancelUrl,
+          user: req.user,
+        })
+      : await createPaydunyaPaymentForBooking({
+          bookingId: target.id,
+          amount,
+          customerName,
+          customerEmail,
+          successUrl,
+          cancelUrl,
+          user: req.user,
+        });
 
     res.status(200).json({
       status: 'success',
       message: 'Paiement PayDunya initialise',
       data: {
         paymentId: result.payment.id,
-        bookingId,
+        bookingId: target.type === 'APPOINTMENT' ? target.id : null,
+        orderId: target.type === 'ORDER' ? target.id : null,
         checkoutUrl: result.invoiceUrl,
         invoiceUrl: result.invoiceUrl,
         token: result.token,
@@ -383,7 +652,10 @@ router.get('/verify/:bookingId', authenticate, async (req, res, next) => {
     const { bookingId } = req.params;
     const payment = await prisma.payment.findFirst({
       where: {
-        appointmentId: bookingId,
+        OR: [
+          { appointmentId: bookingId },
+          { orderId: bookingId },
+        ],
         userId: req.user.id,
       },
       orderBy: { createdAt: 'desc' },
@@ -400,6 +672,7 @@ router.get('/verify/:bookingId', authenticate, async (req, res, next) => {
       data: {
         payment: verified,
         bookingId,
+        orderId: verified?.orderId || null,
       },
     });
   } catch (error) {
@@ -483,6 +756,12 @@ router.get('/me', authenticate, async (req, res, next) => {
           include: {
             salon: { select: { name: true } },
             service: { select: { name: true } },
+          },
+        },
+        order: {
+          include: {
+            salon: { select: { name: true } },
+            items: { include: { product: { select: { name: true } } } },
           },
         },
       },

@@ -2,6 +2,7 @@ const express = require('express');
 const prisma = require('../lib/prisma');
 const { confirmPaydunyaInvoice } = require('../services/paydunyaService');
 const { pushNotification } = require('../realtime/hub');
+const { sendBookingConfirmationEmail, sendOrderConfirmationEmail } = require('../services/emailService');
 
 const router = express.Router();
 
@@ -64,26 +65,78 @@ router.post('/ipn', async (req, res) => {
       data: { status: 'COMPLETED', completedAt: new Date(), transactionId: token },
     });
 
+    let appointment = null;
+    let order = null;
     if (updated.appointmentId) {
+      appointment = await prisma.appointment.findUnique({
+        where: { id: updated.appointmentId },
+        include: {
+          salon: { select: { name: true } },
+          client: { select: { name: true, email: true } },
+          service: { select: { name: true, price: true } },
+        },
+      }).catch(() => null);
       await prisma.appointment.update({
         where: { id: updated.appointmentId },
         data: { status: 'PAID' },
       }).catch(() => {});
     }
+    if (updated.orderId) {
+      order = await prisma.order.findUnique({
+        where: { id: updated.orderId },
+        include: {
+          salon: { select: { name: true } },
+          client: { select: { name: true, email: true } },
+          items: { include: { product: { select: { name: true, price: true } } } },
+        },
+      }).catch(() => null);
+      await prisma.order.update({
+        where: { id: updated.orderId },
+        data: { status: 'CONFIRMED' },
+      }).catch(() => {});
+    }
 
     if (updated.userId) {
       try {
+        const message = appointment
+          ? 'Paiement confirme pour votre reservation.'
+          : order
+            ? 'Paiement confirme pour votre commande.'
+            : 'Paiement confirme avec succes.';
         const notification = await prisma.notification.create({
           data: {
             userId: updated.userId,
             type: 'payment',
-            message: 'Paiement confirme pour votre reservation.',
+            message,
           },
         });
         pushNotification(notification.userId, notification);
       } catch (error) {
         console.error('PayDunya IPN notification error:', error.message);
       }
+    }
+
+    if (appointment?.client?.email) {
+      sendBookingConfirmationEmail({
+        to: appointment.client.email,
+        clientName: appointment.client.name || 'Client',
+        salonName: appointment.salon?.name || 'le salon',
+        date: appointment.date,
+        time: appointment.startTime,
+        services: appointment.service ? [appointment.service] : [],
+        totalPrice: appointment.totalPrice || appointment.service?.price || updated.amount || 0,
+      }).catch(() => {});
+    }
+
+    if (order?.client?.email) {
+      sendOrderConfirmationEmail({
+        to: order.client.email,
+        clientName: order.clientName || order.client.name || 'Client',
+        boutiqueName: order.salon?.name || 'la boutique',
+        items: order.items || [],
+        totalPrice: order.totalPrice || updated.amount || 0,
+        deliveryMode: order.deliveryMode,
+      }).catch(() => {});
     }
 
     return res.status(200).json({ status: 'success' });
