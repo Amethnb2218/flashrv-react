@@ -476,13 +476,13 @@ function Home() {
       {/* CTA */}
       <section className="py-6 bg-gray-900">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-lg md:text-xl font-bold text-white mb-1.5">
+          <h2 className="text-xl md:text-2xl font-bold text-white mb-1.5">
             Vous êtes professionnel ?
           </h2>
-          <p className="text-xs text-gray-400 mb-3">
+          <p className="text-sm md:text-base text-gray-400 mb-3">
             Inscription gratuite · Sans commission · Contrôle total
           </p>
-          <div className="flex flex-wrap justify-center gap-3 mb-4 text-xs text-gray-300">
+          <div className="flex flex-wrap justify-center gap-3 mb-4 text-sm text-gray-300">
             {[
               'Profil vérifié',
               'Réservation 24/7',
@@ -509,8 +509,8 @@ function Home() {
       <section className="py-4 bg-gray-50">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 text-center">
-            <h3 className="text-sm font-bold text-gray-900 mb-0.5">Votre avis compte</h3>
-            <p className="text-xs text-gray-500 mb-2">
+            <h3 className="text-base md:text-lg font-bold text-gray-900 mb-0.5">Votre avis compte</h3>
+            <p className="text-sm text-gray-500 mb-2">
               Bug, suggestion, amélioration — nous lisons tout.
             </p>
             <div className="flex items-center justify-center gap-2">
