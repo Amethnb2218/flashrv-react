@@ -4,7 +4,8 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { 
   FiMapPin, FiPhone, FiMail, FiClock, FiStar, FiCheck, 
   FiWifi, FiCoffee, FiChevronLeft, FiChevronRight, FiShare2,
-  FiHeart, FiX, FiShoppingCart, FiBox, FiPlus, FiMinus, FiUsers
+  FiHeart, FiX, FiShoppingCart, FiBox, FiPlus, FiMinus, FiUsers,
+  FiMessageSquare
 } from 'react-icons/fi'
 // import { salons, servicesBySalon, coiffeursBySalon, reviews } from '../../data/salons'
 import { formatPrice, formatDuration, formatPriceRange } from '../../utils/helpers'
@@ -1651,38 +1652,48 @@ function SalonDetail() {
                       <button
                         type="button"
                         onClick={() => toggleProductLike(product.id)}
-                        className={`px-2.5 py-2 rounded-xl text-xs font-semibold border transition ${isProductLiked(product.id) ? 'bg-red-50 text-red-600 border-red-200' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}
+                        aria-label={isProductLiked(product.id) ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+                        title={isProductLiked(product.id) ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+                        className={`px-2.5 py-2 rounded-xl border transition flex items-center justify-center ${isProductLiked(product.id) ? 'bg-red-50 text-red-600 border-red-200' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}
                       >
-                        {isProductLiked(product.id) ? 'Aime' : 'Like'}
+                        <FiHeart className="w-4 h-4" />
                       </button>
                       <button
                         type="button"
                         onClick={() => shareProduct(product)}
-                        className="px-2.5 py-2 rounded-xl text-xs font-semibold border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                        aria-label="Partager"
+                        title="Partager"
+                        className="px-2.5 py-2 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 flex items-center justify-center"
                       >
-                        Partager
+                        <FiShare2 className="w-4 h-4" />
                       </button>
                       <button
                         type="button"
                         onClick={openProductReview}
-                        className="px-2.5 py-2 rounded-xl text-xs font-semibold border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                        aria-label="Avis"
+                        title="Avis"
+                        className="px-2.5 py-2 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 flex items-center justify-center"
                       >
-                        Avis
+                        <FiMessageSquare className="w-4 h-4" />
                       </button>
                       <a
                         href={salon?.phone ? `tel:${salon.phone}` : '#'}
                         onClick={(e) => { if (!salon?.phone) e.preventDefault() }}
-                        className="px-2.5 py-2 rounded-xl text-xs font-semibold border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 text-center"
+                        aria-label="Appeler"
+                        title="Appeler"
+                        className="px-2.5 py-2 rounded-xl border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 flex items-center justify-center text-center"
                       >
-                        Appeler
+                        <FiPhone className="w-4 h-4" />
                       </a>
                       <button
                         type="button"
                         onClick={() => buyNow(product, selSize, selColor)}
                         disabled={product.stock <= 0 || (needsVariant && !variantChosen)}
-                        className="px-2.5 py-2 rounded-xl text-xs font-semibold border border-gray-900 bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                        aria-label="Acheter"
+                        title="Acheter"
+                        className="px-2.5 py-2 rounded-xl border border-gray-900 bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                       >
-                        Acheter
+                        <FiShoppingCart className="w-4 h-4" />
                       </button>
                     </div>
 
