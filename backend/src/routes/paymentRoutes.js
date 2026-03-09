@@ -8,6 +8,29 @@ const { sendBookingConfirmationEmail, sendOrderConfirmationEmail } = require('..
 const router = express.Router();
 
 const ALLOWED_PROVIDERS = ['PAYDUNYA', 'PAY_ON_SITE'];
+const invoiceCreationInFlight = new Map();
+
+const buildInvoiceLockKey = ({ type, id, userId }) => {
+  return `${String(type || '').toUpperCase()}:${String(id || '').trim()}:${String(userId || '').trim()}`;
+};
+
+const runSingleFlightInvoiceCreation = async ({ lockKey, task }) => {
+  const existing = invoiceCreationInFlight.get(lockKey);
+  if (existing) {
+    return existing;
+  }
+
+  const pending = (async () => {
+    try {
+      return await task();
+    } finally {
+      invoiceCreationInFlight.delete(lockKey);
+    }
+  })();
+
+  invoiceCreationInFlight.set(lockKey, pending);
+  return pending;
+};
 
 const generateReference = () => {
   return 'FRV-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
@@ -488,25 +511,34 @@ router.post('/create', authenticate, async (req, res, next) => {
       return res.status(404).json({ status: 'error', message: 'Reservation ou commande introuvable' });
     }
 
-    const result = target.type === 'ORDER'
-      ? await createPaydunyaPaymentForOrder({
-          orderId: target.id,
-          amount,
-          customerName,
-          customerEmail,
-          successUrl,
-          cancelUrl,
-          user: req.user,
-        })
-      : await createPaydunyaPaymentForBooking({
-          bookingId: target.id,
-          amount,
-          customerName,
-          customerEmail,
-          successUrl,
-          cancelUrl,
-          user: req.user,
-        });
+    const lockKey = buildInvoiceLockKey({
+      type: target.type,
+      id: target.id,
+      userId: req.user.id,
+    });
+
+    const result = await runSingleFlightInvoiceCreation({
+      lockKey,
+      task: async () => (target.type === 'ORDER'
+        ? createPaydunyaPaymentForOrder({
+            orderId: target.id,
+            amount,
+            customerName,
+            customerEmail,
+            successUrl,
+            cancelUrl,
+            user: req.user,
+          })
+        : createPaydunyaPaymentForBooking({
+            bookingId: target.id,
+            amount,
+            customerName,
+            customerEmail,
+            successUrl,
+            cancelUrl,
+            user: req.user,
+          })),
+    });
 
     res.status(200).json({
       status: 'success',
@@ -557,25 +589,34 @@ router.post('/init', authenticate, async (req, res, next) => {
       return res.status(404).json({ status: 'error', message: 'Reservation ou commande introuvable' });
     }
 
-    const result = target.type === 'ORDER'
-      ? await createPaydunyaPaymentForOrder({
-          orderId: target.id,
-          amount,
-          customerName,
-          customerEmail,
-          successUrl,
-          cancelUrl,
-          user: req.user,
-        })
-      : await createPaydunyaPaymentForBooking({
-          bookingId: target.id,
-          amount,
-          customerName,
-          customerEmail,
-          successUrl,
-          cancelUrl,
-          user: req.user,
-        });
+    const lockKey = buildInvoiceLockKey({
+      type: target.type,
+      id: target.id,
+      userId: req.user.id,
+    });
+
+    const result = await runSingleFlightInvoiceCreation({
+      lockKey,
+      task: async () => (target.type === 'ORDER'
+        ? createPaydunyaPaymentForOrder({
+            orderId: target.id,
+            amount,
+            customerName,
+            customerEmail,
+            successUrl,
+            cancelUrl,
+            user: req.user,
+          })
+        : createPaydunyaPaymentForBooking({
+            bookingId: target.id,
+            amount,
+            customerName,
+            customerEmail,
+            successUrl,
+            cancelUrl,
+            user: req.user,
+          })),
+    });
 
     res.status(200).json({
       status: 'success',

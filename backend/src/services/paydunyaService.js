@@ -1,6 +1,34 @@
 const paydunya = require('paydunya');
 
 let configured = false;
+const DEFAULT_PAYDUNYA_TIMEOUT_MS = 12000;
+
+const resolveTimeoutMs = () => {
+  const parsed = Number(process.env.PAYDUNYA_REQUEST_TIMEOUT_MS);
+  if (Number.isFinite(parsed) && parsed > 0) return parsed;
+  return DEFAULT_PAYDUNYA_TIMEOUT_MS;
+};
+
+const withTimeout = async (promise, operationLabel) => {
+  const timeoutMs = resolveTimeoutMs();
+  let timeoutId;
+
+  const timeoutPromise = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => {
+      const error = new Error(`Le service de paiement met trop de temps a repondre (${operationLabel}).`);
+      error.statusCode = 503;
+      error.expose = true;
+      error.code = 'PAYDUNYA_TIMEOUT';
+      reject(error);
+    }, timeoutMs);
+  });
+
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+};
 
 const normalizeMode = (mode) => {
   const value = String(mode || 'test').trim().toLowerCase();
@@ -120,7 +148,7 @@ const createPaydunyaInvoice = async ({
     };
   }
 
-  const response = await invoice.create();
+  const response = await withTimeout(invoice.create(), 'create_invoice');
   if (!response || response.response_code !== '00') {
     throw new Error(response?.response_text || 'PayDunya invoice creation failed');
   }
@@ -145,7 +173,7 @@ const confirmPaydunyaInvoice = async (token) => {
 
   const invoice = new paydunya.CheckoutInvoice();
   invoice.token = invoiceToken;
-  const result = await invoice.confirm();
+  const result = await withTimeout(invoice.confirm(), 'confirm_invoice');
   const state = deriveStatus(result, invoice);
 
   return {
