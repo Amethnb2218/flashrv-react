@@ -87,17 +87,20 @@ function Home() {
     {
       icon: <FiSearch className="w-6 h-6" />,
       title: 'Recherchez',
-      description: 'Filtrez par quartier, spécialité, avis ou disponibilité. Comparez les prix et photos en un coup d\'œil.'
+      description: 'Filtrez par quartier, sp\u00e9cialit\u00e9, avis ou disponibilit\u00e9. Comparez les prix et photos en un coup d\'\u0153il.',
+      link: '/salons'
     },
     {
       icon: <FiCalendar className="w-6 h-6" />,
-      title: 'Réservez',
-      description: 'Choisissez vos services, votre coiffeur et un créneau libre. Confirmation instantanée, zéro appel téléphonique.'
+      title: 'R\u00e9servez',
+      description: 'Choisissez vos services, votre coiffeur et un cr\u00e9neau libre. Confirmation instantan\u00e9e, z\u00e9ro appel t\u00e9l\u00e9phonique.',
+      link: '/salons'
     },
     {
       icon: <FiStar className="w-6 h-6" />,
       title: 'Profitez',
-      description: 'Rappel automatique avant le rendez-vous. Après votre visite, notez le salon pour aider la communauté.'
+      description: 'Rappel automatique avant le rendez-vous. Apr\u00e8s votre visite, notez le salon pour aider la communaut\u00e9.',
+      link: '/salons'
     }
   ]
 
@@ -454,16 +457,17 @@ function Home() {
           </h2>
           <div className="grid grid-cols-3 gap-2">
             {steps.map((step, i) => (
-              <div
+              <Link
                 key={i}
-                className="relative bg-white border border-gray-100 rounded-xl p-2.5 text-center shadow-sm"
+                to={step.link}
+                className="relative bg-white border border-gray-100 rounded-xl p-2.5 text-center shadow-sm hover:border-amber-200 hover:shadow-md transition-all cursor-pointer"
               >
                 <div className="w-8 h-8 bg-gray-900 text-white rounded-lg flex items-center justify-center mx-auto mb-1.5">
                   {step.icon}
                 </div>
                 <h3 className="text-[11px] sm:text-xs font-bold text-gray-900 mb-0.5">{step.title}</h3>
                 <p className="text-[10px] text-gray-500 leading-snug hidden sm:block">{step.description}</p>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
