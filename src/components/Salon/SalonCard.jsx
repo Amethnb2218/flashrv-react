@@ -154,16 +154,16 @@ function SalonCard({ salon, index = 0, variant = 'featured' }) {
 
         {/* Content */}
         <div className="p-3">
-          <h3 className="font-semibold text-sm text-gray-900 group-hover:text-amber-600 transition-colors mb-1 truncate">
+          <h3 className="font-semibold text-sm sm:text-base text-gray-900 group-hover:text-amber-600 transition-colors mb-1 truncate">
             {salon.name}
           </h3>
 
-          <div className="flex items-center text-gray-500 text-xs mb-1">
+          <div className="flex items-center text-gray-500 text-xs sm:text-sm mb-1">
             <FiMapPin className="w-3 h-3 mr-1 text-gray-400 flex-shrink-0" />
             <span className="truncate">{neighborhood}{salon.city ? `, ${salon.city}` : ''}</span>
           </div>
 
-          <div className="flex items-center text-xs mb-2">
+          <div className="flex items-center text-xs sm:text-sm mb-2">
             <FiClock className="w-3 h-3 mr-1 text-gray-400 flex-shrink-0" />
             {todayHours ? (
               isOpen ? (
@@ -195,14 +195,14 @@ function SalonCard({ salon, index = 0, variant = 'featured' }) {
           {/* Price */}
           <div className="pt-2 border-t border-gray-100 flex items-center justify-between">
             <div>
-              <span className="text-xs text-gray-500">
+              <span className="text-xs sm:text-sm text-gray-500">
                 Dès <span className="font-bold text-gray-900">{minPriceLabel}</span>
               </span>
               {Array.isArray(salon.services) && salon.services.length > 0 && !isBoutique && (
                 <span className="block text-[10px] text-gray-400">{salon.services.length} service{salon.services.length > 1 ? 's' : ''}</span>
               )}
             </div>
-            <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-gray-900 text-white shadow-sm group-hover:translate-x-0.5 transition-transform">
+            <span className="inline-flex items-center gap-1 text-[11px] sm:text-xs font-semibold px-2.5 py-1 rounded-full bg-gray-900 text-white shadow-sm group-hover:translate-x-0.5 transition-transform">
               {ctaLabel} →
             </span>
           </div>

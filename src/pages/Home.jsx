@@ -339,7 +339,7 @@ function Home() {
               <h2 className="text-lg md:text-xl font-bold text-gray-900">
                 Salons en vedette
               </h2>
-              <p className="text-xs text-gray-500 mt-0.5">Les meilleurs salons pour démarrer votre expérience.</p>
+              <p className="text-sm text-gray-500 mt-0.5">Les meilleurs salons pour démarrer votre expérience.</p>
             </div>
             <Link
               to="/salons"
@@ -377,7 +377,7 @@ function Home() {
               <h2 className="text-lg md:text-xl font-bold text-gray-900">
                 <FiShoppingBag className="mr-1.5 inline-block text-amber-500" /> Boutiques
               </h2>
-              <p className="text-xs text-gray-500 mt-0.5">Commandez en ligne auprès de nos partenaires.</p>
+              <p className="text-sm text-gray-500 mt-0.5">Commandez en ligne auprès de nos partenaires.</p>
             </div>
             <Link
               to="/salons?businessType=BOUTIQUE"
@@ -413,7 +413,7 @@ function Home() {
           <div className="flex items-end justify-between mb-3">
             <div>
               <h2 className="text-lg md:text-xl font-bold text-gray-900">Catégories</h2>
-              <p className="text-xs text-gray-500 mt-0.5">Trouvez votre service en un clic.</p>
+              <p className="text-sm text-gray-500 mt-0.5">Trouvez votre service en un clic.</p>
             </div>
             <Link
               to="/salons"
@@ -433,7 +433,7 @@ function Home() {
                 {cat.icon && (
                   <span className="text-xl">{cat.icon}</span>
                 )}
-                <span className="text-[11px] font-medium text-gray-700 group-hover:text-amber-700 text-center leading-tight">
+                <span className="text-xs sm:text-sm font-medium text-gray-700 group-hover:text-amber-700 text-center leading-tight">
                   {cat.name}
                 </span>
               </Link>
@@ -443,7 +443,7 @@ function Home() {
               className="group flex flex-col items-center justify-center gap-1 rounded-lg bg-amber-50 p-2.5 border border-amber-100 hover:bg-amber-100 transition-all"
             >
               <span className="text-sm text-amber-600">+{categories.length - 3}</span>
-              <span className="text-[11px] font-medium text-amber-700 text-center">Voir plus</span>
+              <span className="text-xs sm:text-sm font-medium text-amber-700 text-center">Voir plus</span>
             </Link>
           </div>
         </div>
