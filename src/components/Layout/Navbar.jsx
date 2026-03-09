@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
@@ -6,6 +6,13 @@ import { FiMenu, FiX, FiUser, FiLogOut, FiCalendar, FiSettings, FiSearch, FiHear
 import { motion, AnimatePresence } from 'framer-motion'
 import Logo from '../UI/Logo'
 import apiFetch from '../../api/client'
+import { connectRealtime, subscribeRealtime } from '../../utils/realtime'
+import {
+  getSiteNotifications,
+  markAllSiteNotificationsRead,
+  markSiteNotificationRead,
+  subscribeSiteNotifications,
+} from '../../utils/siteNotifications'
 
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
@@ -16,6 +23,14 @@ function Navbar() {
   const { user, isAuthenticated, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  const userKey = user?.id || user?.email || 'anonymous'
+  const notificationUserKeys = useMemo(
+    () =>
+      Array.from(
+        new Set([user?.id, user?.email, userKey, 'anonymous'].filter(Boolean).map((k) => String(k)))
+      ),
+    [user?.email, user?.id, userKey]
+  )
   const searchParams = new URLSearchParams(location.search)
   const isBoutiquePage = location.pathname === '/salons' && searchParams.get('businessType') === 'BOUTIQUE'
 
@@ -53,28 +68,95 @@ function Navbar() {
 
   const closeDrawer = useCallback(() => setIsOpen(false), [])
 
-  // Fetch notifications
+  const fetchNotifications = useCallback(async () => {
+    if (!isAuthenticated) {
+      setNotifications([])
+      return
+    }
+
+    const localMap = new Map()
+    notificationUserKeys.forEach((key) => {
+      getSiteNotifications(key, 20).forEach((notif) => {
+        if (!localMap.has(notif.id)) localMap.set(notif.id, notif)
+      })
+    })
+    const local = Array.from(localMap.values())
+
+    try {
+      const res = await apiFetch('/notifications')
+      const data = res?.data ?? res?.data?.data ?? res
+      const remote = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.notifications)
+          ? data.notifications
+          : Array.isArray(res?.data?.notifications)
+            ? res.data.notifications
+          : []
+      const merged = [...remote, ...local]
+      const dedup = new Map()
+      merged.forEach((n) => {
+        const id = String(n.id || `${n.message}-${n.createdAt}`)
+        if (!dedup.has(id)) dedup.set(id, { ...n, id })
+      })
+      setNotifications(
+        Array.from(dedup.values())
+          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+          .slice(0, 20)
+      )
+    } catch (_) {
+      setNotifications(local)
+    }
+  }, [isAuthenticated, notificationUserKeys])
+
   useEffect(() => {
     if (!isAuthenticated) return
-    const fetchNotifications = async () => {
-      try {
-        const res = await apiFetch('/notifications')
-        const data = res?.data ?? res
-        setNotifications(Array.isArray(data) ? data.slice(0, 10) : [])
-      } catch (_) { /* silent */ }
-    }
     fetchNotifications()
-    const interval = setInterval(fetchNotifications, 60000)
-    return () => clearInterval(interval)
-  }, [isAuthenticated])
+    const interval = setInterval(fetchNotifications, 30000)
+    const unsubscribeLocal = subscribeSiteNotifications(fetchNotifications)
+
+    const token = sessionStorage.getItem('flashrv_token')
+    if (token) connectRealtime(token)
+    const unsubscribeRealtime = subscribeRealtime((event) => {
+      const type = String(event?.type || '').toLowerCase()
+      if (
+        type.includes('notification') ||
+        type.includes('order') ||
+        type.includes('appointment') ||
+        type === 'realtime:open'
+      ) {
+        fetchNotifications()
+      }
+    })
+
+    return () => {
+      clearInterval(interval)
+      unsubscribeLocal?.()
+      unsubscribeRealtime?.()
+    }
+  }, [isAuthenticated, fetchNotifications])
 
   const unreadCount = notifications.filter(n => !n.isRead).length
 
   const markNotificationRead = async (id) => {
+    if (String(id).startsWith('local-')) {
+      notificationUserKeys.forEach((key) => markSiteNotificationRead(id, key))
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n))
+      return
+    }
     try {
       await apiFetch(`/notifications/${id}/read`, { method: 'PATCH' })
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n))
     } catch (_) { /* silent */ }
+  }
+
+  const markAllRead = async () => {
+    notificationUserKeys.forEach((key) => markAllSiteNotificationsRead(key))
+    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
+    try {
+      await apiFetch('/notifications/read-all', { method: 'PATCH' })
+    } catch (_) {
+      // ignore if endpoint is unavailable
+    }
   }
 
   const isSalonPage = location.pathname === '/salons' && searchParams.get('businessType') !== 'BOUTIQUE'
@@ -167,9 +249,20 @@ function Navbar() {
                       >
                         <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
                           <h3 className="font-bold text-gray-900">Notifications</h3>
-                          {unreadCount > 0 && (
-                            <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">{unreadCount} nouvelles</span>
-                          )}
+                          <div className="flex items-center gap-2">
+                            {unreadCount > 0 && (
+                              <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">{unreadCount} nouvelles</span>
+                            )}
+                            {notifications.length > 0 && (
+                              <button
+                                type="button"
+                                onClick={markAllRead}
+                                className="text-xs text-gray-500 hover:text-gray-800 underline"
+                              >
+                                Tout marquer lu
+                              </button>
+                            )}
+                          </div>
                         </div>
                         <div className="max-h-72 overflow-y-auto">
                           {notifications.length === 0 ? (
@@ -187,7 +280,7 @@ function Navbar() {
                               >
                                 <p className="text-sm text-gray-800">{n.message}</p>
                                 <p className="text-xs text-gray-400 mt-1">
-                                  {new Date(n.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                  {new Date(n.createdAt).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                                 </p>
                               </div>
                             ))

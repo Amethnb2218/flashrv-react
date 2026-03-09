@@ -1,11 +1,219 @@
 const express = require('express');
 const prisma = require('../lib/prisma');
 const { authenticate, requireApprovedPro } = require('../middleware/auth');
+const { createPaydunyaInvoice, confirmPaydunyaInvoice } = require('../services/paydunyaService');
+const { pushNotification } = require('../realtime/hub');
+
 const router = express.Router();
+
+const ALLOWED_PROVIDERS = ['PAYDUNYA', 'PAY_ON_SITE'];
+
+const generateReference = () => {
+  return 'FRV-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+};
+
+const getBaseUrls = () => {
+  const frontendBase = (process.env.BASE_URL || process.env.FRONTEND_URL || 'http://localhost:3000').replace(/\/+$/, '');
+  const backendBase = (process.env.API_URL || `http://localhost:${process.env.PORT || 4000}`).replace(/\/+$/, '');
+  return {
+    frontendBase,
+    backendBase,
+  };
+};
+
+const markAppointmentPendingPayment = async (bookingId) => {
+  if (!bookingId) return;
+  await prisma.appointment.update({
+    where: { id: bookingId },
+    data: { status: 'PENDING_PAYMENT' },
+  }).catch(() => {
+    // noop when booking does not exist yet
+  });
+};
+
+const markAppointmentPaid = async (bookingId) => {
+  if (!bookingId) return;
+  await prisma.appointment.update({
+    where: { id: bookingId },
+    data: { status: 'PAID' },
+  }).catch(() => {
+    // noop
+  });
+};
+
+const notifyPaymentCompleted = async (payment, bookingId) => {
+  if (!payment?.userId) return;
+
+  const appointment = bookingId
+    ? await prisma.appointment.findUnique({
+        where: { id: bookingId },
+        include: {
+          salon: { select: { name: true } },
+        },
+      }).catch(() => null)
+    : null;
+
+  const message = appointment
+    ? `Paiement confirme pour votre reservation chez ${appointment.salon?.name || 'le salon'}.`
+    : 'Paiement confirme avec succes.';
+
+  try {
+    const notification = await prisma.notification.create({
+      data: {
+        userId: payment.userId,
+        type: 'payment',
+        message,
+      },
+    });
+    pushNotification(notification.userId, notification);
+  } catch (error) {
+    console.error('Payment notification error:', error.message);
+  }
+};
+
+const upsertBookingPayment = async ({
+  bookingId,
+  userId,
+  amount,
+  reference,
+  transactionId,
+  status = 'PENDING',
+}) => {
+  const data = {
+    transactionId,
+    amount,
+    fees: 0,
+    totalAmount: amount,
+    currency: 'XOF',
+    method: 'PAYDUNYA',
+    status,
+    reference,
+    appointmentId: bookingId || null,
+    userId,
+  };
+
+  const existing = bookingId
+    ? await prisma.payment.findFirst({ where: { appointmentId: bookingId } })
+    : null;
+
+  if (existing) {
+    return prisma.payment.update({
+      where: { id: existing.id },
+      data,
+    });
+  }
+
+  return prisma.payment.create({ data });
+};
+
+const createPaydunyaPaymentForBooking = async ({
+  bookingId,
+  amount,
+  customerName,
+  customerEmail,
+  user,
+}) => {
+  const booking = await prisma.appointment.findUnique({
+    where: { id: bookingId },
+    include: {
+      salon: { select: { id: true, name: true } },
+      service: { select: { id: true, name: true } },
+      client: { select: { id: true } },
+    },
+  });
+
+  if (!booking) {
+    const err = new Error('Reservation introuvable');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  if (booking.clientId !== user.id) {
+    const err = new Error('Acces interdit');
+    err.statusCode = 403;
+    throw err;
+  }
+
+  if (['COMPLETED', 'CANCELLED', 'NO_SHOW'].includes(String(booking.status || '').toUpperCase())) {
+    const err = new Error('Cette reservation ne peut plus etre payee');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const value = Number(amount);
+  if (!Number.isFinite(value) || value <= 0) {
+    const err = new Error('Montant invalide');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const { frontendBase, backendBase } = getBaseUrls();
+  const successUrl = `${frontendBase}/payment/success?appointmentId=${encodeURIComponent(bookingId)}`;
+  const cancelUrl = `${frontendBase}/payment/cancel?appointmentId=${encodeURIComponent(bookingId)}`;
+  const callbackUrl = `${backendBase}/api/paydunya/ipn`;
+
+  const invoice = await createPaydunyaInvoice({
+    amount: value,
+    bookingId,
+    customerName: customerName || user.name || 'Client StyleFlow',
+    customerEmail: customerEmail || user.email || '',
+    description: `Reservation ${booking.service?.name || 'Salon'} - ${booking.salon?.name || 'StyleFlow'}`,
+    successUrl,
+    cancelUrl,
+    callbackUrl,
+  });
+
+  await markAppointmentPendingPayment(bookingId);
+
+  const payment = await upsertBookingPayment({
+    bookingId,
+    userId: user.id,
+    amount: value,
+    reference: invoice.token,
+    transactionId: invoice.token,
+    status: 'PENDING',
+  });
+
+  return {
+    payment,
+    invoiceUrl: invoice.invoiceUrl,
+    token: invoice.token,
+  };
+};
+
+const verifyPaymentRecord = async (payment) => {
+  if (!payment) return null;
+
+  if (String(payment.method || '').toUpperCase() !== 'PAYDUNYA') {
+    return payment;
+  }
+
+  if (String(payment.status || '').toUpperCase() === 'COMPLETED') {
+    return payment;
+  }
+
+  const verification = await confirmPaydunyaInvoice(payment.reference || payment.transactionId);
+
+  if (verification.isPaid) {
+    const updated = await prisma.payment.update({
+      where: { id: payment.id },
+      data: {
+        status: 'COMPLETED',
+        completedAt: new Date(),
+        transactionId: verification.token || payment.transactionId,
+      },
+    });
+    await markAppointmentPaid(updated.appointmentId);
+    await notifyPaymentCompleted(updated, updated.appointmentId);
+    return updated;
+  }
+
+  return payment;
+};
 
 /**
  * GET /api/payments
- * Retourne les paiements du salon (propriétaire)
+ * Retourne les paiements du salon (proprietaire)
  */
 router.get('/', authenticate, requireApprovedPro, async (req, res, next) => {
   try {
@@ -34,64 +242,58 @@ router.get('/', authenticate, requireApprovedPro, async (req, res, next) => {
   }
 });
 
-// Mode de paiement : TEST ou PRODUCTION
-const PAYMENTS_MODE = process.env.PAYMENTS_MODE || 'TEST';
-
-// Méthodes de paiement autorisées - MVP
-const ALLOWED_PROVIDERS = ['ORANGE_MONEY', 'WAVE', 'PAY_ON_SITE'];
-
 /**
- * Générer une référence unique
+ * POST /api/payments/create
+ * Cree une facture PayDunya pour une reservation
  */
-const generateReference = () => {
-  return 'FRV-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
-};
+router.post('/create', authenticate, async (req, res, next) => {
+  try {
+    const { bookingId, amount, customerName, customerEmail } = req.body;
 
-/**
- * Simuler un paiement en mode TEST
- */
-const simulatePayment = async (provider, amount, reference) => {
-  // Simuler un délai de traitement
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  return {
-    success: true,
-    transactionId: `${provider}-TEST-${Date.now()}`,
-    status: 'PENDING',
-    mockCheckoutUrl: provider !== 'PAY_ON_SITE' ? `mock://payment/${reference}` : null,
-    message: PAYMENTS_MODE === 'TEST' 
-      ? `[MODE TEST] Paiement ${provider} simulé` 
-      : `Paiement ${provider} initié`,
-  };
-};
+    if (!bookingId) {
+      return res.status(400).json({ status: 'error', message: 'bookingId requis' });
+    }
+
+    const result = await createPaydunyaPaymentForBooking({
+      bookingId,
+      amount,
+      customerName,
+      customerEmail,
+      user: req.user,
+    });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Facture PayDunya creee',
+      data: {
+        paymentId: result.payment.id,
+        bookingId,
+        invoiceUrl: result.invoiceUrl,
+        token: result.token,
+        provider: 'PAYDUNYA',
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
 /**
  * POST /api/payments/init
- * Initier un paiement (Orange Money ou Wave)
+ * Compatibilite ancienne API (redirige vers PAYDUNYA)
  */
 router.post('/init', authenticate, async (req, res, next) => {
   try {
-    const { provider, amount, phoneNumber, bookingId } = req.body;
+    const { provider, amount, bookingId, customerName, customerEmail } = req.body;
+    const normalizedProvider = String(provider || '').toUpperCase();
 
-    // Validation du provider
-    if (!provider) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Provider de paiement requis',
-      });
-    }
-
-    const normalizedProvider = provider.toUpperCase();
-    
-    // Vérifier que le provider est autorisé
     if (!ALLOWED_PROVIDERS.includes(normalizedProvider)) {
       return res.status(400).json({
         status: 'error',
-        message: `Méthode de paiement non autorisée. Méthodes acceptées: ${ALLOWED_PROVIDERS.join(', ')}`,
+        message: `Methode de paiement non autorisee. Methodes acceptees: ${ALLOWED_PROVIDERS.join(', ')}`,
       });
     }
 
-    // PAY_ON_SITE doit utiliser l'endpoint dédié
     if (normalizedProvider === 'PAY_ON_SITE') {
       return res.status(400).json({
         status: 'error',
@@ -99,70 +301,28 @@ router.post('/init', authenticate, async (req, res, next) => {
       });
     }
 
-    // Validation du montant
-    if (!amount || amount <= 0) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Montant invalide',
-      });
-    }
-
-    // Validation du numéro de téléphone pour les paiements mobiles
-    if (!phoneNumber) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Numéro de téléphone requis pour les paiements mobiles',
-      });
-    }
-
-    // Générer une référence unique
-    const reference = generateReference();
-
-    let paymentResult;
-
-    // Mode TEST : simuler le paiement
-    if (PAYMENTS_MODE === 'TEST') {
-      console.log(`🧪 [TEST MODE] Paiement ${normalizedProvider} initié:`, { amount, phoneNumber, reference });
-      paymentResult = await simulatePayment(normalizedProvider, amount, reference);
-    } else {
-      // Mode PRODUCTION : appeler les vrais APIs
-      // TODO: Intégrer les APIs Wave et Orange Money réels
-      paymentResult = await simulatePayment(normalizedProvider, amount, reference);
-    }
-
-    // Créer l'enregistrement de paiement dans la base de données
-    const payment = await prisma.payment.create({
-      data: {
-        transactionId: paymentResult.transactionId,
-        amount: amount,
-        fees: 0,
-        totalAmount: amount,
-        currency: 'XOF',
-        method: normalizedProvider,
-        status: 'PENDING',
-        reference: reference,
-        phoneNumber: phoneNumber,
-        appointmentId: bookingId || null,
-        userId: req.user.id,
-      },
+    const result = await createPaydunyaPaymentForBooking({
+      bookingId,
+      amount,
+      customerName,
+      customerEmail,
+      user: req.user,
     });
 
     res.status(200).json({
       status: 'success',
-      message: paymentResult.message,
+      message: 'Paiement PayDunya initialise',
       data: {
-        paymentId: payment.id,
-        reference: reference,
-        transactionId: paymentResult.transactionId,
-        mockCheckoutUrl: paymentResult.mockCheckoutUrl,
-        amount: amount,
-        provider: normalizedProvider,
-        paymentStatus: paymentResult.status,
-        testMode: PAYMENTS_MODE === 'TEST',
+        paymentId: result.payment.id,
+        bookingId,
+        checkoutUrl: result.invoiceUrl,
+        invoiceUrl: result.invoiceUrl,
+        token: result.token,
+        provider: 'PAYDUNYA',
+        paymentStatus: result.payment.status,
       },
     });
   } catch (error) {
-    console.error('Payment init error:', error);
     next(error);
   }
 });
@@ -174,11 +334,8 @@ router.post('/init', authenticate, async (req, res, next) => {
 router.post('/confirm-on-site', authenticate, async (req, res, next) => {
   try {
     const { bookingId, amount } = req.body;
-
-    // Générer une référence unique
     const reference = generateReference();
 
-    // Créer l'enregistrement de paiement
     const payment = await prisma.payment.create({
       data: {
         transactionId: `ONSITE-${Date.now()}`,
@@ -188,64 +345,63 @@ router.post('/confirm-on-site', authenticate, async (req, res, next) => {
         currency: 'XOF',
         method: 'PAY_ON_SITE',
         status: 'ON_SITE',
-        reference: reference,
+        reference,
         phoneNumber: null,
         appointmentId: bookingId || null,
         userId: req.user.id,
       },
     });
 
-    // Si un bookingId est fourni, mettre à jour le statut de la réservation
     if (bookingId) {
       await prisma.appointment.update({
         where: { id: bookingId },
         data: { status: 'CONFIRMED_ON_SITE' },
-      }).catch(() => {
-        // Ignorer si la réservation n'existe pas encore
-      });
+      }).catch(() => {});
     }
 
     res.status(200).json({
       status: 'success',
-      message: 'Réservation confirmée. Paiement à effectuer au salon.',
+      message: 'Reservation confirmee. Paiement a effectuer au salon.',
       data: {
         paymentId: payment.id,
-        reference: reference,
+        reference,
         status: 'ON_SITE',
         provider: 'PAY_ON_SITE',
       },
     });
   } catch (error) {
-    console.error('Confirm on-site error:', error);
     next(error);
   }
 });
 
 /**
- * PATCH /api/payments/:id/refund
- * Marquer un paiement comme remboursé (propriétaire du salon)
+ * GET /api/payments/verify/:bookingId
+ * Verifie un paiement PayDunya d'une reservation
  */
-router.patch('/:id/refund', authenticate, async (req, res, next) => {
+router.get('/verify/:bookingId', authenticate, async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const payment = await prisma.payment.findUnique({
-      where: { id },
-      include: { appointment: true },
+    const { bookingId } = req.params;
+    const payment = await prisma.payment.findFirst({
+      where: {
+        appointmentId: bookingId,
+        userId: req.user.id,
+      },
+      orderBy: { createdAt: 'desc' },
     });
+
     if (!payment) {
       return res.status(404).json({ status: 'error', message: 'Paiement introuvable' });
     }
-    if (payment.appointmentId) {
-      const salon = await prisma.salon.findFirst({ where: { ownerId: req.user.id } });
-      if (!salon || payment.appointment?.salonId !== salon.id) {
-        return res.status(403).json({ status: 'error', message: 'Accès interdit' });
-      }
-    }
-    const updated = await prisma.payment.update({
-      where: { id },
-      data: { status: 'REFUNDED' },
+
+    const verified = await verifyPaymentRecord(payment);
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        payment: verified,
+        bookingId,
+      },
     });
-    res.json({ status: 'success', data: updated });
   } catch (error) {
     next(error);
   }
@@ -253,7 +409,7 @@ router.patch('/:id/refund', authenticate, async (req, res, next) => {
 
 /**
  * GET /api/payments/:id/status
- * Vérifier le statut d'un paiement
+ * Verifier le statut d'un paiement
  */
 router.get('/:id/status', authenticate, async (req, res, next) => {
   try {
@@ -269,39 +425,15 @@ router.get('/:id/status', authenticate, async (req, res, next) => {
     if (!payment) {
       return res.status(404).json({
         status: 'error',
-        message: 'Paiement non trouvé',
+        message: 'Paiement non trouve',
       });
     }
 
-    // En mode TEST, simuler la confirmation après quelques vérifications
-    if (PAYMENTS_MODE === 'TEST' && payment.status === 'PENDING') {
-      // Simuler la confirmation automatique pour les tests
-      const updatedPayment = await prisma.payment.update({
-        where: { id },
-        data: { status: 'COMPLETED', completedAt: new Date() },
-      });
-
-      // Mettre à jour le statut du rendez-vous si lié
-      if (payment.appointmentId) {
-        await prisma.appointment.update({
-          where: { id: payment.appointmentId },
-          data: { status: 'CONFIRMED' },
-        }).catch(() => {});
-      }
-
-      return res.status(200).json({
-        status: 'success',
-        data: { 
-          payment: updatedPayment,
-          testMode: true,
-          message: '[TEST MODE] Paiement automatiquement confirmé',
-        },
-      });
-    }
+    const verified = await verifyPaymentRecord(payment);
 
     res.status(200).json({
       status: 'success',
-      data: { payment },
+      data: { payment: verified },
     });
   } catch (error) {
     next(error);
@@ -309,8 +441,38 @@ router.get('/:id/status', authenticate, async (req, res, next) => {
 });
 
 /**
+ * PATCH /api/payments/:id/refund
+ * Marquer un paiement comme rembourse (proprietaire du salon)
+ */
+router.patch('/:id/refund', authenticate, async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const payment = await prisma.payment.findUnique({
+      where: { id },
+      include: { appointment: true },
+    });
+    if (!payment) {
+      return res.status(404).json({ status: 'error', message: 'Paiement introuvable' });
+    }
+    if (payment.appointmentId) {
+      const salon = await prisma.salon.findFirst({ where: { ownerId: req.user.id } });
+      if (!salon || payment.appointment?.salonId !== salon.id) {
+        return res.status(403).json({ status: 'error', message: 'Acces interdit' });
+      }
+    }
+    const updated = await prisma.payment.update({
+      where: { id },
+      data: { status: 'REFUNDED' },
+    });
+    res.json({ status: 'success', data: updated });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
  * GET /api/payments/me
- * Historique des paiements de l'utilisateur connecté
+ * Historique des paiements de l'utilisateur connecte
  */
 router.get('/me', authenticate, async (req, res, next) => {
   try {
@@ -334,84 +496,6 @@ router.get('/me', authenticate, async (req, res, next) => {
     });
   } catch (error) {
     next(error);
-  }
-});
-
-/**
- * Webhook Wave (pour production future)
- * POST /api/payments/webhook/wave
- */
-router.post('/webhook/wave', async (req, res) => {
-  try {
-    const { id, payment_status, client_reference } = req.body;
-
-    console.log('Wave webhook received:', req.body);
-
-    if (payment_status === 'succeeded') {
-      const payment = await prisma.payment.findFirst({
-        where: { reference: client_reference },
-      });
-
-      if (payment) {
-        await prisma.payment.update({
-          where: { id: payment.id },
-          data: { status: 'COMPLETED', completedAt: new Date() },
-        });
-
-        if (payment.appointmentId) {
-          await prisma.appointment.update({
-            where: { id: payment.appointmentId },
-            data: { status: 'CONFIRMED' },
-          });
-        }
-      }
-    }
-
-    res.status(200).json({ received: true });
-  } catch (error) {
-    console.error('Wave webhook error:', error);
-    res.status(500).json({ error: 'Webhook processing failed' });
-  }
-});
-
-/**
- * Webhook Orange Money (pour production future)
- * POST /api/payments/webhook/orange-money
- */
-router.post('/webhook/orange-money', async (req, res) => {
-  try {
-    const { status, order_id, txn_id } = req.body;
-
-    console.log('Orange Money webhook received:', req.body);
-
-    if (status === 'SUCCESS') {
-      const payment = await prisma.payment.findFirst({
-        where: { reference: order_id },
-      });
-
-      if (payment) {
-        await prisma.payment.update({
-          where: { id: payment.id },
-          data: { 
-            status: 'COMPLETED', 
-            completedAt: new Date(),
-            transactionId: txn_id,
-          },
-        });
-
-        if (payment.appointmentId) {
-          await prisma.appointment.update({
-            where: { id: payment.appointmentId },
-            data: { status: 'CONFIRMED' },
-          });
-        }
-      }
-    }
-
-    res.status(200).json({ received: true });
-  } catch (error) {
-    console.error('Orange Money webhook error:', error);
-    res.status(500).json({ error: 'Webhook processing failed' });
   }
 });
 

@@ -93,7 +93,7 @@ export const salons = [
       saturday: { open: "08:00", close: "18:00" },
       sunday: null
     },
-    amenities: ["wifi", "parking", "climatisation", "café", "cartes acceptées", "wave", "orange money"],
+    amenities: ["wifi", "parking", "climatisation", "café", "cartes acceptées", "paiement mobile", "paiement mobile"],
     specialties: ["Tresses africaines", "Tissages", "Locks", "Soins naturels"],
     coordinates: { lat: 14.6937, lng: -17.4441 },
     verified: true,
@@ -133,7 +133,7 @@ export const salons = [
       saturday: { open: "09:00", close: "17:00" },
       sunday: null
     },
-    amenities: ["wifi", "climatisation", "cartes acceptées", "wave"],
+    amenities: ["wifi", "climatisation", "cartes acceptées", "paiement mobile"],
     specialties: ["Maquillage", "Manucure", "Soins visage", "Coiffure"],
     coordinates: { lat: 14.7067, lng: -17.4677 },
     verified: true,
@@ -173,7 +173,7 @@ export const salons = [
       saturday: { open: "09:00", close: "16:00" },
       sunday: null
     },
-    amenities: ["wifi", "climatisation", "orange money"],
+    amenities: ["wifi", "climatisation", "paiement mobile"],
     specialties: ["Locks", "Twists", "Coiffures naturelles", "Freeform"],
     coordinates: { lat: 14.6847, lng: -17.4400 },
     verified: true,
@@ -213,7 +213,7 @@ export const salons = [
       saturday: { open: "09:00", close: "18:00" },
       sunday: { open: "10:00", close: "14:00" }
     },
-    amenities: ["wifi", "parking", "climatisation", "café", "cartes acceptées", "spa", "wave", "orange money"],
+    amenities: ["wifi", "parking", "climatisation", "café", "cartes acceptées", "spa", "paiement mobile", "paiement mobile"],
     specialties: ["Coiffure événementielle", "Maquillage mariée", "Soins spa", "Service VIP"],
     coordinates: { lat: 14.6950, lng: -17.4600 },
     verified: true,
@@ -253,7 +253,7 @@ export const salons = [
       saturday: { open: "08:00", close: "15:00" },
       sunday: null
     },
-    amenities: ["wifi", "orange money"],
+    amenities: ["wifi", "paiement mobile"],
     specialties: ["Soins naturels", "Produits bio", "Henné", "Conseil capillaire"],
     coordinates: { lat: 14.6800, lng: -17.4350 },
     verified: true,
@@ -293,7 +293,7 @@ export const salons = [
       saturday: { open: "09:00", close: "20:00" },
       sunday: { open: "12:00", close: "18:00" }
     },
-    amenities: ["wifi", "parking", "climatisation", "café", "cartes acceptées", "wave", "orange money"],
+    amenities: ["wifi", "parking", "climatisation", "café", "cartes acceptées", "paiement mobile", "paiement mobile"],
     specialties: ["Box braids", "Cornrows", "Tissages", "Styles tendance"],
     coordinates: { lat: 14.7450, lng: -17.5200 },
     verified: true,
@@ -333,7 +333,7 @@ export const salons = [
       saturday: { open: "10:00", close: "17:00" },
       sunday: null
     },
-    amenities: ["wifi", "parking", "climatisation", "vestiaire", "maquillage inclus", "cartes acceptées", "wave", "orange money"],
+    amenities: ["wifi", "parking", "climatisation", "vestiaire", "maquillage inclus", "cartes acceptées", "paiement mobile", "paiement mobile"],
     specialties: ["Portrait", "Mode", "Mariage", "Événements", "Book photo"],
     coordinates: { lat: 14.6920, lng: -17.4450 },
     verified: true,
@@ -373,7 +373,7 @@ export const salons = [
       saturday: { open: "09:00", close: "18:00" },
       sunday: { open: "10:00", close: "16:00" }
     },
-    amenities: ["wifi", "parking", "climatisation", "vestiaire", "maquillage inclus", "studio extérieur", "cartes acceptées", "wave", "orange money"],
+    amenities: ["wifi", "parking", "climatisation", "vestiaire", "maquillage inclus", "studio extérieur", "cartes acceptées", "paiement mobile", "paiement mobile"],
     specialties: ["Mode", "Portrait artistique", "Mariage", "Grossesse", "Famille"],
     coordinates: { lat: 14.7480, lng: -17.5100 },
     verified: true,
@@ -413,7 +413,7 @@ export const salons = [
       saturday: { open: "10:00", close: "16:00" },
       sunday: null
     },
-    amenities: ["wifi", "climatisation", "vestiaire", "maquillage en option", "wave", "orange money"],
+    amenities: ["wifi", "climatisation", "vestiaire", "maquillage en option", "paiement mobile", "paiement mobile"],
     specialties: ["Portrait CV", "LinkedIn", "Photo identité pro", "Portrait couple", "Portrait famille"],
     coordinates: { lat: 14.7100, lng: -17.4680 },
     verified: true,
@@ -453,7 +453,7 @@ export const salons = [
       saturday: { open: "08:00", close: "21:00" },
       sunday: { open: "09:00", close: "15:00" }
     },
-    amenities: ["wifi", "climatisation", "TV", "café", "wave", "orange money"],
+    amenities: ["wifi", "climatisation", "TV", "café", "paiement mobile", "paiement mobile"],
     specialties: ["Dégradé", "Barbe", "Rasage traditionnel", "Coupe afro", "Lineup"],
     coordinates: { lat: 14.6930, lng: -17.4420 },
     verified: true,
@@ -493,7 +493,7 @@ export const salons = [
       saturday: { open: "08:00", close: "21:00" },
       sunday: { open: "10:00", close: "16:00" }
     },
-    amenities: ["wifi", "parking", "climatisation", "TV grand écran", "PlayStation", "café", "cartes acceptées", "wave", "orange money"],
+    amenities: ["wifi", "parking", "climatisation", "TV grand écran", "PlayStation", "café", "cartes acceptées", "paiement mobile", "paiement mobile"],
     specialties: ["Dégradé américain", "Coupe afro", "Design cheveux", "Barbe sculptée", "Soins visage homme"],
     coordinates: { lat: 14.7440, lng: -17.5180 },
     verified: true,
@@ -707,3 +707,4 @@ export const calculateDeposit = (services, salon) => {
 }
 
 export default { salons, servicesBySalon, coiffeursBySalon, reviews, categories, neighborhoods }
+

@@ -241,7 +241,7 @@ router.post('/', authenticate, async (req, res, next) => {
       }
     }
 
-    // Create appointment (status PENDING_ASSIGNMENT if no coiffeur assigned)
+    // Create appointment with pending payment status
     const appointment = await prisma.appointment.create({
       data: {
         date: appointmentDate,
@@ -249,7 +249,7 @@ router.post('/', authenticate, async (req, res, next) => {
         endTime,
         totalPrice: totalPrice,
         notes: combinedNotes || null,
-        status: coiffeurId ? 'PENDING' : 'PENDING_ASSIGNMENT',
+        status: 'PENDING_PAYMENT',
         clientId: req.user.id,
         salonId,
         coiffeurId: coiffeurId || null,
@@ -286,6 +286,22 @@ router.post('/', authenticate, async (req, res, next) => {
       }
     }
 
+    // Store client confirmation notification for in-app bell
+    if (appointment?.clientId) {
+      try {
+        const notification = await prisma.notification.create({
+          data: {
+            userId: appointment.clientId,
+            type: 'booking',
+            message: `Reservation creee chez ${appointment.salon?.name || 'le salon'} le ${new Date(appointmentDate).toLocaleDateString('fr-FR')} a ${startTime}. Paiement en attente.`,
+          },
+        });
+        pushNotification(notification.userId, notification);
+      } catch (e) {
+        console.error('Notification booking client error:', e.message);
+      }
+    }
+
     // Send confirmation email to client
     if (appointment?.client?.email) {
       sendBookingConfirmationEmail({
@@ -301,8 +317,8 @@ router.post('/', authenticate, async (req, res, next) => {
 
     // Push notification to client
     sendPushToUser(req.user.id, {
-      title: '✅ Réservation confirmée',
-      body: `RDV chez ${appointment.salon?.name || 'le salon'} le ${new Date(appointmentDate).toLocaleDateString('fr-FR')} à ${startTime}.`,
+      title: 'Reservation creee',
+      body: `RDV chez ${appointment.salon?.name || 'le salon'} le ${new Date(appointmentDate).toLocaleDateString('fr-FR')} a ${startTime}. Paiement en attente.`,
       url: '/dashboard',
     }).catch(() => {});
 
@@ -483,7 +499,7 @@ router.patch('/:id/status', authenticate, async (req, res, next) => {
     const { id } = req.params;
     const { status } = req.body;
 
-    const validStatuses = ['PENDING', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'NO_SHOW'];
+    const validStatuses = ['PENDING_PAYMENT', 'PAID', 'PENDING', 'CONFIRMED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'NO_SHOW', 'CONFIRMED_ON_SITE'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({
         status: 'error',
@@ -824,3 +840,5 @@ router.get('/availability/:coiffeurId', async (req, res, next) => {
 });
 
 module.exports = router;
+
+

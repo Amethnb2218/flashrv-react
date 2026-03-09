@@ -18,6 +18,7 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const assistantRoutes = require('./routes/assistantRoutes');
 const productRoutes = require('./routes/productRoutes');
 const orderRoutes = require('./routes/orderRoutes');
+const paydunyaRoutes = require('./routes/paydunyaRoutes');
 
 const rateLimit = require('express-rate-limit');
 
@@ -137,6 +138,7 @@ app.use('/api/push', pushRoutes);
 app.use('/api/assistant', assistantRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/paydunya', paydunyaRoutes);
 
 // ===========================================
 // 404 HANDLER
@@ -209,4 +211,3 @@ app.use((err, req, res, next) => {
 });
 
 module.exports = app;
-

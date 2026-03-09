@@ -9,9 +9,8 @@ import apiFetch from '../../api/client'
 import LoadingSpinner from '../../components/UI/LoadingSpinner'
 
 const PAYMENT_METHODS = [
-  { id: 'wave', name: 'Wave', icon: '🌊', color: 'blue', desc: 'Paiement rapide Wave' },
-  { id: 'orange_money', name: 'Orange Money', icon: '🟠', color: 'orange', desc: 'Paiement mobile Orange' },
-  { id: 'cash_on_delivery', name: 'Paiement à la livraison', icon: '💵', color: 'gray', desc: 'Payez en espèces à la réception' },
+  { id: 'pay_on_pickup', name: 'Paiement au retrait', icon: 'PICK', color: 'gray', desc: 'Reglez en boutique au retrait' },
+  { id: 'cash_on_delivery', name: 'Paiement a la livraison', icon: 'COD', color: 'gray', desc: 'Payez en especes a la reception' },
 ]
 
 function Checkout() {

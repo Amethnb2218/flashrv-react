@@ -91,6 +91,7 @@ const statusLabels = {
   confirmed_on_site: "Confirmé (sur place)",
   in_progress: "En cours",
   pending: "En attente",
+  pending_payment: "En attente de paiement",
   pending_assignment: "En attente d'assignation",
   pending_cash: "En attente (sur place)",
   paid: "Payé",
@@ -556,6 +557,9 @@ const [newProduct, setNewProduct] = useState({
 });
 const [productQuery, setProductQuery] = useState("");
 const [orderFilter, setOrderFilter] = useState("all");
+const [orderQuery, setOrderQuery] = useState("");
+const [appointmentQuery, setAppointmentQuery] = useState("");
+const [appointmentFilter, setAppointmentFilter] = useState("all");
 
 // Payment methods
 const [paymentMethods, setPaymentMethods] = useState([]); // {id, method, enabled}
@@ -564,7 +568,7 @@ const [showPaymentMethodModal, setShowPaymentMethodModal] = useState(false);
 const [confirmPaymentMethod, setConfirmPaymentMethod] = useState(null);
 const [deletingPaymentMethod, setDeletingPaymentMethod] = useState(false);
 const [newPaymentMethod, setNewPaymentMethod] = useState({
-method: "",
+method: "PAYDUNYA",
 enabled: true,
 });
 
@@ -848,7 +852,9 @@ const normalizeAppointment = (appt) => {
   if (!appt) return appt;
   const statusMap = {
     PENDING: "pending",
+    PENDING_PAYMENT: "pending_payment",
     PENDING_ASSIGNMENT: "pending_assignment",
+    PAID: "paid",
     CONFIRMED: "confirmed",
     CONFIRMED_ON_SITE: "confirmed_on_site",
     IN_PROGRESS: "in_progress",
@@ -1015,21 +1021,40 @@ const openingHoursToApi = (openingHours) =>
 /* ----------------------------
 Payment methods (API)
 ----------------------------- */
+const paymentMethodChoices = [
+  { value: "PAYDUNYA", label: "PayDunya" },
+  { value: "CARD", label: "Carte bancaire" },
+  { value: "CASH", label: "Especes / Cash" },
+  { value: "PAY_ON_SITE", label: "Paiement sur place" },
+];
+const formatPaymentMethodLabel = (method) => {
+  const key = String(method || "").toUpperCase();
+  if (key === "PAYDUNYA") return "PayDunya (Wave, Orange, Free, Carte)";
+  if (key === "CARD") return "Carte bancaire";
+  if (key === "CASH") return "Especes / Cash";
+  if (key === "PAY_ON_SITE") return "Paiement sur place";
+  return method || "Non defini";
+};
+const openPaymentMethodModal = () => {
+setNewPaymentMethod({ method: "PAYDUNYA", enabled: true });
+setShowPaymentMethodModal(true);
+};
 const handleAddPaymentMethod = async () => {
-if (!newPaymentMethod.method.trim()) {
-toast.error("Le nom du moyen de paiement est requis.");
+const normalizedMethod = String(newPaymentMethod.method || "").trim().toUpperCase();
+if (!normalizedMethod) {
+toast.error("Le moyen de paiement est requis.");
 return;
 }
 try {
 const res = await apiFetch("/salon/payment-methods", {
 method: "POST",
-body: newPaymentMethod,
+body: { ...newPaymentMethod, method: normalizedMethod },
 });
 const createdPaymentMethod = res?.data ?? res;
 setPaymentMethods((prev) => [createdPaymentMethod, ...prev]);
 setShowPaymentMethodModal(false);
-setNewPaymentMethod({ method: "", enabled: true });
-toast.success("Moyen de paiement ajouté !");
+setNewPaymentMethod({ method: "PAYDUNYA", enabled: true });
+toast.success("Moyen de paiement ajoute !");
 } catch (e) {
 toast.error(e.message || "Erreur lors de l'ajout");
 }
@@ -1468,7 +1493,9 @@ const statusMap = {
   confirmed: "CONFIRMED",
   confirmed_on_site: "CONFIRMED_ON_SITE",
   pending: "PENDING",
+  pending_payment: "PENDING_PAYMENT",
   pending_assignment: "PENDING_ASSIGNMENT",
+  paid: "PAID",
   in_progress: "IN_PROGRESS",
   no_show: "NO_SHOW",
 };
@@ -1954,18 +1981,83 @@ const filteredProducts = useMemo(() => {
 }, [products, productQuery]);
 
 const filteredOrders = useMemo(() => {
-  if (orderFilter === "all") return orders;
-  return orders.filter((o) => o.status === orderFilter);
-}, [orders, orderFilter]);
+  const query = orderQuery.trim().toLowerCase();
+  return orders.filter((o) => {
+    const statusOk = orderFilter === "all" ? true : o.status === orderFilter;
+    if (!statusOk) return false;
+    if (!query) return true;
+    return (
+      String(o.clientName || "").toLowerCase().includes(query) ||
+      String(o.clientPhone || "").toLowerCase().includes(query) ||
+      String(o.id || "").toLowerCase().includes(query) ||
+      (Array.isArray(o.items) && o.items.some((it) => String(it.product?.name || "").toLowerCase().includes(query)))
+    );
+  });
+}, [orders, orderFilter, orderQuery]);
+
+const filteredAppointments = useMemo(() => {
+  const query = appointmentQuery.trim().toLowerCase();
+  return appointments.filter((a) => {
+    const key = String(a.status || "").toLowerCase();
+    const statusOk =
+      appointmentFilter === "all" ? true :
+      appointmentFilter === "upcoming"
+        ? ["confirmed", "confirmed_on_site", "paid", "pending", "pending_payment", "pending_assignment", "in_progress"].includes(key)
+        : appointmentFilter === "completed"
+          ? key === "completed"
+          : appointmentFilter === "cancelled"
+            ? key === "cancelled"
+            : key === appointmentFilter;
+    if (!statusOk) return false;
+    if (!query) return true;
+    return (
+      String(a.clientName || "").toLowerCase().includes(query) ||
+      String(a.staffName || "").toLowerCase().includes(query) ||
+      String(a.serviceName || "").toLowerCase().includes(query) ||
+      String(a.client?.phoneNumber || a.client?.phone || "").toLowerCase().includes(query)
+    );
+  });
+}, [appointments, appointmentFilter, appointmentQuery]);
 
 const orderStatusOptions = [
   { value: "PENDING", label: "En attente", tone: "amber" },
-  { value: "CONFIRMED", label: "Confirmée", tone: "blue" },
-  { value: "PREPARING", label: "En préparation", tone: "purple" },
-  { value: "READY", label: "Préte", tone: "green" },
-  { value: "DELIVERED", label: "Livrée", tone: "green" },
-  { value: "CANCELLED", label: "Annulée", tone: "red" },
+  { value: "CONFIRMED", label: "Confirmee", tone: "blue" },
+  { value: "PREPARING", label: "En preparation", tone: "purple" },
+  { value: "READY", label: "Prete", tone: "green" },
+  { value: "DELIVERED", label: "Livree", tone: "green" },
+  { value: "CANCELLED", label: "Annulee", tone: "red" },
 ];
+
+const orderStatusFlow = ["PENDING", "CONFIRMED", "PREPARING", "READY", "DELIVERED"];
+const orderNextStatus = {
+  PENDING: { next: "CONFIRMED", label: "Confirmer" },
+  CONFIRMED: { next: "PREPARING", label: "Lancer la preparation" },
+  PREPARING: { next: "READY", label: "Marquer prete" },
+  READY: { next: "DELIVERED", label: "Marquer livree" },
+};
+
+const getOrderRef = (order) => {
+  const value = String(order?.id || "").replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+  return value ? `CMD-${value.slice(-8)}` : "CMD-N/A";
+};
+
+const splitOrderNotes = (notesValue) => {
+  const rawValue = String(notesValue || "").trim();
+  if (!rawValue) return { note: "", variantLines: [] };
+
+  const lines = rawValue.split(/\r?\n/);
+  const markerIndex = lines.findIndex((l) => l.trim().toLowerCase().startsWith("variantes"));
+  if (markerIndex === -1) {
+    return { note: rawValue, variantLines: [] };
+  }
+
+  const before = lines.slice(0, markerIndex).join("\n").trim();
+  const after = lines
+    .slice(markerIndex + 1)
+    .map((l) => l.trim())
+    .filter(Boolean);
+  return { note: before, variantLines: after };
+};
 
 /* ----------------------------
 Stats (API)
@@ -2218,16 +2310,42 @@ active
       </button>
     ))}
   </div>
+  <div className="mb-5">
+    <div className="relative max-w-md">
+      <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+      <input
+        value={orderQuery}
+        onChange={(e) => setOrderQuery(e.target.value)}
+        placeholder="Rechercher client, téléphone, article ou ID..."
+        className="w-full pl-11 pr-4 py-2.5 border border-gray-200 rounded-2xl bg-white focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+      />
+    </div>
+  </div>
   {loading ? (
     <p className="text-gray-500 font-semibold">Chargement…</p>
   ) : filteredOrders.length === 0 ? (
     <EmptyState icon={<FiShoppingCart />} title="Aucune commande" subtitle="Les commandes apparaîtront ici." />
   ) : (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-      {filteredOrders.map((order, idx) => {
-        const statusOpt = orderStatusOptions.find((s) => s.value === order.status) || { label: order.status, tone: "gray" };
-        const statusSteps = ["PENDING", "CONFIRMED", "PREPARING", "READY", "DELIVERED"];
-        const currentStepIdx = statusSteps.indexOf(order.status);
+            {filteredOrders.map((order, idx) => {
+        const statusKey = String(order.status || "").toUpperCase();
+        const statusOpt = orderStatusOptions.find((s) => s.value === statusKey) || { label: statusKey || "�", tone: "gray" };
+        const currentStepIdx = orderStatusFlow.indexOf(statusKey);
+        const nextAction = orderNextStatus[statusKey] || null;
+        const itemCount = (order.items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+        const { note, variantLines } = splitOrderNotes(order.notes);
+        const createdAtLabel = order.createdAt
+          ? new Date(order.createdAt).toLocaleString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
+          : "�";
+        const paymentMethodKey = String(order.paymentMethod || order.payment?.method || "").toUpperCase();
+        const paymentLabel = paymentMethodKey === "CASH_ON_DELIVERY"
+          ? "Paiement a la livraison"
+          : paymentMethodKey === "PAY_ON_PICKUP"
+            ? "Paiement au retrait"
+            : paymentMethodKey === "PAYDUNYA"
+              ? "PayDunya"
+              : "Non precise";
+
         return (
           <motion.div
             key={order.id || idx}
@@ -2236,10 +2354,9 @@ active
             transition={{ duration: 0.25, delay: idx * 0.03 }}
             className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
           >
-            {/* Order progress bar */}
             <div className="flex">
-              {statusSteps.map((step, i) => (
-                <div key={step} className={`flex-1 h-1 ${order.status === "CANCELLED" ? "bg-red-400" : i <= currentStepIdx ? "bg-green-500" : "bg-gray-200"}`} />
+              {orderStatusFlow.map((step, i) => (
+                <div key={step} className={`flex-1 h-1 ${statusKey === "CANCELLED" ? "bg-red-400" : i <= currentStepIdx ? "bg-green-500" : "bg-gray-200"}`} />
               ))}
             </div>
 
@@ -2252,17 +2369,39 @@ active
                     <p className="text-xs text-gray-400 mt-1 flex items-center gap-1"><FiMapPin className="w-3 h-3" /> {order.deliveryAddress}</p>
                   )}
                 </div>
-                <Badge tone={statusOpt.tone}>{statusOpt.label}</Badge>
+                <div className="text-right">
+                  <Badge tone={statusOpt.tone}>{statusOpt.label}</Badge>
+                  <p className="text-[11px] mt-1 text-gray-500 font-semibold">{getOrderRef(order)}</p>
+                </div>
+              </div>
+
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Badge tone="gray">{itemCount} article(s)</Badge>
+                <Badge tone={order.deliveryMode === "DELIVERY" ? "blue" : "purple"}>
+                  {order.deliveryMode === "DELIVERY" ? "Livraison" : "Retrait boutique"}
+                </Badge>
+                <Badge tone="gray">{createdAtLabel}</Badge>
               </div>
 
               <div className="mt-4 space-y-1.5">
                 {(order.items || []).map((item, i) => (
-                  <div key={i} className="flex justify-between text-sm">
-                    <span className="text-gray-700">{item.product?.name || "Article"} × {item.quantity}</span>
+                  <div key={i} className="flex items-start justify-between text-sm gap-3">
+                    <span className="text-gray-700">{item.product?.name || "Article"} � {item.quantity}</span>
                     <span className="font-medium">{formatMoney(item.unitPrice * item.quantity)}</span>
                   </div>
                 ))}
               </div>
+
+              {variantLines.length > 0 && (
+                <div className="mt-3 bg-indigo-50 border border-indigo-100 rounded-xl p-3">
+                  <p className="text-xs font-semibold text-indigo-700 mb-1">Variantes commandees</p>
+                  <div className="space-y-1">
+                    {variantLines.map((line, i) => (
+                      <p key={`${order.id}-variant-${i}`} className="text-xs text-indigo-700">{line}</p>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-3 mt-4 p-3 bg-gray-50 rounded-xl">
                 <div>
@@ -2270,50 +2409,32 @@ active
                   <p className="font-bold text-amber-600">{formatMoney(order.totalPrice)}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">Mode</p>
-                  <p className="font-semibold text-gray-900 flex items-center gap-1">
-                    {order.deliveryMode === "DELIVERY" ? <><FiTrendingUp className="w-3 h-3" /> Livraison</> : "Retrait"}
-                  </p>
+                  <p className="text-xs text-gray-500">Paiement</p>
+                  <p className="font-semibold text-gray-900 text-sm">{paymentLabel}</p>
                 </div>
-                <div>
-                  <p className="text-xs text-gray-500">Date</p>
-                  <p className="font-semibold text-gray-900 text-sm">
-                    {new Date(order.createdAt).toLocaleString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
-                  </p>
-                </div>
-                {order.paymentMethod && (
+                {(order.deliveryMode === "DELIVERY" && order.deliveryAddress) && (
                   <div>
-                    <p className="text-xs text-gray-500">Paiement</p>
-                    <p className="font-semibold text-gray-900 text-sm">
-                      {order.paymentMethod === "wave" ? "Wave" : order.paymentMethod === "orange_money" ? "Orange Money" : "Espèces"}
-                    </p>
+                    <p className="text-xs text-gray-500">Adresse</p>
+                    <p className="font-semibold text-gray-900 text-sm line-clamp-2">{order.deliveryAddress}</p>
                   </div>
                 )}
               </div>
-              {order.notes && (
-                <p className="mt-3 text-sm text-gray-600 italic bg-amber-50 px-3 py-2 rounded-lg">Note : {order.notes}</p>
+
+              <div className="mt-4 flex items-center gap-1">
+                {orderStatusFlow.map((step, i) => (
+                  <div key={`${order.id}-${step}`} className={`flex-1 h-1.5 rounded-full ${statusKey === "CANCELLED" ? "bg-red-200" : i <= currentStepIdx ? "bg-emerald-500" : "bg-gray-200"}`} />
+                ))}
+              </div>
+
+              {note && (
+                <p className="mt-3 text-sm text-gray-600 italic bg-amber-50 px-3 py-2 rounded-lg">Note: {note}</p>
               )}
 
-              {order.status !== "DELIVERED" && order.status !== "CANCELLED" && (
+              {statusKey !== "DELIVERED" && statusKey !== "CANCELLED" && (
                 <div className="flex flex-wrap gap-2 mt-4">
-                  {order.status === "PENDING" && (
-                    <Button variant="primary" className="px-3 py-2" onClick={() => handleOrderStatus(order.id, "CONFIRMED")}>
-                      <FiCheck className="mr-1" /> Confirmer
-                    </Button>
-                  )}
-                  {order.status === "CONFIRMED" && (
-                    <Button variant="primary" className="px-3 py-2" onClick={() => handleOrderStatus(order.id, "PREPARING")}>
-                      <FiPackage className="mr-1" /> Préparer
-                    </Button>
-                  )}
-                  {order.status === "PREPARING" && (
-                    <Button variant="primary" className="px-3 py-2" onClick={() => handleOrderStatus(order.id, "READY")}>
-                      <FiCheck className="mr-1" /> Prête
-                    </Button>
-                  )}
-                  {order.status === "READY" && (
-                    <Button variant="primary" className="px-3 py-2" onClick={() => handleOrderStatus(order.id, "DELIVERED")}>
-                      <FiCheck className="mr-1" /> Livrée
+                  {nextAction && (
+                    <Button variant="primary" className="px-3 py-2" onClick={() => handleOrderStatus(order.id, nextAction.next)}>
+                      <FiCheck className="mr-1" /> {nextAction.label}
                     </Button>
                   )}
                   <Button variant="secondary" className="px-3 py-2 text-red-600" onClick={() => handleOrderStatus(order.id, "CANCELLED")}>
@@ -2565,15 +2686,48 @@ active
 {activeTab === "appointments" && (
 <motion.div key="appointments" {...pageAnim}>
 <Card>
-<CardHeader icon={<FiCalendar />} title="Rendez-vous" subtitle={`${appointments.length} rendez-vous au total`} />
+<CardHeader icon={<FiCalendar />} title="Rendez-vous" subtitle={`${filteredAppointments.length} rendez-vous affichés`} />
 <div className="p-6">
+
+<div className="flex flex-col lg:flex-row gap-3 mb-5">
+  <div className="relative lg:max-w-md w-full">
+    <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+    <input
+      value={appointmentQuery}
+      onChange={(e) => setAppointmentQuery(e.target.value)}
+      placeholder="Rechercher client, service, coiffeur..."
+      className="w-full pl-11 pr-4 py-2.5 border border-gray-200 rounded-2xl bg-white focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+    />
+  </div>
+  <div className="flex flex-wrap gap-2">
+    {[
+      { value: "all", label: "Tous" },
+      { value: "upcoming", label: "À venir" },
+      { value: "completed", label: "Terminés" },
+      { value: "cancelled", label: "Annulés" },
+    ].map((opt) => (
+      <button
+        key={opt.value}
+        onClick={() => setAppointmentFilter(opt.value)}
+        className={cx(
+          "px-3 py-1.5 rounded-xl text-sm font-medium transition",
+          appointmentFilter === opt.value
+            ? "bg-gray-900 text-white"
+            : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
+        )}
+      >
+        {opt.label}
+      </button>
+    ))}
+  </div>
+</div>
 
 {/* -- Stat cards -- */}
 {(() => {
-  const total = appointments.length;
-  const upcoming = appointments.filter((a) => a.status === "confirmed" || a.status === "confirmed_on_site" || a.status === "pending" || a.status === "pending_assignment").length;
-  const completed = appointments.filter((a) => a.status === "completed").length;
-  const revenue = appointments.filter((a) => a.status === "completed").reduce((s, a) => s + (a.amount || 0), 0);
+  const total = filteredAppointments.length;
+  const upcoming = filteredAppointments.filter((a) => a.status === "confirmed" || a.status === "confirmed_on_site" || a.status === "paid" || a.status === "pending" || a.status === "pending_payment" || a.status === "pending_assignment").length;
+  const completed = filteredAppointments.filter((a) => a.status === "completed").length;
+  const revenue = filteredAppointments.filter((a) => a.status === "completed").reduce((s, a) => s + (a.amount || 0), 0);
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <StatCard icon={<FiCalendar className="w-6 h-6" />} label="Total" value={total} color="blue" />
@@ -2615,7 +2769,7 @@ active
 </div>
 {loading ? (
 <p className="text-gray-500 font-semibold">Chargement...</p>
-) : appointments.length === 0 ? (
+) : filteredAppointments.length === 0 ? (
 <EmptyState
 icon={<FiCalendar />}
 title="Aucun rendez-vous"
@@ -2623,7 +2777,7 @@ subtitle="Les réservations apparaîtront ici."
 />
 ) : (
 <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-  {appointments.map((row, idx) => {
+  {filteredAppointments.map((row, idx) => {
     const avatar = resolveMediaUrl(row.client?.picture || row.client?.avatar);
     const paymentTone =
       row.paymentStatus === "paid"
@@ -2643,9 +2797,9 @@ subtitle="Les réservations apparaîtront ici."
         ? "green"
         : row.status === "cancelled"
         ? "red"
-        : row.status === "confirmed" || row.status === "confirmed_on_site"
+        : row.status === "confirmed" || row.status === "confirmed_on_site" || row.status === "paid"
         ? "blue"
-        : row.status === "pending" || row.status === "pending_assignment"
+        : row.status === "pending" || row.status === "pending_payment" || row.status === "pending_assignment"
         ? "amber"
         : "gray";
     const statusLabel = getStatusLabel(row.status);
@@ -2653,8 +2807,8 @@ subtitle="Les réservations apparaîtront ici."
     // Appointment progress steps
     const apptSteps = ["Demandé", "Confirmé", "En cours", "Terminé"];
     const apptStepIndex = row.status === "completed" ? 4
-      : (row.status === "confirmed" || row.status === "confirmed_on_site") ? 2
-      : (row.status === "pending" || row.status === "pending_assignment") ? 1
+      : (row.status === "confirmed" || row.status === "confirmed_on_site" || row.status === "paid") ? 2
+      : (row.status === "pending" || row.status === "pending_payment" || row.status === "pending_assignment") ? 1
       : row.status === "cancelled" ? -1
       : 0;
     const isCancelled = row.status === "cancelled";
@@ -3793,7 +3947,7 @@ icon={<FiCreditCard />}
 title="Aucun moyen de paiement"
 subtitle="Configurez les moyens de paiement acceptés par votre salon."
 action={
-<Button onClick={() => setShowPaymentMethodModal(true)}>
+<Button onClick={openPaymentMethodModal}>
 <FiPlus className="mr-2" /> Ajouter un moyen de paiement
 </Button>
 }
@@ -3801,7 +3955,7 @@ action={
 ) : (
 <>
 <div className="mb-4 flex justify-end">
-<Button onClick={() => setShowPaymentMethodModal(true)}>
+<Button onClick={openPaymentMethodModal}>
 <FiPlus className="mr-2" /> Ajouter un moyen de paiement
 </Button>
 </div>
@@ -3813,7 +3967,7 @@ className="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm flex items-
 >
 <FiCreditCard className="w-8 h-8 text-amber-500" />
 <div className="flex-1">
-<div className="font-bold text-gray-900 text-base">{pm.method}</div>
+<div className="font-bold text-gray-900 text-base">{formatPaymentMethodLabel(pm.method)}</div>
 <div className="text-xs text-gray-500">{pm.enabled ? "Activé" : "Désactivé"}</div>
 </div>
 <div className="flex items-center gap-2">
@@ -3846,12 +4000,15 @@ Annuler
 }
 >
 <div className="space-y-4">
-<Input
-label="Nom du moyen de paiement"
+<Select
+label="Moyen de paiement"
 value={newPaymentMethod.method}
 onChange={(e) => setNewPaymentMethod((p) => ({ ...p, method: e.target.value }))}
-placeholder="Ex: Orange Money, Wave, Espèces..."
-/>
+>
+{paymentMethodChoices.map((opt) => (
+<option key={opt.value} value={opt.value}>{opt.label}</option>
+))}
+</Select>
 <Select
 label="Statut"
 value={newPaymentMethod.enabled ? "1" : "0"}
@@ -4648,6 +4805,14 @@ Ajouter horaires
 </div>
 );
 }
+
+
+
+
+
+
+
+
 
 
 

@@ -125,8 +125,8 @@ function Footer() {
             © {currentYear} StyleFlow. Tous droits réservés.
           </p>
           <div className="flex items-center space-x-4 mt-4 md:mt-0">
-            <span className="px-3 py-1 bg-orange-500/20 text-orange-400 text-xs font-semibold rounded-full border border-orange-500/30">Orange Money</span>
-            <span className="px-3 py-1 bg-blue-500/20 text-blue-400 text-xs font-semibold rounded-full border border-blue-500/30">Wave</span>
+            <span className="px-3 py-1 bg-indigo-500/20 text-indigo-300 text-xs font-semibold rounded-full border border-indigo-500/30">PayDunya</span>
+            <span className="px-3 py-1 bg-amber-500/20 text-amber-300 text-xs font-semibold rounded-full border border-amber-500/30">Carte bancaire</span>
             <span className="px-3 py-1 bg-green-500/20 text-green-400 text-xs font-semibold rounded-full border border-green-500/30">Cash</span>
           </div>
         </div>

@@ -13,6 +13,7 @@ import apiFetch from '@/api/client'
 import { resolveMediaUrl } from '../../utils/media'
 import AppointmentChatModal from '../../components/Chat/AppointmentChatModal'
 import toast from 'react-hot-toast'
+import { pushSiteNotification } from '../../utils/siteNotifications'
 
 function ClientDashboard() {
   const { user } = useAuth()
@@ -97,6 +98,12 @@ function ClientDashboard() {
       await apiFetch(`/orders/${orderId}/status`, { method: 'PATCH', body: { status: 'CANCELLED' } })
       setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'CANCELLED' } : o))
       toast.success('Commande annulée')
+      pushSiteNotification({
+        userId: user?.id || user?.email,
+        type: 'order_cancelled',
+        message: `Votre commande ${orderId} a été annulée avec succès.`,
+        meta: { orderId },
+      })
     } catch (e) {
       toast.error(e.message || 'Erreur lors de l\'annulation')
     } finally {
@@ -168,7 +175,9 @@ function ClientDashboard() {
     const styles = {
       CONFIRMED: 'bg-green-100 text-green-700',
       CONFIRMED_ON_SITE: 'bg-green-100 text-green-700',
+      PAID: 'bg-emerald-100 text-emerald-700',
       PENDING: 'bg-yellow-100 text-yellow-700',
+      PENDING_PAYMENT: 'bg-amber-100 text-amber-700',
       PENDING_ASSIGNMENT: 'bg-yellow-100 text-yellow-700',
       IN_PROGRESS: 'bg-blue-100 text-blue-700',
       CANCELLED: 'bg-red-100 text-red-700',
@@ -178,7 +187,9 @@ function ClientDashboard() {
     const labels = {
       CONFIRMED: 'Confirmée',
       CONFIRMED_ON_SITE: 'Confirmée (sur place)',
+      PAID: 'Payée',
       PENDING: 'En attente',
+      PENDING_PAYMENT: 'En attente de paiement',
       PENDING_ASSIGNMENT: 'En attente d\'assignation',
       IN_PROGRESS: 'En cours',
       CANCELLED: 'Annulée',
@@ -267,7 +278,7 @@ function ClientDashboard() {
           </div>
         </div>
 
-        {['PENDING', 'PENDING_ASSIGNMENT', 'CONFIRMED', 'CONFIRMED_ON_SITE'].includes(String(booking.status || '').toUpperCase()) && new Date(booking.date) >= new Date() && (
+        {['PENDING', 'PENDING_PAYMENT', 'PENDING_ASSIGNMENT', 'CONFIRMED', 'CONFIRMED_ON_SITE', 'PAID'].includes(String(booking.status || '').toUpperCase()) && new Date(booking.date) >= new Date() && (
           <div className="flex gap-3 mt-6">
             <button
               onClick={() => {
@@ -634,3 +645,4 @@ function ClientDashboard() {
 }
 
 export default ClientDashboard
+

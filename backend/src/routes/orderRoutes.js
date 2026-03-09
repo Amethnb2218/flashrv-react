@@ -122,6 +122,22 @@ router.post('/', authenticate, async (req, res, next) => {
       }
     }
 
+    // Notify client confirmation for in-app notifications
+    if (order.clientId) {
+      try {
+        const notification = await prisma.notification.create({
+          data: {
+            userId: order.clientId,
+            type: 'order',
+            message: `Votre commande chez ${order.salon?.name || 'la boutique'} est confirmee.`,
+          },
+        });
+        pushNotification(notification.userId, notification);
+      } catch (e) {
+        console.error('Notification client order create error:', e.message);
+      }
+    }
+
     // Send confirmation email to client
     if (order.client?.email) {
       sendOrderConfirmationEmail({
@@ -212,10 +228,16 @@ router.patch('/:id/status', authenticate, async (req, res, next) => {
       return res.status(404).json({ status: 'error', message: 'Commande introuvable' });
     }
 
-    // Only boutique owner or admin can change status
+    const isClient = order.clientId === req.user.id;
+    const clientCanCancel =
+      isClient &&
+      status === 'CANCELLED' &&
+      ['PENDING', 'CONFIRMED'].includes(String(order.status || '').toUpperCase());
+
+    // Only boutique owner/admin can change status, except restricted client cancellation
     const isOwner = order.salon?.ownerId === req.user.id;
     const isAdmin = req.user.role === 'ADMIN' || req.user.role === 'SUPER_ADMIN';
-    if (!isOwner && !isAdmin) {
+    if (!isOwner && !isAdmin && !clientCanCancel) {
       return res.status(403).json({ status: 'error', message: 'Accès interdit' });
     }
 
@@ -263,6 +285,22 @@ router.patch('/:id/status', authenticate, async (req, res, next) => {
         pushNotification(notification.userId, notification);
       } catch (e) {
         console.error('Notification order status error:', e.message);
+      }
+    }
+
+    // If cancellation came from client side, notify boutique owner
+    if (status === 'CANCELLED' && isClient && updated.salon?.ownerId) {
+      try {
+        const notification = await prisma.notification.create({
+          data: {
+            userId: updated.salon.ownerId,
+            type: 'order',
+            message: `La commande de ${updated.clientName || updated.client?.name || 'un client'} a ete annulee.`,
+          },
+        });
+        pushNotification(notification.userId, notification);
+      } catch (e) {
+        console.error('Notification owner cancel error:', e.message);
       }
     }
 

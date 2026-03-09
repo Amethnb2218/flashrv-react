@@ -6,11 +6,11 @@ import { useAuth } from '../../context/AuthContext'
 import { formatPrice } from '../../utils/helpers'
 import { resolveMediaUrl } from '../../utils/media'
 import apiFetch from '../../api/client'
+import { pushSiteNotification } from '../../utils/siteNotifications'
 
 const PAYMENT_METHODS = [
-  { id: 'wave', name: 'Wave', icon: '🌊', color: 'blue', description: 'Paiement rapide Wave' },
-  { id: 'orange_money', name: 'Orange Money', icon: '🟠', color: 'orange', description: 'Paiement mobile Orange' },
-  { id: 'cash_on_delivery', name: 'Paiement à la livraison', icon: '💵', color: 'gray', description: 'Payez en espèces à la réception' },
+  { id: 'pay_on_pickup', name: 'Paiement au retrait', icon: 'PICK', color: 'gray', description: 'Reglez en boutique au moment du retrait' },
+  { id: 'cash_on_delivery', name: 'Paiement a la livraison', icon: 'COD', color: 'gray', description: 'Payez en especes a la reception' },
 ]
 
 const STEPS = ['Récapitulatif', 'Livraison', 'Paiement']
@@ -23,7 +23,6 @@ function OrderCheckout() {
   const orderData = location.state
   const [currentStep, setCurrentStep] = useState(0)
   const [selectedPayment, setSelectedPayment] = useState(null)
-  const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber || user?.phone || '')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
@@ -77,6 +76,19 @@ function OrderCheckout() {
     setSubmitting(true)
     setError('')
     try {
+      const variantNotes = cart
+        .map((c) => {
+          const parts = []
+          if (c.selectedSize) parts.push(`Taille ${c.selectedSize}`)
+          if (c.selectedColor) parts.push(`Couleur ${c.selectedColor}`)
+          if (parts.length === 0) return null
+          return `- ${c.product.name} x${c.quantity}: ${parts.join(', ')}`
+        })
+        .filter(Boolean)
+      const mergedNotes = [form.notes?.trim(), variantNotes.length > 0 ? `Variantes:\n${variantNotes.join('\n')}` : '']
+        .filter(Boolean)
+        .join('\n\n')
+
       const res = await apiFetch('/orders', {
         method: 'POST',
         body: {
@@ -91,14 +103,29 @@ function OrderCheckout() {
           deliveryAddress: form.deliveryMode === 'DELIVERY' ? form.deliveryAddress : undefined,
           clientPhone: form.clientPhone || undefined,
           clientName: form.clientName || undefined,
-          notes: form.notes || undefined,
+          notes: mergedNotes || undefined,
           paymentMethod: selectedPayment,
         }
       })
-      const order = res?.data ?? res
+      const order = res?.data?.order || res?.order || res?.data || res
+      pushSiteNotification({
+        userId: user?.id || user?.email,
+        type: 'order_confirmation',
+        message: `Commande confirmée chez ${salon.name}. Réf: ${order?.id || 'N/A'}`,
+        meta: { orderId: order?.id, salonId: salon.id },
+      })
       navigate('/order/receipt', {
         state: {
-          order: { ...order, items: cart },
+          order: {
+            ...order,
+            items: cart.map((c) => ({
+              ...(c.product || {}),
+              product: c.product,
+              quantity: c.quantity,
+              selectedSize: c.selectedSize || null,
+              selectedColor: c.selectedColor || null,
+            })),
+          },
           salon,
           paymentMethod: selectedPayment,
           deliveryMode: form.deliveryMode,
@@ -114,7 +141,6 @@ function OrderCheckout() {
       setSubmitting(false)
     }
   }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-amber-50/20 py-6">
       <div className="max-w-3xl mx-auto px-4">
@@ -303,17 +329,25 @@ function OrderCheckout() {
                 {PAYMENT_METHODS.map(method => (
                   <button
                     key={method.id}
-                    onClick={() => setSelectedPayment(method.id)}
+                    onClick={() => {
+                      if (method.id === 'pay_on_pickup' && form.deliveryMode === 'DELIVERY') return
+                      setSelectedPayment(method.id)
+                    }}
+                    disabled={method.id === 'pay_on_pickup' && form.deliveryMode === 'DELIVERY'}
                     className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 text-left transition-all ${
                       selectedPayment === method.id
                         ? 'border-gray-900 bg-gray-50 shadow-sm'
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
-                    <span className="text-2xl">{method.icon}</span>
+                    <span className="text-xs font-semibold text-gray-700 bg-gray-100 rounded-full px-2.5 py-1">{method.icon}</span>
                     <div className="flex-1">
                       <p className="font-semibold text-gray-900">{method.name}</p>
-                      <p className="text-sm text-gray-500">{method.description}</p>
+                      <p className={`text-sm ${method.id === 'pay_on_pickup' && form.deliveryMode === 'DELIVERY' ? 'text-gray-400' : 'text-gray-500'}`}>
+                        {method.id === 'pay_on_pickup' && form.deliveryMode === 'DELIVERY'
+                          ? 'Indisponible pour les commandes en livraison'
+                          : method.description}
+                      </p>
                     </div>
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
                       selectedPayment === method.id ? 'border-gray-900 bg-gray-900' : 'border-gray-300'
@@ -324,19 +358,7 @@ function OrderCheckout() {
                 ))}
               </div>
 
-              {(selectedPayment === 'wave' || selectedPayment === 'orange_money') && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    <FiPhone className="inline w-4 h-4 mr-1" /> Numéro {selectedPayment === 'wave' ? 'Wave' : 'Orange Money'}
-                  </label>
-                  <input
-                    value={phoneNumber}
-                    onChange={e => setPhoneNumber(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
-                    placeholder="77 123 45 67"
-                  />
-                </div>
-              )}
+              
 
               {/* Order Summary */}
               <div className="p-4 bg-gray-50 rounded-xl space-y-2">
@@ -372,7 +394,7 @@ function OrderCheckout() {
                 Traitement...
               </span>
             ) : currentStep === 2 ? (
-              `Payer ${formatPrice(grandTotal)}`
+              `Confirmer la commande (${formatPrice(grandTotal)})`
             ) : (
               'Continuer'
             )}
@@ -389,3 +411,6 @@ function OrderCheckout() {
 }
 
 export default OrderCheckout
+
+
+

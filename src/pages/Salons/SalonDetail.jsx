@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { 
@@ -37,6 +37,9 @@ function SalonDetail() {
   const [reviewError, setReviewError] = useState('')
   const [activeService, setActiveService] = useState(null)
   const [serviceImageIndex, setServiceImageIndex] = useState(0)
+  const [activeProduct, setActiveProduct] = useState(null)
+  const [productImageIndex, setProductImageIndex] = useState(0)
+  const articlesSectionRef = useRef(null)
 
   // Boutique state
   const [boutiqueProducts, setBoutiqueProducts] = useState([])
@@ -143,12 +146,59 @@ function SalonDetail() {
     return cart.filter(c => c.product.id === productId)
   }
 
+  const getVariantEntries = (product) => {
+    const combosRaw = Array.isArray(product?.variantCombinations)
+      ? product.variantCombinations
+      : Array.isArray(product?.variants)
+        ? product.variants
+        : []
+
+    return combosRaw
+      .map((v) => ({
+        size: v?.size || null,
+        color: v?.color || null,
+        stock: Number(v?.stock ?? v?.quantity ?? 0),
+        isAvailable: v?.isAvailable !== false && Number(v?.stock ?? v?.quantity ?? 0) > 0,
+      }))
+      .filter((v) => v.size || v.color)
+  }
+
+  const getProductImages = (product) => {
+    if (!product) return []
+    const raw = [
+      product.imageUrl,
+      product.image,
+      ...(Array.isArray(product.images)
+        ? product.images.map((img) => img?.url || img?.media || img?.imageUrl || img)
+        : []),
+    ].filter(Boolean)
+    return Array.from(new Set(raw)).map(resolveMediaUrl).filter(Boolean)
+  }
+
+  const openArticlesTab = () => {
+    setActiveTab('articles')
+    setTimeout(() => {
+      articlesSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 80)
+  }
+
+  const openProductDetail = (product) => {
+    if (!product) return
+    setActiveProduct(product)
+    setProductImageIndex(0)
+  }
+
+  const closeProductDetail = () => {
+    setActiveProduct(null)
+    setProductImageIndex(0)
+  }
+
   const cartTotal = cart.reduce((sum, c) => sum + c.product.price * c.quantity, 0)
   const cartCount = cart.reduce((sum, c) => sum + c.quantity, 0)
 
   const handleSubmitOrder = () => {
     if (!isAuthenticated) {
-      navigate('/login', { state: { from: { pathname: `/salons/${id}` } } })
+      navigate('/login', { state: { from: { pathname: `/salon/${id}` } } })
       return
     }
     if (cart.length === 0) return
@@ -206,7 +256,7 @@ function SalonDetail() {
 
   const handleSubmitReview = async () => {
     if (!isAuthenticated) {
-      navigate('/login', { state: { from: { pathname: `/salons/${id}` } } })
+      navigate('/login', { state: { from: { pathname: `/salon/${id}` } } })
       return
     }
     if (reviewRating < 1 || reviewRating > 5) {
@@ -494,7 +544,7 @@ function SalonDetail() {
                 {(isBoutique ? ['articles', 'equipe', 'avis'] : ['services', 'equipe', 'avis']).map(tab => (
                   <button
                     key={tab}
-                    onClick={() => setActiveTab(tab)}
+                    onClick={() => (tab === 'articles' ? openArticlesTab() : setActiveTab(tab))}
                     className={`flex-1 py-3 rounded-xl text-center font-semibold transition-colors ${
                       activeTab === tab
                         ? 'bg-white text-primary-700 shadow-sm border border-gray-100'
@@ -560,7 +610,7 @@ function SalonDetail() {
 
                 {/* Articles Tab (Boutique) */}
                 {activeTab === 'articles' && (
-                  <div className="space-y-4">
+                  <div ref={articlesSectionRef} className="space-y-4">
                     {boutiqueProducts.length === 0 ? (
                       <div className="text-center py-12">
                         <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -574,16 +624,49 @@ function SalonDetail() {
                           const img = resolveMediaUrl(product.imageUrl || product.image)
                           const inCartItems = getCartItemForProduct(product.id)
                           const inCartTotal = inCartItems.reduce((s, c) => s + c.quantity, 0)
+                          const variantEntries = getVariantEntries(product)
                           const sizes = product.sizes || product.variants?.sizes || []
                           const colors = product.colors || product.variants?.colors || []
-                          const hasSizes = Array.isArray(sizes) && sizes.length > 0
-                          const hasColors = Array.isArray(colors) && colors.length > 0
+                          const availableSizesFromCombos = Array.from(new Set(variantEntries.map(v => v.size).filter(Boolean)))
+                          const availableColorsFromCombos = Array.from(new Set(variantEntries.map(v => v.color).filter(Boolean)))
+                          const resolvedSizes = Array.isArray(sizes) && sizes.length > 0 ? sizes : availableSizesFromCombos
+                          const resolvedColors = Array.isArray(colors) && colors.length > 0 ? colors : availableColorsFromCombos
+                          const hasSizes = Array.isArray(resolvedSizes) && resolvedSizes.length > 0
+                          const hasColors = Array.isArray(resolvedColors) && resolvedColors.length > 0
                           const selSize = variantSelections[product.id]?.size || null
                           const selColor = variantSelections[product.id]?.color || null
                           const needsVariant = (hasSizes || hasColors)
                           const variantChosen = (!hasSizes || selSize) && (!hasColors || selColor)
+                          const isSizeAvailable = (sizeValue) => {
+                            if (variantEntries.length === 0) return true
+                            return variantEntries.some((v) =>
+                              v.isAvailable &&
+                              v.size === sizeValue &&
+                              (!selColor || !v.color || v.color === selColor)
+                            )
+                          }
+                          const isColorAvailable = (colorValue) => {
+                            if (variantEntries.length === 0) return true
+                            return variantEntries.some((v) =>
+                              v.isAvailable &&
+                              v.color === colorValue &&
+                              (!selSize || !v.size || v.size === selSize)
+                            )
+                          }
                           return (
-                            <div key={product.id} className="bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-md transition-shadow">
+                            <div
+                              key={product.id}
+                              role="button"
+                              tabIndex={0}
+                              onClick={() => openProductDetail(product)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault()
+                                  openProductDetail(product)
+                                }
+                              }}
+                              className="bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+                            >
                               {img ? (
                                 <div className="w-full h-56 bg-gray-50 flex items-center justify-center">
                                   <img src={img} alt={product.name} className="w-full h-full object-contain p-2" loading="lazy" />
@@ -610,17 +693,29 @@ function SalonDetail() {
                                   <div className="mb-3">
                                     <p className="text-xs font-medium text-gray-500 mb-1.5">Taille</p>
                                     <div className="flex flex-wrap gap-1.5">
-                                      {sizes.map(s => (
+                                      {resolvedSizes.map(s => {
+                                        const sizeValue = String(s)
+                                        const available = isSizeAvailable(sizeValue)
+                                        return (
                                         <button
-                                          key={s}
-                                          onClick={() => setVariantSelections(prev => ({ ...prev, [product.id]: { ...prev[product.id], size: prev[product.id]?.size === s ? null : s } }))}
+                                          key={sizeValue}
+                                          onClick={(e) => {
+                                            e.stopPropagation()
+                                            setVariantSelections(prev => ({ ...prev, [product.id]: { ...prev[product.id], size: prev[product.id]?.size === sizeValue ? null : sizeValue } }))
+                                          }}
+                                          disabled={!available}
                                           className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition ${
-                                            selSize === s ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-700 border-gray-200 hover:border-gray-400'
+                                            !available
+                                              ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-60'
+                                              : selSize === sizeValue
+                                                ? 'bg-gray-900 text-white border-gray-900'
+                                                : 'bg-white text-gray-700 border-gray-200 hover:border-gray-400'
                                           }`}
                                         >
-                                          {s}
+                                          {sizeValue}
                                         </button>
-                                      ))}
+                                        )
+                                      })}
                                     </div>
                                   </div>
                                 )}
@@ -630,19 +725,37 @@ function SalonDetail() {
                                   <div className="mb-3">
                                     <p className="text-xs font-medium text-gray-500 mb-1.5">Couleur</p>
                                     <div className="flex flex-wrap gap-1.5">
-                                      {colors.map(c => (
+                                      {resolvedColors.map(c => {
+                                        const colorValue = String(c)
+                                        const available = isColorAvailable(colorValue)
+                                        return (
                                         <button
-                                          key={c}
-                                          onClick={() => setVariantSelections(prev => ({ ...prev, [product.id]: { ...prev[product.id], color: prev[product.id]?.color === c ? null : c } }))}
+                                          key={colorValue}
+                                          onClick={(e) => {
+                                            e.stopPropagation()
+                                            setVariantSelections(prev => ({ ...prev, [product.id]: { ...prev[product.id], color: prev[product.id]?.color === colorValue ? null : colorValue } }))
+                                          }}
+                                          disabled={!available}
                                           className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition ${
-                                            selColor === c ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-700 border-gray-200 hover:border-gray-400'
+                                            !available
+                                              ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-60'
+                                              : selColor === colorValue
+                                                ? 'bg-gray-900 text-white border-gray-900'
+                                                : 'bg-white text-gray-700 border-gray-200 hover:border-gray-400'
                                           }`}
                                         >
-                                          {c}
+                                          {colorValue}
                                         </button>
-                                      ))}
+                                        )
+                                      })}
                                     </div>
                                   </div>
+                                )}
+
+                                {needsVariant && !variantChosen && (
+                                  <p className="mb-2 text-[11px] text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-2 py-1">
+                                    Choisissez les variantes requises avant d'ajouter au panier.
+                                  </p>
                                 )}
 
                                 <div className="flex items-center justify-between">
@@ -652,17 +765,17 @@ function SalonDetail() {
                                   {product.stock > 0 && (
                                     inCartTotal > 0 ? (
                                       <div className="flex items-center gap-2">
-                                        <button onClick={() => removeFromCart(product.id, selSize, selColor)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200">
+                                        <button onClick={(e) => { e.stopPropagation(); removeFromCart(product.id, selSize, selColor) }} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200">
                                           <FiMinus className="w-4 h-4" />
                                         </button>
                                         <span className="font-semibold text-sm">{inCartTotal}</span>
-                                        <button onClick={() => addToCart(product, selSize, selColor)} className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center hover:bg-amber-200" disabled={needsVariant && !variantChosen}>
+                                        <button onClick={(e) => { e.stopPropagation(); addToCart(product, selSize, selColor) }} className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center hover:bg-amber-200" disabled={needsVariant && !variantChosen}>
                                           <FiPlus className="w-4 h-4" />
                                         </button>
                                       </div>
                                     ) : (
                                       <button
-                                        onClick={() => addToCart(product, selSize, selColor)}
+                                        onClick={(e) => { e.stopPropagation(); addToCart(product, selSize, selColor) }}
                                         disabled={needsVariant && !variantChosen}
                                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
                                       >
@@ -671,6 +784,13 @@ function SalonDetail() {
                                     )
                                   )}
                                 </div>
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); openProductDetail(product) }}
+                                  className="mt-3 w-full rounded-xl border border-gray-200 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+                                >
+                                  Voir la fiche
+                                </button>
                               </div>
                             </div>
                           )
@@ -757,7 +877,7 @@ function SalonDetail() {
                             Connectez-vous pour noter ce salon et partager votre expérience.
                           </p>
                           <button
-                            onClick={() => navigate('/login', { state: { from: { pathname: `/salons/${id}` } } })}
+                            onClick={() => navigate('/login', { state: { from: { pathname: `/salon/${id}` } } })}
                             className="px-4 py-2 rounded-lg bg-primary-600 text-white font-semibold hover:bg-primary-700 transition-colors"
                           >
                             Se connecter
@@ -896,7 +1016,7 @@ function SalonDetail() {
                   )}
 
                   <button
-                    onClick={() => cartCount > 0 ? setShowCartModal(true) : setActiveTab('articles')}
+                    onClick={() => cartCount > 0 ? setShowCartModal(true) : openArticlesTab()}
                     className="w-full mb-4 rounded-xl bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 text-white font-semibold py-3.5 shadow-lg hover:shadow-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
                   >
                     {cartCount > 0 ? `Commander (${formatPrice(cartTotal)})` : 'Voir les articles'}
@@ -977,11 +1097,12 @@ function SalonDetail() {
                     {salon.paymentMethods.map((pm) => {
                       const method = pm.method || pm
                       const labels = {
-                        WAVE: { label: 'Wave', color: 'bg-blue-50 text-blue-700' },
-                        ORANGE_MONEY: { label: 'Orange Money', color: 'bg-orange-50 text-orange-700' },
-                        FREE_MONEY: { label: 'Free Money', color: 'bg-green-50 text-green-700' },
-                        CASH: { label: 'Espèces', color: 'bg-gray-100 text-gray-700' },
-                        CARD: { label: 'Carte bancaire', color: 'bg-purple-50 text-purple-700' },
+                        PAYDUNYA: { label: 'PayDunya', color: 'bg-indigo-50 text-indigo-700' },
+                        WAVE: { label: 'Wave (via PayDunya)', color: 'bg-blue-50 text-blue-700' },
+                        ORANGE_MONEY: { label: 'Orange Money (via PayDunya)', color: 'bg-orange-50 text-orange-700' },
+                        FREE_MONEY: { label: 'Free Money (via PayDunya)', color: 'bg-green-50 text-green-700' },
+                        CASH: { label: 'Especes', color: 'bg-gray-100 text-gray-700' },
+                        CARD: { label: 'Carte bancaire (via PayDunya)', color: 'bg-purple-50 text-purple-700' },
                       }
                       const info = labels[method] || { label: method, color: 'bg-gray-100 text-gray-600' }
                       return (
@@ -1141,6 +1262,218 @@ function SalonDetail() {
         )}
       </AnimatePresence>
 
+      <AnimatePresence>
+        {activeProduct && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: reduceMotion ? 0 : 0.2 }}
+            className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm p-0 md:p-4"
+            onClick={closeProductDetail}
+          >
+            {(() => {
+              const product = activeProduct
+              const productImages = getProductImages(product)
+              const variantEntries = getVariantEntries(product)
+              const sizes = product.sizes || product.variants?.sizes || []
+              const colors = product.colors || product.variants?.colors || []
+              const availableSizesFromCombos = Array.from(new Set(variantEntries.map(v => v.size).filter(Boolean)))
+              const availableColorsFromCombos = Array.from(new Set(variantEntries.map(v => v.color).filter(Boolean)))
+              const resolvedSizes = Array.isArray(sizes) && sizes.length > 0 ? sizes : availableSizesFromCombos
+              const resolvedColors = Array.isArray(colors) && colors.length > 0 ? colors : availableColorsFromCombos
+              const hasSizes = Array.isArray(resolvedSizes) && resolvedSizes.length > 0
+              const hasColors = Array.isArray(resolvedColors) && resolvedColors.length > 0
+              const selSize = variantSelections[product.id]?.size || null
+              const selColor = variantSelections[product.id]?.color || null
+              const needsVariant = hasSizes || hasColors
+              const variantChosen = (!hasSizes || selSize) && (!hasColors || selColor)
+              const inCartItems = getCartItemForProduct(product.id).filter((c) => c.selectedSize === selSize && c.selectedColor === selColor)
+              const inCartTotal = inCartItems.reduce((s, c) => s + c.quantity, 0)
+
+              const isSizeAvailable = (sizeValue) => {
+                if (variantEntries.length === 0) return true
+                return variantEntries.some((v) =>
+                  v.isAvailable &&
+                  v.size === sizeValue &&
+                  (!selColor || !v.color || v.color === selColor)
+                )
+              }
+              const isColorAvailable = (colorValue) => {
+                if (variantEntries.length === 0) return true
+                return variantEntries.some((v) =>
+                  v.isAvailable &&
+                  v.color === colorValue &&
+                  (!selSize || !v.size || v.size === selSize)
+                )
+              }
+
+              return (
+                <motion.div
+                  initial={{ y: 40, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: 40, opacity: 0 }}
+                  transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 250, damping: 28 }}
+                  className="w-full md:max-w-2xl bg-white rounded-t-3xl md:rounded-3xl shadow-2xl overflow-hidden max-h-[92vh] md:max-h-[88vh] overflow-y-auto"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="sticky top-0 z-10 bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between">
+                    <h3 className="font-bold text-gray-900 truncate pr-3">{product.name}</h3>
+                    <button
+                      onClick={closeProductDetail}
+                      className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-50"
+                    >
+                      <FiX className="w-5 h-5 text-gray-600" />
+                    </button>
+                  </div>
+
+                  <div className="relative bg-gray-50">
+                    {productImages.length > 0 ? (
+                      <img
+                        src={productImages[productImageIndex]}
+                        alt={product.name}
+                        className="w-full h-72 md:h-80 object-contain p-3"
+                      />
+                    ) : (
+                      <div className="w-full h-72 md:h-80 flex items-center justify-center">
+                        <FiBox className="w-12 h-12 text-gray-300" />
+                      </div>
+                    )}
+
+                    {productImages.length > 1 && (
+                      <>
+                        <button
+                          onClick={() => setProductImageIndex((prev) => prev === 0 ? productImages.length - 1 : prev - 1)}
+                          className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/90 rounded-full flex items-center justify-center shadow"
+                        >
+                          <FiChevronLeft className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={() => setProductImageIndex((prev) => (prev + 1) % productImages.length)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/90 rounded-full flex items-center justify-center shadow"
+                        >
+                          <FiChevronRight className="w-5 h-5" />
+                        </button>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="p-4 md:p-6 space-y-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-2xl font-extrabold text-gray-900">{formatPrice(product.price)}</p>
+                        {product.category && <p className="text-xs text-gray-500 mt-1">{product.category}</p>}
+                      </div>
+                      <span className={`text-xs font-medium px-2 py-1 rounded-full ${product.stock > 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                        {product.stock > 0 ? `${product.stock} en stock` : 'Rupture'}
+                      </span>
+                    </div>
+
+                    {product.description && (
+                      <p className="text-sm text-gray-600">{product.description}</p>
+                    )}
+
+                    {hasSizes && (
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-sm font-semibold text-gray-900">Taille</p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {resolvedSizes.map((s) => {
+                            const sizeValue = String(s)
+                            const available = isSizeAvailable(sizeValue)
+                            return (
+                              <button
+                                key={sizeValue}
+                                onClick={() => setVariantSelections(prev => ({ ...prev, [product.id]: { ...prev[product.id], size: prev[product.id]?.size === sizeValue ? null : sizeValue } }))}
+                                disabled={!available}
+                                className={`px-3 py-2 rounded-lg text-sm font-medium border transition ${
+                                  !available
+                                    ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-60'
+                                    : selSize === sizeValue
+                                      ? 'bg-gray-900 text-white border-gray-900'
+                                      : 'bg-white text-gray-700 border-gray-200 hover:border-gray-400'
+                                }`}
+                              >
+                                {sizeValue}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {hasColors && (
+                      <div>
+                        <p className="text-sm font-semibold text-gray-900 mb-2">Couleur</p>
+                        <div className="flex flex-wrap gap-2">
+                          {resolvedColors.map((c) => {
+                            const colorValue = String(c)
+                            const available = isColorAvailable(colorValue)
+                            return (
+                              <button
+                                key={colorValue}
+                                onClick={() => setVariantSelections(prev => ({ ...prev, [product.id]: { ...prev[product.id], color: prev[product.id]?.color === colorValue ? null : colorValue } }))}
+                                disabled={!available}
+                                className={`px-3 py-2 rounded-lg text-sm font-medium border transition ${
+                                  !available
+                                    ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-60'
+                                    : selColor === colorValue
+                                      ? 'bg-gray-900 text-white border-gray-900'
+                                      : 'bg-white text-gray-700 border-gray-200 hover:border-gray-400'
+                                }`}
+                              >
+                                {colorValue}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {needsVariant && !variantChosen && (
+                      <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+                        Choisissez la taille et/ou la couleur avant d'ajouter au panier.
+                      </p>
+                    )}
+
+                    <div className="pt-2 border-t border-gray-100">
+                      {inCartTotal > 0 ? (
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-2">
+                            <button onClick={() => removeFromCart(product.id, selSize, selColor)} className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200">
+                              <FiMinus className="w-4 h-4" />
+                            </button>
+                            <span className="font-semibold min-w-6 text-center">{inCartTotal}</span>
+                            <button onClick={() => addToCart(product, selSize, selColor)} disabled={needsVariant && !variantChosen} className="w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center hover:bg-amber-200 disabled:opacity-50">
+                              <FiPlus className="w-4 h-4" />
+                            </button>
+                          </div>
+                          <button
+                            onClick={() => { setShowCartModal(true); closeProductDetail() }}
+                            className="rounded-xl bg-gray-900 text-white font-semibold px-4 py-2.5 text-sm"
+                          >
+                            Voir panier
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => addToCart(product, selSize, selColor)}
+                          disabled={product.stock <= 0 || (needsVariant && !variantChosen)}
+                          className="w-full rounded-xl bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white font-semibold py-3.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Ajouter au panier
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              )
+            })()}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Sticky mobile CTA bar */}
       <div className="fixed bottom-0 inset-x-0 z-40 lg:hidden bg-white/95 backdrop-blur border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] px-4 py-3 safe-area-pb">
         <div className="flex items-center justify-between gap-3 max-w-lg mx-auto">
@@ -1150,7 +1483,7 @@ function SalonDetail() {
           </div>
           {isBoutique ? (
             <button
-              onClick={() => cartCount > 0 ? setShowCartModal(true) : setActiveTab('articles')}
+              onClick={() => cartCount > 0 ? setShowCartModal(true) : openArticlesTab()}
               className="flex-shrink-0 rounded-xl bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 text-white font-semibold py-3 px-6 shadow-lg text-sm"
             >
               {cartCount > 0 ? `Commander (${formatPrice(cartTotal)})` : 'Voir articles'}
@@ -1222,3 +1555,5 @@ function SalonDetail() {
 }
 
 export default SalonDetail
+
+

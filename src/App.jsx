@@ -9,6 +9,7 @@ import SalonDetail from './pages/Salons/SalonDetail'
 import Booking from './pages/Booking/Booking'
 import Payment from './pages/Payment/Payment'
 import PaymentSuccess from './pages/Payment/PaymentSuccess'
+import PaymentCancel from './pages/Payment/PaymentCancel'
 import ClientDashboard from './pages/Dashboard/ClientDashboard'
 import CoiffeurDashboard from './pages/Dashboard/CoiffeurDashboard'
 import Profile from './pages/Profile/Profile'
@@ -51,6 +52,11 @@ function App() {
         <Route path="payment/success" element={
           <ProtectedRoute>
             <PaymentSuccess />
+          </ProtectedRoute>
+        } />
+        <Route path="payment/cancel" element={
+          <ProtectedRoute>
+            <PaymentCancel />
           </ProtectedRoute>
         } />
         <Route path="order/checkout" element={
@@ -107,4 +113,3 @@ function App() {
 }
 
 export default App
-

@@ -21,7 +21,18 @@ function Login() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const from = location.state?.from?.pathname || '/'
+  const rawFrom = location.state?.from?.pathname || '/'
+  const normalizeRedirectPath = (path) => {
+    if (!path || typeof path !== 'string') return '/'
+    if (path.startsWith('/salons/')) {
+      return path.replace('/salons/', '/salon/')
+    }
+    if (path === '/order/confirmation') {
+      return '/order/checkout'
+    }
+    return path
+  }
+  const from = normalizeRedirectPath(rawFrom)
 
   const validate = () => {
     const newErrors = {}
