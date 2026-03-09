@@ -59,8 +59,8 @@ export async function subscribeToPush() {
       },
     });
   } catch (err) {
-    // Silently ignore push subscription errors
-    console.warn('Push subscription failed:', err.message);
+    // Silently ignore push subscription errors when the backend push service is unavailable.
+    void err
   }
 }
 

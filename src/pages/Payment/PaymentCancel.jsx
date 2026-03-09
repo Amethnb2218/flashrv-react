@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { FiAlertCircle, FiRefreshCw } from 'react-icons/fi'
 import apiFetch from '../../api/client'
+import { buildPaydunyaPaymentPayload } from '../../utils/payments'
 
 function PaymentCancel() {
   const location = useLocation()
@@ -46,15 +47,27 @@ function PaymentCancel() {
       const depositPct = Number(appointment?.salon?.depositPercentage || 25)
       const total = Number(appointment?.totalPrice || appointment?.service?.price || 0)
       const depositAmount = Math.max(1, Math.round((total * depositPct) / 100))
+      const customerName =
+        appointment?.client?.name ||
+        [appointment?.clientFirstName, appointment?.clientLastName].filter(Boolean).join(' ') ||
+        ''
+      const customerEmail = appointment?.client?.email || appointment?.user?.email || ''
+      const customerPhone = appointment?.client?.phone || appointment?.clientPhone || appointment?.user?.phone || ''
+      const serviceLabel = Array.isArray(appointment?.services) && appointment.services.length > 0
+        ? appointment.services.map((service) => service?.name).filter(Boolean).join(', ')
+        : appointment?.service?.name || 'Reservation'
 
       const result = await apiFetch('/payments/create', {
         method: 'POST',
-        body: {
+        body: buildPaydunyaPaymentPayload({
           bookingId: appointment.id,
           amount: depositAmount,
-          customerName: appointment?.client?.name || '',
-          customerEmail: appointment?.client?.email || '',
-        },
+          customerName,
+          customerEmail,
+          customerPhone,
+          salonName: appointment?.salon?.name,
+          serviceLabel,
+        }),
       })
 
       const payload = result?.data || result

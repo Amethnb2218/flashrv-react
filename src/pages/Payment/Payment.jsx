@@ -7,6 +7,8 @@ import { useAuth } from '../../context/AuthContext'
 import LoadingSpinner from '../../components/UI/LoadingSpinner'
 import apiFetch from '../../api/client'
 import { pushSiteNotification } from '../../utils/siteNotifications'
+import { resolveMediaUrl } from '../../utils/media'
+import { buildPaydunyaPaymentPayload } from '../../utils/payments'
 
 const PAYMENT_METHODS = [
   {
@@ -163,14 +165,18 @@ function Payment() {
         return
       }
 
+      const serviceLabel = bookingState.services.map((service) => service.name).filter(Boolean).join(', ')
       const result = await apiFetch('/payments/create', {
         method: 'POST',
-        body: {
+        body: buildPaydunyaPaymentPayload({
           bookingId: appointmentId,
           amount: depositAmount,
           customerName: `${bookingState.clientFirstName || ''} ${bookingState.clientLastName || ''}`.trim() || user?.name || '',
-          customerEmail: user?.email || '',
-        },
+          customerEmail: user?.email || bookingState.clientEmail || '',
+          customerPhone: bookingState.clientPhone || user?.phoneNumber || user?.phone || '',
+          salonName: bookingState.salon?.name,
+          serviceLabel,
+        }),
       })
 
       const payload = result?.data || result
@@ -188,6 +194,14 @@ function Payment() {
       setLoading(false)
     }
   }
+
+  const salonImage = resolveMediaUrl(
+    bookingState.salon?.coverImage ||
+    bookingState.salon?.image ||
+    bookingState.salon?.gallery?.[0]?.url ||
+    bookingState.salon?.gallery?.[0]?.media ||
+    ''
+  )
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-amber-50/20 py-8 relative overflow-hidden">
@@ -279,73 +293,102 @@ function Payment() {
             <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 md:sticky md:top-24">
               <h2 className="text-xl font-bold text-gray-900 mb-6">Recapitulatif</h2>
 
-              <div className="flex items-center pb-4 border-b border-gray-100">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center text-white font-bold text-lg">
-                  {bookingState.salon.name?.charAt(0) || 'S'}
-                </div>
-                <div className="ml-4">
-                  <h3 className="font-semibold text-gray-900">{bookingState.salon.name}</h3>
-                  <p className="text-sm text-gray-500">{bookingState.salon.address}</p>
-                </div>
-              </div>
-
-              <div className="py-4 border-b border-gray-100">
-                <h4 className="font-medium text-gray-900 mb-3">Services</h4>
-                {bookingState.services.map((service) => (
-                  <div key={service.id} className="flex justify-between text-sm mb-2 gap-3">
-                    <span className="text-gray-600 break-words">{service.name}</span>
-                    <span className="font-medium whitespace-nowrap">{service.price.toLocaleString()} FCFA</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="py-4 border-b border-gray-100">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Date</span>
-                  <span className="font-medium">
-                    {bookingState.date && new Date(bookingState.date).toLocaleDateString('fr-FR', {
-                      weekday: 'short',
-                      day: 'numeric',
-                      month: 'short',
-                    })}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm mt-2">
-                  <span className="text-gray-600">Heure</span>
-                  <span className="font-medium">{bookingState.time}</span>
-                </div>
-                <div className="flex justify-between text-sm mt-2">
-                  <span className="text-gray-600">Coiffeur(se)</span>
-                  <span className="font-medium">{bookingState.coiffeur?.name || 'A definir'}</span>
-                </div>
-              </div>
-
-              <div className="py-4 space-y-3">
-                <div className="flex justify-between text-sm text-gray-600">
-                  <span>Total services</span>
-                  <span className="font-medium">{bookingState.totalPrice.toLocaleString()} FCFA</span>
-                </div>
-
-                {selectedMethod && selectedMethod !== 'pay_on_site' ? (
-                  <>
-                    <div className="h-px bg-gray-200" />
-                    <div className="bg-primary-50 rounded-xl p-4">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm font-medium text-dark-900">Acompte a payer ({depositPercentage}%)</span>
-                        <span className="text-xl font-bold text-primary-600">{depositAmount.toLocaleString()} FCFA</span>
+              <div className="rounded-3xl border border-gray-100 overflow-hidden shadow-[0_20px_60px_-45px_rgba(17,24,39,0.45)]">
+                <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-amber-700 px-5 py-5 text-white">
+                  <div className="flex items-center gap-4">
+                    {salonImage ? (
+                      <img
+                        src={salonImage}
+                        alt={bookingState.salon.name}
+                        className="w-16 h-16 rounded-2xl object-cover border border-white/20"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 rounded-2xl bg-white/12 backdrop-blur flex items-center justify-center text-white font-bold text-2xl border border-white/10">
+                        {bookingState.salon.name?.charAt(0) || 'S'}
                       </div>
-                      <div className="flex justify-between items-center text-sm text-gray-600">
-                        <span>Reste a payer au salon</span>
-                        <span>{remainingAmount.toLocaleString()} FCFA</span>
-                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-[11px] uppercase tracking-[0.28em] text-white/60">Reservation</p>
+                      <h3 className="font-semibold text-lg truncate">{bookingState.salon.name}</h3>
+                      <p className="text-sm text-white/70 truncate">{bookingState.salon.address || bookingState.salon.neighborhood || 'Senegal'}</p>
                     </div>
-                  </>
-                ) : (
-                  <div className="flex justify-between items-center">
-                    <span className="text-lg font-bold text-gray-900">Total</span>
-                    <span className="text-2xl font-bold text-primary-600">{bookingState.totalPrice.toLocaleString()} FCFA</span>
                   </div>
-                )}
+                </div>
+
+                <div className="bg-white px-5 py-5">
+                  <div className="pb-5 border-b border-gray-100">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-semibold text-gray-900">Services</h4>
+                      <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-gray-100 text-gray-600">
+                        {bookingState.services.length}
+                      </span>
+                    </div>
+                    <div className="space-y-3">
+                      {bookingState.services.map((service) => (
+                        <div key={service.id} className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-gray-900 break-words">{service.name}</p>
+                            <p className="text-xs text-gray-500">Prestation reservee</p>
+                          </div>
+                          <span className="text-sm font-semibold text-gray-900 whitespace-nowrap">
+                            {service.price.toLocaleString()} FCFA
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="py-5 border-b border-gray-100 space-y-3">
+                    <div className="flex justify-between items-center gap-4 text-sm">
+                      <span className="text-gray-500">Date</span>
+                      <span className="font-semibold text-gray-900 text-right">
+                        {bookingState.date && new Date(bookingState.date).toLocaleDateString('fr-FR', {
+                          weekday: 'short',
+                          day: 'numeric',
+                          month: 'short',
+                        })}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center gap-4 text-sm">
+                      <span className="text-gray-500">Heure</span>
+                      <span className="font-semibold text-gray-900">{bookingState.time}</span>
+                    </div>
+                    <div className="flex justify-between items-center gap-4 text-sm">
+                      <span className="text-gray-500">Coiffeur(se)</span>
+                      <span className="font-semibold text-gray-900 text-right">{bookingState.coiffeur?.name || 'A definir'}</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-5 space-y-4">
+                    <div className="flex justify-between text-sm text-gray-600">
+                      <span>Total services</span>
+                      <span className="font-semibold text-gray-900">{bookingState.totalPrice.toLocaleString()} FCFA</span>
+                    </div>
+
+                    {selectedMethod && selectedMethod !== 'pay_on_site' ? (
+                      <div className="rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-100 p-4">
+                        <div className="flex justify-between items-start gap-3 mb-3">
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900">Acompte a payer ({depositPercentage}%)</p>
+                            <p className="text-xs text-gray-500 mt-1">Paiement en ligne pour confirmer votre reservation</p>
+                          </div>
+                          <span className="text-2xl font-black text-amber-700 whitespace-nowrap">
+                            {depositAmount.toLocaleString()} FCFA
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center text-sm text-gray-600 pt-3 border-t border-amber-100">
+                          <span>Reste a payer au salon</span>
+                          <span className="font-semibold text-gray-900">{remainingAmount.toLocaleString()} FCFA</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="rounded-2xl bg-gray-50 border border-gray-100 p-4 flex justify-between items-center gap-4">
+                        <span className="text-lg font-bold text-gray-900">Total</span>
+                        <span className="text-2xl font-black text-gray-900">{bookingState.totalPrice.toLocaleString()} FCFA</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
 
               <div className="py-3 border-t border-gray-100">
