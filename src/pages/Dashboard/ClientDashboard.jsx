@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import { 
   FiCalendar, FiClock, FiMapPin, FiStar, FiMoreVertical, 
   FiX, FiRefreshCw, FiHeart, FiSettings, FiChevronRight,
-  FiGift, FiAward, FiPercent, FiMessageCircle
+  FiGift, FiAward, FiPercent, FiMessageCircle, FiShoppingBag, FiPackage
 } from 'react-icons/fi'
 import { useAuth } from '../../context/AuthContext'
 import { loyaltyConfig } from '../../data/salons'
@@ -23,6 +23,9 @@ function ClientDashboard() {
   const [chatBooking, setChatBooking] = useState(null)
   const [showChatModal, setShowChatModal] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [orders, setOrders] = useState([])
+  const [ordersLoading, setOrdersLoading] = useState(true)
+  const [cancellingOrderId, setCancellingOrderId] = useState(null)
 
   const getSalonImage = (salon) => {
     if (!salon) return ''
@@ -67,6 +70,48 @@ function ClientDashboard() {
       mounted = false
     }
   }, [user])
+
+  // Fetch orders
+  useEffect(() => {
+    if (!user) return
+    let mounted = true
+    const loadOrders = async () => {
+      setOrdersLoading(true)
+      try {
+        const res = await apiFetch('/orders?scope=client')
+        const data = res?.data ?? res
+        if (mounted) setOrders(Array.isArray(data) ? data : (data?.orders || []))
+      } catch (_) {
+        if (mounted) setOrders([])
+      } finally {
+        if (mounted) setOrdersLoading(false)
+      }
+    }
+    loadOrders()
+    return () => { mounted = false }
+  }, [user])
+
+  const handleCancelOrder = async (orderId) => {
+    setCancellingOrderId(orderId)
+    try {
+      await apiFetch(`/orders/${orderId}/status`, { method: 'PATCH', body: { status: 'CANCELLED' } })
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'CANCELLED' } : o))
+      toast.success('Commande annulée')
+    } catch (e) {
+      toast.error(e.message || 'Erreur lors de l\'annulation')
+    } finally {
+      setCancellingOrderId(null)
+    }
+  }
+
+  const orderStatusLabels = {
+    PENDING: { label: 'En attente', className: 'bg-yellow-100 text-yellow-700' },
+    CONFIRMED: { label: 'Confirmée', className: 'bg-blue-100 text-blue-700' },
+    PREPARING: { label: 'En préparation', className: 'bg-purple-100 text-purple-700' },
+    READY: { label: 'Prête', className: 'bg-green-100 text-green-700' },
+    DELIVERED: { label: 'Livrée', className: 'bg-green-100 text-green-700' },
+    CANCELLED: { label: 'Annulée', className: 'bg-red-100 text-red-700' },
+  }
 
   const now = new Date()
   const getBookingDateTime = (booking) => {
@@ -370,11 +415,110 @@ function ClientDashboard() {
               >
                 Historique ({pastBookings.length})
               </button>
+              <button
+                onClick={() => setActiveTab('orders')}
+                className={`flex-1 py-4 text-center font-medium transition-colors flex items-center justify-center gap-1 ${
+                  activeTab === 'orders'
+                    ? 'text-primary-600 border-b-2 border-primary-600'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <FiShoppingBag className="w-4 h-4" />
+                Commandes ({orders.length})
+              </button>
             </div>
           </div>
 
           <div className="p-6">
-            {loading ? (
+            {/* Orders Tab */}
+            {activeTab === 'orders' ? (
+              ordersLoading ? (
+                <div className="text-center py-12">
+                  <div className="w-10 h-10 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin mx-auto mb-4"></div>
+                  <p className="text-gray-500">Chargement des commandes...</p>
+                </div>
+              ) : orders.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <FiShoppingBag className="w-10 h-10 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Aucune commande</h3>
+                  <p className="text-gray-500 mb-6">Vos commandes boutique apparaîtront ici</p>
+                  <Link to="/salons?businessType=BOUTIQUE" className="inline-flex items-center px-6 py-3 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-colors">
+                    Explorer les boutiques
+                  </Link>
+                </div>
+              ) : (
+                <div className="grid gap-4">
+                  {orders.map(order => {
+                    const st = orderStatusLabels[order.status] || { label: order.status, className: 'bg-gray-100 text-gray-700' }
+                    const canCancel = ['PENDING', 'CONFIRMED'].includes(order.status)
+                    return (
+                      <motion.div
+                        key={order.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-white/90 backdrop-blur rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow"
+                      >
+                        <div className="h-1 w-full bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-400" />
+                        <div className="p-5">
+                          <div className="flex items-start justify-between mb-3">
+                            <div>
+                              <h3 className="font-bold text-gray-900">{order.salon?.name || 'Boutique'}</h3>
+                              <p className="text-xs text-gray-500">
+                                {new Date(order.createdAt).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                              </p>
+                            </div>
+                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${st.className}`}>{st.label}</span>
+                          </div>
+
+                          <div className="space-y-1.5 mb-3">
+                            {(order.items || []).map((item, i) => (
+                              <div key={i} className="flex justify-between text-sm">
+                                <span className="text-gray-700">{item.product?.name || 'Article'} × {item.quantity}</span>
+                                <span className="font-medium text-gray-900">{(item.unitPrice * item.quantity).toLocaleString()} FCFA</span>
+                              </div>
+                            ))}
+                          </div>
+
+                          <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                            <div className="flex items-center gap-3 text-sm text-gray-500">
+                              <span className="flex items-center gap-1">
+                                <FiPackage className="w-4 h-4" />
+                                {order.deliveryMode === 'DELIVERY' ? 'Livraison' : 'Retrait'}
+                              </span>
+                            </div>
+                            <p className="font-bold text-amber-600 text-lg">{(order.totalPrice || 0).toLocaleString()} FCFA</p>
+                          </div>
+
+                          {/* Status Timeline */}
+                          <div className="mt-4 flex items-center gap-1">
+                            {['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'DELIVERED'].map((step, i) => {
+                              const steps = ['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'DELIVERED']
+                              const currentIdx = steps.indexOf(order.status)
+                              const isDone = i <= currentIdx && order.status !== 'CANCELLED'
+                              return (
+                                <div key={step} className={`flex-1 h-1.5 rounded-full ${isDone ? 'bg-green-500' : 'bg-gray-200'}`} />
+                              )
+                            })}
+                          </div>
+
+                          {canCancel && (
+                            <button
+                              onClick={() => handleCancelOrder(order.id)}
+                              disabled={cancellingOrderId === order.id}
+                              className="mt-4 w-full py-2.5 border border-red-300 text-red-600 rounded-xl hover:bg-red-50 transition-colors text-sm font-medium disabled:opacity-50"
+                            >
+                              {cancellingOrderId === order.id ? 'Annulation...' : 'Annuler la commande'}
+                            </button>
+                          )}
+                        </div>
+                      </motion.div>
+                    )
+                  })}
+                </div>
+              )
+            ) : loading ? (
               <div className="text-center py-12">
                 <div className="w-10 h-10 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin mx-auto mb-4"></div>
                 <p className="text-gray-500">Chargement des réservations...</p>

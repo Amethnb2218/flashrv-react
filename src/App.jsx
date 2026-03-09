@@ -19,6 +19,8 @@ import AdminDashboard from './pages/Admin/AdminDashboard'
 import NotFound from './pages/NotFound'
 import ProtectedRoute from './components/Auth/ProtectedRoute'
 import InstallPrompt from './components/PWA/InstallPrompt'
+import OrderCheckout from './pages/Order/OrderCheckout'
+import OrderReceipt from './pages/Order/OrderReceipt'
 
 function App() {
   return (
@@ -49,6 +51,16 @@ function App() {
         <Route path="payment/success" element={
           <ProtectedRoute>
             <PaymentSuccess />
+          </ProtectedRoute>
+        } />
+        <Route path="order/checkout" element={
+          <ProtectedRoute>
+            <OrderCheckout />
+          </ProtectedRoute>
+        } />
+        <Route path="order/receipt" element={
+          <ProtectedRoute>
+            <OrderReceipt />
           </ProtectedRoute>
         } />
         <Route path="dashboard" element={

@@ -2,14 +2,17 @@ import { useState, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { FiMenu, FiX, FiUser, FiLogOut, FiCalendar, FiSettings, FiPhone, FiMapPin, FiSearch, FiHeart, FiStar, FiHome, FiScissors, FiShoppingBag } from 'react-icons/fi'
+import { FiMenu, FiX, FiUser, FiLogOut, FiCalendar, FiSettings, FiPhone, FiMapPin, FiSearch, FiHeart, FiStar, FiHome, FiScissors, FiShoppingBag, FiBell } from 'react-icons/fi'
 import { motion, AnimatePresence } from 'framer-motion'
 import Logo from '../UI/Logo'
+import apiFetch from '../../api/client'
 
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const [showNotifications, setShowNotifications] = useState(false)
+  const [notifications, setNotifications] = useState([])
   const { user, isAuthenticated, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
@@ -34,6 +37,8 @@ function Navbar() {
   // Close drawer on route change
   useEffect(() => {
     setIsOpen(false)
+    setShowNotifications(false)
+    setShowUserMenu(false)
   }, [location.pathname, location.search])
 
   // Lock body scroll when mobile drawer is open
@@ -47,6 +52,30 @@ function Navbar() {
   }, [isOpen])
 
   const closeDrawer = useCallback(() => setIsOpen(false), [])
+
+  // Fetch notifications
+  useEffect(() => {
+    if (!isAuthenticated) return
+    const fetchNotifications = async () => {
+      try {
+        const res = await apiFetch('/notifications')
+        const data = res?.data ?? res
+        setNotifications(Array.isArray(data) ? data.slice(0, 10) : [])
+      } catch (_) { /* silent */ }
+    }
+    fetchNotifications()
+    const interval = setInterval(fetchNotifications, 60000)
+    return () => clearInterval(interval)
+  }, [isAuthenticated])
+
+  const unreadCount = notifications.filter(n => !n.isRead).length
+
+  const markNotificationRead = async (id) => {
+    try {
+      await apiFetch(`/notifications/${id}/read`, { method: 'PATCH' })
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n))
+    } catch (_) { /* silent */ }
+  }
 
   const isSalonPage = location.pathname === '/salons' && searchParams.get('businessType') !== 'BOUTIQUE'
 
@@ -68,7 +97,7 @@ function Navbar() {
               </a>
               <span className="flex items-center space-x-1.5">
                 <FiMapPin className="w-3 h-3 text-amber-400" />
-                <span>Dakar, Sénégal</span>
+                <span>Dakar, Sï¿½nï¿½gal</span>
               </span>
             </div>
             <div className="flex items-center space-x-4">
@@ -78,7 +107,7 @@ function Navbar() {
               </span>
               <span className="flex items-center space-x-1.5 bg-amber-500/20 px-2 py-0.5 rounded-full">
                 <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span>
-                <span className="text-amber-400 font-medium">Réservation 24h/24</span>
+                <span className="text-amber-400 font-medium">Rï¿½servation 24h/24</span>
               </span>
             </div>
           </div>
@@ -139,13 +168,71 @@ function Navbar() {
               >
                 <FiHeart className="w-5 h-5" />
               </button>
+
+              {/* Notification Bell */}
+              {isAuthenticated && (
+                <div className="relative">
+                  <button
+                    onClick={() => { setShowNotifications(!showNotifications); setShowUserMenu(false) }}
+                    className="p-2.5 text-gray-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 relative"
+                    title="Notifications"
+                  >
+                    <FiBell className="w-5 h-5" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
+                  </button>
+
+                  <AnimatePresence>
+                    {showNotifications && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }}
+                        className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50"
+                      >
+                        <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                          <h3 className="font-bold text-gray-900">Notifications</h3>
+                          {unreadCount > 0 && (
+                            <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">{unreadCount} nouvelles</span>
+                          )}
+                        </div>
+                        <div className="max-h-72 overflow-y-auto">
+                          {notifications.length === 0 ? (
+                            <div className="p-6 text-center text-gray-400 text-sm">
+                              Aucune notification
+                            </div>
+                          ) : (
+                            notifications.map(n => (
+                              <div
+                                key={n.id}
+                                onClick={() => markNotificationRead(n.id)}
+                                className={`px-4 py-3 border-b border-gray-50 cursor-pointer hover:bg-gray-50 transition ${
+                                  !n.isRead ? 'bg-amber-50/50' : ''
+                                }`}
+                              >
+                                <p className="text-sm text-gray-800">{n.message}</p>
+                                <p className="text-xs text-gray-400 mt-1">
+                                  {new Date(n.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                </p>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
               
               <div className="h-6 w-px bg-gray-200"></div>
               
               {isAuthenticated ? (
                 <div className="relative">
                   <button
-                    onClick={() => setShowUserMenu(!showUserMenu)}
+                    onClick={() => { setShowUserMenu(!showUserMenu); setShowNotifications(false) }}
                     className="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
                   >
                     {(user.avatar || user.picture) ? (
@@ -186,7 +273,7 @@ function Navbar() {
                           className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
                         >
                           <FiCalendar className="w-4 h-4" />
-                          <span>{user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' ? 'Dashboard admin' : user.role === 'PRO' ? 'Mon dashboard' : 'Mes réservations'}</span>
+                          <span>{user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' ? 'Dashboard admin' : user.role === 'PRO' ? 'Mon dashboard' : 'Mes rï¿½servations'}</span>
                         </Link>
                         
                         <Link
@@ -195,7 +282,7 @@ function Navbar() {
                           className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
                         >
                           <FiSettings className="w-4 h-4" />
-                          <span>Paramètres</span>
+                          <span>Paramï¿½tres</span>
                         </Link>
                         
                         <button
@@ -203,7 +290,7 @@ function Navbar() {
                           className="flex items-center space-x-2 px-4 py-2 text-red-600 hover:bg-red-50 w-full transition-colors"
                         >
                           <FiLogOut className="w-4 h-4" />
-                          <span>Déconnexion</span>
+                          <span>Dï¿½connexion</span>
                         </button>
                       </motion.div>
                     )}
@@ -239,7 +326,7 @@ function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Drawer — rendered via Portal outside nav for stable positioning */}
+      {/* Mobile Drawer ï¿½ rendered via Portal outside nav for stable positioning */}
       {createPortal(
         <AnimatePresence mode="wait">
           {isOpen && (
@@ -350,15 +437,29 @@ function Navbar() {
                         className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                       >
                         <FiCalendar className="w-5 h-5" />
-                        <span>{user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' ? 'Dashboard admin' : user.role === 'PRO' ? 'Mon dashboard' : 'Mes réservations'}</span>
+                        <span>{user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' ? 'Dashboard admin' : user.role === 'PRO' ? 'Mon dashboard' : 'Mes rï¿½servations'}</span>
                       </Link>
+                      <button
+                        onClick={() => { closeDrawer(); navigate('/dashboard') }}
+                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors w-full"
+                      >
+                        <div className="relative">
+                          <FiBell className="w-5 h-5" />
+                          {unreadCount > 0 && (
+                            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                              {unreadCount > 9 ? '9+' : unreadCount}
+                            </span>
+                          )}
+                        </div>
+                        <span>Notifications{unreadCount > 0 ? ` (${unreadCount})` : ''}</span>
+                      </button>
                       <Link
                         to="/profile"
                         onClick={closeDrawer}
                         className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                       >
                         <FiSettings className="w-5 h-5" />
-                        <span>Paramètres</span>
+                        <span>Paramï¿½tres</span>
                       </Link>
                     </div>
                   ) : (
@@ -381,7 +482,7 @@ function Navbar() {
                   )}
                 </div>
 
-                {/* Drawer footer — logout */}
+                {/* Drawer footer ï¿½ logout */}
                 {isAuthenticated && (
                   <div className="border-t border-gray-100 px-4 py-4">
                     <button
@@ -389,7 +490,7 @@ function Navbar() {
                       className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
                     >
                       <FiLogOut className="w-5 h-5" />
-                      <span>Déconnexion</span>
+                      <span>Dï¿½connexion</span>
                     </button>
                   </div>
                 )}

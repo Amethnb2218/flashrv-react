@@ -40,10 +40,11 @@ function SalonDetail() {
 
   // Boutique state
   const [boutiqueProducts, setBoutiqueProducts] = useState([])
-  const [cart, setCart] = useState([]) // [{product, quantity}]
+  const [cart, setCart] = useState([]) // [{product, quantity, selectedSize, selectedColor}]
   const [showCartModal, setShowCartModal] = useState(false)
   const [orderForm, setOrderForm] = useState({ deliveryMode: 'PICKUP', deliveryAddress: '', clientPhone: '', clientName: '', notes: '' })
   const [orderSubmitting, setOrderSubmitting] = useState(false)
+  const [variantSelections, setVariantSelections] = useState({}) // { productId: { size, color } }
 
   useEffect(() => {
     let mounted = true
@@ -116,67 +117,64 @@ function SalonDetail() {
 
   const isBoutique = salonData?.businessType === 'BOUTIQUE'
 
-  const addToCart = (product) => {
+  const addToCart = (product, size, color) => {
+    const selSize = size || variantSelections[product.id]?.size || null
+    const selColor = color || variantSelections[product.id]?.color || null
     setCart(prev => {
-      const existing = prev.find(c => c.product.id === product.id)
+      const existing = prev.find(c => c.product.id === product.id && c.selectedSize === selSize && c.selectedColor === selColor)
       if (existing) {
-        return prev.map(c => c.product.id === product.id ? { ...c, quantity: c.quantity + 1 } : c)
+        return prev.map(c => (c.product.id === product.id && c.selectedSize === selSize && c.selectedColor === selColor) ? { ...c, quantity: c.quantity + 1 } : c)
       }
-      return [...prev, { product, quantity: 1 }]
+      return [...prev, { product, quantity: 1, selectedSize: selSize, selectedColor: selColor }]
     })
   }
 
-  const removeFromCart = (productId) => {
+  const removeFromCart = (productId, size, color) => {
     setCart(prev => {
-      const existing = prev.find(c => c.product.id === productId)
+      const existing = prev.find(c => c.product.id === productId && c.selectedSize === (size || null) && c.selectedColor === (color || null))
       if (existing && existing.quantity > 1) {
-        return prev.map(c => c.product.id === productId ? { ...c, quantity: c.quantity - 1 } : c)
+        return prev.map(c => (c.product.id === productId && c.selectedSize === (size || null) && c.selectedColor === (color || null)) ? { ...c, quantity: c.quantity - 1 } : c)
       }
-      return prev.filter(c => c.product.id !== productId)
+      return prev.filter(c => !(c.product.id === productId && c.selectedSize === (size || null) && c.selectedColor === (color || null)))
     })
+  }
+
+  const getCartItemForProduct = (productId) => {
+    return cart.filter(c => c.product.id === productId)
   }
 
   const cartTotal = cart.reduce((sum, c) => sum + c.product.price * c.quantity, 0)
   const cartCount = cart.reduce((sum, c) => sum + c.quantity, 0)
 
-  const handleSubmitOrder = async () => {
+  const handleSubmitOrder = () => {
     if (!isAuthenticated) {
       navigate('/login', { state: { from: { pathname: `/salons/${id}` } } })
       return
     }
     if (cart.length === 0) return
-    setOrderSubmitting(true)
-    try {
-      await apiFetch('/orders', {
-        method: 'POST',
-        body: {
-          salonId: salonData.id,
-          items: cart.map(c => ({ productId: c.product.id, quantity: c.quantity })),
-          deliveryMode: orderForm.deliveryMode,
-          deliveryAddress: orderForm.deliveryMode === 'DELIVERY' ? orderForm.deliveryAddress : undefined,
-          clientPhone: orderForm.clientPhone || undefined,
-          clientName: orderForm.clientName || user?.name || undefined,
-          notes: orderForm.notes || undefined,
-        }
-      })
-      setCart([])
-      setShowCartModal(false)
-      setOrderForm({ deliveryMode: 'PICKUP', deliveryAddress: '', clientPhone: '', clientName: '', notes: '' })
-      alert('Commande envoyée ! Le vendeur va la confirmer.')
-    } catch (e) {
-      alert(e.message || 'Erreur lors de la commande')
-    } finally {
-      setOrderSubmitting(false)
-    }
+    setShowCartModal(false)
+    navigate('/order/checkout', {
+      state: {
+        cart,
+        salon: salonData,
+        deliveryMode: orderForm.deliveryMode,
+        deliveryAddress: orderForm.deliveryAddress,
+        clientPhone: orderForm.clientPhone,
+        clientName: orderForm.clientName || user?.name,
+        notes: orderForm.notes,
+      }
+    })
+    setCart([])
+    setOrderForm({ deliveryMode: 'PICKUP', deliveryAddress: '', clientPhone: '', clientName: '', notes: '' })
   }
 
   const amenityIcons = {
     wifi: <FiWifi />,
-    café: <FiCoffee />,
-    climatisation: '??',
-    parking: '???',
-    'cartes acceptées': '??',
-    spa: '?????'
+    "caf\u00e9": <FiCoffee />,
+    climatisation: 'â„ï¸',
+    parking: 'ðŸ…¿ï¸',
+    "cartes accept\u00e9es": 'ðŸ’³',
+    spa: 'ðŸ§–â€â™€ï¸'
   }
 
   const handleBookNow = () => {
@@ -212,7 +210,7 @@ function SalonDetail() {
       return
     }
     if (reviewRating < 1 || reviewRating > 5) {
-      setReviewError('Veuillez sélectionner une note entre 1 et 5')
+      setReviewError('Veuillez sï¿½lectionner une note entre 1 et 5')
       return
     }
     setReviewSubmitting(true)
@@ -300,7 +298,7 @@ function SalonDetail() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Salon non trouvé</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Salon non trouvï¿½</h2>
           <Link to="/salons" className="btn-primary">Retour aux salons</Link>
         </div>
       </div>
@@ -312,14 +310,14 @@ function SalonDetail() {
   const minPrice = salon.minPrice ?? servicesMinPrice
   const maxPrice = salon.maxPrice ?? servicesMaxPrice
   const priceLabel = formatPriceRange(minPrice, maxPrice)
-  const priceText = priceLabel === '—' ? 'Tarifs sur place' : priceLabel
+  const priceText = priceLabel === 'ï¿½' ? 'Tarifs sur place' : priceLabel
   const reviewCount = salon.reviewCount ?? salonReviews.length
   const computedRating = typeof salon.rating === 'number'
     ? salon.rating
     : (reviewCount ? salonReviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviewCount : 0)
   const hasRating = reviewCount > 0 && computedRating > 0
   const ratingLabel = hasRating ? computedRating.toFixed(1) : 'Nouveau'
-  const ratingHint = hasRating ? `${reviewCount} avis` : 'Soyez le premier à noter'
+  const ratingHint = hasRating ? `${reviewCount} avis` : 'Soyez le premier ï¿½ noter'
   const activeServiceImages = activeService ? getServiceImages(activeService) : []
 
   return (
@@ -343,7 +341,7 @@ function SalonDetail() {
         ) : null}
         <div className={`img-fallback w-full h-full flex flex-col items-center justify-center text-slate-400 absolute inset-0 ${galleryImages.length > 0 ? 'hidden' : ''}`}>
           <svg className="w-16 h-16 mb-3 text-slate-300" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" /></svg>
-          <span className="text-sm font-medium">Photo bientôt disponible</span>
+          <span className="text-sm font-medium">Photo bientï¿½t disponible</span>
         </div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.18),_transparent_55%)]" />
@@ -353,7 +351,7 @@ function SalonDetail() {
             <button
               onClick={() => setCurrentImageIndex(prev => prev === 0 ? galleryImages.length - 1 : prev - 1)}
               className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 rounded-full flex items-center justify-center hover:bg-white"
-              aria-label="Image précédente"
+              aria-label="Image prï¿½cï¿½dente"
             >
               <FiChevronLeft className="w-6 h-6" />
             </button>
@@ -425,7 +423,7 @@ function SalonDetail() {
                       ) : (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-600">
                           <span className="w-2 h-2 rounded-full bg-red-400" />
-                          Fermé
+                          Fermï¿½
                         </span>
                       )
                     ) : null}
@@ -454,7 +452,7 @@ function SalonDetail() {
                 <span className="px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">
                   {isBoutique ? `${boutiqueProducts.length} article${boutiqueProducts.length > 1 ? 's' : ''}` : `${services.length} services`}
                 </span>
-                {priceLabel !== '—' && (
+                {priceLabel !== 'ï¿½' && (
                   <span className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700">
                     {priceLabel}
                   </span>
@@ -465,7 +463,7 @@ function SalonDetail() {
                   </span>
                 ) : (
                   <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700">
-                    Soyez le premier à noter
+                    Soyez le premier ï¿½ noter
                   </span>
                 )}
               </div>
@@ -505,7 +503,7 @@ function SalonDetail() {
                   >
                     {tab === 'services' && 'Services'}
                     {tab === 'articles' && 'Articles'}
-                    {tab === 'equipe' && 'Équipe'}
+                    {tab === 'equipe' && 'ï¿½quipe'}
                     {tab === 'avis' && `Avis (${salonReviews.length})`}
                   </button>
                 ))}
@@ -549,7 +547,7 @@ function SalonDetail() {
                                 </div>
                                 <div className="flex items-center gap-3">
                                   <span className="font-semibold text-primary-600">{formatPrice(service.price)}</span>
-                                  <span className="text-xs text-gray-400 group-hover:text-primary-600">Voir détails</span>
+                                  <span className="text-xs text-gray-400 group-hover:text-primary-600">Voir dï¿½tails</span>
                                 </div>
                               </button>
                             )
@@ -574,7 +572,16 @@ function SalonDetail() {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {boutiqueProducts.filter(p => p.isActive !== false).map(product => {
                           const img = resolveMediaUrl(product.imageUrl || product.image)
-                          const inCart = cart.find(c => c.product.id === product.id)
+                          const inCartItems = getCartItemForProduct(product.id)
+                          const inCartTotal = inCartItems.reduce((s, c) => s + c.quantity, 0)
+                          const sizes = product.sizes || product.variants?.sizes || []
+                          const colors = product.colors || product.variants?.colors || []
+                          const hasSizes = Array.isArray(sizes) && sizes.length > 0
+                          const hasColors = Array.isArray(colors) && colors.length > 0
+                          const selSize = variantSelections[product.id]?.size || null
+                          const selColor = variantSelections[product.id]?.color || null
+                          const needsVariant = (hasSizes || hasColors)
+                          const variantChosen = (!hasSizes || selSize) && (!hasColors || selColor)
                           return (
                             <div key={product.id} className="bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-md transition-shadow">
                               {img ? (
@@ -597,25 +604,67 @@ function SalonDetail() {
                                 {product.description && (
                                   <p className="text-sm text-gray-600 mb-3 line-clamp-2">{product.description}</p>
                                 )}
+
+                                {/* Variant: Sizes */}
+                                {hasSizes && (
+                                  <div className="mb-3">
+                                    <p className="text-xs font-medium text-gray-500 mb-1.5">Taille</p>
+                                    <div className="flex flex-wrap gap-1.5">
+                                      {sizes.map(s => (
+                                        <button
+                                          key={s}
+                                          onClick={() => setVariantSelections(prev => ({ ...prev, [product.id]: { ...prev[product.id], size: prev[product.id]?.size === s ? null : s } }))}
+                                          className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition ${
+                                            selSize === s ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-700 border-gray-200 hover:border-gray-400'
+                                          }`}
+                                        >
+                                          {s}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Variant: Colors */}
+                                {hasColors && (
+                                  <div className="mb-3">
+                                    <p className="text-xs font-medium text-gray-500 mb-1.5">Couleur</p>
+                                    <div className="flex flex-wrap gap-1.5">
+                                      {colors.map(c => (
+                                        <button
+                                          key={c}
+                                          onClick={() => setVariantSelections(prev => ({ ...prev, [product.id]: { ...prev[product.id], color: prev[product.id]?.color === c ? null : c } }))}
+                                          className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition ${
+                                            selColor === c ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-700 border-gray-200 hover:border-gray-400'
+                                          }`}
+                                        >
+                                          {c}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
                                 <div className="flex items-center justify-between">
                                   <span className={`text-xs font-medium px-2 py-1 rounded-full ${product.stock > 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
                                     {product.stock > 0 ? `${product.stock} en stock` : 'Rupture'}
                                   </span>
                                   {product.stock > 0 && (
-                                    inCart ? (
+                                    inCartTotal > 0 ? (
                                       <div className="flex items-center gap-2">
-                                        <button onClick={() => removeFromCart(product.id)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200">
+                                        <button onClick={() => removeFromCart(product.id, selSize, selColor)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200">
                                           <FiMinus className="w-4 h-4" />
                                         </button>
-                                        <span className="font-semibold text-sm">{inCart.quantity}</span>
-                                        <button onClick={() => addToCart(product)} className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center hover:bg-amber-200">
+                                        <span className="font-semibold text-sm">{inCartTotal}</span>
+                                        <button onClick={() => addToCart(product, selSize, selColor)} className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center hover:bg-amber-200" disabled={needsVariant && !variantChosen}>
                                           <FiPlus className="w-4 h-4" />
                                         </button>
                                       </div>
                                     ) : (
                                       <button
-                                        onClick={() => addToCart(product)}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 transition"
+                                        onClick={() => addToCart(product, selSize, selColor)}
+                                        disabled={needsVariant && !variantChosen}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
                                       >
                                         <FiShoppingCart className="w-4 h-4" /> Ajouter
                                       </button>
@@ -639,8 +688,8 @@ function SalonDetail() {
                         <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                           <FiUsers className="w-8 h-8 text-gray-400" />
                         </div>
-                        <p className="text-gray-500 mb-2">Équipe non renseignée</p>
-                        <p className="text-sm text-gray-400">Les membres de l'équipe seront bientôt ajoutés.</p>
+                        <p className="text-gray-500 mb-2">ï¿½quipe non renseignï¿½e</p>
+                        <p className="text-sm text-gray-400">Les membres de l'ï¿½quipe seront bientï¿½t ajoutï¿½s.</p>
                       </div>
                     ) : (
                     <div className="grid md:grid-cols-2 gap-4">
@@ -679,9 +728,9 @@ function SalonDetail() {
                               <p className="text-sm text-gray-500 truncate">{coiffeur.specialty || 'Expert'}</p>
                               <div className="flex items-center gap-2 mt-2 text-sm">
                                 <FiStar className="w-4 h-4 text-yellow-500 fill-current" />
-                                <span className="font-semibold text-gray-700">{rating != null ? rating.toFixed(1) : '—'}</span>
-                                <span className="text-gray-300">•</span>
-                                <span className="text-gray-500">{coiffeur.experience || '—'}</span>
+                                <span className="font-semibold text-gray-700">{rating != null ? rating.toFixed(1) : 'ï¿½'}</span>
+                                <span className="text-gray-300">ï¿½</span>
+                                <span className="text-gray-500">{coiffeur.experience || 'ï¿½'}</span>
                               </div>
                             </div>
                           </div>
@@ -699,13 +748,13 @@ function SalonDetail() {
                     <div className="bg-gray-50 rounded-2xl p-5 border border-gray-100">
                       <div className="flex items-center justify-between mb-4">
                         <h4 className="font-semibold text-gray-900">Laisser un avis</h4>
-                        <span className="text-xs text-gray-500">Votre avis aide la communauté</span>
+                        <span className="text-xs text-gray-500">Votre avis aide la communautï¿½</span>
                       </div>
 
                       {!isAuthenticated ? (
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                           <p className="text-sm text-gray-600">
-                            Connectez-vous pour noter ce salon et partager votre expérience.
+                            Connectez-vous pour noter ce salon et partager votre expï¿½rience.
                           </p>
                           <button
                             onClick={() => navigate('/login', { state: { from: { pathname: `/salons/${id}` } } })}
@@ -728,7 +777,7 @@ function SalonDetail() {
                                     onMouseLeave={() => setHoverRating(0)}
                                     onClick={() => setReviewRating(star)}
                                     className="p-1"
-                                    aria-label={`Noter ${star} étoile${star > 1 ? 's' : ''}`}
+                                    aria-label={`Noter ${star} ï¿½toile${star > 1 ? 's' : ''}`}
                                   >
                                     <FiStar className={`${active ? 'text-yellow-500 fill-current' : 'text-gray-300'} w-6 h-6`} />
                                   </button>
@@ -743,7 +792,7 @@ function SalonDetail() {
                             rows={4}
                             value={reviewComment}
                             onChange={(e) => setReviewComment(e.target.value)}
-                            placeholder="Décrivez votre expérience : accueil, ponctualité, résultat, ambiance."
+                            placeholder="Dï¿½crivez votre expï¿½rience : accueil, ponctualitï¿½, rï¿½sultat, ambiance."
                             className="w-full resize-none rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                           />
                           {reviewError && (
@@ -769,7 +818,7 @@ function SalonDetail() {
                           <FiStar className="w-8 h-8 text-gray-400" />
                         </div>
                         <p className="text-gray-500 mb-2">Aucun avis pour le moment</p>
-                        <p className="text-sm text-gray-400">Soyez le premier à laisser un avis après votre visite !</p>
+                        <p className="text-sm text-gray-400">Soyez le premier ï¿½ laisser un avis aprï¿½s votre visite !</p>
                       </div>
                     ) : (
                       salonReviews.map(review => {
@@ -787,7 +836,7 @@ function SalonDetail() {
                               <div className="flex items-center space-x-2">
                                 <h4 className="font-medium text-gray-900">{reviewerName}</h4>
                                 {review.verified && (
-                                  <span className="bg-green-100 text-green-600 text-xs px-2 py-0.5 rounded-full">Vérifié</span>
+                                  <span className="bg-green-100 text-green-600 text-xs px-2 py-0.5 rounded-full">Vï¿½rifiï¿½</span>
                                 )}
                               </div>
                               <div className="flex items-center space-x-2">
@@ -833,9 +882,13 @@ function SalonDetail() {
                         <span className="font-semibold text-gray-900">Panier ({cartCount})</span>
                         <span className="font-bold text-amber-600">{formatPrice(cartTotal)}</span>
                       </div>
-                      {cart.map(c => (
-                        <div key={c.product.id} className="flex items-center justify-between text-sm py-1">
-                          <span className="text-gray-700">{c.product.name} × {c.quantity}</span>
+                      {cart.map((c, idx) => (
+                        <div key={`${c.product.id}-${c.selectedSize}-${c.selectedColor}-${idx}`} className="flex items-center justify-between text-sm py-1">
+                          <span className="text-gray-700">
+                            {c.product.name} Ã— {c.quantity}
+                            {c.selectedSize ? ` Â· ${c.selectedSize}` : ''}
+                            {c.selectedColor ? ` Â· ${c.selectedColor}` : ''}
+                          </span>
                           <span className="text-gray-500">{formatPrice(c.product.price * c.quantity)}</span>
                         </div>
                       ))}
@@ -852,10 +905,10 @@ function SalonDetail() {
               ) : (
                 <>
                   <div className="text-center mb-6">
-                    <span className="text-xs uppercase tracking-wide text-gray-500">À partir de</span>
+                    <span className="text-xs uppercase tracking-wide text-gray-500">ï¿½ partir de</span>
                     <p className="text-3xl font-extrabold text-gray-900 mt-1">{priceText}</p>
                     <p className="text-xs text-gray-500 mt-2">
-                      {services.length} service{services.length > 1 ? 's' : ''} · {ratingHint}
+                      {services.length} service{services.length > 1 ? 's' : ''} ï¿½ {ratingHint}
                     </p>
                   </div>
 
@@ -863,7 +916,7 @@ function SalonDetail() {
                     onClick={handleBookNow}
                     className="w-full mb-4 rounded-xl bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white font-semibold py-3.5 shadow-lg hover:shadow-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
                   >
-                    Réserver maintenant
+                    Rï¿½server maintenant
                   </button>
                 </>
               )}
@@ -918,7 +971,7 @@ function SalonDetail() {
               {salon.paymentMethods?.length > 0 && (
                 <div className="mb-6">
                   <h4 className="font-medium text-gray-900 mb-3 flex items-center text-sm">
-                    ?? Moyens de paiement acceptés
+                    ?? Moyens de paiement acceptï¿½s
                   </h4>
                   <div className="flex flex-wrap gap-2">
                     {salon.paymentMethods.map((pm) => {
@@ -927,7 +980,7 @@ function SalonDetail() {
                         WAVE: { label: 'Wave', color: 'bg-blue-50 text-blue-700' },
                         ORANGE_MONEY: { label: 'Orange Money', color: 'bg-orange-50 text-orange-700' },
                         FREE_MONEY: { label: 'Free Money', color: 'bg-green-50 text-green-700' },
-                        CASH: { label: 'Espèces', color: 'bg-gray-100 text-gray-700' },
+                        CASH: { label: 'Espï¿½ces', color: 'bg-gray-100 text-gray-700' },
                         CARD: { label: 'Carte bancaire', color: 'bg-purple-50 text-purple-700' },
                       }
                       const info = labels[method] || { label: method, color: 'bg-gray-100 text-gray-600' }
@@ -949,7 +1002,7 @@ function SalonDetail() {
                     <div key={day} className="flex justify-between">
                       <span className="text-gray-600">{getDayName(day)}</span>
                       <span className={hours ? 'text-gray-900' : 'text-red-500'}>
-                        {hours ? `${hours.open} - ${hours.close}` : 'Fermé'}
+                        {hours ? `${hours.open} - ${hours.close}` : 'Fermï¿½'}
                       </span>
                     </div>
                   ))}
@@ -1073,7 +1126,7 @@ function SalonDetail() {
                     onClick={() => handleReserveService(activeService)}
                     className="w-full btn-primary"
                   >
-                    Réserver ce service
+                    Rï¿½server ce service
                   </button>
                   <button
                     onClick={() => setActiveService(null)}
@@ -1107,7 +1160,7 @@ function SalonDetail() {
               onClick={handleBookNow}
               className="flex-shrink-0 rounded-xl bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white font-semibold py-3 px-6 shadow-lg text-sm"
             >
-              Réserver
+              Rï¿½server
             </button>
           )}
         </div>
@@ -1121,22 +1174,26 @@ function SalonDetail() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setShowCartModal(false)}>
           <div className="w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-              <h3 className="text-xl font-bold text-gray-900">Votre commande</h3>
+              <h3 className="text-xl font-bold text-gray-900">Votre panier ({cartCount})</h3>
               <button onClick={() => setShowCartModal(false)} className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center hover:bg-gray-50">
                 <FiX className="w-5 h-5" />
               </button>
             </div>
             <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
-              {cart.map(c => (
-                <div key={c.product.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                  <div>
+              {cart.map((c, idx) => (
+                <div key={`${c.product.id}-${c.selectedSize}-${c.selectedColor}-${idx}`} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                  <div className="min-w-0 flex-1">
                     <p className="font-semibold text-gray-900">{c.product.name}</p>
-                    <p className="text-sm text-gray-500">{formatPrice(c.product.price)} × {c.quantity}</p>
+                    <div className="flex gap-2 text-xs text-gray-500">
+                      <span>{formatPrice(c.product.price)} Ã— {c.quantity}</span>
+                      {c.selectedSize && <span>Â· {c.selectedSize}</span>}
+                      {c.selectedColor && <span>Â· {c.selectedColor}</span>}
+                    </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button onClick={() => removeFromCart(c.product.id)} className="w-8 h-8 rounded-full bg-white border flex items-center justify-center"><FiMinus className="w-4 h-4" /></button>
+                    <button onClick={() => removeFromCart(c.product.id, c.selectedSize, c.selectedColor)} className="w-8 h-8 rounded-full bg-white border flex items-center justify-center"><FiMinus className="w-4 h-4" /></button>
                     <span className="font-bold">{c.quantity}</span>
-                    <button onClick={() => addToCart(c.product)} className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center"><FiPlus className="w-4 h-4" /></button>
+                    <button onClick={() => addToCart(c.product, c.selectedSize, c.selectedColor)} className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center"><FiPlus className="w-4 h-4" /></button>
                     <span className="ml-2 font-semibold">{formatPrice(c.product.price * c.quantity)}</span>
                   </div>
                 </div>
@@ -1149,63 +1206,12 @@ function SalonDetail() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Mode de livraison</label>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setOrderForm(f => ({ ...f, deliveryMode: 'PICKUP' }))}
-                    className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border transition ${orderForm.deliveryMode === 'PICKUP' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-700 border-gray-200'}`}
-                  >
-                    Retrait en boutique
-                  </button>
-                  <button
-                    onClick={() => setOrderForm(f => ({ ...f, deliveryMode: 'DELIVERY' }))}
-                    className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border transition ${orderForm.deliveryMode === 'DELIVERY' ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-700 border-gray-200'}`}
-                  >
-                    Livraison
-                  </button>
-                </div>
-              </div>
-
-              {orderForm.deliveryMode === 'DELIVERY' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Adresse de livraison</label>
-                  <input
-                    value={orderForm.deliveryAddress}
-                    onChange={e => setOrderForm(f => ({ ...f, deliveryAddress: e.target.value }))}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
-                    placeholder="Votre adresse"
-                  />
-                </div>
-              )}
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
-                <input
-                  value={orderForm.clientPhone}
-                  onChange={e => setOrderForm(f => ({ ...f, clientPhone: e.target.value }))}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
-                  placeholder="Numéro de téléphone"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Notes (optionnel)</label>
-                <textarea
-                  value={orderForm.notes}
-                  onChange={e => setOrderForm(f => ({ ...f, notes: e.target.value }))}
-                  rows={2}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
-                  placeholder="Instructions spéciales…"
-                />
-              </div>
-
               <button
                 onClick={handleSubmitOrder}
-                disabled={orderSubmitting || cart.length === 0}
+                disabled={cart.length === 0}
                 className="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-60"
               >
-                {orderSubmitting ? 'Envoi en cours…' : `Confirmer la commande (${formatPrice(cartTotal)})`}
+                Passer la commande ({formatPrice(cartTotal)})
               </button>
             </div>
           </div>

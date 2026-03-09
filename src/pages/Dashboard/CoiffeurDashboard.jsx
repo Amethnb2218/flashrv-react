@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+Ôªøimport { useEffect, useMemo, useRef, useState } from "react";
 import apiFetch from "@/api/client";
 import { useAuth } from "../../context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -40,6 +40,7 @@ FiShoppingBag,
 FiPackage,
 FiShoppingCart,
 FiBox,
+FiMapPin,
 } from "react-icons/fi";
 import AppointmentChatModal from "../../components/Chat/AppointmentChatModal";
 import QuartierSelector from "../../components/UI/QuartierSelector";
@@ -83,29 +84,29 @@ transition: { duration: 0.2 },
 
 // Traduction statuts (rendez-vous, paiement, avis, etc.)
 const statusLabels = {
-  upcoming: "¿ venir",
-  completed: "TerminÈ",
-  cancelled: "AnnulÈ",
-  confirmed: "ConfirmÈ",
-  confirmed_on_site: "ConfirmÈ (sur place)",
+  upcoming: "ÔøΩ venir",
+  completed: "TerminÔøΩ",
+  cancelled: "AnnulÔøΩ",
+  confirmed: "ConfirmÔøΩ",
+  confirmed_on_site: "ConfirmÔøΩ (sur place)",
   in_progress: "En cours",
   pending: "En attente",
   pending_assignment: "En attente d'assignation",
   pending_cash: "En attente (sur place)",
-  paid: "PayÈ",
-  deposit_paid: "Acompte payÈ",
-  refunded: "RemboursÈ",
-  failed: "…chec paiement",
+  paid: "PayÔøΩ",
+  deposit_paid: "Acompte payÔøΩ",
+  refunded: "RemboursÔøΩ",
+  failed: "ÔøΩchec paiement",
   on_site: "Sur place",
-  unpaid: "ImpayÈ",
+  unpaid: "ImpayÔøΩ",
   no_show: "Absence",
-  approved: "ApprouvÈ",
-  rejected: "RejetÈ",
+  approved: "ApprouvÔøΩ",
+  rejected: "RejetÔøΩ",
 };
 
 const getStatusLabel = (value) => {
   const key = String(value || "").toLowerCase();
-  return statusLabels[key] || value || "ó";
+  return statusLabels[key] || value || "ÔøΩ";
 };
 
 const modalAnim = {
@@ -190,7 +191,7 @@ function formatPeriodLabel(period) {
     start = startOfDay(new Date(now.getFullYear(), 0, 1));
     end = endOfDay(new Date(now.getFullYear(), 11, 31));
   }
-  return `${start.toLocaleDateString("fr-FR")} ñ ${end.toLocaleDateString("fr-FR")}`;
+  return `${start.toLocaleDateString("fr-FR")} ÔøΩ ${end.toLocaleDateString("fr-FR")}`;
 }
 
 function toYmd(d) {
@@ -223,7 +224,7 @@ Service: ${invoice.serviceName}
 ---
 Total: ${formatMoney(invoice.totalAmount)}
 Acompte (${invoice.depositPct}%): ${formatMoney(invoice.depositAmount)}
-Reste ‡ payer: ${formatMoney(invoice.remainingAmount)}
+Reste ÔøΩ payer: ${formatMoney(invoice.remainingAmount)}
 ---
 Merci de votre confiance !
 `.trim();
@@ -478,7 +479,7 @@ title="Fermer"
 
 function DataTable({ columns, data, emptyLabel }) {
 if (!data?.length) {
-return <EmptyState icon={<FiGrid />} title={emptyLabel || "Aucune donnÈe"} />;
+return <EmptyState icon={<FiGrid />} title={emptyLabel || "Aucune donnÔøΩe"} />;
 }
 return (
 <div className="overflow-x-auto rounded-2xl border border-gray-100">
@@ -524,7 +525,7 @@ export default function CoiffeurDashboard() {
 const { isAuthenticated, checkAuth, user } = useAuth();
 
 // IMPORTANT: on garde l'onglet "portfolio" MAIS le label est "Salon".
-// Donc activeTab doit toujours Ítre "portfolio" (et surtout PAS "salon").
+// Donc activeTab doit toujours ÔøΩtre "portfolio" (et surtout PAS "salon").
 const [activeTab, setActiveTab] = useState("appointments");
 
 // data
@@ -603,7 +604,7 @@ label: "Pause",
 open: "09:00",
 close: "18:00",
 closed: false,
-name: "Jour fÈriÈ",
+name: "Jour fÔøΩriÔøΩ",
 });
 
 // Payments + invoices
@@ -639,7 +640,7 @@ const [loyalty, setLoyalty] = useState({
 enabled: true,
 pointsPerBooking: 10,
 rewardThreshold: 100,
-rewardLabel: "10% de rÈduction",
+rewardLabel: "10% de rÔøΩduction",
 });
 
 // CRM clients
@@ -709,28 +710,28 @@ const tabs = useMemo(
 () => isBoutique ? [
   { id: "orders", label: "Commandes", icon: FiShoppingCart },
   { id: "products", label: "Articles", icon: FiBox },
-  { id: "team", label: "…quipe", icon: FiUsers },
+  { id: "team", label: "ÔøΩquipe", icon: FiUsers },
   { id: "payments", label: "Paiements", icon: FiDollarSign },
   { id: "paymentMethods", label: "Moyens de paiement", icon: FiCreditCard },
   { id: "portfolio", label: "Boutique", icon: FiCamera },
   { id: "reviews", label: "Avis", icon: FiStar },
-  { id: "promos", label: "Promos & FidÈlitÈ", icon: FiGift },
+  { id: "promos", label: "Promos & FidÔøΩlitÔøΩ", icon: FiGift },
   { id: "crm", label: "CRM Clients", icon: FiUser },
   { id: "stats", label: "Stats", icon: FiBarChart2 },
-  { id: "settings", label: "ParamËtres", icon: FiSettings },
+  { id: "settings", label: "ParamÔøΩtres", icon: FiSettings },
 ] : [
   { id: "appointments", label: "Rendez-vous", icon: FiCalendar },
   { id: "services", label: "Services", icon: FiScissors },
-  { id: "team", label: "…quipe", icon: FiUsers },
+  { id: "team", label: "ÔøΩquipe", icon: FiUsers },
   { id: "planning", label: "Planning", icon: FiClock },
   { id: "payments", label: "Paiements", icon: FiDollarSign },
   { id: "paymentMethods", label: "Moyens de paiement", icon: FiCreditCard },
   { id: "portfolio", label: "Salon", icon: FiCamera },
   { id: "reviews", label: "Avis", icon: FiStar },
-  { id: "promos", label: "Promos & FidÈlitÈ", icon: FiGift },
+  { id: "promos", label: "Promos & FidÔøΩlitÔøΩ", icon: FiGift },
   { id: "crm", label: "CRM Clients", icon: FiUser },
   { id: "stats", label: "Stats", icon: FiBarChart2 },
-  { id: "settings", label: "ParamËtres", icon: FiSettings },
+  { id: "settings", label: "ParamÔøΩtres", icon: FiSettings },
 ],
 [isBoutique]
 );
@@ -784,7 +785,7 @@ const normalizePortfolioList = (items = []) => {
       const existing = grouped.get(groupId) || {
         id: groupId,
         type: "beforeAfter",
-        title: title || "Avant/AprËs",
+        title: title || "Avant/AprÔøΩs",
         beforeMedia: "",
         afterMedia: "",
         ids: [],
@@ -922,8 +923,8 @@ const normalizeException = (ex) => {
 const normalizeHoliday = (h) => {
   if (!h) return h;
   const rawName = h?.name || h?.label || "";
-  let safeName = String(rawName || "Jour fÈriÈ");
-  if (safeName.includes("√") || safeName.includes("ÔøΩ")) {
+  let safeName = String(rawName || "Jour fÔøΩriÔøΩ");
+  if (safeName.includes("ÔøΩ") || safeName.includes("ÔøΩ")) {
     try {
       safeName = decodeURIComponent(escape(safeName));
     } catch {
@@ -933,7 +934,7 @@ const normalizeHoliday = (h) => {
   return {
     ...h,
     date: toYmd(h?.date),
-    name: safeName.includes("?") || safeName.includes("ÔøΩ") ? "Jour fÈriÈ" : safeName,
+    name: safeName.includes("?") || safeName.includes("ÔøΩ") ? "Jour fÔøΩriÔøΩ" : safeName,
   };
 };
 
@@ -1028,7 +1029,7 @@ const createdPaymentMethod = res?.data ?? res;
 setPaymentMethods((prev) => [createdPaymentMethod, ...prev]);
 setShowPaymentMethodModal(false);
 setNewPaymentMethod({ method: "", enabled: true });
-toast.success("Moyen de paiement ajoutÈ !");
+toast.success("Moyen de paiement ajoutÔøΩ !");
 } catch (e) {
 toast.error(e.message || "Erreur lors de l'ajout");
 }
@@ -1040,7 +1041,7 @@ try {
 setDeletingPaymentMethod(true);
 await apiFetch(`/salon/payment-methods/${id}`, { method: "DELETE" });
 setPaymentMethods((prev) => prev.filter((pm) => pm.id !== id));
-toast.success("Moyen de paiement supprimÈ.");
+toast.success("Moyen de paiement supprimÔøΩ.");
 } catch (e) {
 toast.error(e.message || "Erreur lors de la suppression");
 } finally {
@@ -1060,7 +1061,7 @@ const user = await checkAuth();
 authed = !!user;
 }
 if (!authed) {
-toast.error("Vous devez Ítre connectÈ pour voir les moyens de paiement.");
+toast.error("Vous devez ÔøΩtre connectÔøΩ pour voir les moyens de paiement.");
 window.location.reload();
 return;
 }
@@ -1135,7 +1136,7 @@ setUnreadNotifications(notificationsRes?.data?.unreadCount || 0);
 }
 )
 .catch((err) => {
-let msg = "Erreur lors du chargement des donnÈes";
+let msg = "Erreur lors du chargement des donnÔøΩes";
 if (err && err.message) msg += ` : ${err.message}`;
 toast.error(msg);
 })
@@ -1250,7 +1251,7 @@ return false;
 }
 const ok = file.type.startsWith("image/") || file.type.startsWith("video/");
 if (!ok) {
-toast.error("Format non supportÈ. (image/* ou video/*)");
+toast.error("Format non supportÔøΩ. (image/* ou video/*)");
 return false;
 }
 return true;
@@ -1390,7 +1391,7 @@ try {
   const res = await apiFetch("/services", { method: "POST", body: form });
   const created = normalizeService(res?.data || res);
   setServices((prev) => [created, ...prev]);
-  toast.success("Service ajoutÈ !");
+  toast.success("Service ajoutÔøΩ !");
   setShowServiceModal(false);
   resetNewService();
 } catch (err) {
@@ -1438,10 +1439,10 @@ try {
   const res = await apiFetch(`/services/${updated.id}`, { method: "PATCH", body: form });
   const saved = normalizeService(res?.data || res);
   setServices((prev) => prev.map((s) => (s.id === updated.id ? { ...s, ...saved } : s)));
-  toast.success("Service mis ‡ jour !");
+  toast.success("Service mis ÔøΩ jour !");
   setEditingService(null);
 } catch (err) {
-  toast.error("Erreur mise ‡ jour: " + (err.message || err));
+  toast.error("Erreur mise ÔøΩ jour: " + (err.message || err));
 }
 };
 
@@ -1450,7 +1451,7 @@ if (!confirmDelete?.id) return;
 try {
   await apiFetch(`/services/${confirmDelete.id}`, { method: "DELETE" });
   setServices((prev) => prev.filter((s) => s.id !== confirmDelete.id));
-  toast.success("Service supprimÈ.");
+  toast.success("Service supprimÔøΩ.");
   setConfirmDelete(null);
 } catch (err) {
   toast.error("Erreur suppression: " + (err.message || err));
@@ -1475,10 +1476,10 @@ const apiStatus = statusMap[status] || String(status || "").toUpperCase();
 apiFetch(`/appointments/${id}/status`, { method: "PATCH", body: { status: apiStatus } })
   .then(() => {
     setAppointments((prev) => prev.map((a) => (a.id === id ? { ...a, status } : a)));
-    toast.success("Statut mis ‡ jour.");
+    toast.success("Statut mis ÔøΩ jour.");
   })
   .catch((err) => {
-    toast.error("Erreur mise ‡ jour statut: " + (err.message || err));
+    toast.error("Erreur mise ÔøΩ jour statut: " + (err.message || err));
   });
 };
 
@@ -1498,13 +1499,13 @@ depositAmount,
 remainingAmount,
 };
 setInvoices((prev) => [invoice, ...prev]);
-toast.success("Facture gÈnÈrÈe.");
+toast.success("Facture gÔøΩnÔøΩrÔøΩe.");
 downloadInvoiceLikeFile(invoice);
 };
 
 const refundAppointmentDeposit = async (appt) => {
 if (!appt?.depositPaid || (appt.depositPct || 0) <= 0) {
-toast.error("Aucun acompte ‡ rembourser.");
+toast.error("Aucun acompte ÔøΩ rembourser.");
 return;
 }
 const paymentId = appt.payment?.id;
@@ -1519,7 +1520,7 @@ prev.map((a) =>
 a.id === appt.id ? { ...a, paymentStatus: "refunded", depositPaid: false } : a
 )
 );
-toast.success("Remboursement effectuÈ.");
+toast.success("Remboursement effectuÔøΩ.");
 } catch (err) {
 toast.error("Erreur remboursement: " + (err.message || err));
 }
@@ -1558,7 +1559,7 @@ try {
   const res = await apiFetch("/team", { method: "POST", body: payload });
   const created = res?.data ?? res;
   setTeam((prev) => [created, ...prev]);
-  toast.success("Membre ajoutÈ.");
+  toast.success("Membre ajoutÔøΩ.");
   setShowTeamModal(false);
   resetNewMember();
 } catch (err) {
@@ -1580,10 +1581,10 @@ try {
   const res = await apiFetch(`/team/${editingMember.id}`, { method: "PATCH", body: payload });
   const updated = res?.data ?? res;
   setTeam((prev) => prev.map((m) => (m.id === editingMember.id ? { ...m, ...updated } : m)));
-  toast.success("Membre mis ‡ jour.");
+  toast.success("Membre mis ÔøΩ jour.");
   setEditingMember(null);
 } catch (err) {
-  toast.error("Erreur mise ‡ jour: " + (err.message || err));
+  toast.error("Erreur mise ÔøΩ jour: " + (err.message || err));
 }
 };
 
@@ -1591,7 +1592,7 @@ const deleteMember = async (id) => {
 try {
   await apiFetch(`/team/${id}`, { method: "DELETE" });
   setTeam((prev) => prev.filter((m) => m.id !== id));
-  toast.success("Membre supprimÈ.");
+  toast.success("Membre supprimÔøΩ.");
 } catch (err) {
   toast.error("Erreur suppression: " + (err.message || err));
 }
@@ -1616,7 +1617,7 @@ label: planningForm.label || "Pause",
 });
 const created = normalizeBreak(res?.data ?? res);
 setPlanning((p) => ({ ...p, breaks: [created, ...p.breaks] }));
-toast.success("Pause ajoutÈe.");
+toast.success("Pause ajoutÔøΩe.");
 }
 if (t === "exception") {
 const res = await apiFetch("/planning/exceptions", {
@@ -1630,19 +1631,19 @@ closed: !!planningForm.closed,
 });
 const created = normalizeException(res?.data ?? res);
 setPlanning((p) => ({ ...p, exceptions: [created, ...p.exceptions] }));
-toast.success("Exception ajoutÈe.");
+toast.success("Exception ajoutÔøΩe.");
 }
 if (t === "holiday") {
 const res = await apiFetch("/planning/holidays", {
 method: "POST",
 body: {
 date: planningForm.date,
-name: planningForm.name || "Jour fÈriÈ",
+name: planningForm.name || "Jour fÔøΩriÔøΩ",
 },
 });
 const created = normalizeHoliday(res?.data ?? res);
 setPlanning((p) => ({ ...p, holidays: [created, ...p.holidays] }));
-toast.success("Jour fÈriÈ ajoutÈ.");
+toast.success("Jour fÔøΩriÔøΩ ajoutÔøΩ.");
 }
 setShowPlanningModal(false);
 } catch (err) {
@@ -1663,7 +1664,7 @@ setPlanning((p) => ({
 ...p,
 [type]: p[type].filter((x) => x.id !== id),
 }));
-toast.success("SupprimÈ.");
+toast.success("SupprimÔøΩ.");
 } catch (err) {
 toast.error(err.message || "Erreur lors de la suppression");
 }
@@ -1676,7 +1677,7 @@ const addPortfolioItem = async () => {
 const title = portfolioForm.title.trim();
 if (!title) return toast.error("Titre requis.");
 if (!portfolioForm.media && !portfolioForm.mediaFile)
-  return toast.error(portfolioForm.type === "video" ? "Ajoute une vidÈo." : "Ajoute une photo.");
+  return toast.error(portfolioForm.type === "video" ? "Ajoute une vidÔøΩo." : "Ajoute une photo.");
 
 try {
     const form = new FormData();
@@ -1692,7 +1693,7 @@ try {
     const created = normalizePortfolioList([createdRaw])[0];
     if (created) created.type = portfolioForm.type === "video" ? "video" : "gallery";
     setPortfolio((p) => [created, ...p]);
-  toast.success(isBoutique ? "AjoutÈ ‡ la boutique." : "AjoutÈ au salon.");
+  toast.success(isBoutique ? "AjoutÔøΩ ÔøΩ la boutique." : "AjoutÔøΩ au salon.");
   setShowPortfolioModal(false);
   setPortfolioForm({
     type: "gallery",
@@ -1719,9 +1720,9 @@ try {
       x.id === item.id ? { ...x, media: updated.url || x.media } : x
     )
   );
-  toast.success("Image mise ‡ jour.");
+  toast.success("Image mise ÔøΩ jour.");
 } catch (err) {
-  toast.error(err.message || "Erreur lors de la mise ‡ jour");
+  toast.error(err.message || "Erreur lors de la mise ÔøΩ jour");
 }
 };
 
@@ -1731,7 +1732,7 @@ if (!ids[0]) return;
 try {
   await Promise.all(ids.map((id) => apiFetch(`/portfolio/${id}`, { method: "DELETE" })));
   setPortfolio((p) => p.filter((x) => x.id !== (item?.id || item)));
-  toast.success("SupprimÈ.");
+  toast.success("SupprimÔøΩ.");
 } catch (err) {
   toast.error(err.message || "Erreur lors de la suppression");
 }
@@ -1745,9 +1746,9 @@ try {
   const res = await apiFetch(`/reviews/${id}`, { method: "PATCH", body: { status } });
   const updated = normalizeReview(res?.data ?? res);
   setReviews((prev) => prev.map((r) => (r.id === id ? { ...r, ...updated } : r)));
-  toast.success("Avis mis ‡ jour.");
+  toast.success("Avis mis ÔøΩ jour.");
 } catch (err) {
-  toast.error(err.message || "Erreur lors de la mise ‡ jour");
+  toast.error(err.message || "Erreur lors de la mise ÔøΩ jour");
 }
 };
 
@@ -1770,7 +1771,7 @@ validTo: promoForm.expiresAt || null,
 const res = await apiFetch("/promos", { method: "POST", body: payload });
 const created = normalizePromo(res?.data ?? res);
 setPromos((p) => [created, ...p]);
-toast.success("Promo ajoutÈe.");
+toast.success("Promo ajoutÔøΩe.");
 setShowPromoModal(false);
 setPromoForm({ code: "", type: "percent", value: 10, expiresAt: "", active: true });
 } catch (e) {
@@ -1789,7 +1790,7 @@ body: { isActive: !current.active },
 const updated = normalizePromo(res?.data ?? res);
 setPromos((p) => p.map((x) => (x.id === id ? updated : x)));
 } catch (e) {
-toast.error(e.message || "Erreur lors de la mise ‡ jour");
+toast.error(e.message || "Erreur lors de la mise ÔøΩ jour");
 }
 };
 
@@ -1797,7 +1798,7 @@ const deletePromo = async (id) => {
 try {
 await apiFetch(`/promos/${id}`, { method: "DELETE" });
 setPromos((p) => p.filter((x) => x.id !== id));
-toast.success("Promo supprimÈe.");
+toast.success("Promo supprimÔøΩe.");
 } catch (e) {
 toast.error(e.message || "Erreur lors de la suppression");
 }
@@ -1807,7 +1808,7 @@ try {
   const res = await apiFetch("/loyalty", { method: "PATCH", body: { settings: loyalty } });
   const settings = res?.settings || res?.data?.settings || loyalty;
   if (settings) setLoyalty(settings);
-  toast.success("FidÈlitÈ sauvegardÈe.");
+  toast.success("FidÔøΩlitÔøΩ sauvegardÔøΩe.");
 } catch (e) {
   toast.error(e.message || "Erreur lors de la sauvegarde");
 }
@@ -1825,9 +1826,9 @@ try {
   const updated = normalizeClient(res?.data ?? res);
   setClients((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
   if (selectedClient?.id === updated.id) setSelectedClient(updated);
-  toast.success("No-show ajoutÈ.");
+  toast.success("No-show ajoutÔøΩ.");
 } catch (err) {
-  toast.error(err.message || "Erreur mise ‡ jour no-show");
+  toast.error(err.message || "Erreur mise ÔøΩ jour no-show");
 }
 };
 
@@ -1845,9 +1846,9 @@ try {
   const updated = normalizeClient(res?.data ?? res);
   setClients((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
   setSelectedClient(updated);
-  toast.success("Notes sauvegardÈes.");
+  toast.success("Notes sauvegardÔøΩes.");
 } catch (e) {
-  toast.error(e.message || "Erreur mise ‡ jour notes");
+  toast.error(e.message || "Erreur mise ÔøΩ jour notes");
 } finally {
   setSavingClientAddress(false);
 }
@@ -1865,9 +1866,9 @@ const updated = normalizeClient(res?.data ?? res);
 setClients((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
 setSelectedClient(updated);
 setClientAddressDraft(updated.address || "");
-toast.success("Adresse mise ‡ jour.");
+toast.success("Adresse mise ÔøΩ jour.");
 } catch (e) {
-toast.error(e.message || "Erreur mise ‡ jour adresse");
+toast.error(e.message || "Erreur mise ÔøΩ jour adresse");
 } finally {
 setSavingClientAddress(false);
 }
@@ -1904,12 +1905,12 @@ const handleSaveProduct = async () => {
       const res = await apiFetch(`/products/${editingProduct.id}`, { method: "PATCH", body: formData });
       const updated = res?.data ?? res;
       setProducts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
-      toast.success("Article mis ‡ jour.");
+      toast.success("Article mis ÔøΩ jour.");
     } else {
       const res = await apiFetch("/products", { method: "POST", body: formData });
       const created = res?.data ?? res;
       setProducts((prev) => [created, ...prev]);
-      toast.success("Article ajoutÈ.");
+      toast.success("Article ajoutÔøΩ.");
     }
     resetProductForm();
     setShowProductModal(false);
@@ -1923,7 +1924,7 @@ const handleDeleteProduct = async (id) => {
   try {
     await apiFetch(`/products/${id}`, { method: "DELETE" });
     setProducts((prev) => prev.filter((p) => p.id !== id));
-    toast.success("Article supprimÈ.");
+    toast.success("Article supprimÔøΩ.");
   } catch (e) {
     toast.error(e.message || "Erreur lors de la suppression");
   }
@@ -1937,9 +1938,9 @@ const handleOrderStatus = async (orderId, newStatus) => {
     });
     const updated = res?.data ?? res;
     setOrders((prev) => prev.map((o) => (o.id === updated.id ? updated : o)));
-    toast.success(`Commande ${newStatus === "CANCELLED" ? "annulÈe" : "mise ‡ jour"}.`);
+    toast.success(`Commande ${newStatus === "CANCELLED" ? "annulÔøΩe" : "mise ÔøΩ jour"}.`);
   } catch (e) {
-    toast.error(e.message || "Erreur mise ‡ jour commande");
+    toast.error(e.message || "Erreur mise ÔøΩ jour commande");
   }
 };
 
@@ -1959,11 +1960,11 @@ const filteredOrders = useMemo(() => {
 
 const orderStatusOptions = [
   { value: "PENDING", label: "En attente", tone: "amber" },
-  { value: "CONFIRMED", label: "ConfirmÈe", tone: "blue" },
-  { value: "PREPARING", label: "En prÈparation", tone: "purple" },
-  { value: "READY", label: "PrÍte", tone: "green" },
-  { value: "DELIVERED", label: "LivrÈe", tone: "green" },
-  { value: "CANCELLED", label: "AnnulÈe", tone: "red" },
+  { value: "CONFIRMED", label: "ConfirmÔøΩe", tone: "blue" },
+  { value: "PREPARING", label: "En prÔøΩparation", tone: "purple" },
+  { value: "READY", label: "PrÔøΩte", tone: "green" },
+  { value: "DELIVERED", label: "LivrÔøΩe", tone: "green" },
+  { value: "CANCELLED", label: "AnnulÔøΩe", tone: "red" },
 ];
 
 /* ----------------------------
@@ -2030,7 +2031,7 @@ const fetchSalonSettings = async () => {
     const salon = data?.salon ?? data;
     applySalonSettingsFromApi(salon);
   } catch (e) {
-    toast.error("Erreur chargement paramËtres: " + (e.message || e));
+    toast.error("Erreur chargement paramÔøΩtres: " + (e.message || e));
   }
 };
 
@@ -2057,7 +2058,7 @@ const saveSettings = async () => {
     const data = res?.data ?? res;
     const salon = data?.salon ?? data;
     applySalonSettingsFromApi(salon);
-    toast.success("ParamËtres sauvegardÈs.");
+    toast.success("ParamÔøΩtres sauvegardÔøΩs.");
   } catch (e) {
     toast.error(e.message || "Erreur lors de la sauvegarde");
   } finally {
@@ -2107,13 +2108,13 @@ return (
 		/>
 		<StatCard
 			icon={<FiCheck className="text-green-500" />} 
-			label={isBoutique ? "LivrÈes" : "TerminÈs"}
+			label={isBoutique ? "LivrÔøΩes" : "TerminÔøΩs"}
 			value={isBoutique ? orders.filter(o => o.status === "DELIVERED").length : stats.completedBookings}
 			color="green"
 		/>
 		<StatCard
 			icon={<FiX className="text-red-500" />} 
-			label="AnnulÈs"
+			label="AnnulÔøΩs"
 			value={isBoutique ? orders.filter(o => o.status === "CANCELLED").length : stats.cancelledBookings}
 			color="red"
 		/>
@@ -2127,8 +2128,8 @@ return (
 </h1>
 <p className="text-sm text-gray-500 mt-1">
 {isBoutique
-  ? "Gestion des commandes, articles, paiements, boutique, avis, promos, CRM et paramËtres."
-  : "Gestion des RDV, services, …quipe, planning, paiements, salon, avis, promos, CRM et paramËtres."}
+  ? "Gestion des commandes, articles, paiements, boutique, avis, promos, CRM et paramÔøΩtres."
+  : "Gestion des RDV, services, ÔøΩquipe, planning, paiements, salon, avis, promos, CRM et paramÔøΩtres."}
 </p>
 </div>
 
@@ -2139,7 +2140,7 @@ return (
       <FiShoppingCart className="mr-2" /> En attente: {orders.filter(o => o.status === "PENDING").length}
     </Badge>
     <Badge tone="green">
-      <FiCheck className="mr-2" /> LivrÈes: {orders.filter(o => o.status === "DELIVERED").length}
+      <FiCheck className="mr-2" /> LivrÔøΩes: {orders.filter(o => o.status === "DELIVERED").length}
     </Badge>
     <Badge tone="blue">
       <FiBox className="mr-2" /> Articles: {products.length}
@@ -2148,13 +2149,13 @@ return (
 ) : (
   <>
     <Badge tone="blue">
-      <FiCalendar className="mr-2" /> ¿ venir: {upcomingCount}
+      <FiCalendar className="mr-2" /> ÔøΩ venir: {upcomingCount}
     </Badge>
     <Badge tone="green">
-      <FiCheck className="mr-2" /> TerminÈs: {completedCount}
+      <FiCheck className="mr-2" /> TerminÔøΩs: {completedCount}
     </Badge>
     <Badge tone="red">
-      <FiX className="mr-2" /> AnnulÈs: {cancelledCount}
+      <FiX className="mr-2" /> AnnulÔøΩs: {cancelledCount}
     </Badge>
   </>
 )}
@@ -2190,8 +2191,16 @@ active
 {/* ------------------ ORDERS (Boutique) ------------------ */}
 {activeTab === "orders" && (
 <motion.div key="orders" {...pageAnim}>
+{/* Order Stats */}
+<div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+  <StatCard icon={<FiShoppingCart className="w-6 h-6" />} label="Total commandes" value={filteredOrders.length} color="amber" />
+  <StatCard icon={<FiClock className="w-6 h-6" />} label="En attente" value={filteredOrders.filter(o => o.status === "PENDING").length} color="amber" />
+  <StatCard icon={<FiPackage className="w-6 h-6" />} label="En pr√©paration" value={filteredOrders.filter(o => ["CONFIRMED", "PREPARING"].includes(o.status)).length} color="blue" />
+  <StatCard icon={<FiCheck className="w-6 h-6" />} label="Livr√©es" value={filteredOrders.filter(o => o.status === "DELIVERED").length} color="green" />
+</div>
+
 <Card>
-<CardHeader icon={<FiShoppingCart />} title={`Commandes (${filteredOrders.length})`} />
+<CardHeader icon={<FiShoppingCart />} title={`Commandes (${filteredOrders.length})`} subtitle="G√©rez vos commandes boutique" />
 <div className="p-6">
   <div className="flex flex-wrap gap-2 mb-5">
     {[{ value: "all", label: "Toutes" }, ...orderStatusOptions].map((opt) => (
@@ -2210,93 +2219,109 @@ active
     ))}
   </div>
   {loading ? (
-    <p className="text-gray-500 font-semibold">ChargementÖ</p>
+    <p className="text-gray-500 font-semibold">Chargement‚Ä¶</p>
   ) : filteredOrders.length === 0 ? (
-    <EmptyState icon={<FiShoppingCart />} title="Aucune commande" subtitle="Les commandes apparaÓtront ici." />
+    <EmptyState icon={<FiShoppingCart />} title="Aucune commande" subtitle="Les commandes appara√Ætront ici." />
   ) : (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
       {filteredOrders.map((order, idx) => {
         const statusOpt = orderStatusOptions.find((s) => s.value === order.status) || { label: order.status, tone: "gray" };
+        const statusSteps = ["PENDING", "CONFIRMED", "PREPARING", "READY", "DELIVERED"];
+        const currentStepIdx = statusSteps.indexOf(order.status);
         return (
           <motion.div
             key={order.id || idx}
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25, delay: idx * 0.03 }}
-            className="bg-white rounded-2xl border border-gray-100 shadow-[0_20px_50px_-35px_rgba(15,23,42,0.55)] p-5"
+            className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
           >
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="font-semibold text-gray-900">{order.clientName || "Client"}</p>
-                <p className="text-xs text-gray-500">{order.clientPhone || ""}</p>
-                {order.deliveryMode === "DELIVERY" && order.deliveryAddress && (
-                  <p className="text-xs text-gray-400 mt-1">?? {order.deliveryAddress}</p>
-                )}
-              </div>
-              <Badge tone={statusOpt.tone}>{statusOpt.label}</Badge>
-            </div>
-
-            <div className="mt-4 space-y-1">
-              {(order.items || []).map((item, i) => (
-                <div key={i} className="flex justify-between text-sm">
-                  <span className="text-gray-700">{item.product?.name || "Article"} ◊ {item.quantity}</span>
-                  <span className="font-medium">{formatMoney(item.unitPrice * item.quantity)}</span>
-                </div>
+            {/* Order progress bar */}
+            <div className="flex">
+              {statusSteps.map((step, i) => (
+                <div key={step} className={`flex-1 h-1 ${order.status === "CANCELLED" ? "bg-red-400" : i <= currentStepIdx ? "bg-green-500" : "bg-gray-200"}`} />
               ))}
             </div>
 
-            <div className="grid sm:grid-cols-2 gap-4 mt-4">
-              <div>
-                <p className="text-xs text-gray-500">Total</p>
-                <p className="font-bold text-gray-900">{formatMoney(order.totalPrice)}</p>
+            <div className="p-5">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="font-bold text-gray-900">{order.clientName || "Client"}</p>
+                  <p className="text-xs text-gray-500">{order.clientPhone || ""}</p>
+                  {order.deliveryMode === "DELIVERY" && order.deliveryAddress && (
+                    <p className="text-xs text-gray-400 mt-1 flex items-center gap-1"><FiMapPin className="w-3 h-3" /> {order.deliveryAddress}</p>
+                  )}
+                </div>
+                <Badge tone={statusOpt.tone}>{statusOpt.label}</Badge>
               </div>
-              <div>
-                <p className="text-xs text-gray-500">Mode</p>
-                <p className="font-semibold text-gray-900">
-                  {order.deliveryMode === "DELIVERY" ? "Livraison" : "Retrait"}
-                </p>
+
+              <div className="mt-4 space-y-1.5">
+                {(order.items || []).map((item, i) => (
+                  <div key={i} className="flex justify-between text-sm">
+                    <span className="text-gray-700">{item.product?.name || "Article"} √ó {item.quantity}</span>
+                    <span className="font-medium">{formatMoney(item.unitPrice * item.quantity)}</span>
+                  </div>
+                ))}
               </div>
-              <div>
-                <p className="text-xs text-gray-500">Date</p>
-                <p className="font-semibold text-gray-900">
-                  {new Date(order.createdAt).toLocaleString("fr-FR")}
-                </p>
+
+              <div className="grid grid-cols-2 gap-3 mt-4 p-3 bg-gray-50 rounded-xl">
+                <div>
+                  <p className="text-xs text-gray-500">Total</p>
+                  <p className="font-bold text-amber-600">{formatMoney(order.totalPrice)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Mode</p>
+                  <p className="font-semibold text-gray-900 flex items-center gap-1">
+                    {order.deliveryMode === "DELIVERY" ? <><FiTrendingUp className="w-3 h-3" /> Livraison</> : "Retrait"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Date</p>
+                  <p className="font-semibold text-gray-900 text-sm">
+                    {new Date(order.createdAt).toLocaleString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                  </p>
+                </div>
+                {order.paymentMethod && (
+                  <div>
+                    <p className="text-xs text-gray-500">Paiement</p>
+                    <p className="font-semibold text-gray-900 text-sm">
+                      {order.paymentMethod === "wave" ? "üåä Wave" : order.paymentMethod === "orange_money" ? "üü† Orange Money" : "üíµ Esp√®ces"}
+                    </p>
+                  </div>
+                )}
               </div>
               {order.notes && (
-                <div>
-                  <p className="text-xs text-gray-500">Notes</p>
-                  <p className="text-sm text-gray-700">{order.notes}</p>
+                <p className="mt-3 text-sm text-gray-600 italic bg-amber-50 px-3 py-2 rounded-lg">üìù {order.notes}</p>
+              )}
+
+              {order.status !== "DELIVERED" && order.status !== "CANCELLED" && (
+                <div className="flex flex-wrap gap-2 mt-4">
+                  {order.status === "PENDING" && (
+                    <Button variant="primary" className="px-3 py-2" onClick={() => handleOrderStatus(order.id, "CONFIRMED")}>
+                      <FiCheck className="mr-1" /> Confirmer
+                    </Button>
+                  )}
+                  {order.status === "CONFIRMED" && (
+                    <Button variant="primary" className="px-3 py-2" onClick={() => handleOrderStatus(order.id, "PREPARING")}>
+                      <FiPackage className="mr-1" /> Pr√©parer
+                    </Button>
+                  )}
+                  {order.status === "PREPARING" && (
+                    <Button variant="primary" className="px-3 py-2" onClick={() => handleOrderStatus(order.id, "READY")}>
+                      <FiCheck className="mr-1" /> Pr√™te
+                    </Button>
+                  )}
+                  {order.status === "READY" && (
+                    <Button variant="primary" className="px-3 py-2" onClick={() => handleOrderStatus(order.id, "DELIVERED")}>
+                      <FiCheck className="mr-1" /> Livr√©e
+                    </Button>
+                  )}
+                  <Button variant="secondary" className="px-3 py-2 text-red-600" onClick={() => handleOrderStatus(order.id, "CANCELLED")}>
+                    <FiX className="mr-1" /> Annuler
+                  </Button>
                 </div>
               )}
             </div>
-
-            {order.status !== "DELIVERED" && order.status !== "CANCELLED" && (
-              <div className="flex flex-wrap gap-2 mt-4">
-                {order.status === "PENDING" && (
-                  <Button variant="secondary" className="px-3 py-2" onClick={() => handleOrderStatus(order.id, "CONFIRMED")}>
-                    <FiCheck className="mr-1" /> Confirmer
-                  </Button>
-                )}
-                {order.status === "CONFIRMED" && (
-                  <Button variant="secondary" className="px-3 py-2" onClick={() => handleOrderStatus(order.id, "PREPARING")}>
-                    <FiPackage className="mr-1" /> PrÈparer
-                  </Button>
-                )}
-                {order.status === "PREPARING" && (
-                  <Button variant="secondary" className="px-3 py-2" onClick={() => handleOrderStatus(order.id, "READY")}>
-                    <FiCheck className="mr-1" /> PrÍte
-                  </Button>
-                )}
-                {order.status === "READY" && (
-                  <Button variant="secondary" className="px-3 py-2" onClick={() => handleOrderStatus(order.id, "DELIVERED")}>
-                    <FiCheck className="mr-1" /> LivrÈe
-                  </Button>
-                )}
-                <Button variant="secondary" className="px-3 py-2 text-red-600" onClick={() => handleOrderStatus(order.id, "CANCELLED")}>
-                  <FiX className="mr-1" /> Annuler
-                </Button>
-              </div>
-            )}
           </motion.div>
         );
       })}
@@ -2327,16 +2352,16 @@ active
         <input
           value={productQuery}
           onChange={(e) => setProductQuery(e.target.value)}
-          placeholder="Rechercher un articleÖ"
+          placeholder="Rechercher un articleÔøΩ"
           className="w-full pl-11 pr-4 py-2.5 border border-gray-200 rounded-2xl bg-white focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
         />
       </div>
     </div>
 
     {loading ? (
-      <p className="text-gray-500 font-semibold">ChargementÖ</p>
+      <p className="text-gray-500 font-semibold">ChargementÔøΩ</p>
     ) : filteredProducts.length === 0 ? (
-      <EmptyState icon={<FiBox />} title="Aucun article" subtitle="Ajoutez vos articles pour commencer ‡ vendre." />
+      <EmptyState icon={<FiBox />} title="Aucun article" subtitle="Ajoutez vos articles pour commencer ÔøΩ vendre." />
     ) : (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {filteredProducts.map((product) => {
@@ -2485,7 +2510,7 @@ active
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">CatÈgorie</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">CatÔøΩgorie</label>
           <input
             value={(editingProduct || newProduct).category}
             onChange={(e) => {
@@ -2495,7 +2520,7 @@ active
                 : setNewProduct((p) => ({ ...p, category: val }));
             }}
             className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
-            placeholder="ex: Accessoires, VÍtementsÖ"
+            placeholder="ex: Accessoires, VÔøΩtementsÔøΩ"
           />
         </div>
         <div>
@@ -2517,7 +2542,7 @@ active
             const currentFiles = (editingProduct || newProduct).imageFiles || [];
             if (currentFiles.length <= 1) return null;
             return (
-              <p className="text-xs text-gray-500 mt-1">{currentFiles.length} photos sÈlectionnÈes</p>
+              <p className="text-xs text-gray-500 mt-1">{currentFiles.length} photos sÔøΩlectionnÔøΩes</p>
             );
           })()}
         </div>
@@ -2540,8 +2565,25 @@ active
 {activeTab === "appointments" && (
 <motion.div key="appointments" {...pageAnim}>
 <Card>
-<CardHeader icon={<FiCalendar />} title="Rendez-vous" />
+<CardHeader icon={<FiCalendar />} title="Rendez-vous" subtitle={`${appointments.length} rendez-vous au total`} />
 <div className="p-6">
+
+{/* ‚îÄ‚îÄ Stat cards ‚îÄ‚îÄ */}
+{(() => {
+  const total = appointments.length;
+  const upcoming = appointments.filter((a) => a.status === "confirmed" || a.status === "confirmed_on_site" || a.status === "pending" || a.status === "pending_assignment").length;
+  const completed = appointments.filter((a) => a.status === "completed").length;
+  const revenue = appointments.filter((a) => a.status === "completed").reduce((s, a) => s + (a.amount || 0), 0);
+  return (
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <StatCard icon={<FiCalendar className="w-6 h-6" />} label="Total" value={total} color="blue" />
+      <StatCard icon={<FiClock className="w-6 h-6" />} label="√Ä venir" value={upcoming} color="amber" />
+      <StatCard icon={<FiCheck className="w-6 h-6" />} label="Termin√©s" value={completed} color="green" />
+      <StatCard icon={<FiDollarSign className="w-6 h-6" />} label="Revenus" value={formatMoney(revenue)} color="amber" />
+    </div>
+  );
+})()}
+
 <div className="mb-5 border border-gray-200 rounded-2xl p-4 bg-gray-50">
   <div className="flex items-center justify-between mb-3">
     <p className="font-semibold text-gray-900">Notifications</p>
@@ -2572,12 +2614,12 @@ active
   )}
 </div>
 {loading ? (
-<p className="text-gray-500 font-semibold">ChargementÖ</p>
+<p className="text-gray-500 font-semibold">ChargementÔøΩ</p>
 ) : appointments.length === 0 ? (
 <EmptyState
 icon={<FiCalendar />}
 title="Aucun rendez-vous"
-subtitle="Les rÈservations apparaÓtront ici."
+subtitle="Les rÔøΩservations apparaÔøΩtront ici."
 />
 ) : (
 <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
@@ -2608,105 +2650,175 @@ subtitle="Les rÈservations apparaÓtront ici."
         : "gray";
     const statusLabel = getStatusLabel(row.status);
 
+    // Appointment progress steps
+    const apptSteps = ["Demand√©", "Confirm√©", "En cours", "Termin√©"];
+    const apptStepIndex = row.status === "completed" ? 4
+      : (row.status === "confirmed" || row.status === "confirmed_on_site") ? 2
+      : (row.status === "pending" || row.status === "pending_assignment") ? 1
+      : row.status === "cancelled" ? -1
+      : 0;
+    const isCancelled = row.status === "cancelled";
+
     return (
       <motion.div
         key={row.id || idx}
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25, delay: idx * 0.03 }}
-        className="bg-white rounded-2xl border border-gray-100 shadow-[0_20px_50px_-35px_rgba(15,23,42,0.55)] p-5"
+        className="bg-white rounded-2xl border border-gray-100 shadow-[0_20px_50px_-35px_rgba(15,23,42,0.55)] overflow-hidden"
       >
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-3">
-            {avatar ? (
-              <img
-                src={avatar}
-                alt={row.clientName}
-                className="w-11 h-11 rounded-full object-cover ring-2 ring-white shadow-sm"
-              />
-            ) : (
-              <div className="w-11 h-11 rounded-full bg-primary-100 text-primary-700 font-bold flex items-center justify-center">
-                {(row.clientName || "C").charAt(0).toUpperCase()}
+        {/* Top progress bar */}
+        <div className="flex h-1.5">
+          {apptSteps.map((_, i) => (
+            <div key={i} className={`flex-1 ${
+              isCancelled ? "bg-red-400"
+              : i < apptStepIndex ? "bg-green-500"
+              : i === apptStepIndex ? "bg-amber-400"
+              : "bg-gray-200"
+            }`} />
+          ))}
+        </div>
+
+        <div className="p-5">
+          {/* Client header */}
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center gap-3">
+              {avatar ? (
+                <img
+                  src={avatar}
+                  alt={row.clientName}
+                  className="w-12 h-12 rounded-full object-cover ring-2 ring-white shadow-md"
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 text-white font-bold flex items-center justify-center text-lg shadow-md">
+                  {(row.clientName || "C").charAt(0).toUpperCase()}
+                </div>
+              )}
+              <div>
+                <p className="font-bold text-gray-900">{row.clientName}</p>
+                {(row.client?.phoneNumber || row.client?.phone) && (
+                  <p className="text-xs text-gray-500 flex items-center gap-1">
+                    <FiUser className="w-3 h-3" /> {row.client.phoneNumber || row.client.phone}
+                  </p>
+                )}
+                {row.clientAddress && (
+                  <p className="text-xs text-gray-400 flex items-center gap-1">
+                    <FiMapPin className="w-3 h-3" /> {row.clientAddress}
+                  </p>
+                )}
               </div>
-            )}
-            <div>
-              <p className="font-semibold text-gray-900">{row.clientName}</p>
-              <p className="text-xs text-gray-500">{row.client?.phoneNumber || row.client?.phone || ""}</p>
-              {row.clientAddress ? <p className="text-xs text-gray-400">{row.clientAddress}</p> : null}
+            </div>
+            <Badge tone={statusTone}>{statusLabel}</Badge>
+          </div>
+
+          {/* Details grid */}
+          <div className="mt-4 bg-gray-50 rounded-xl p-4">
+            <div className="grid sm:grid-cols-2 gap-3">
+              <div className="flex items-center gap-2">
+                <FiCalendar className="w-4 h-4 text-amber-500" />
+                <div>
+                  <p className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Date</p>
+                  <p className="font-semibold text-gray-900 text-sm">{formatDate(row.date)}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <FiClock className="w-4 h-4 text-blue-500" />
+                <div>
+                  <p className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Heure</p>
+                  <p className="font-semibold text-gray-900 text-sm">{toTime(row.time) || "\u2014"}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <FiScissors className="w-4 h-4 text-purple-500" />
+                <div>
+                  <p className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Service</p>
+                  <p className="font-semibold text-gray-900 text-sm">{row.serviceName}</p>
+                  {row.service?.duration && <p className="text-[11px] text-gray-400">{row.service.duration} min</p>}
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <FiUser className="w-4 h-4 text-green-500" />
+                <div>
+                  <p className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Employ\u00e9</p>
+                  <p className="font-semibold text-gray-900 text-sm">{row.staffName || "\u2014"}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-200">
+              <div className="flex items-center gap-2">
+                <FiCreditCard className="w-4 h-4 text-gray-400" />
+                <Badge tone={paymentTone}>{paymentLabel}</Badge>
+              </div>
+              <p className="font-bold text-amber-600 text-lg">{formatMoney(row.amount)}</p>
             </div>
           </div>
-          <Badge tone={statusTone}>{statusLabel}</Badge>
-        </div>
 
-        <div className="grid sm:grid-cols-2 gap-4 mt-5">
-          <div>
-            <p className="text-xs text-gray-500">Date</p>
-            <p className="font-semibold text-gray-900">{formatDate(row.date)}</p>
+          {/* Progress timeline */}
+          <div className="mt-4 flex items-center gap-1">
+            {apptSteps.map((step, i) => (
+              <div key={i} className="flex-1 flex flex-col items-center">
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                  isCancelled ? "bg-red-100 text-red-600"
+                  : i < apptStepIndex ? "bg-green-500 text-white"
+                  : i === apptStepIndex ? "bg-amber-400 text-white"
+                  : "bg-gray-200 text-gray-400"
+                }`}>
+                  {isCancelled ? "\u2715" : i < apptStepIndex ? "\u2713" : i + 1}
+                </div>
+                <span className={`text-[10px] mt-1 font-medium ${
+                  isCancelled ? "text-red-400"
+                  : i < apptStepIndex ? "text-green-600"
+                  : i === apptStepIndex ? "text-amber-600"
+                  : "text-gray-400"
+                }`}>{step}</span>
+              </div>
+            ))}
           </div>
-          <div>
-            <p className="text-xs text-gray-500">Heure</p>
-            <p className="font-semibold text-gray-900">{toTime(row.time) || "ó"}</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500">Service</p>
-            <p className="font-semibold text-gray-900">{row.serviceName}</p>
-            <p className="text-xs text-gray-500">{row.service?.duration ? `${row.service.duration} min` : ""}</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500">EmployÈ</p>
-            <p className="font-semibold text-gray-900">{row.staffName || "ó"}</p>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500">Paiement</p>
-            <Badge tone={paymentTone}>{paymentLabel}</Badge>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500">Montant</p>
-            <p className="font-semibold text-gray-900">{formatMoney(row.amount)}</p>
-          </div>
-        </div>
 
-        <div className="flex flex-wrap gap-2 mt-5">
-          <Button
-            variant="secondary"
-            className="px-3 py-2"
-            onClick={() => setAppointmentStatus(row.id, "completed")}
-            disabled={row.status === "completed"}
-          >
-            <FiCheck className="mr-2" /> Terminer
-          </Button>
-          <Button
-            variant="secondary"
-            className="px-3 py-2"
-            onClick={() => setAppointmentStatus(row.id, "cancelled")}
-            disabled={row.status === "cancelled"}
-          >
-            <FiX className="mr-2" /> Annuler
-          </Button>
-          <Button
-            variant="secondary"
-            className="px-3 py-2"
-            onClick={() => generateInvoiceForAppointment(row)}
-          >
-            <FiFileText className="mr-2" /> Facture
-          </Button>
-          <Button
-            variant="secondary"
-            className="px-3 py-2"
-            onClick={() => refundAppointmentDeposit(row)}
-          >
-            <FiDollarSign className="mr-2" /> Rembourser
-          </Button>
-          <Button
-            variant="secondary"
-            className="px-3 py-2"
-            onClick={() => {
-              setChatAppointment(row);
-              setShowChatModal(true);
-            }}
-          >
-            <FiMessageCircle className="mr-2" /> Chat
-          </Button>
+          {/* Action buttons */}
+          <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-100">
+            <Button
+              variant="primary"
+              className="px-3 py-2 text-sm"
+              onClick={() => setAppointmentStatus(row.id, "completed")}
+              disabled={row.status === "completed" || row.status === "cancelled"}
+            >
+              <FiCheck className="mr-1.5" /> Terminer
+            </Button>
+            <Button
+              variant="secondary"
+              className="px-3 py-2 text-sm"
+              onClick={() => setAppointmentStatus(row.id, "cancelled")}
+              disabled={row.status === "cancelled" || row.status === "completed"}
+            >
+              <FiX className="mr-1.5" /> Annuler
+            </Button>
+            <Button
+              variant="secondary"
+              className="px-3 py-2 text-sm"
+              onClick={() => generateInvoiceForAppointment(row)}
+            >
+              <FiFileText className="mr-1.5" /> Facture
+            </Button>
+            <Button
+              variant="secondary"
+              className="px-3 py-2 text-sm"
+              onClick={() => refundAppointmentDeposit(row)}
+            >
+              <FiDollarSign className="mr-1.5" /> Rembourser
+            </Button>
+            <Button
+              variant="secondary"
+              className="px-3 py-2 text-sm"
+              onClick={() => {
+                setChatAppointment(row);
+                setShowChatModal(true);
+              }}
+            >
+              <FiMessageCircle className="mr-1.5" /> Chat
+            </Button>
+          </div>
         </div>
       </motion.div>
     );
@@ -2739,7 +2851,7 @@ right={
 <input
 value={serviceQuery}
 onChange={(e) => setServiceQuery(e.target.value)}
-placeholder="Rechercher un serviceÖ"
+placeholder="Rechercher un serviceÔøΩ"
 className={cx(
 "w-full pl-11 pr-4 py-2.5 border border-gray-200 rounded-2xl bg-white",
 "focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
@@ -2750,7 +2862,7 @@ className={cx(
 
 <div className="md:col-span-4">
 <Select
-label="CatÈgorie"
+label="CatÔøΩgorie"
 value={serviceCategory}
 onChange={(e) => setServiceCategory(e.target.value)}
 >
@@ -2765,17 +2877,17 @@ onChange={(e) => setServiceCategory(e.target.value)}
 
 <div className="md:col-span-4">
 <Select label="Trier par" value={serviceSort} onChange={(e) => setServiceSort(e.target.value)}>
-<option value="recent">Plus rÈcents</option>
+<option value="recent">Plus rÔøΩcents</option>
 <option value="priceAsc">Prix ?</option>
 <option value="priceDesc">Prix ?</option>
-<option value="durationAsc">DurÈe ?</option>
-<option value="durationDesc">DurÈe ?</option>
+<option value="durationAsc">DurÔøΩe ?</option>
+<option value="durationDesc">DurÔøΩe ?</option>
 </Select>
 </div>
 </div>
 
 {loading ? (
-<p className="text-gray-500 font-semibold">ChargementÖ</p>
+<p className="text-gray-500 font-semibold">ChargementÔøΩ</p>
 ) : filteredServices.length === 0 ? (
 <EmptyState
 icon={<FiFilter />}
@@ -2799,7 +2911,7 @@ className="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm hover:shado
 <div className="mb-3">
 {service.media ? (
 isImage(mediaUrl) ? (
-<img src={mediaUrl} alt="aperÁu" className="w-full h-64 object-cover rounded-2xl" />
+<img src={mediaUrl} alt="aperÔøΩu" className="w-full h-64 object-cover rounded-2xl" />
 ) : isVideo(mediaUrl) ? (
 <video src={mediaUrl} controls className="w-full h-64 object-cover rounded-2xl" />
 ) : (
@@ -2939,7 +3051,7 @@ type="button"
 onClick={() => removeServiceMediaAt(idx, setNewService)}
 className="w-7 h-7 rounded-full bg-white/90 shadow flex items-center justify-center text-xs"
 >
-◊
+ÔøΩ
 </button>
 </div>
 {idx === 0 && (
@@ -2952,7 +3064,7 @@ Couverture
 </div>
 ) : (
 <p className="text-xs text-gray-500 mt-2">
-Max {MAX_MEDIA_MB}MB par fichier ñ jusquí‡ {MAX_SERVICE_MEDIA} photos
+Max {MAX_MEDIA_MB}MB par fichier ÔøΩ jusquÔøΩÔøΩ {MAX_SERVICE_MEDIA} photos
 </p>
 )}
 </div>
@@ -2965,7 +3077,7 @@ onChange={(e) => setNewService((p) => ({ ...p, name: e.target.value }))}
 />
 
 <Select
-label="CatÈgorie"
+label="CatÔøΩgorie"
 value={newService.category}
 onChange={(e) => setNewService((p) => ({ ...p, category: e.target.value }))}
 >
@@ -2979,7 +3091,7 @@ onChange={(e) => setNewService((p) => ({ ...p, category: e.target.value }))}
 <Textarea
 label="Description"
 rows={3}
-placeholder="Description optionnelleÖ"
+placeholder="Description optionnelleÔøΩ"
 value={newService.description}
 onChange={(e) => setNewService((p) => ({ ...p, description: e.target.value }))}
 />
@@ -2993,7 +3105,7 @@ value={newService.price}
 onChange={(e) => setNewService((p) => ({ ...p, price: e.target.value }))}
 />
 <Select
-label="DurÈe"
+label="DurÔøΩe"
 value={newService.duration}
 onChange={(e) => setNewService((p) => ({ ...p, duration: Number(e.target.value) }))}
 >
@@ -3073,7 +3185,7 @@ type="button"
 onClick={() => removeServiceMediaAt(idx, setEditingService)}
 className="w-7 h-7 rounded-full bg-white/90 shadow flex items-center justify-center text-xs"
 >
-◊
+ÔøΩ
 </button>
 </div>
 {idx === 0 && (
@@ -3086,7 +3198,7 @@ Couverture
 </div>
 ) : (
 <p className="text-xs text-gray-500 mt-2">
-Max {MAX_MEDIA_MB}MB par fichier ñ jusquí‡ {MAX_SERVICE_MEDIA} photos
+Max {MAX_MEDIA_MB}MB par fichier ÔøΩ jusquÔøΩÔøΩ {MAX_SERVICE_MEDIA} photos
 </p>
 )}
 </div>
@@ -3094,7 +3206,7 @@ Max {MAX_MEDIA_MB}MB par fichier ñ jusquí‡ {MAX_SERVICE_MEDIA} photos
 <Input label="Nom *" value={editingService.name || ""} onChange={(e) => setEditingService((p) => ({ ...p, name: e.target.value }))} />
 
 <Select
-label="CatÈgorie"
+label="CatÔøΩgorie"
 value={editingService.category || serviceCategories[0]}
 onChange={(e) => setEditingService((p) => ({ ...p, category: e.target.value }))}
 >
@@ -3120,7 +3232,7 @@ value={editingService.price ?? ""}
 onChange={(e) => setEditingService((p) => ({ ...p, price: Number(e.target.value) }))}
 />
 <Select
-label="DurÈe"
+label="DurÔøΩe"
 value={editingService.duration ?? 30}
 onChange={(e) => setEditingService((p) => ({ ...p, duration: Number(e.target.value) }))}
 >
@@ -3169,7 +3281,7 @@ Annuler
 </div>
 <div>
 <p className="font-extrabold text-gray-900">Supprimer "{confirmDelete?.name}" ?</p>
-<p className="text-sm text-gray-500 mt-1">Cette action est irrÈversible.</p>
+<p className="text-sm text-gray-500 mt-1">Cette action est irrÔøΩversible.</p>
 </div>
 </div>
 </Modal>
@@ -3182,7 +3294,7 @@ Annuler
 <Card>
 <CardHeader
 icon={<FiUsers />}
-title="…quipe"
+title="ÔøΩquipe"
 right={
 <Button onClick={() => setShowTeamModal(true)}>
 <FiPlus className="mr-2" /> Ajouter
@@ -3191,9 +3303,9 @@ right={
 />
 <div className="p-6">
 {loading ? (
-<p className="text-gray-500 font-semibold">ChargementÖ</p>
+<p className="text-gray-500 font-semibold">ChargementÔøΩ</p>
 ) : team.length === 0 ? (
-<EmptyState icon={<FiUsers />} title="Aucun employÈ" subtitle="Ajoutez les membres de votre …quipe." />
+<EmptyState icon={<FiUsers />} title="Aucun employÔøΩ" subtitle="Ajoutez les membres de votre ÔøΩquipe." />
 ) : (
 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
 {team.map((m) => {
@@ -3241,14 +3353,14 @@ className="w-14 h-14 rounded-2xl object-cover ring-2 ring-white shadow"
 </div>
 
 <div className="mt-4 pt-4 border-t border-gray-100">
-<p className="text-xs font-extrabold text-gray-700 mb-2">DisponibilitÈs</p>
+<p className="text-xs font-extrabold text-gray-700 mb-2">DisponibilitÔøΩs</p>
 <div className="space-y-1.5">
 {weekDays.map(([label, key]) => {
 const h = m.availability?.[key];
 return (
 <div key={key} className="flex items-center justify-between text-xs">
 <span className="font-semibold text-gray-700">{label}</span>
-<span className="text-gray-500">{h ? `${h.open} - ${h.close}` : "FermÈ"}</span>
+<span className="text-gray-500">{h ? `${h.open} - ${h.close}` : "FermÔøΩ"}</span>
 </div>
 );
 })}
@@ -3265,7 +3377,7 @@ return (
 {/* Add member modal */}
 <Modal
 open={showTeamModal}
-title="Ajouter un employÈ"
+title="Ajouter un employÔøΩ"
 onClose={() => {
 setShowTeamModal(false);
 resetNewMember();
@@ -3283,14 +3395,14 @@ Annuler
 >
 <div className="space-y-4">
 <Input label="Nom *" value={newMember.name} onChange={(e) => setNewMember((p) => ({ ...p, name: e.target.value }))} />
-<Select label="RÙle" value={newMember.role} onChange={(e) => setNewMember((p) => ({ ...p, role: e.target.value }))}>
+<Select label="RÔøΩle" value={newMember.role} onChange={(e) => setNewMember((p) => ({ ...p, role: e.target.value }))}>
 {roles.map((r) => (
 <option key={r} value={r}>
 {r}
 </option>
 ))}
 </Select>
-<Input label="TÈlÈphone" value={newMember.phone} onChange={(e) => setNewMember((p) => ({ ...p, phone: e.target.value }))} />
+<Input label="TÔøΩlÔøΩphone" value={newMember.phone} onChange={(e) => setNewMember((p) => ({ ...p, phone: e.target.value }))} />
 
 <div className="flex items-center gap-2">
 <input type="checkbox" checked={newMember.active} onChange={(e) => setNewMember((p) => ({ ...p, active: e.target.checked }))} />
@@ -3298,7 +3410,7 @@ Annuler
 </div>
 
 <div className="pt-2">
-<p className="text-sm font-extrabold text-gray-900 mb-2">DisponibilitÈs</p>
+<p className="text-sm font-extrabold text-gray-900 mb-2">DisponibilitÔøΩs</p>
 <div className="space-y-3">
 {weekDays.map(([label, key]) => {
 const h = newMember.availability[key];
@@ -3318,7 +3430,7 @@ availability: { ...p.availability, [key]: { ...h, open: e.target.value } },
 }
 className="px-3 py-2 border border-gray-200 rounded-xl bg-white"
 />
-<span className="text-gray-500 font-semibold">ó</span>
+<span className="text-gray-500 font-semibold">ÔøΩ</span>
 <input
 type="time"
 value={h.close}
@@ -3339,7 +3451,7 @@ availability: { ...p.availability, [key]: null },
 }
 className="text-red-600 hover:text-red-700 font-semibold text-sm"
 >
-FermÈ
+FermÔøΩ
 </button>
 </>
 ) : (
@@ -3366,7 +3478,7 @@ Ajouter horaires
 {/* Edit member modal */}
 <Modal
 open={!!editingMember}
-title="Modifier employÈ"
+title="Modifier employÔøΩ"
 onClose={() => setEditingMember(null)}
 footer={
 <div className="flex gap-3 justify-end">
@@ -3382,14 +3494,14 @@ Annuler
 {editingMember ? (
 <div className="space-y-4">
 <Input label="Nom *" value={editingMember.name} onChange={(e) => setEditingMember((p) => ({ ...p, name: e.target.value }))} />
-<Select label="RÙle" value={editingMember.role} onChange={(e) => setEditingMember((p) => ({ ...p, role: e.target.value }))}>
+<Select label="RÔøΩle" value={editingMember.role} onChange={(e) => setEditingMember((p) => ({ ...p, role: e.target.value }))}>
 {roles.map((r) => (
 <option key={r} value={r}>
 {r}
 </option>
 ))}
 </Select>
-<Input label="TÈlÈphone" value={editingMember.phone || ""} onChange={(e) => setEditingMember((p) => ({ ...p, phone: e.target.value }))} />
+<Input label="TÔøΩlÔøΩphone" value={editingMember.phone || ""} onChange={(e) => setEditingMember((p) => ({ ...p, phone: e.target.value }))} />
 
 <div className="flex items-center gap-2">
 <input type="checkbox" checked={!!editingMember.active} onChange={(e) => setEditingMember((p) => ({ ...p, active: e.target.checked }))} />
@@ -3397,7 +3509,7 @@ Annuler
 </div>
 
 <div className="pt-2">
-<p className="text-sm font-extrabold text-gray-900 mb-2">DisponibilitÈs</p>
+<p className="text-sm font-extrabold text-gray-900 mb-2">DisponibilitÔøΩs</p>
 <div className="space-y-3">
 {weekDays.map(([label, key]) => {
 const h = editingMember.availability?.[key] || null;
@@ -3417,7 +3529,7 @@ availability: { ...p.availability, [key]: { ...h, open: e.target.value } },
 }
 className="px-3 py-2 border border-gray-200 rounded-xl bg-white"
 />
-<span className="text-gray-500 font-semibold">ó</span>
+<span className="text-gray-500 font-semibold">ÔøΩ</span>
 <input
 type="time"
 value={h.close}
@@ -3438,7 +3550,7 @@ availability: { ...p.availability, [key]: null },
 }
 className="text-red-600 hover:text-red-700 font-semibold text-sm"
 >
-FermÈ
+FermÔøΩ
 </button>
 </>
 ) : (
@@ -3490,7 +3602,7 @@ right={
 <div key={b.id} className="p-3 bg-gray-50 rounded-2xl flex items-center justify-between">
 <div>
 <p className="text-sm font-extrabold text-gray-900">{b.label}</p>
-<p className="text-xs text-gray-500">{b.date} ‡ {b.start}-{b.end}</p>
+<p className="text-xs text-gray-500">{b.date} ÔøΩ {b.start}-{b.end}</p>
 </div>
 <IconButton title="Supprimer" onClick={() => removePlanningItem("breaks", b.id)}>
 <FiTrash2 />
@@ -3511,7 +3623,7 @@ right={
 <div key={ex.id} className="p-3 bg-gray-50 rounded-2xl flex items-center justify-between">
 <div>
 <p className="text-sm font-extrabold text-gray-900">{ex.date}</p>
-<p className="text-xs text-gray-500">{ex.closed ? "FermÈ" : `${ex.open}-${ex.close}`}</p>
+<p className="text-xs text-gray-500">{ex.closed ? "FermÔøΩ" : `${ex.open}-${ex.close}`}</p>
 </div>
 <IconButton title="Supprimer" onClick={() => removePlanningItem("exceptions", ex.id)}>
 <FiTrash2 />
@@ -3523,9 +3635,9 @@ right={
 </Card>
 
 <Card className="p-5">
-<h4 className="font-extrabold text-gray-900 mb-3">Jours fÈriÈs</h4>
+<h4 className="font-extrabold text-gray-900 mb-3">Jours fÔøΩriÔøΩs</h4>
 {planning.holidays.length === 0 ? (
-<p className="text-sm text-gray-500">Aucun jour fÈriÈ.</p>
+<p className="text-sm text-gray-500">Aucun jour fÔøΩriÔøΩ.</p>
 ) : (
 <div className="space-y-2">
 {planning.holidays.map((h) => (
@@ -3565,16 +3677,16 @@ Annuler
 <Select label="Type" value={planningForm.type} onChange={(e) => setPlanningForm((p) => ({ ...p, type: e.target.value }))}>
 <option value="break">Pause</option>
 <option value="exception">Exception</option>
-<option value="holiday">Jour fÈriÈ</option>
+<option value="holiday">Jour fÔøΩriÔøΩ</option>
 </Select>
 
 <Input label="Date *" type="date" value={planningForm.date} onChange={(e) => setPlanningForm((p) => ({ ...p, date: e.target.value }))} />
 
 {planningForm.type === "break" && (
 <>
-<Input label="LibellÈ" value={planningForm.label} onChange={(e) => setPlanningForm((p) => ({ ...p, label: e.target.value }))} />
+<Input label="LibellÔøΩ" value={planningForm.label} onChange={(e) => setPlanningForm((p) => ({ ...p, label: e.target.value }))} />
 <div className="grid grid-cols-2 gap-4">
-<Input label="DÈbut" type="time" value={planningForm.start} onChange={(e) => setPlanningForm((p) => ({ ...p, start: e.target.value }))} />
+<Input label="DÔøΩbut" type="time" value={planningForm.start} onChange={(e) => setPlanningForm((p) => ({ ...p, start: e.target.value }))} />
 <Input label="Fin" type="time" value={planningForm.end} onChange={(e) => setPlanningForm((p) => ({ ...p, end: e.target.value }))} />
 </div>
 </>
@@ -3584,7 +3696,7 @@ Annuler
 <>
 <div className="flex items-center gap-2">
 <input type="checkbox" checked={planningForm.closed} onChange={(e) => setPlanningForm((p) => ({ ...p, closed: e.target.checked }))} />
-<span className="text-sm font-semibold text-gray-700">FermÈ ce jour</span>
+<span className="text-sm font-semibold text-gray-700">FermÔøΩ ce jour</span>
 </div>
 {!planningForm.closed ? (
 <div className="grid grid-cols-2 gap-4">
@@ -3609,7 +3721,7 @@ Annuler
 <Card>
 <CardHeader icon={<FiDollarSign />} title="Paiements" />
 <div className="p-6">
-{/* ? petit fix: afficher payments si dispo, sinon fallback appointments (tu ne perds aucune donnÈe) */}
+{/* ? petit fix: afficher payments si dispo, sinon fallback appointments (tu ne perds aucune donnÔøΩe) */}
 <DataTable
 emptyLabel="Aucun paiement"
 columns={[
@@ -3674,12 +3786,12 @@ data={payments.length ? payments : appointments}
 <CardHeader icon={<FiCreditCard />} title="Moyens de paiement du salon" right={null} />
 <div className="p-6">
 {loadingPaymentMethods ? (
-<p className="text-gray-500 font-semibold">ChargementÖ</p>
+<p className="text-gray-500 font-semibold">ChargementÔøΩ</p>
 ) : paymentMethods.length === 0 ? (
 <EmptyState
 icon={<FiCreditCard />}
 title="Aucun moyen de paiement"
-subtitle="Configurez les moyens de paiement acceptÈs par votre salon."
+subtitle="Configurez les moyens de paiement acceptÔøΩs par votre salon."
 action={
 <Button onClick={() => setShowPaymentMethodModal(true)}>
 <FiPlus className="mr-2" /> Ajouter un moyen de paiement
@@ -3702,7 +3814,7 @@ className="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm flex items-
 <FiCreditCard className="w-8 h-8 text-amber-500" />
 <div className="flex-1">
 <div className="font-bold text-gray-900 text-base">{pm.method}</div>
-<div className="text-xs text-gray-500">{pm.enabled ? "ActivÈ" : "DÈsactivÈ"}</div>
+<div className="text-xs text-gray-500">{pm.enabled ? "ActivÔøΩ" : "DÔøΩsactivÔøΩ"}</div>
 </div>
 <div className="flex items-center gap-2">
 <Badge tone={pm.enabled ? "green" : "gray"}>{pm.enabled ? "OK" : "OFF"}</Badge>
@@ -3738,15 +3850,15 @@ Annuler
 label="Nom du moyen de paiement"
 value={newPaymentMethod.method}
 onChange={(e) => setNewPaymentMethod((p) => ({ ...p, method: e.target.value }))}
-placeholder="Ex: Orange Money, Wave, EspËces..."
+placeholder="Ex: Orange Money, Wave, EspÔøΩces..."
 />
 <Select
 label="Statut"
 value={newPaymentMethod.enabled ? "1" : "0"}
 onChange={(e) => setNewPaymentMethod((p) => ({ ...p, enabled: e.target.value === "1" }))}
 >
-<option value="1">ActivÈ</option>
-<option value="0">DÈsactivÈ</option>
+<option value="1">ActivÔøΩ</option>
+<option value="0">DÔøΩsactivÔøΩ</option>
 </Select>
 </div>
 </Modal>
@@ -3774,7 +3886,7 @@ Supprimer
 <FiAlertTriangle />
 </span>
 <div>
-<p className="font-semibold text-gray-900">Cette action est dÈfinitive.</p>
+<p className="font-semibold text-gray-900">Cette action est dÔøΩfinitive.</p>
 <p className="text-sm text-gray-500">
 Voulez-vous vraiment supprimer le moyen de paiement{" "}
 <span className="font-semibold text-gray-700">{confirmPaymentMethod?.method}</span> ?
@@ -3791,7 +3903,7 @@ Voulez-vous vraiment supprimer le moyen de paiement{" "}
 <CardHeader
 icon={<FiCamera />}
 title={isBoutique ? "Boutique" : "Salon"}
-subtitle="Photos / vidÈos"
+subtitle="Photos / vidÔøΩos"
 right={
 <Button onClick={() => setShowPortfolioModal(true)}>
 <FiPlus className="mr-2" /> Ajouter
@@ -3800,7 +3912,7 @@ right={
 />
 <div className="p-6">
 {portfolio.length === 0 ? (
-<EmptyState icon={<FiCamera />} title={isBoutique ? "Boutique vide" : "Salon vide"} subtitle="Ajoute des photos ou vidÈos." />
+<EmptyState icon={<FiCamera />} title={isBoutique ? "Boutique vide" : "Salon vide"} subtitle="Ajoute des photos ou vidÔøΩos." />
 ) : (
 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
 {portfolio.map((p) => {
@@ -3811,7 +3923,7 @@ return (
 <div key={p.id} className="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm">
 <div className="flex items-start justify-between gap-2">
 <div className="min-w-0">
-<Badge tone="purple">{p.type === "video" ? "VidÈo" : "Galerie"}</Badge>
+<Badge tone="purple">{p.type === "video" ? "VidÔøΩo" : "Galerie"}</Badge>
 <h4 className="mt-2 text-base font-extrabold text-gray-900 truncate">{p.title}</h4>
 <p className="text-xs text-gray-500 mt-1">{formatDate(p.createdAt)}</p>
 </div>
@@ -3864,7 +3976,7 @@ isImage(mediaUrl) ? (
 
 <Modal
 open={showPortfolioModal}
-title={isBoutique ? "Ajouter ‡ la boutique" : "Ajouter au salon"}
+title={isBoutique ? "Ajouter ÔøΩ la boutique" : "Ajouter au salon"}
 onClose={() => setShowPortfolioModal(false)}
 footer={
 <div className="flex gap-3 justify-end">
@@ -3884,7 +3996,7 @@ value={portfolioForm.type}
 onChange={(e) => setPortfolioForm((p) => ({ ...p, type: e.target.value }))}
 >
 <option value="gallery">Galerie</option>
-<option value="video">VidÈo</option>
+<option value="video">VidÔøΩo</option>
 </Select>
 
 <Input
@@ -3894,7 +4006,7 @@ onChange={(e) => setPortfolioForm((p) => ({ ...p, title: e.target.value }))}
 />
 
 <div>
-<label className="block text-sm font-semibold text-gray-700 mb-1">{portfolioForm.type === "video" ? "VidÈo *" : "Photo *"}</label>
+<label className="block text-sm font-semibold text-gray-700 mb-1">{portfolioForm.type === "video" ? "VidÔøΩo *" : "Photo *"}</label>
 <input
 type="file"
 accept={portfolioForm.type === "video" ? "video/*" : "image/*"}
@@ -3923,14 +4035,14 @@ right={
 <Select value={reviewFilter} onChange={(e) => setReviewFilter(e.target.value)}>
 <option value="all">Tous</option>
 <option value="pending">En attente</option>
-<option value="approved">ApprouvÈs</option>
-<option value="rejected">RejetÈs</option>
+<option value="approved">ApprouvÔøΩs</option>
+<option value="rejected">RejetÔøΩs</option>
 </Select>
 }
 />
 <div className="p-6">
 {filteredReviews.length === 0 ? (
-<EmptyState icon={<FiStar />} title="Aucun avis" subtitle="Les avis apparaÓtront ici." />
+<EmptyState icon={<FiStar />} title="Aucun avis" subtitle="Les avis apparaÔøΩtront ici." />
 ) : (
 <div className="space-y-3">
 {filteredReviews.map((r) => (
@@ -3992,11 +4104,11 @@ right={
 <Badge tone="purple">{p.type === "percent" ? `${p.value}%` : `${formatMoney(p.value)}`}</Badge>
 {p.active ? <Badge tone="green">Active</Badge> : <Badge tone="red">Inactive</Badge>}
 </div>
-<p className="text-xs text-gray-500 mt-2">Expire: {p.expiresAt || "ó"}</p>
+<p className="text-xs text-gray-500 mt-2">Expire: {p.expiresAt || "ÔøΩ"}</p>
 </div>
 <div className="flex gap-2">
 <Button variant="secondary" className="px-3 py-2" onClick={() => togglePromo(p.id)}>
-{p.active ? "DÈsactiver" : "Activer"}
+{p.active ? "DÔøΩsactiver" : "Activer"}
 </Button>
 <IconButton title="Supprimer" onClick={() => deletePromo(p.id)}>
 <FiTrash2 />
@@ -4010,21 +4122,21 @@ right={
 </Card>
 
 <Card>
-<CardHeader icon={<FiGift />} title="FidÈlitÈ" subtitle="Points + rÈcompense" />
+<CardHeader icon={<FiGift />} title="FidÔøΩlitÔøΩ" subtitle="Points + rÔøΩcompense" />
 <div className="p-6 space-y-4">
 <div className="flex items-center gap-2">
 <input type="checkbox" checked={!!loyalty.enabled} onChange={(e) => setLoyalty((p) => ({ ...p, enabled: e.target.checked }))} />
-<span className="text-sm font-semibold text-gray-700">Activer la fidÈlitÈ</span>
+<span className="text-sm font-semibold text-gray-700">Activer la fidÔøΩlitÔøΩ</span>
 </div>
 
 <div className="grid grid-cols-2 gap-4">
-<Input label="Points / rÈservation" type="number" value={loyalty.pointsPerBooking} onChange={(e) => setLoyalty((p) => ({ ...p, pointsPerBooking: Number(e.target.value) }))} />
+<Input label="Points / rÔøΩservation" type="number" value={loyalty.pointsPerBooking} onChange={(e) => setLoyalty((p) => ({ ...p, pointsPerBooking: Number(e.target.value) }))} />
 <Input label="Seuil points" type="number" value={loyalty.rewardThreshold} onChange={(e) => setLoyalty((p) => ({ ...p, rewardThreshold: Number(e.target.value) }))} />
 </div>
 
-<Input label="RÈcompense" value={loyalty.rewardLabel} onChange={(e) => setLoyalty((p) => ({ ...p, rewardLabel: e.target.value }))} />
+<Input label="RÔøΩcompense" value={loyalty.rewardLabel} onChange={(e) => setLoyalty((p) => ({ ...p, rewardLabel: e.target.value }))} />
 
-<Button variant="secondary" onClick={() => toast.success("FidÈlitÈ sauvegardÈe ")}>
+<Button variant="secondary" onClick={() => toast.success("FidÔøΩlitÔøΩ sauvegardÔøΩe ")}>
 <FiSave className="mr-2" /> Sauvegarder
 </Button>
 </div>
@@ -4075,7 +4187,7 @@ Annuler
 <input
 value={clientQuery}
 onChange={(e) => setClientQuery(e.target.value)}
-placeholder="Rechercher clientÖ"
+placeholder="Rechercher clientÔøΩ"
 className={cx(
 "w-full pl-11 pr-4 py-2.5 border border-gray-200 rounded-2xl bg-white",
 "focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
@@ -4098,7 +4210,7 @@ selectedClient?.id === c.id
 <div className="flex items-center justify-between gap-2">
 <div>
 <p className="font-extrabold text-gray-900">{c.name}</p>
-<p className="text-xs text-gray-500 mt-1">{c.phone || "ó"}</p>
+<p className="text-xs text-gray-500 mt-1">{c.phone || "ÔøΩ"}</p>
 <p className="text-xs text-gray-400">{c.address || ""}</p>
 </div>
 <Badge tone={c.noShowCount > 0 ? "red" : "green"}>No-show: {c.noShowCount}</Badge>
@@ -4123,14 +4235,14 @@ selectedClient ? (
 />
 <div className="p-6">
 {!selectedClient ? (
-<EmptyState icon={<FiUser />} title="SÈlectionne un client" subtitle="Clique sur un client ‡ gauche pour voir sa fiche." />
+<EmptyState icon={<FiUser />} title="SÔøΩlectionne un client" subtitle="Clique sur un client ÔøΩ gauche pour voir sa fiche." />
 ) : (
 <div className="space-y-5">
 <div className="flex items-start justify-between gap-3">
 <div>
 <h3 className="text-xl font-extrabold text-gray-900">{selectedClient.name}</h3>
-<p className="text-sm text-gray-500 mt-1">{selectedClient.phone || "ó"}</p>
-<p className="text-sm text-gray-500">{selectedClient.email || "ó"}</p>
+<p className="text-sm text-gray-500 mt-1">{selectedClient.phone || "ÔøΩ"}</p>
+<p className="text-sm text-gray-500">{selectedClient.email || "ÔøΩ"}</p>
 </div>
 <Badge tone={selectedClient.noShowCount > 0 ? "red" : "green"}>No-show: {selectedClient.noShowCount}</Badge>
 </div>
@@ -4154,7 +4266,7 @@ Sauvegarder l'adresse
 </div>
 </div>
 <Textarea
-label="PrÈfÈrences"
+label="PrÔøΩfÔøΩrences"
 rows={4}
 value={selectedClient.preferences || ""}
 onChange={(e) => {
@@ -4185,7 +4297,7 @@ setSelectedClient((p) => ({ ...p, notes: e.target.value }));
 <div key={h.id} className="p-4 bg-gray-50 rounded-2xl flex items-center justify-between">
 <div>
 <p className="font-extrabold text-gray-900">{h.service}</p>
-<p className="text-xs text-gray-500 mt-1">{h.date} ‡ {getStatusLabel(h.status)}</p>
+<p className="text-xs text-gray-500 mt-1">{h.date} ÔøΩ {getStatusLabel(h.status)}</p>
 </div>
 <span className="font-extrabold text-gray-900">{formatMoney(h.amount)}</span>
 </div>
@@ -4209,7 +4321,7 @@ setSelectedClient((p) => ({ ...p, notes: e.target.value }));
 { id: "today", label: "Aujourd'hui" },
 { id: "week", label: "Cette semaine" },
 { id: "month", label: "Ce mois" },
-{ id: "year", label: "Cette annÈe" },
+{ id: "year", label: "Cette annÔøΩe" },
 ].map((p) => (
 <button
 key={p.id}
@@ -4223,7 +4335,7 @@ statsPeriod === p.id ? "bg-gray-900 text-white" : "bg-white text-gray-700 border
 </button>
 ))}
 </div>
-<p className="text-xs text-gray-500 mt-2">PÈriode : {formatPeriodLabel(statsPeriod)}</p>
+<p className="text-xs text-gray-500 mt-2">PÔøΩriode : {formatPeriodLabel(statsPeriod)}</p>
 </div>
 
 <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -4242,7 +4354,7 @@ statsPeriod === p.id ? "bg-gray-900 text-white" : "bg-white text-gray-700 border
 <div className="bg-white rounded-3xl p-5 shadow-sm border border-gray-100">
 <div className="flex items-center justify-between">
 <div>
-<p className="text-gray-500 text-sm font-semibold">RÈservations</p>
+<p className="text-gray-500 text-sm font-semibold">RÔøΩservations</p>
 <p className="text-2xl font-extrabold text-gray-900 mt-1">{stats.totalBookings}</p>
 </div>
 <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center">
@@ -4302,19 +4414,19 @@ return (
 })}
 </div>
 ) : (
-<p className="text-gray-500 text-center py-8">Pas encore de donnÈes pour cette pÈriode.</p>
+<p className="text-gray-500 text-center py-8">Pas encore de donnÔøΩes pour cette pÔøΩriode.</p>
 )}
 </div>
 
 <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
-<h3 className="font-extrabold text-gray-900 mb-4">RÈsumÈ d'activitÈ</h3>
+<h3 className="font-extrabold text-gray-900 mb-4">RÔøΩsumÔøΩ d'activitÔøΩ</h3>
 <div className="space-y-3">
 <div className="flex items-center justify-between p-4 bg-green-50 rounded-2xl">
 <div className="flex items-center">
 <div className="w-10 h-10 bg-green-600 rounded-2xl flex items-center justify-center mr-3">
 <FiCheck className="w-5 h-5 text-white" />
 </div>
-<span className="font-bold text-gray-900">RDV terminÈs</span>
+<span className="font-bold text-gray-900">RDV terminÔøΩs</span>
 </div>
 <span className="text-xl font-extrabold text-green-700">{stats.completedBookings}</span>
 </div>
@@ -4324,7 +4436,7 @@ return (
 <div className="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center mr-3">
 <FiClock className="w-5 h-5 text-white" />
 </div>
-<span className="font-bold text-gray-900">RDV ¿ venir</span>
+<span className="font-bold text-gray-900">RDV ÔøΩ venir</span>
 </div>
 <span className="text-xl font-extrabold text-blue-700">
 {appointments.filter((a) => a.status === "upcoming").length}
@@ -4352,7 +4464,7 @@ return (
 <Card>
 <CardHeader
 icon={<FiSettings />}
-title="ParamËtres du salon"
+title="ParamÔøΩtres du salon"
 right={
 <Button onClick={saveSettings} disabled={savingSettings}>
 <FiSave className="mr-2" /> Sauvegarder
@@ -4362,7 +4474,7 @@ right={
 <div className="p-6">
 <div className="grid md:grid-cols-2 gap-6">
 <Input label="Nom du salon" value={salonSettings.name} onChange={(e) => setSalonSettings((p) => ({ ...p, name: e.target.value }))} />
-<Input label="TÈlÈphone" value={salonSettings.phone} onChange={(e) => setSalonSettings((p) => ({ ...p, phone: e.target.value }))} />
+<Input label="TÔøΩlÔøΩphone" value={salonSettings.phone} onChange={(e) => setSalonSettings((p) => ({ ...p, phone: e.target.value }))} />
 <Input label="WhatsApp" value={salonSettings.whatsapp} onChange={(e) => setSalonSettings((p) => ({ ...p, whatsapp: e.target.value }))} />
 <Input label="Adresse" value={salonSettings.address} onChange={(e) => setSalonSettings((p) => ({ ...p, address: e.target.value }))} />
 <div>
@@ -4370,7 +4482,7 @@ right={
   <QuartierSelector
     value={salonSettings.neighborhood}
     onChange={(v) => setSalonSettings((p) => ({ ...p, neighborhood: v }))}
-    placeholder="SÈlectionner votre quartier"
+    placeholder="SÔøΩlectionner votre quartier"
     variant="form"
   />
 </div>
@@ -4401,7 +4513,7 @@ right={
           const imageUrl = await uploadSalonImage(file);
           if (imageUrl) {
             setSalonSettings((p) => ({ ...p, image: imageUrl }));
-            toast.success("Photo du salon mise ‡ jour.");
+            toast.success("Photo du salon mise ÔøΩ jour.");
           }
         } catch (err) {
           toast.error(err.message || "Erreur lors de l'upload de l'image.");
@@ -4434,7 +4546,7 @@ right={
         </Button>
       )}
       <p className="text-xs text-gray-500">
-        Image carrÈe ou paysage. AffichÈe sur la page d'accueil et la fiche salon.
+        Image carrÔøΩe ou paysage. AffichÔøΩe sur la page d'accueil et la fiche salon.
       </p>
     </div>
   </div>
@@ -4472,7 +4584,7 @@ openingHours: { ...p.openingHours, [key]: { ...hours, open: e.target.value } },
 }
 className="px-3 py-2 border border-gray-200 rounded-xl bg-white"
 />
-<span className="text-gray-500 font-semibold">ó</span>
+<span className="text-gray-500 font-semibold">ÔøΩ</span>
 <input
 type="time"
 value={hours.close}
@@ -4488,12 +4600,12 @@ className="px-3 py-2 border border-gray-200 rounded-xl bg-white"
 onClick={() => setSalonSettings((p) => ({ ...p, openingHours: { ...p.openingHours, [key]: null } }))}
 className="text-red-600 hover:text-red-700 font-semibold text-sm"
 >
-Marquer fermÈ
+Marquer fermÔøΩ
 </button>
 </>
 ) : (
 <>
-<span className="text-gray-400 font-semibold">FermÈ</span>
+<span className="text-gray-400 font-semibold">FermÔøΩ</span>
 <button
 onClick={() =>
 setSalonSettings((p) => ({
