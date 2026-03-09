@@ -13,6 +13,15 @@ import { useAuth } from '../../context/AuthContext'
 import { useBooking } from '../../context/BookingContext'
 import LoadingSpinner from '../../components/UI/LoadingSpinner'
 import apiFetch from '@/api/client'
+import toast from 'react-hot-toast'
+import { parseProductMeta } from '../../utils/productMeta'
+import {
+  addItemToCart,
+  deriveDeliveryConfigFromItems,
+  readCart,
+  removeItemFromCart,
+  subscribeCart,
+} from '../../utils/cartStore'
 
 function SalonDetail() {
   const { id } = useParams()
@@ -43,11 +52,23 @@ function SalonDetail() {
 
   // Boutique state
   const [boutiqueProducts, setBoutiqueProducts] = useState([])
-  const [cart, setCart] = useState([]) // [{product, quantity, selectedSize, selectedColor}]
+  const [cart, setCart] = useState(() => {
+    const saved = readCart()
+    return Array.isArray(saved?.items) ? saved.items : []
+  }) // [{product, quantity, selectedSize, selectedColor}]
   const [showCartModal, setShowCartModal] = useState(false)
   const [orderForm, setOrderForm] = useState({ deliveryMode: 'PICKUP', deliveryAddress: '', clientPhone: '', clientName: '', notes: '' })
   const [orderSubmitting, setOrderSubmitting] = useState(false)
   const [variantSelections, setVariantSelections] = useState({}) // { productId: { size, color } }
+  const [likedProducts, setLikedProducts] = useState(() => {
+    try {
+      const raw = localStorage.getItem('flashrv_liked_products')
+      const parsed = raw ? JSON.parse(raw) : []
+      return Array.isArray(parsed) ? parsed : []
+    } catch {
+      return []
+    }
+  })
 
   useEffect(() => {
     let mounted = true
@@ -97,6 +118,29 @@ function SalonDetail() {
     }
   }, [id])
 
+  useEffect(() => {
+    const syncCart = () => {
+      const saved = readCart()
+      const salonId = salonData?.id || id
+      if (saved?.salon?.id && String(saved.salon.id) !== String(salonId)) {
+        setCart([])
+        return
+      }
+      setCart(Array.isArray(saved?.items) ? saved.items : [])
+    }
+    syncCart()
+    const unsubscribe = subscribeCart(syncCart)
+    return unsubscribe
+  }, [id, salonData?.id])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('flashrv_liked_products', JSON.stringify(likedProducts))
+    } catch {
+      // ignore persistence errors
+    }
+  }, [likedProducts])
+
   // Group services by category
   const servicesByCategory = services.reduce((acc, service) => {
     const key = service.category || 'Autres'
@@ -123,23 +167,31 @@ function SalonDetail() {
   const addToCart = (product, size, color) => {
     const selSize = size || variantSelections[product.id]?.size || null
     const selColor = color || variantSelections[product.id]?.color || null
-    setCart(prev => {
-      const existing = prev.find(c => c.product.id === product.id && c.selectedSize === selSize && c.selectedColor === selColor)
-      if (existing) {
-        return prev.map(c => (c.product.id === product.id && c.selectedSize === selSize && c.selectedColor === selColor) ? { ...c, quantity: c.quantity + 1 } : c)
-      }
-      return [...prev, { product, quantity: 1, selectedSize: selSize, selectedColor: selColor }]
+    const cartSalon = {
+      id: salonData?.id || id,
+      name: salonData?.name,
+      image: salonData?.image || salonData?.picture || null,
+      phone: salonData?.phone || null,
+      whatsapp: salonData?.whatsapp || null,
+    }
+    const next = addItemToCart({
+      salon: cartSalon,
+      product,
+      quantity: 1,
+      selectedSize: selSize,
+      selectedColor: selColor,
     })
+    setCart(next.items || [])
   }
 
   const removeFromCart = (productId, size, color) => {
-    setCart(prev => {
-      const existing = prev.find(c => c.product.id === productId && c.selectedSize === (size || null) && c.selectedColor === (color || null))
-      if (existing && existing.quantity > 1) {
-        return prev.map(c => (c.product.id === productId && c.selectedSize === (size || null) && c.selectedColor === (color || null)) ? { ...c, quantity: c.quantity - 1 } : c)
-      }
-      return prev.filter(c => !(c.product.id === productId && c.selectedSize === (size || null) && c.selectedColor === (color || null)))
+    const next = removeItemFromCart({
+      productId,
+      selectedSize: size || null,
+      selectedColor: color || null,
+      quantity: 1,
     })
+    setCart(next.items || [])
   }
 
   const getCartItemForProduct = (productId) => {
@@ -243,27 +295,33 @@ function SalonDetail() {
 
   const getResolvedVariantOptions = (product, { includeFallback = false } = {}) => {
     const variantEntries = getVariantEntries(product)
+    const productMeta = parseProductMeta(product)
 
     const availableSizesFromCombos = uniqueOptions(variantEntries.map((v) => v.size))
     const availableColorsFromCombos = uniqueOptions(variantEntries.map((v) => v.color))
 
     const explicitSizes = uniqueOptions([
-      ...normalizeOptionList(product?.sizes),
+      ...normalizeOptionList(productMeta.sizes),
       ...normalizeOptionList(product?.sizeOptions),
       ...normalizeOptionList(product?.variants?.sizes),
       ...normalizeOptionList(product?.variants?.size),
       ...normalizeOptionList(product?.options?.sizes),
     ])
     const explicitColors = uniqueOptions([
-      ...normalizeOptionList(product?.colors),
+      ...normalizeOptionList(productMeta.colors),
       ...normalizeOptionList(product?.colorOptions),
       ...normalizeOptionList(product?.variants?.colors),
       ...normalizeOptionList(product?.variants?.color),
       ...normalizeOptionList(product?.options?.colors),
     ])
+    const explicitAvailableColors = uniqueOptions(productMeta.availableColors)
 
     let resolvedSizes = explicitSizes.length > 0 ? explicitSizes : availableSizesFromCombos
     let resolvedColors = explicitColors.length > 0 ? explicitColors : availableColorsFromCombos
+    let resolvedAvailableColors =
+      explicitAvailableColors.length > 0
+        ? explicitAvailableColors
+        : resolvedColors
     let usesFallbackSizes = false
     let usesFallbackColors = false
 
@@ -274,6 +332,7 @@ function SalonDetail() {
       }
       if (resolvedColors.length === 0) {
         resolvedColors = ['Noir', 'Blanc', 'Rouge', 'Bleu', 'Vert', 'Jaune']
+        resolvedAvailableColors = resolvedColors
         usesFallbackColors = true
       }
     }
@@ -282,8 +341,10 @@ function SalonDetail() {
       variantEntries,
       resolvedSizes,
       resolvedColors,
+      resolvedAvailableColors,
       usesFallbackSizes,
       usesFallbackColors,
+      deliveryMeta: productMeta,
     }
   }
 
@@ -297,6 +358,63 @@ function SalonDetail() {
         : []),
     ].filter(Boolean)
     return Array.from(new Set(raw)).map(resolveMediaUrl).filter(Boolean)
+  }
+
+  const isProductLiked = (productId) => likedProducts.includes(String(productId))
+
+  const toggleProductLike = (productId) => {
+    const key = String(productId)
+    setLikedProducts((prev) =>
+      prev.includes(key) ? prev.filter((idValue) => idValue !== key) : [...prev, key]
+    )
+  }
+
+  const shareProduct = async (product) => {
+    const shareUrl = `${window.location.origin}/salon/${id}`
+    const payload = {
+      title: `${product?.name || 'Article'} - ${salonData?.name || 'FlashRV'}`,
+      text: `Regardez ${product?.name || 'cet article'} sur ${salonData?.name || 'la boutique'}.`,
+      url: shareUrl,
+    }
+    try {
+      if (navigator.share) {
+        await navigator.share(payload)
+      } else if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(shareUrl)
+        toast.success('Lien copie dans le presse-papiers.')
+      }
+    } catch {
+      // silent
+    }
+  }
+
+  const openProductReview = () => {
+    setActiveTab('avis')
+    closeProductDetail()
+    setTimeout(() => window.scrollTo({ top: window.scrollY + 380, behavior: 'smooth' }), 120)
+  }
+
+  const buyNow = (product, size, color) => {
+    addToCart(product, size, color)
+    const cartState = readCart()
+    const items = Array.isArray(cartState?.items) ? cartState.items : []
+    if (!cartState?.salon?.id || items.length === 0) return
+    const delivery = deriveDeliveryConfigFromItems(items)
+    closeProductDetail()
+    navigate('/order/checkout', {
+      state: {
+        cart: items,
+        salon: cartState.salon,
+        deliveryMode: delivery.canDeliverAll ? 'DELIVERY' : 'PICKUP',
+        deliveryAddress: '',
+        clientPhone: user?.phoneNumber || user?.phone || '',
+        clientName: user?.name || '',
+        notes: '',
+        forcePickup: !delivery.canDeliverAll,
+        deliveryZones: delivery.deliveryZones,
+        minDeliveryFee: delivery.minDeliveryFee,
+      },
+    })
   }
 
   const openArticlesTab = () => {
@@ -319,6 +437,7 @@ function SalonDetail() {
 
   const cartTotal = cart.reduce((sum, c) => sum + c.product.price * c.quantity, 0)
   const cartCount = cart.reduce((sum, c) => sum + c.quantity, 0)
+  const cartDeliveryConfig = deriveDeliveryConfigFromItems(cart)
 
   const handleSubmitOrder = () => {
     if (!isAuthenticated) {
@@ -326,20 +445,28 @@ function SalonDetail() {
       return
     }
     if (cart.length === 0) return
+    const delivery = deriveDeliveryConfigFromItems(cart)
     setShowCartModal(false)
     navigate('/order/checkout', {
       state: {
         cart,
-        salon: salonData,
-        deliveryMode: orderForm.deliveryMode,
+        salon: {
+          id: salonData?.id,
+          name: salonData?.name,
+          image: salonData?.image || salonData?.picture || null,
+          phone: salonData?.phone || null,
+          whatsapp: salonData?.whatsapp || null,
+        },
+        deliveryMode: delivery.canDeliverAll ? orderForm.deliveryMode : 'PICKUP',
         deliveryAddress: orderForm.deliveryAddress,
         clientPhone: orderForm.clientPhone,
         clientName: orderForm.clientName || user?.name,
         notes: orderForm.notes,
+        forcePickup: !delivery.canDeliverAll,
+        deliveryZones: delivery.deliveryZones,
+        minDeliveryFee: delivery.minDeliveryFee,
       }
     })
-    setCart([])
-    setOrderForm({ deliveryMode: 'PICKUP', deliveryAddress: '', clientPhone: '', clientName: '', notes: '' })
   }
 
   const amenityIcons = {
@@ -748,7 +875,7 @@ function SalonDetail() {
                           const img = resolveMediaUrl(product.imageUrl || product.image)
                           const inCartItems = getCartItemForProduct(product.id)
                           const inCartTotal = inCartItems.reduce((s, c) => s + c.quantity, 0)
-                          const { variantEntries, resolvedSizes, resolvedColors } = getResolvedVariantOptions(product)
+                          const { variantEntries, resolvedSizes, resolvedColors, resolvedAvailableColors, deliveryMeta } = getResolvedVariantOptions(product)
                           const hasSizes = Array.isArray(resolvedSizes) && resolvedSizes.length > 0
                           const hasColors = Array.isArray(resolvedColors) && resolvedColors.length > 0
                           const selSize = variantSelections[product.id]?.size || null
@@ -764,7 +891,12 @@ function SalonDetail() {
                             )
                           }
                           const isColorAvailable = (colorValue) => {
-                            if (variantEntries.length === 0) return true
+                            if (variantEntries.length === 0) {
+                              if (Array.isArray(resolvedAvailableColors) && resolvedAvailableColors.length > 0) {
+                                return resolvedAvailableColors.includes(colorValue)
+                              }
+                              return true
+                            }
                             return variantEntries.some((v) =>
                               v.isAvailable &&
                               v.color === colorValue &&
@@ -856,19 +988,25 @@ function SalonDetail() {
                                           disabled={!available}
                                           className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition ${
                                             !available
-                                              ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-60'
+                                              ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-60 line-through'
                                               : selColor === colorValue
                                                 ? 'bg-gray-900 text-white border-gray-900'
                                                 : 'bg-white text-gray-700 border-gray-200 hover:border-gray-400'
                                           }`}
                                         >
-                                          {colorValue}
+                                          {colorValue}{!available ? ' (indispo)' : ''}
                                         </button>
                                         )
                                       })}
                                     </div>
                                   </div>
                                 )}
+
+                                <p className="mb-2 text-[11px] text-gray-500">
+                                  {deliveryMeta?.isDeliverable
+                                    ? `Livraison disponible${deliveryMeta?.deliveryFee > 0 ? ` a partir de ${formatPrice(deliveryMeta.deliveryFee)}` : ''}`
+                                    : 'Retrait uniquement'}
+                                </p>
 
                                 {needsVariant && !variantChosen && (
                                   <p className="mb-2 text-[11px] text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-2 py-1">
@@ -1397,8 +1535,10 @@ function SalonDetail() {
                 variantEntries,
                 resolvedSizes,
                 resolvedColors,
+                resolvedAvailableColors,
                 usesFallbackSizes,
                 usesFallbackColors,
+                deliveryMeta,
               } = getResolvedVariantOptions(product, { includeFallback: true })
               const hasSizes = Array.isArray(resolvedSizes) && resolvedSizes.length > 0
               const hasColors = Array.isArray(resolvedColors) && resolvedColors.length > 0
@@ -1420,7 +1560,12 @@ function SalonDetail() {
                 )
               }
               const isColorAvailable = (colorValue) => {
-                if (variantEntries.length === 0) return true
+                if (variantEntries.length === 0) {
+                  if (Array.isArray(resolvedAvailableColors) && resolvedAvailableColors.length > 0) {
+                    return resolvedAvailableColors.includes(colorValue)
+                  }
+                  return true
+                }
                 return variantEntries.some((v) =>
                   v.isAvailable &&
                   v.color === colorValue &&
@@ -1493,6 +1638,54 @@ function SalonDetail() {
                       <p className="text-sm text-gray-600">{product.description}</p>
                     )}
 
+                    <div className="rounded-xl border border-gray-100 bg-gray-50 px-3 py-2 text-xs text-gray-600">
+                      {deliveryMeta?.isDeliverable
+                        ? `Livraison disponible${deliveryMeta?.deliveryFee > 0 ? ` a partir de ${formatPrice(deliveryMeta.deliveryFee)}` : ''}`
+                        : 'Retrait boutique uniquement'}
+                      {deliveryMeta?.isDeliverable && Array.isArray(deliveryMeta?.deliveryZones) && deliveryMeta.deliveryZones.length > 0 ? (
+                        <span className="block mt-1 text-gray-500">Zones: {deliveryMeta.deliveryZones.join(', ')}</span>
+                      ) : null}
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => toggleProductLike(product.id)}
+                        className={`px-2.5 py-2 rounded-xl text-xs font-semibold border transition ${isProductLiked(product.id) ? 'bg-red-50 text-red-600 border-red-200' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}
+                      >
+                        {isProductLiked(product.id) ? 'Aime' : 'Like'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => shareProduct(product)}
+                        className="px-2.5 py-2 rounded-xl text-xs font-semibold border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                      >
+                        Partager
+                      </button>
+                      <button
+                        type="button"
+                        onClick={openProductReview}
+                        className="px-2.5 py-2 rounded-xl text-xs font-semibold border border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                      >
+                        Avis
+                      </button>
+                      <a
+                        href={salon?.phone ? `tel:${salon.phone}` : '#'}
+                        onClick={(e) => { if (!salon?.phone) e.preventDefault() }}
+                        className="px-2.5 py-2 rounded-xl text-xs font-semibold border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 text-center"
+                      >
+                        Appeler
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => buyNow(product, selSize, selColor)}
+                        disabled={product.stock <= 0 || (needsVariant && !variantChosen)}
+                        className="px-2.5 py-2 rounded-xl text-xs font-semibold border border-gray-900 bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Acheter
+                      </button>
+                    </div>
+
                     {hasSizes && (
                       <div>
                         <div className="flex items-center justify-between mb-2">
@@ -1541,13 +1734,13 @@ function SalonDetail() {
                                 disabled={!available}
                                 className={`px-3 py-2 rounded-lg text-sm font-medium border transition ${
                                   !available
-                                    ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-60'
+                                    ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-60 line-through'
                                     : selColor === colorValue
                                       ? 'bg-gray-900 text-white border-gray-900'
                                       : 'bg-white text-gray-700 border-gray-200 hover:border-gray-400'
                                 }`}
                               >
-                                {colorValue}
+                                {colorValue}{!available ? ' (indispo)' : ''}
                               </button>
                             )
                           })}
@@ -1655,6 +1848,15 @@ function SalonDetail() {
                   </div>
                 </div>
               ))}
+
+              <div className="rounded-xl border border-gray-100 bg-gray-50 px-3 py-2 text-xs text-gray-600">
+                {cartDeliveryConfig.canDeliverAll
+                  ? `Livraison possible${cartDeliveryConfig.minDeliveryFee > 0 ? ` a partir de ${formatPrice(cartDeliveryConfig.minDeliveryFee)}` : ''}`
+                  : 'Ce panier contient des articles en retrait uniquement'}
+                {cartDeliveryConfig.canDeliverAll && cartDeliveryConfig.deliveryZones.length > 0 ? (
+                  <span className="block mt-1 text-gray-500">Zones: {cartDeliveryConfig.deliveryZones.join(', ')}</span>
+                ) : null}
+              </div>
 
               <div className="border-t border-gray-100 pt-4">
                 <div className="flex justify-between text-lg font-bold">

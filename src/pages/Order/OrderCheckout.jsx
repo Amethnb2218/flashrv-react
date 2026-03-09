@@ -7,6 +7,7 @@ import { formatPrice } from '../../utils/helpers'
 import { resolveMediaUrl } from '../../utils/media'
 import apiFetch from '../../api/client'
 import { pushSiteNotification } from '../../utils/siteNotifications'
+import { clearCart, deriveDeliveryConfigFromItems, readCart } from '../../utils/cartStore'
 
 const PAYMENT_METHODS = [
   { id: 'pay_on_pickup', name: 'Paiement au retrait', icon: 'PICK', color: 'gray', description: 'Reglez en boutique au moment du retrait' },
@@ -20,14 +21,30 @@ function OrderCheckout() {
   const location = useLocation()
   const { user, isAuthenticated } = useAuth()
 
-  const orderData = location.state
+  const storageCart = readCart()
+  const orderData =
+    location.state ||
+    (Array.isArray(storageCart?.items) && storageCart.items.length > 0 && storageCart?.salon?.id
+      ? {
+          cart: storageCart.items,
+          salon: storageCart.salon,
+          deliveryMode: 'PICKUP',
+          deliveryAddress: '',
+          clientPhone: user?.phoneNumber || user?.phone || '',
+          clientName: user?.name || '',
+          notes: '',
+        }
+      : null)
+  const deliveryConfig = deriveDeliveryConfigFromItems(orderData?.cart || [])
+  const baseDeliveryFee = Number(orderData?.minDeliveryFee ?? deliveryConfig.minDeliveryFee ?? 0)
+  const forcePickup = Boolean(orderData?.forcePickup) || !deliveryConfig.canDeliverAll
   const [currentStep, setCurrentStep] = useState(0)
   const [selectedPayment, setSelectedPayment] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
   const [form, setForm] = useState({
-    deliveryMode: orderData?.deliveryMode || 'PICKUP',
+    deliveryMode: forcePickup ? 'PICKUP' : (orderData?.deliveryMode || 'PICKUP'),
     deliveryAddress: orderData?.deliveryAddress || '',
     clientPhone: orderData?.clientPhone || user?.phoneNumber || user?.phone || '',
     clientName: orderData?.clientName || user?.name || '',
@@ -50,7 +67,7 @@ function OrderCheckout() {
 
   const { cart, salon } = orderData
   const cartTotal = cart.reduce((sum, c) => sum + c.product.price * c.quantity, 0)
-  const deliveryFee = form.deliveryMode === 'DELIVERY' ? 1000 : 0
+  const deliveryFee = form.deliveryMode === 'DELIVERY' ? baseDeliveryFee : 0
   const grandTotal = cartTotal + deliveryFee
 
   const canProceed = () => {
@@ -135,6 +152,7 @@ function OrderCheckout() {
         },
         replace: true,
       })
+      clearCart()
     } catch (e) {
       setError(e.message || 'Erreur lors de la commande')
     } finally {
@@ -250,18 +268,37 @@ function OrderCheckout() {
                   <p className="text-xs text-gray-500 mt-1">Gratuit</p>
                 </button>
                 <button
-                  onClick={() => setForm(f => ({ ...f, deliveryMode: 'DELIVERY' }))}
+                  onClick={() => {
+                    if (forcePickup) return
+                    setForm(f => ({ ...f, deliveryMode: 'DELIVERY' }))
+                  }}
+                  disabled={forcePickup}
                   className={`p-4 rounded-xl border-2 text-left transition-all ${
                     form.deliveryMode === 'DELIVERY'
                       ? 'border-gray-900 bg-gray-50'
-                      : 'border-gray-200 hover:border-gray-300'
+                      : forcePickup
+                        ? 'border-gray-100 bg-gray-50 text-gray-400 cursor-not-allowed'
+                        : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
                   <FiTruck className="w-6 h-6 mb-2" />
                   <p className="font-semibold text-sm">Livraison</p>
-                  <p className="text-xs text-gray-500 mt-1">{formatPrice(1000)}</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {forcePickup ? 'Indisponible pour ce panier' : baseDeliveryFee > 0 ? `A partir de ${formatPrice(baseDeliveryFee)}` : 'Gratuit'}
+                  </p>
                 </button>
               </div>
+
+              {deliveryConfig.deliveryZones.length > 0 && !forcePickup && (
+                <p className="text-xs text-gray-500">
+                  Zones de livraison: {deliveryConfig.deliveryZones.join(', ')}
+                </p>
+              )}
+              {forcePickup && (
+                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+                  Un ou plusieurs articles de ce panier sont en retrait uniquement.
+                </p>
+              )}
 
               <div className="space-y-4">
                 <div>

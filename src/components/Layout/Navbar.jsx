@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { FiMenu, FiX, FiUser, FiLogOut, FiCalendar, FiSettings, FiSearch, FiHeart, FiHome, FiScissors, FiShoppingBag, FiBell } from 'react-icons/fi'
+import { FiMenu, FiX, FiUser, FiLogOut, FiCalendar, FiSettings, FiSearch, FiHeart, FiHome, FiScissors, FiShoppingBag, FiBell, FiShoppingCart } from 'react-icons/fi'
 import { motion, AnimatePresence } from 'framer-motion'
 import Logo from '../UI/Logo'
 import apiFetch from '../../api/client'
@@ -13,6 +13,12 @@ import {
   markSiteNotificationRead,
   subscribeSiteNotifications,
 } from '../../utils/siteNotifications'
+import {
+  deriveDeliveryConfigFromItems,
+  getCartCount,
+  readCart,
+  subscribeCart,
+} from '../../utils/cartStore'
 
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
@@ -20,6 +26,7 @@ function Navbar() {
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
   const [notifications, setNotifications] = useState([])
+  const [cartCount, setCartCount] = useState(() => getCartCount())
   const { user, isAuthenticated, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
@@ -66,6 +73,12 @@ function Navbar() {
     return () => { document.body.style.overflow = '' }
   }, [isOpen])
 
+  useEffect(() => {
+    setCartCount(getCartCount())
+    const unsubscribe = subscribeCart(() => setCartCount(getCartCount()))
+    return unsubscribe
+  }, [])
+
   const closeDrawer = useCallback(() => setIsOpen(false), [])
   const getDashboardPath = useCallback(() => {
     if (!isAuthenticated) return '/login'
@@ -93,6 +106,32 @@ function Navbar() {
     }
     navigate(getDashboardPath())
   }, [closeDrawer, getDashboardPath, isAuthenticated, navigate, user?.role])
+
+  const openCart = useCallback(() => {
+    closeDrawer()
+    const cartState = readCart()
+    const items = Array.isArray(cartState?.items) ? cartState.items : []
+    if (items.length === 0 || !cartState?.salon?.id) {
+      navigate('/salons?businessType=BOUTIQUE')
+      return
+    }
+
+    const delivery = deriveDeliveryConfigFromItems(items)
+    navigate('/order/checkout', {
+      state: {
+        cart: items,
+        salon: cartState.salon,
+        deliveryMode: delivery.canDeliverAll ? 'DELIVERY' : 'PICKUP',
+        deliveryAddress: '',
+        clientPhone: user?.phoneNumber || user?.phone || '',
+        clientName: user?.name || '',
+        notes: '',
+        forcePickup: !delivery.canDeliverAll,
+        deliveryZones: delivery.deliveryZones,
+        minDeliveryFee: delivery.minDeliveryFee,
+      },
+    })
+  }, [closeDrawer, navigate, user?.name, user?.phone, user?.phoneNumber])
 
   const fetchNotifications = useCallback(async () => {
     if (!isAuthenticated) {
@@ -247,6 +286,19 @@ function Navbar() {
                 title="Mes favoris"
               >
                 <FiHeart className="w-5 h-5" />
+              </button>
+
+              <button
+                onClick={openCart}
+                className="p-2.5 text-gray-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 relative"
+                title="Panier"
+              >
+                <FiShoppingCart className="w-5 h-5" />
+                {cartCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-amber-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow">
+                    {cartCount > 9 ? '9+' : cartCount}
+                  </span>
+                )}
               </button>
 
               {/* Notification Bell */}
@@ -543,6 +595,20 @@ function Navbar() {
                           )}
                         </div>
                         <span>Notifications{unreadCount > 0 ? ` (${unreadCount})` : ''}</span>
+                      </button>
+                      <button
+                        onClick={openCart}
+                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors w-full"
+                      >
+                        <div className="relative">
+                          <FiShoppingCart className="w-5 h-5" />
+                          {cartCount > 0 && (
+                            <span className="absolute -top-1 -right-1 w-4 h-4 bg-amber-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                              {cartCount > 9 ? '9+' : cartCount}
+                            </span>
+                          )}
+                        </div>
+                        <span>Panier{cartCount > 0 ? ` (${cartCount})` : ''}</span>
                       </button>
                       <Link
                         to="/profile"

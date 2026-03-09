@@ -561,6 +561,12 @@ model Product {
   stock       Int      @default(0)
   category    String?
   imageUrl    String?
+  sizes       String?
+  colors      String?
+  availableColors String?
+  isDeliverable Boolean @default(false)
+  deliveryZones String?
+  deliveryFee  Float   @default(0)
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

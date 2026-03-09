@@ -10,14 +10,100 @@ const uploadProductImages = cloudinaryProductUpload.fields([
   { name: 'images', maxCount: 10 },
 ]);
 
+const parseListField = (value) => {
+  if (value == null) return [];
+  if (Array.isArray(value)) return value.map((v) => String(v || '').trim()).filter(Boolean);
+  if (typeof value === 'string') {
+    const raw = value.trim();
+    if (!raw) return [];
+    if (
+      (raw.startsWith('[') && raw.endsWith(']')) ||
+      (raw.startsWith('{') && raw.endsWith('}'))
+    ) {
+      try {
+        const parsed = JSON.parse(raw);
+        return parseListField(parsed);
+      } catch (_) {
+        // fallback below
+      }
+    }
+    return raw.split(/[;,|/]/g).map((v) => String(v || '').trim()).filter(Boolean);
+  }
+  if (typeof value === 'object') {
+    if (Array.isArray(value.values)) return parseListField(value.values);
+    if (Array.isArray(value.options)) return parseListField(value.options);
+    return Object.values(value).map((v) => String(v || '').trim()).filter(Boolean);
+  }
+  return [];
+};
+
+const parseBooleanField = (value) => {
+  if (value === true || value === false) return value;
+  const key = String(value || '').trim().toLowerCase();
+  if (key === 'true' || key === '1' || key === 'yes' || key === 'oui') return true;
+  if (key === 'false' || key === '0' || key === 'no' || key === 'non') return false;
+  return null;
+};
+
 /**
  * POST /api/products
  * Create a product (boutique owner only)
  */
 router.post('/', authenticate, uploadProductImages, async (req, res, next) => {
   try {
-    const { name, description, price, stock, category, imageUrl } = req.body;
+    const {
+      name,
+      description,
+      price,
+      stock,
+      category,
+      imageUrl,
+      sizes,
+      colors,
+      availableColors,
+      isDeliverable,
+      deliveryZones,
+      deliveryFee,
+    } = req.body;
     const userId = req.user.id;
+
+    const parsedSizes = parseListField(sizes);
+    const parsedColors = Array.from(new Set(parseListField(colors)));
+    const parsedAvailableColors = Array.from(new Set(parseListField(availableColors)));
+    const deliverableFlag = parseBooleanField(isDeliverable);
+    const parsedDeliveryZones = Array.from(new Set(parseListField(deliveryZones)));
+    const parsedDeliveryFee = Number(deliveryFee || 0);
+
+    if (parsedColors.length === 0) {
+      return res.status(400).json({ status: 'error', message: 'Au moins une couleur est requise.' });
+    }
+    if (parsedAvailableColors.length === 0) {
+      return res.status(400).json({ status: 'error', message: 'Indiquez les couleurs disponibles.' });
+    }
+    if (parsedAvailableColors.some((c) => !parsedColors.includes(c))) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Les couleurs disponibles doivent faire partie des couleurs du produit.',
+      });
+    }
+    if (deliverableFlag === null) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Precisez si le produit est livrable ou retrait uniquement.',
+      });
+    }
+    if (deliverableFlag && parsedDeliveryZones.length === 0) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Au moins une zone de livraison est requise.',
+      });
+    }
+    if (!Number.isFinite(parsedDeliveryFee) || parsedDeliveryFee < 0) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Frais de livraison invalides.',
+      });
+    }
 
     const salon = await prisma.salon.findFirst({
       where: { ownerId: userId, businessType: 'BOUTIQUE' },
@@ -42,6 +128,12 @@ router.post('/', authenticate, uploadProductImages, async (req, res, next) => {
         stock: parseInt(stock || '0', 10),
         category: category || null,
         imageUrl: mainImage,
+        sizes: parsedSizes.length > 0 ? JSON.stringify(parsedSizes) : null,
+        colors: JSON.stringify(parsedColors),
+        availableColors: JSON.stringify(parsedAvailableColors),
+        isDeliverable: deliverableFlag,
+        deliveryZones: deliverableFlag && parsedDeliveryZones.length > 0 ? JSON.stringify(parsedDeliveryZones) : null,
+        deliveryFee: deliverableFlag ? parsedDeliveryFee : 0,
         salonId: salon.id,
         images: imageUrls.length > 0
           ? { create: imageUrls.map((url) => ({ url })) }
@@ -106,7 +198,21 @@ router.get('/boutique/:salonId', async (req, res, next) => {
 router.patch('/:id', authenticate, uploadProductImages, async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { name, description, price, stock, category, imageUrl, isActive } = req.body;
+    const {
+      name,
+      description,
+      price,
+      stock,
+      category,
+      imageUrl,
+      isActive,
+      sizes,
+      colors,
+      availableColors,
+      isDeliverable,
+      deliveryZones,
+      deliveryFee,
+    } = req.body;
 
     const product = await prisma.product.findUnique({
       where: { id },
@@ -121,12 +227,87 @@ router.patch('/:id', authenticate, uploadProductImages, async (req, res, next) =
     }
 
     const updateData = {};
+    const existingColors = Array.from(new Set(parseListField(product.colors)));
+    const existingAvailableColors = Array.from(new Set(parseListField(product.availableColors)));
+    const existingZones = Array.from(new Set(parseListField(product.deliveryZones)));
+
     if (name !== undefined) updateData.name = name;
     if (description !== undefined) updateData.description = description;
     if (price !== undefined) updateData.price = parseFloat(price);
     if (stock !== undefined) updateData.stock = parseInt(stock, 10);
     if (category !== undefined) updateData.category = category;
     if (isActive !== undefined) updateData.isActive = isActive === true || isActive === 'true';
+
+    if (sizes !== undefined) {
+      const parsedSizes = Array.from(new Set(parseListField(sizes)));
+      updateData.sizes = parsedSizes.length > 0 ? JSON.stringify(parsedSizes) : null;
+    }
+
+    let nextColors = existingColors;
+    if (colors !== undefined) {
+      const parsedColors = Array.from(new Set(parseListField(colors)));
+      if (parsedColors.length === 0) {
+        return res.status(400).json({ status: 'error', message: 'Au moins une couleur est requise.' });
+      }
+      nextColors = parsedColors;
+      updateData.colors = JSON.stringify(parsedColors);
+    }
+
+    let nextAvailableColors = existingAvailableColors;
+    if (availableColors !== undefined) {
+      const parsedAvailableColors = Array.from(new Set(parseListField(availableColors)));
+      if (parsedAvailableColors.length === 0) {
+        return res.status(400).json({ status: 'error', message: 'Indiquez les couleurs disponibles.' });
+      }
+      nextAvailableColors = parsedAvailableColors;
+      updateData.availableColors = JSON.stringify(parsedAvailableColors);
+    }
+    if (nextColors.length > 0 && nextAvailableColors.length === 0) {
+      return res.status(400).json({ status: 'error', message: 'Indiquez les couleurs disponibles.' });
+    }
+    if (nextAvailableColors.length > 0 && nextAvailableColors.some((c) => !nextColors.includes(c))) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Les couleurs disponibles doivent faire partie des couleurs du produit.',
+      });
+    }
+
+    const parsedDeliverable = isDeliverable !== undefined ? parseBooleanField(isDeliverable) : null;
+    if (isDeliverable !== undefined && parsedDeliverable === null) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Valeur de livrabilite invalide.',
+      });
+    }
+    const nextDeliverable = parsedDeliverable === null ? Boolean(product.isDeliverable) : parsedDeliverable;
+    if (parsedDeliverable !== null) updateData.isDeliverable = parsedDeliverable;
+
+    let nextZones = existingZones;
+    if (deliveryZones !== undefined) {
+      nextZones = Array.from(new Set(parseListField(deliveryZones)));
+      updateData.deliveryZones = nextZones.length > 0 ? JSON.stringify(nextZones) : null;
+    }
+    if (nextDeliverable && nextZones.length === 0) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Au moins une zone de livraison est requise.',
+      });
+    }
+    if (!nextDeliverable) {
+      updateData.deliveryZones = null;
+      updateData.deliveryFee = 0;
+    }
+
+    if (deliveryFee !== undefined) {
+      const parsedDeliveryFee = Number(deliveryFee || 0);
+      if (!Number.isFinite(parsedDeliveryFee) || parsedDeliveryFee < 0) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'Frais de livraison invalides.',
+        });
+      }
+      updateData.deliveryFee = nextDeliverable ? parsedDeliveryFee : 0;
+    }
 
     const imageUrls = [];
     const files = [...(req.files?.image || []), ...(req.files?.images || [])];

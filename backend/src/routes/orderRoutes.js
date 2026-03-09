@@ -51,6 +51,25 @@ router.post('/', authenticate, async (req, res, next) => {
 
     const productMap = new Map(products.map((p) => [p.id, p]));
 
+    const normalizedDeliveryMode = String(deliveryMode || 'PICKUP').toUpperCase() === 'DELIVERY'
+      ? 'DELIVERY'
+      : 'PICKUP';
+    if (normalizedDeliveryMode === 'DELIVERY' && !String(deliveryAddress || '').trim()) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Adresse de livraison requise.',
+      });
+    }
+    if (normalizedDeliveryMode === 'DELIVERY') {
+      const nonDeliverable = products.find((p) => p.isDeliverable !== true);
+      if (nonDeliverable) {
+        return res.status(400).json({
+          status: 'error',
+          message: `Le produit "${nonDeliverable.name}" est uniquement disponible en retrait.`,
+        });
+      }
+    }
+
     // Check stock and calculate total
     let totalPrice = 0;
     const orderItems = [];
@@ -79,8 +98,8 @@ router.post('/', authenticate, async (req, res, next) => {
           salonId,
           totalPrice,
           notes: notes || null,
-          deliveryMode: deliveryMode || 'PICKUP',
-          deliveryAddress: deliveryAddress || null,
+          deliveryMode: normalizedDeliveryMode,
+          deliveryAddress: normalizedDeliveryMode === 'DELIVERY' ? (deliveryAddress || null) : null,
           clientPhone: clientPhone || null,
           clientName: clientName || req.user.name || null,
           status: 'PENDING',

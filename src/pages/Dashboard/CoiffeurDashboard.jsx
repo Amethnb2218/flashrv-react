@@ -45,6 +45,7 @@ FiMapPin,
 } from "react-icons/fi";
 import AppointmentChatModal from "../../components/Chat/AppointmentChatModal";
 import QuartierSelector from "../../components/UI/QuartierSelector";
+import { parseOptionList, listToInput } from "../../utils/productMeta";
 
 /* ----------------------------
 Constants
@@ -556,6 +557,12 @@ const [newProduct, setNewProduct] = useState({
   image: "",
   imageFile: null,
   imageFiles: [],
+  sizesText: "",
+  colorsText: "",
+  availableColorsText: "",
+  deliveryChoice: "",
+  deliveryZonesText: "",
+  deliveryFee: "",
 });
 const [productQuery, setProductQuery] = useState("");
 const [orderFilter, setOrderFilter] = useState("all");
@@ -1908,8 +1915,27 @@ setSavingClientAddress(false);
 /* ----------------------------
 Boutique: Product & Order handlers
 ----------------------------- */
+const parseProductFormList = (value) => Array.from(new Set(parseOptionList(value)));
+const mapProductToForm = (product) => {
+  const colors = parseProductFormList(product?.colors);
+  const availableColors = parseProductFormList(product?.availableColors);
+  const sizes = parseProductFormList(product?.sizes);
+  const zones = parseProductFormList(product?.deliveryZones);
+  const deliverable = product?.isDeliverable === true || String(product?.isDeliverable || "").toLowerCase() === "true";
+  return {
+    ...product,
+    imageFile: null,
+    imageFiles: [],
+    sizesText: listToInput(sizes),
+    colorsText: listToInput(colors),
+    availableColorsText: listToInput(availableColors.length > 0 ? availableColors : colors),
+    deliveryChoice: deliverable ? "DELIVERY" : "PICKUP_ONLY",
+    deliveryZonesText: listToInput(zones),
+    deliveryFee: deliverable ? String(Number(product?.deliveryFee || 0)) : "",
+  };
+};
 const resetProductForm = () => {
-  setNewProduct({ name: "", description: "", price: "", stock: "", category: "", image: "", imageFile: null, imageFiles: [] });
+  setNewProduct({ name: "", description: "", price: "", stock: "", category: "", image: "", imageFile: null, imageFiles: [], sizesText: "", colorsText: "", availableColorsText: "", deliveryChoice: "", deliveryZonesText: "", deliveryFee: "" });
   setEditingProduct(null);
 };
 
@@ -1919,6 +1945,40 @@ const handleSaveProduct = async () => {
     toast.error("Nom et prix sont obligatoires.");
     return;
   }
+
+  const colors = parseProductFormList(form.colorsText);
+  const availableColors = parseProductFormList(form.availableColorsText);
+  const sizes = parseProductFormList(form.sizesText);
+  const deliveryZones = parseProductFormList(form.deliveryZonesText);
+  const deliveryChoice = String(form.deliveryChoice || "").toUpperCase();
+  const isDeliverable = deliveryChoice === "DELIVERY";
+  const deliveryFee = Number(form.deliveryFee || 0);
+
+  if (colors.length === 0) {
+    toast.error("Ajoutez au moins une couleur.");
+    return;
+  }
+  if (availableColors.length === 0) {
+    toast.error("Precisez les couleurs disponibles.");
+    return;
+  }
+  if (availableColors.some((c) => !colors.includes(c))) {
+    toast.error("Les couleurs disponibles doivent etre dans la liste des couleurs.");
+    return;
+  }
+  if (!["DELIVERY", "PICKUP_ONLY"].includes(deliveryChoice)) {
+    toast.error("Precisez si l'article est livrable ou retrait uniquement.");
+    return;
+  }
+  if (isDeliverable && deliveryZones.length === 0) {
+    toast.error("Ajoutez au moins une zone de livraison.");
+    return;
+  }
+  if (!Number.isFinite(deliveryFee) || deliveryFee < 0) {
+    toast.error("Frais de livraison invalides.");
+    return;
+  }
+
   try {
     const formData = new FormData();
     formData.append("name", form.name);
@@ -1926,6 +1986,13 @@ const handleSaveProduct = async () => {
     formData.append("price", Number(form.price));
     formData.append("stock", form.stock ? Number(form.stock) : 0);
     formData.append("category", form.category || "");
+    formData.append("sizes", JSON.stringify(sizes));
+    formData.append("colors", JSON.stringify(colors));
+    formData.append("availableColors", JSON.stringify(availableColors));
+    formData.append("isDeliverable", String(isDeliverable));
+    formData.append("deliveryZones", JSON.stringify(isDeliverable ? deliveryZones : []));
+    formData.append("deliveryFee", String(isDeliverable ? deliveryFee : 0));
+
     if (form.imageFiles?.length > 0) {
       form.imageFiles.forEach((file) => formData.append("images", file));
     } else if (form.imageFile) {
@@ -1936,12 +2003,12 @@ const handleSaveProduct = async () => {
       const res = await apiFetch(`/products/${editingProduct.id}`, { method: "PATCH", body: formData });
       const updated = res?.data ?? res;
       setProducts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
-      toast.success("Article mis à jour.");
+      toast.success("Article mis a jour.");
     } else {
       const res = await apiFetch("/products", { method: "POST", body: formData });
       const created = res?.data ?? res;
       setProducts((prev) => [created, ...prev]);
-      toast.success("Article ajouté.");
+      toast.success("Article ajoute.");
     }
     resetProductForm();
     setShowProductModal(false);
@@ -2562,7 +2629,7 @@ active
                   <div className="flex gap-2">
                     <button
                       onClick={() => {
-                        setEditingProduct({ ...product, imageFile: null });
+                        setEditingProduct(mapProductToForm(product));
                         setShowProductModal(true);
                       }}
                       className="p-2 rounded-xl hover:bg-gray-100"
@@ -2660,7 +2727,7 @@ active
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Categorie</label>
           <input
             value={(editingProduct || newProduct).category}
             onChange={(e) => {
@@ -2670,9 +2737,124 @@ active
                 : setNewProduct((p) => ({ ...p, category: val }));
             }}
             className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
-            placeholder="ex: Accessoires, Vétementsé"
+            placeholder="ex: Accessoires, Vetements"
           />
         </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Tailles (optionnel)</label>
+          <input
+            value={(editingProduct || newProduct).sizesText}
+            onChange={(e) => {
+              const val = e.target.value;
+              editingProduct
+                ? setEditingProduct((p) => ({ ...p, sizesText: val }))
+                : setNewProduct((p) => ({ ...p, sizesText: val }));
+            }}
+            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
+            placeholder="ex: S, M, L, XL"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Couleurs *</label>
+          <input
+            value={(editingProduct || newProduct).colorsText}
+            onChange={(e) => {
+              const val = e.target.value;
+              editingProduct
+                ? setEditingProduct((p) => ({ ...p, colorsText: val }))
+                : setNewProduct((p) => ({ ...p, colorsText: val }));
+            }}
+            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
+            placeholder="ex: Rouge, Vert, Noir"
+          />
+          <p className="text-xs text-gray-500 mt-1">Liste complete des couleurs proposees.</p>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Couleurs disponibles *</label>
+          <input
+            value={(editingProduct || newProduct).availableColorsText}
+            onChange={(e) => {
+              const val = e.target.value;
+              editingProduct
+                ? setEditingProduct((p) => ({ ...p, availableColorsText: val }))
+                : setNewProduct((p) => ({ ...p, availableColorsText: val }));
+            }}
+            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
+            placeholder="ex: Rouge, Noir"
+          />
+          <p className="text-xs text-gray-500 mt-1">Les couleurs non listees ici seront grisees cote client.</p>
+        </div>
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-700">Livraison *</label>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                editingProduct
+                  ? setEditingProduct((p) => ({ ...p, deliveryChoice: "DELIVERY" }))
+                  : setNewProduct((p) => ({ ...p, deliveryChoice: "DELIVERY" }));
+              }}
+              className={cx(
+                "px-3 py-2 rounded-xl border text-sm font-medium",
+                (editingProduct || newProduct).deliveryChoice === "DELIVERY"
+                  ? "border-gray-900 bg-gray-900 text-white"
+                  : "border-gray-200 text-gray-700 hover:bg-gray-50"
+              )}
+            >
+              Livre
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                editingProduct
+                  ? setEditingProduct((p) => ({ ...p, deliveryChoice: "PICKUP_ONLY" }))
+                  : setNewProduct((p) => ({ ...p, deliveryChoice: "PICKUP_ONLY" }));
+              }}
+              className={cx(
+                "px-3 py-2 rounded-xl border text-sm font-medium",
+                (editingProduct || newProduct).deliveryChoice === "PICKUP_ONLY"
+                  ? "border-gray-900 bg-gray-900 text-white"
+                  : "border-gray-200 text-gray-700 hover:bg-gray-50"
+              )}
+            >
+              Retrait uniquement
+            </button>
+          </div>
+        </div>
+        {(editingProduct || newProduct).deliveryChoice === "DELIVERY" && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Zones de livraison *</label>
+              <input
+                value={(editingProduct || newProduct).deliveryZonesText}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  editingProduct
+                    ? setEditingProduct((p) => ({ ...p, deliveryZonesText: val }))
+                    : setNewProduct((p) => ({ ...p, deliveryZonesText: val }));
+                }}
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
+                placeholder="ex: Dakar, Centre-ville"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Livraison a partir de (FCFA)</label>
+              <input
+                type="number"
+                min="0"
+                value={(editingProduct || newProduct).deliveryFee}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  editingProduct
+                    ? setEditingProduct((p) => ({ ...p, deliveryFee: val }))
+                    : setNewProduct((p) => ({ ...p, deliveryFee: val }));
+                }}
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
+                placeholder="1000"
+              />
+            </div>
+          </div>
+        )}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Photos (plusieurs possibles)</label>
           <input
@@ -2692,12 +2874,12 @@ active
             const currentFiles = (editingProduct || newProduct).imageFiles || [];
             if (currentFiles.length <= 1) return null;
             return (
-              <p className="text-xs text-gray-500 mt-1">{currentFiles.length} photos sélectionnées</p>
+              <p className="text-xs text-gray-500 mt-1">{currentFiles.length} photos selectionnees</p>
             );
           })()}
         </div>
       </div>
-      <div className="flex justify-end gap-3 mt-6">
+      <div className="flex justify-end gap-3 mt-6"> 
         <Button variant="secondary" onClick={() => { setShowProductModal(false); resetProductForm(); }}>
           Annuler
         </Button>
