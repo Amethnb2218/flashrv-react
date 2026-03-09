@@ -214,7 +214,7 @@ function Home() {
                 </span>{' '}
                 en 30 secondes
               </h1>
-              <p className="mt-2 text-base text-gray-600 max-w-xl leading-relaxed">
+              <p className="mt-2 text-base md:text-lg text-gray-600 max-w-xl leading-relaxed">
                 Trouvez un salon vérifié près de chez vous, comparez les services et tarifs, et réservez en ligne — sans appel ni attente.
               </p>
 
