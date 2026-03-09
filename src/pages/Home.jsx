@@ -194,7 +194,7 @@ function Home() {
           <div className="absolute -top-12 right-12 w-72 h-72 bg-amber-100/50 rounded-full blur-3xl"></div>
           <div className="absolute bottom-10 left-8 w-80 h-80 bg-yellow-100/40 rounded-full blur-3xl"></div>
         </div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-20">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-6">
           <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 items-start">
             <motion.div
               initial={{ opacity: 0, y: 24 }}
@@ -204,18 +204,18 @@ function Home() {
               <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">
                 Gratuit · Sans engagement
               </span>
-              <h1 className="mt-4 text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
+              <h1 className="mt-2 text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">
                 Réservez votre{' '}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-yellow-600">
                   salon de beauté
                 </span>{' '}
                 en 30 secondes
               </h1>
-              <p className="mt-5 text-lg text-gray-600 max-w-xl leading-relaxed">
+              <p className="mt-2 text-sm text-gray-600 max-w-xl leading-relaxed">
                 Trouvez un salon vérifié près de chez vous, comparez les services et tarifs, et réservez en ligne — sans appel ni attente.
               </p>
 
-              <form onSubmit={handleSearch} className="mt-8 bg-white/95 rounded-3xl p-4 shadow-[0_28px_70px_-40px_rgba(15,23,42,0.6)] border border-white/70 backdrop-blur">
+              <form onSubmit={handleSearch} className="mt-4 bg-white/95 rounded-xl p-2.5 shadow-[0_28px_70px_-40px_rgba(15,23,42,0.6)] border border-white/70 backdrop-blur">
                 <div className="flex flex-col md:flex-row gap-3">
                   <div className="flex-1 relative">
                     <FiMapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-500 w-5 h-5" />
@@ -230,7 +230,7 @@ function Home() {
                       aria-expanded={showSuggestions && suggestions.length > 0}
                       aria-controls="home-suggestions"
                       placeholder="Quartier, ville, salon..."
-                      className="w-full pl-12 pr-4 py-4 bg-gray-50 rounded-xl focus:ring-2 focus:ring-amber-400 focus:bg-white transition-all outline-none text-gray-800 placeholder-gray-400"
+                      className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl focus:ring-2 focus:ring-amber-400 focus:bg-white transition-all outline-none text-gray-800 placeholder-gray-400 text-sm"
                     />
                     <AnimatePresence>
                       {showSuggestions && suggestions.length > 0 && (
@@ -267,14 +267,14 @@ function Home() {
                   </div>
                   <button
                     type="submit"
-                    className="flex items-center justify-center gap-2 bg-gray-900 hover:bg-gray-800 text-white font-semibold py-4 px-8 rounded-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+                    className="flex items-center justify-center gap-2 bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 px-6 rounded-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 text-sm"
                   >
                     <FiSearch className="w-5 h-5" />
                     <span>Rechercher</span>
                     <FiArrowRight className="w-4 h-4" />
                   </button>
                 </div>
-                <div className="mt-4 flex flex-wrap items-center gap-3">
+                <div className="mt-3 flex flex-wrap items-center gap-2">
                   <button
                     type="button"
                     onClick={handleGeolocation}
@@ -316,16 +316,16 @@ function Home() {
               </form>
 
                 {stats.length > 0 && (
-                <div className={`mt-10 grid gap-4 max-w-2xl ${stats.length >= 4 ? 'grid-cols-2 sm:grid-cols-4' : stats.length === 3 ? 'grid-cols-3' : stats.length === 2 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                <div className={`mt-3 flex flex-wrap gap-2`}>
                   {stats.map((stat, i) => (
-                    <div key={i} className="bg-white/80 border border-gray-100 rounded-2xl p-4 text-center shadow-sm">
-                      <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
-                      <div className="text-xs text-gray-500 mt-1">{stat.label}</div>
+                    <div key={i} className="inline-flex items-center gap-2 bg-white/80 border border-gray-100 rounded-full px-3 py-1.5 shadow-sm">
+                      <span className="text-sm font-bold text-gray-900">{stat.value}</span>
+                      <span className="text-xs text-gray-500">{stat.label}</span>
                     </div>
                   ))}
                 </div>
                 )}
-              <div className="mt-6 flex flex-wrap items-center gap-3 text-xs text-gray-600">
+              <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-gray-600">
                 {[
                   { icon: <FiShield className="w-4 h-4" />, label: 'Paiement sécurisé' },
                   { icon: <FiCheck className="w-4 h-4" />, label: 'Salons vérifiés' },
@@ -368,59 +368,46 @@ function Home() {
         </div>
       </section>
 
-      {/* Trust */}
-      <section className="py-12 bg-white">
+      {/* Trust Strip */}
+      <section className="py-3 bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="flex items-center justify-center gap-6 flex-wrap">
             {trustItems.map((item, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: reduceMotion ? 0 : 0.4, delay: reduceMotion ? 0 : i * 0.08 }}
-                className="bg-white/80 border border-gray-100 rounded-2xl p-5 shadow-sm"
-              >
-                <div className="w-10 h-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center mb-3">
-                  {item.icon}
-                </div>
-                <p className="font-semibold text-gray-900">{item.title}</p>
-                <p className="text-sm text-gray-600 mt-1">{item.desc}</p>
-              </motion.div>
+              <div key={i} className="inline-flex items-center gap-2 text-sm text-gray-600">
+                <span className="text-amber-500">{item.icon}</span>
+                <span className="font-medium">{item.title}</span>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
       {/* Featured Salons */}
-      <section className="py-16 bg-gray-50">
+      <section className="py-4 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-10">
+          <div className="flex items-end justify-between mb-3">
             <div>
-              <span className="inline-block px-4 py-2 bg-amber-100 text-amber-700 rounded-full text-sm font-medium mb-4">
-                Sélection premium
-              </span>
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
+              <h2 className="text-lg md:text-xl font-bold text-gray-900">
                 Salons en vedette
               </h2>
-              <p className="mt-2 text-gray-600">Les meilleurs salons pour démarrer votre expérience.</p>
+              <p className="text-xs text-gray-500 mt-0.5">Les meilleurs salons pour démarrer votre expérience.</p>
             </div>
             <Link
               to="/salons"
-              className="mt-6 md:mt-0 inline-flex items-center gap-2 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white font-semibold py-3 px-6 rounded-full transition-all shadow-lg hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 group"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-amber-700 hover:text-amber-800 transition-colors group"
             >
-              <span>Voir tous les salons</span>
-              <FiArrowRight className="group-hover:translate-x-1 transition-transform" />
+              <span>Voir tout</span>
+              <FiArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
             {loadingSalons ? (
               [1, 2, 3].map((i) => (
-                <div key={i} className="bg-white rounded-2xl border border-gray-100 p-5 animate-pulse">
-                  <div className="h-40 bg-gray-100 rounded-xl mb-4"></div>
-                  <div className="h-4 bg-gray-100 rounded w-2/3 mb-2"></div>
-                  <div className="h-3 bg-gray-100 rounded w-1/2"></div>
+                <div key={i} className="bg-white rounded-xl border border-gray-100 p-3 animate-pulse">
+                  <div className="h-32 bg-gray-100 rounded-lg mb-3"></div>
+                  <div className="h-3 bg-gray-100 rounded w-2/3 mb-2"></div>
+                  <div className="h-2.5 bg-gray-100 rounded w-1/2"></div>
                 </div>
               ))
             ) : (
@@ -434,35 +421,31 @@ function Home() {
 
       {/* Featured Boutiques */}
       {(loadingSalons || featuredBoutiques.length > 0) && (
-      <section className="py-16 bg-white">
+      <section className="py-4 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-10">
+          <div className="flex items-end justify-between mb-3">
             <div>
-              <span className="inline-block px-4 py-2 bg-amber-50 text-amber-700 rounded-full text-sm font-medium mb-4">
-                <FiShoppingBag className="mr-1 inline-block" /> Shopping
-              </span>
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
-                Boutiques en vedette
+              <h2 className="text-lg md:text-xl font-bold text-gray-900">
+                <FiShoppingBag className="mr-1.5 inline-block text-amber-500" /> Boutiques
               </h2>
-              <p className="mt-2 text-gray-600">Découvrez les boutiques partenaires et commandez en ligne.</p>
+              <p className="text-xs text-gray-500 mt-0.5">Commandez en ligne auprès de nos partenaires.</p>
             </div>
             <Link
               to="/salons?businessType=BOUTIQUE"
-              className="mt-6 md:mt-0 inline-flex items-center gap-2 bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 text-white font-semibold py-3 px-6 rounded-full transition-all shadow-lg hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 group"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-amber-700 hover:text-amber-800 transition-colors group"
             >
-              <FiShoppingBag className="w-4 h-4" />
-              <span>Voir toutes les boutiques</span>
-              <FiArrowRight className="group-hover:translate-x-1 transition-transform" />
+              <span>Voir tout</span>
+              <FiArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
             {loadingSalons ? (
               [1, 2, 3].map((i) => (
-                <div key={i} className="bg-white rounded-2xl border border-gray-100 p-5 animate-pulse">
-                  <div className="h-40 bg-gray-100 rounded-xl mb-4"></div>
-                  <div className="h-4 bg-gray-100 rounded w-2/3 mb-2"></div>
-                  <div className="h-3 bg-gray-100 rounded w-1/2"></div>
+                <div key={i} className="bg-white rounded-xl border border-gray-100 p-3 animate-pulse">
+                  <div className="h-32 bg-gray-100 rounded-lg mb-3"></div>
+                  <div className="h-3 bg-gray-100 rounded w-2/3 mb-2"></div>
+                  <div className="h-2.5 bg-gray-100 rounded w-1/2"></div>
                 </div>
               ))
             ) : (
@@ -476,180 +459,126 @@ function Home() {
       )}
 
       {/* Categories */}
-      <section className="py-16 bg-gradient-to-b from-white to-amber-50/20">
+      <section className="py-4 bg-gradient-to-b from-white to-amber-50/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-end justify-between mb-3">
             <div>
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">
-                Services populaires
-              </span>
-              <h2 className="mt-3 text-2xl md:text-3xl font-bold text-gray-900">Explorez par catégorie</h2>
-              <p className="text-gray-600 mt-1">Choisissez votre service en un clic.</p>
+              <h2 className="text-lg md:text-xl font-bold text-gray-900">Catégories</h2>
+              <p className="text-xs text-gray-500 mt-0.5">Trouvez votre service en un clic.</p>
             </div>
-            <motion.button
-              type="button"
-              onClick={() => setShowAllCategories((prev) => !prev)}
-              whileHover={reduceMotion ? {} : { scale: 1.06 }}
-              whileTap={reduceMotion ? {} : { scale: 0.97 }}
-              className="text-sm font-semibold text-amber-700 hover:text-amber-800 inline-flex items-center gap-2"
-              aria-expanded={showAllCategories}
+            <Link
+              to="/salons"
+              className="text-sm font-semibold text-amber-700 hover:text-amber-800 inline-flex items-center gap-1.5 group"
             >
-              {showAllCategories ? 'Voir moins' : 'Voir tout'}
-              <FiArrowRight className={`transition-transform ${showAllCategories ? 'rotate-180' : ''}`} />
-            </motion.button>
+              Voir tout
+              <FiArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Link>
           </div>
-          <motion.div layout className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            <AnimatePresence>
-              {(showAllCategories ? categories : categories.slice(0, 4)).map((cat, idx) => (
-                <motion.div
-                  key={cat.id}
-                  layout
-                  initial={{ opacity: 0, y: 18, scale: 0.98 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 18, scale: 0.98 }}
-                  transition={{ duration: reduceMotion ? 0 : 0.32, delay: reduceMotion ? 0 : idx * 0.03 }}
-                >
-                  <Link
-                    to={`/salons?category=${cat.id}`}
-                    className="group relative block rounded-2xl bg-white/90 p-6 border border-amber-100/60 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.45)] hover:-translate-y-1 hover:shadow-[0_28px_60px_-35px_rgba(15,23,42,0.6)] transition-all"
-                  >
-                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-amber-50/60 via-white to-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div className="relative">
-                      <div className="h-1.5 w-12 bg-gradient-to-r from-amber-400 via-yellow-300 to-orange-300 rounded-full" />
-                      {cat.icon && (
-                        <div className="mt-3 text-2xl text-amber-500">
-                          {cat.icon}
-                        </div>
-                      )}
-                      <div className="mt-4 font-semibold text-gray-900 group-hover:text-amber-700">
-                        {cat.name}
-                      </div>
-                      <div className="text-sm text-gray-500 mt-1">Découvrir</div>
-                    </div>
-                  </Link>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </motion.div>
+          <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2">
+            {categories.slice(0, 3).map((cat, idx) => (
+              <Link
+                key={cat.id}
+                to={`/salons?category=${cat.id}`}
+                className="group flex flex-col items-center gap-1 rounded-lg bg-white p-2.5 border border-gray-100 shadow-sm hover:border-amber-200 hover:bg-amber-50 transition-all"
+              >
+                {cat.icon && (
+                  <span className="text-xl">{cat.icon}</span>
+                )}
+                <span className="text-[11px] font-medium text-gray-700 group-hover:text-amber-700 text-center leading-tight">
+                  {cat.name}
+                </span>
+              </Link>
+            ))}
+            <Link
+              to="/salons"
+              className="group flex flex-col items-center justify-center gap-1 rounded-lg bg-amber-50 p-2.5 border border-amber-100 hover:bg-amber-100 transition-all"
+            >
+              <span className="text-sm text-amber-600">+{categories.length - 3}</span>
+              <span className="text-[11px] font-medium text-amber-700 text-center">Voir plus</span>
+            </Link>
+          </div>
         </div>
       </section>
 
       {/* How it works */}
-      <section className="py-16 bg-gray-50">
+      <section className="py-4 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <span className="inline-block px-4 py-2 bg-amber-100 text-amber-700 rounded-full text-sm font-medium mb-4">
-              Simple & Rapide
-            </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
-              Comment ça marche ?
-            </h2>
-          </div>
-          <div className="relative">
-            <div className="hidden md:block absolute top-10 left-1/2 -translate-x-1/2 w-[70%] h-px bg-gradient-to-r from-transparent via-amber-300/70 to-transparent" />
-            <div className="grid md:grid-cols-3 gap-8">
-              {steps.map((step, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 24 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: reduceMotion ? 0 : i * 0.15 }}
-                  className="relative bg-white/90 border border-gray-100 rounded-2xl p-6 text-center shadow-sm hover:-translate-y-1 hover:shadow-lg transition-all"
-                >
-                  <span className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-gray-900 text-white text-xs font-semibold px-3 py-1 shadow">
-                    0{i + 1}
-                  </span>
-                  <div className="w-14 h-14 bg-gray-900 text-white rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    {step.icon}
-                  </div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">{step.title}</h3>
-                  <p className="text-gray-600 leading-relaxed">{step.description}</p>
-                </motion.div>
-              ))}
-            </div>
+          <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3 text-center">
+            Comment ça marche ?
+          </h2>
+          <div className="grid grid-cols-3 gap-2">
+            {steps.map((step, i) => (
+              <div
+                key={i}
+                className="relative bg-white border border-gray-100 rounded-xl p-2.5 text-center shadow-sm"
+              >
+                <div className="w-8 h-8 bg-gray-900 text-white rounded-lg flex items-center justify-center mx-auto mb-1.5">
+                  {step.icon}
+                </div>
+                <h3 className="text-xs font-bold text-gray-900 mb-0.5">{step.title}</h3>
+                <p className="text-[10px] text-gray-500 leading-snug hidden sm:block">{step.description}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* CTA */}
-      <section className="py-16 bg-gray-900">
+      <section className="py-6 bg-gray-900">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+          <h2 className="text-lg md:text-xl font-bold text-white mb-1.5">
+            Vous êtes professionnel ?
+          </h2>
+          <p className="text-xs text-gray-400 mb-3">
+            Inscription gratuite · Sans commission · Contrôle total
+          </p>
+          <div className="flex flex-wrap justify-center gap-3 mb-4 text-xs text-gray-300">
+            {[
+              'Profil vérifié',
+              'Réservation 24/7',
+              'Rappels auto',
+              'Dashboard & stats',
+            ].map((b) => (
+              <div key={b} className="flex items-center gap-1.5">
+                <FiCheck className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                <span>{b}</span>
+              </div>
+            ))}
+          </div>
+          <Link
+            to="/register?role=pro"
+            className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-gray-900 font-bold py-2.5 px-5 rounded-full text-sm transition-all hover:shadow-lg"
           >
-            <span className="inline-block px-4 py-2 bg-amber-500/20 text-amber-400 rounded-full text-sm font-medium mb-6">
-              Pour les professionnels
-            </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Développez votre salon avec StyleFlow
-            </h2>
-            <p className="text-gray-400 max-w-xl mx-auto mb-6 leading-relaxed">
-              Inscription gratuite. Sans commission. Gardez le contrôle total sur votre planning et votre clientèle.
-            </p>
-            <div className="flex flex-wrap justify-center gap-4 mb-8 text-sm text-gray-300">
-              {[
-                'Profil vérifié & visible',
-                'Réservations en ligne 24/7',
-                'Rappels automatiques',
-                'Tableau de bord & stats',
-              ].map((b) => (
-                <div key={b} className="flex items-center gap-2">
-                  <FiCheck className="w-4 h-4 text-amber-400 flex-shrink-0" />
-                  <span>{b}</span>
-                </div>
-              ))}
-            </div>
-            <Link
-              to="/register?role=pro"
-              className="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-gray-900 font-bold py-4 px-8 rounded-full transition-all hover:shadow-lg"
-            >
-              <span>Devenir partenaire</span>
-              <FiArrowRight />
-            </Link>
-          </motion.div>
+            <span>Devenir partenaire</span>
+            <FiArrowRight className="w-4 h-4" />
+          </Link>
         </div>
       </section>
 
       {/* Feedback */}
-      <section className="py-16 bg-gray-50">
+      <section className="py-4 bg-gray-50">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-10"
-          >
-            <span className="inline-block px-4 py-2 bg-amber-100 text-amber-700 rounded-full text-sm font-medium mb-4">
-              Votre avis compte
-            </span>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
-              Aidez-nous à améliorer
-            </h2>
-          </motion.div>
-          <div className="bg-white rounded-3xl border border-gray-100 shadow-lg p-8 text-center">
-            <p className="text-gray-600">
-              Partagez un bug, une suggestion ou une amélioration. Nous lisons chaque retour.
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 text-center">
+            <h3 className="text-sm font-bold text-gray-900 mb-0.5">Votre avis compte</h3>
+            <p className="text-xs text-gray-500 mb-2">
+              Bug, suggestion, amélioration — nous lisons tout.
             </p>
-            <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <div className="flex items-center justify-center gap-2">
               <button
                 type="button"
                 onClick={() => openFeedback('suggestion')}
-                className="btn-primary"
+                className="btn-primary text-sm py-2 px-4"
               >
-                Proposer une amélioration
+                Suggestion
               </button>
               <button
                 type="button"
                 onClick={() => openFeedback('bug')}
-                className="btn-secondary"
+                className="btn-secondary text-sm py-2 px-4"
               >
-                Signaler un bug
+                Bug
               </button>
             </div>
-            <p className="text-xs text-gray-400 mt-4">Réponse sous 24–48h ouvrées.</p>
           </div>
         </div>
       </section>

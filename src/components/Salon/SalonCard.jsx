@@ -86,10 +86,8 @@ function SalonCard({ salon, index = 0, variant = 'featured' }) {
   const typeBadge = getSalonTypeBadge()
   const isList = variant === 'list'
   const ctaLabel = isBoutique ? 'Voir les articles' : isList ? 'Voir disponibilités' : 'Réserver'
-  const imageHeight = isList ? 'h-44 md:h-48' : 'h-52'
-  const cardClass = isList
-    ? 'bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 group hover:-translate-y-1'
-    : 'bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 group hover:-translate-y-1'
+  const imageHeight = isList ? 'h-32 md:h-36' : 'h-36 sm:h-40'
+  const cardClass = 'bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 group hover:-translate-y-0.5'
 
   return (
     <motion.div
@@ -123,50 +121,50 @@ function SalonCard({ salon, index = 0, variant = 'featured' }) {
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
           
           {/* Badges */}
-          <div className="absolute top-3 left-3 flex items-center gap-2">
+          <div className="absolute top-2 left-2 flex items-center gap-1.5">
             {typeBadge && (
-              <span className={`${typeBadge.bg} ${typeBadge.text} text-xs font-medium px-2.5 py-1 rounded-full flex items-center shadow`}>
-                <span className="mr-1">{typeBadge.icon}</span>
+              <span className={`${typeBadge.bg} ${typeBadge.text} text-[10px] font-medium px-2 py-0.5 rounded-full flex items-center shadow`}>
+                <span className="mr-0.5">{typeBadge.icon}</span>
                 {typeBadge.label}
               </span>
             )}
             {salon.featured && !isShootingStudio && (
-              <span className="bg-amber-400 text-gray-900 text-xs font-bold px-2.5 py-1 rounded-full shadow">
+              <span className="bg-amber-400 text-gray-900 text-[10px] font-bold px-2 py-0.5 rounded-full shadow">
                 ★ Vedette
               </span>
             )}
           </div>
           {salon.verified && (
-            <div className="absolute top-3 right-3 bg-amber-500 text-white p-1.5 rounded-full shadow" title="Vérifié">
-              <FiCheck className="w-3.5 h-3.5" />
+            <div className="absolute top-2 right-2 bg-amber-500 text-white p-1 rounded-full shadow" title="Vérifié">
+              <FiCheck className="w-3 h-3" />
             </div>
           )}
           
           {/* Rating */}
-          <div className={`absolute bottom-3 right-3 flex items-center space-x-1 px-2.5 py-1 rounded-full shadow ${
+          <div className={`absolute bottom-2 right-2 flex items-center space-x-0.5 px-2 py-0.5 rounded-full shadow text-xs ${
             hasRating ? 'bg-white' : 'bg-amber-500 text-white'
           }`}>
-            <FiStar className={`w-4 h-4 ${hasRating ? 'text-amber-400 fill-current' : 'text-white'}`} />
-            <span className="font-bold text-sm">{ratingLabel}</span>
+            <FiStar className={`w-3 h-3 ${hasRating ? 'text-amber-400 fill-current' : 'text-white'}`} />
+            <span className="font-bold">{ratingLabel}</span>
             {hasRating && reviewCount > 0 && (
-              <span className="text-xs text-gray-500">({reviewCount})</span>
+              <span className="text-[10px] text-gray-500">({reviewCount})</span>
             )}
           </div>
         </div>
 
         {/* Content */}
-        <div className="p-5">
-          <h3 className="font-bold text-lg text-gray-900 group-hover:text-amber-600 transition-colors mb-2">
+        <div className="p-3">
+          <h3 className="font-semibold text-sm text-gray-900 group-hover:text-amber-600 transition-colors mb-1 truncate">
             {salon.name}
           </h3>
 
-          <div className="flex items-center text-gray-500 text-sm mb-2">
-            <FiMapPin className="w-4 h-4 mr-1.5 text-gray-400" />
-            <span>{neighborhood}{salon.city ? `, ${salon.city}` : ''}</span>
+          <div className="flex items-center text-gray-500 text-xs mb-1">
+            <FiMapPin className="w-3 h-3 mr-1 text-gray-400 flex-shrink-0" />
+            <span className="truncate">{neighborhood}{salon.city ? `, ${salon.city}` : ''}</span>
           </div>
 
-          <div className="flex items-center text-sm mb-4">
-            <FiClock className="w-4 h-4 mr-1.5 text-gray-400" />
+          <div className="flex items-center text-xs mb-2">
+            <FiClock className="w-3 h-3 mr-1 text-gray-400 flex-shrink-0" />
             {todayHours ? (
               isOpen ? (
                 <span className="text-green-600 font-medium">
@@ -182,11 +180,11 @@ function SalonCard({ salon, index = 0, variant = 'featured' }) {
 
           {/* Specialties */}
           {specialties.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mb-4">
-              {specialties.slice(0, 3).map((specialty, i) => (
+            <div className="flex flex-wrap gap-1 mb-2">
+              {specialties.slice(0, 2).map((specialty, i) => (
                 <span
                   key={i}
-                  className="text-xs bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full"
+                  className="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full"
                 >
                   {specialty}
                 </span>
@@ -195,16 +193,16 @@ function SalonCard({ salon, index = 0, variant = 'featured' }) {
           )}
 
           {/* Price */}
-          <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
+          <div className="pt-2 border-t border-gray-100 flex items-center justify-between">
             <div>
-              <span className="text-sm text-gray-500">
-                À partir de <span className="font-bold text-gray-900">{minPriceLabel}</span>
+              <span className="text-xs text-gray-500">
+                Dès <span className="font-bold text-gray-900">{minPriceLabel}</span>
               </span>
               {Array.isArray(salon.services) && salon.services.length > 0 && !isBoutique && (
-                <span className="block text-xs text-gray-400 mt-0.5">{salon.services.length} service{salon.services.length > 1 ? 's' : ''}</span>
+                <span className="block text-[10px] text-gray-400">{salon.services.length} service{salon.services.length > 1 ? 's' : ''}</span>
               )}
             </div>
-            <span className="inline-flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-full bg-gray-900 text-white shadow-sm group-hover:translate-x-1 transition-transform">
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-gray-900 text-white shadow-sm group-hover:translate-x-0.5 transition-transform">
               {ctaLabel} →
             </span>
           </div>
