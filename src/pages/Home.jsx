@@ -194,7 +194,7 @@ function Home() {
           <div className="absolute -top-12 right-12 w-72 h-72 bg-amber-100/50 rounded-full blur-3xl"></div>
           <div className="absolute bottom-10 left-8 w-80 h-80 bg-yellow-100/40 rounded-full blur-3xl"></div>
         </div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-4">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 pb-4">
           <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 items-center">
             <motion.div
               initial={{ opacity: 0, y: 24 }}
