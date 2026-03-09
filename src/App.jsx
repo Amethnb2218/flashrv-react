@@ -22,6 +22,8 @@ import ProtectedRoute from './components/Auth/ProtectedRoute'
 import InstallPrompt from './components/PWA/InstallPrompt'
 import OrderCheckout from './pages/Order/OrderCheckout'
 import OrderReceipt from './pages/Order/OrderReceipt'
+import OrderPaymentSuccess from './pages/Order/OrderPaymentSuccess'
+import OrderPaymentCancel from './pages/Order/OrderPaymentCancel'
 
 function App() {
   return (
@@ -67,6 +69,16 @@ function App() {
         <Route path="order/receipt" element={
           <ProtectedRoute>
             <OrderReceipt />
+          </ProtectedRoute>
+        } />
+        <Route path="order/payment/success" element={
+          <ProtectedRoute>
+            <OrderPaymentSuccess />
+          </ProtectedRoute>
+        } />
+        <Route path="order/payment/cancel" element={
+          <ProtectedRoute>
+            <OrderPaymentCancel />
           </ProtectedRoute>
         } />
         <Route path="dashboard" element={

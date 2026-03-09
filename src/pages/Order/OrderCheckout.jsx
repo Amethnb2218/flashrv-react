@@ -8,8 +8,11 @@ import { resolveMediaUrl } from '../../utils/media'
 import apiFetch from '../../api/client'
 import { pushSiteNotification } from '../../utils/siteNotifications'
 import { clearCart, deriveDeliveryConfigFromItems, readCart } from '../../utils/cartStore'
+import { buildPaydunyaPaymentPayload } from '../../utils/payments'
+import { saveOrderPaymentSession } from '../../utils/orderPaymentSession'
 
 const PAYMENT_METHODS = [
+  { id: 'paydunya', name: 'PayDunya', icon: 'PD', color: 'amber', description: 'Paiement en ligne securise (Wave, Orange, Free, Carte bancaire)' },
   { id: 'pay_on_pickup', name: 'Paiement au retrait', icon: 'PICK', color: 'gray', description: 'Reglez en boutique au moment du retrait' },
   { id: 'cash_on_delivery', name: 'Paiement a la livraison', icon: 'COD', color: 'gray', description: 'Payez en especes a la reception' },
 ]
@@ -102,7 +105,8 @@ function OrderCheckout() {
           return `- ${c.product.name} x${c.quantity}: ${parts.join(', ')}`
         })
         .filter(Boolean)
-      const mergedNotes = [form.notes?.trim(), variantNotes.length > 0 ? `Variantes:\n${variantNotes.join('\n')}` : '']
+      const mergedNotes = [form.notes?.trim(), variantNotes.length > 0 ? `Variantes:
+${variantNotes.join('\n')}` : '']
         .filter(Boolean)
         .join('\n\n')
 
@@ -125,31 +129,64 @@ function OrderCheckout() {
         }
       })
       const order = res?.data?.order || res?.order || res?.data || res
+      const receiptPayload = {
+        order: {
+          ...order,
+          clientName: form.clientName || '',
+          clientPhone: form.clientPhone || '',
+          items: cart.map((c) => ({
+            ...(c.product || {}),
+            product: c.product,
+            quantity: c.quantity,
+            selectedSize: c.selectedSize || null,
+            selectedColor: c.selectedColor || null,
+          })),
+        },
+        salon,
+        paymentMethod: selectedPayment,
+        deliveryMode: form.deliveryMode,
+        deliveryAddress: form.deliveryAddress,
+        grandTotal,
+        deliveryFee,
+      }
       pushSiteNotification({
         userId: user?.id || user?.email,
         type: 'order_confirmation',
-        message: `Commande confirmée chez ${salon.name}. Réf: ${order?.id || 'N/A'}`,
+        message: `Commande confirmee chez ${salon.name}. Ref: ${order?.id || 'N/A'}`,
         meta: { orderId: order?.id, salonId: salon.id },
       })
+
+      if (selectedPayment === 'paydunya') {
+        saveOrderPaymentSession(receiptPayload)
+
+        const paymentResult = await apiFetch('/payments/create', {
+          method: 'POST',
+          body: buildPaydunyaPaymentPayload({
+            bookingId: order?.id,
+            amount: grandTotal,
+            customerName: form.clientName || user?.name || '',
+            customerEmail: user?.email || '',
+            customerPhone: form.clientPhone || user?.phoneNumber || user?.phone || '',
+            salonName: salon?.name,
+            serviceLabel: cart.map((item) => `${item.product?.name} x${item.quantity}`).join(', '),
+            successPath: '/order/payment/success',
+            cancelPath: '/order/payment/cancel',
+            resourceKey: 'orderId',
+          }),
+        })
+
+        const paymentPayload = paymentResult?.data || paymentResult
+        if (!paymentPayload?.invoiceUrl) {
+          throw new Error('Erreur lors de la creation de la facture PayDunya')
+        }
+
+        clearCart()
+        window.location.href = paymentPayload.invoiceUrl
+        return
+      }
+
       navigate('/order/receipt', {
-        state: {
-          order: {
-            ...order,
-            items: cart.map((c) => ({
-              ...(c.product || {}),
-              product: c.product,
-              quantity: c.quantity,
-              selectedSize: c.selectedSize || null,
-              selectedColor: c.selectedColor || null,
-            })),
-          },
-          salon,
-          paymentMethod: selectedPayment,
-          deliveryMode: form.deliveryMode,
-          deliveryAddress: form.deliveryAddress,
-          grandTotal,
-          deliveryFee,
-        },
+        state: receiptPayload,
         replace: true,
       })
       clearCart()

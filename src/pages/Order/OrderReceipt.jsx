@@ -6,8 +6,10 @@ import { resolveMediaUrl } from '../../utils/media'
 import { useEffect, useState } from 'react'
 import apiFetch from '../../api/client'
 import toast from 'react-hot-toast'
+import { readOrderPaymentSession } from '../../utils/orderPaymentSession'
 
 const paymentLabels = {
+  paydunya: { name: 'PayDunya', icon: 'PD' },
   pay_on_pickup: { name: 'Paiement au retrait', icon: 'PICK' },
   cash_on_delivery: { name: 'Paiement a la livraison', icon: 'COD' },
 }
@@ -15,7 +17,7 @@ const paymentLabels = {
 function OrderReceipt() {
   const location = useLocation()
   const navigate = useNavigate()
-  const data = location.state
+  const data = location.state || readOrderPaymentSession()
 
   const [copied, setCopied] = useState(false)
   const [orderStatus, setOrderStatus] = useState(data?.order?.status || 'PENDING')
@@ -176,6 +178,10 @@ function OrderReceipt() {
               {paymentMethod === 'cash_on_delivery' ? (
                 <p className="text-xs text-amber-600 font-medium mt-2 bg-amber-50 px-3 py-1.5 rounded-lg">
                   Preparez le montant exact si possible
+                </p>
+              ) : paymentMethod === 'paydunya' ? (
+                <p className="text-xs text-emerald-700 font-medium mt-2 bg-emerald-50 px-3 py-1.5 rounded-lg">
+                  Paiement PayDunya initialise pour cette commande
                 </p>
               ) : (
                 <p className="text-xs text-blue-600 font-medium mt-2 bg-blue-50 px-3 py-1.5 rounded-lg">

@@ -16,6 +16,9 @@ export function buildPaydunyaPaymentPayload({
   customerPhone,
   salonName,
   serviceLabel,
+  successPath,
+  cancelPath,
+  resourceKey = 'appointmentId',
 }) {
   const origin = typeof window !== 'undefined' ? window.location.origin : ''
   const safeBookingId = String(bookingId || '').trim()
@@ -37,8 +40,16 @@ export function buildPaydunyaPaymentPayload({
     customerEmail: safeEmail,
     customerPhone: safePhone,
     description: `${safeServiceLabel} - ${safeSalonName}`,
-    successUrl: origin ? `${origin}/payment/success?appointmentId=${encodeURIComponent(safeBookingId)}` : undefined,
-    cancelUrl: origin ? `${origin}/payment/cancel?appointmentId=${encodeURIComponent(safeBookingId)}` : undefined,
+    successUrl: origin && successPath
+      ? `${origin}${successPath}?${resourceKey}=${encodeURIComponent(safeBookingId)}`
+      : origin
+        ? `${origin}/payment/success?${resourceKey}=${encodeURIComponent(safeBookingId)}`
+        : undefined,
+    cancelUrl: origin && cancelPath
+      ? `${origin}${cancelPath}?${resourceKey}=${encodeURIComponent(safeBookingId)}`
+      : origin
+        ? `${origin}/payment/cancel?${resourceKey}=${encodeURIComponent(safeBookingId)}`
+        : undefined,
     metadata: {
       bookingId: safeBookingId,
       salonName: safeSalonName,
