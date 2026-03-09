@@ -75,19 +75,19 @@ function Home() {
     ? (totalReviews > 0
       ? (salons.reduce((sum, s) => sum + (s.rating || 0), 0) / salons.length).toFixed(1)
       : 'Nouveau')
-    : ''
+    : '—'
   const stats = [
     { value: `${onlySalons.length}`, label: 'Salons partenaires', show: onlySalons.length > 0 },
     { value: `${onlyBoutiques.length}`, label: 'Boutiques', show: onlyBoutiques.length > 0 },
     { value: `${totalReviews}`, label: 'Avis clients', show: totalReviews > 0 },
-    { value: avgRating, label: 'Note moyenne', show: avgRating !== 'Nouveau' && avgRating !== '' }
+    { value: avgRating, label: 'Note moyenne', show: avgRating !== 'Nouveau' && avgRating !== '—' }
   ].filter(s => s.show)
 
   const steps = [
     {
       icon: <FiSearch className="w-6 h-6" />,
       title: 'Recherchez',
-      description: 'Filtrez par quartier, spécialité, avis ou disponibilité. Comparez les prix et photos en un coup d\'il.'
+      description: 'Filtrez par quartier, spécialité, avis ou disponibilité. Comparez les prix et photos en un coup d\'œil.'
     },
     {
       icon: <FiCalendar className="w-6 h-6" />,
@@ -108,7 +108,7 @@ function Home() {
   ]
 
   const quickFilters = [
-    { label: 'Aujourdhui', icon: <FiCalendar className="w-4 h-4" />, params: { day: 'today' } },
+    { label: 'Aujourd’hui', icon: <FiCalendar className="w-4 h-4" />, params: { day: 'today' } },
     { label: 'Dispo maintenant', icon: <FiClock className="w-4 h-4" />, params: { openNow: '1' } },
     { label: '< 2 km', icon: <FiNavigation className="w-4 h-4" />, params: { radius: '2' } },
     { label: 'Top notés', icon: <FiStar className="w-4 h-4" />, params: { sortBy: 'rating' } },
@@ -166,7 +166,7 @@ function Home() {
 
       setIsLocating(false)
       // Redirect to salons page anyway so the user isn't stuck
-      toast('Position non disponible  affichage de tous les salons.', { id: 'geo-fallback', icon: '??', duration: 3000 })
+      toast('Position non disponible — affichage de tous les salons.', { id: 'geo-fallback', icon: '📍', duration: 3000 })
       navigate('/salons')
     }
 
@@ -212,7 +212,7 @@ function Home() {
                 en 30 secondes
               </h1>
               <p className="mt-5 text-lg text-gray-600 max-w-xl leading-relaxed">
-                Trouvez un salon vérifié près de chez vous, comparez les services et tarifs, et réservez en ligne  sans appel ni attente.
+                Trouvez un salon vérifié près de chez vous, comparez les services et tarifs, et réservez en ligne — sans appel ni attente.
               </p>
 
               <form onSubmit={handleSearch} className="mt-8 bg-white/95 rounded-3xl p-4 shadow-[0_28px_70px_-40px_rgba(15,23,42,0.6)] border border-white/70 backdrop-blur">
@@ -439,7 +439,7 @@ function Home() {
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-10">
             <div>
               <span className="inline-block px-4 py-2 bg-amber-50 text-amber-700 rounded-full text-sm font-medium mb-4">
-                <span className="mr-1">???</span> Shopping
+                <FiShoppingBag className="mr-1 inline-block" /> Shopping
               </span>
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
                 Boutiques en vedette
@@ -649,7 +649,7 @@ function Home() {
                 Signaler un bug
               </button>
             </div>
-            <p className="text-xs text-gray-400 mt-4">Réponse sous 2448h ouvrées.</p>
+            <p className="text-xs text-gray-400 mt-4">Réponse sous 24–48h ouvrées.</p>
           </div>
         </div>
       </section>
@@ -754,7 +754,7 @@ function FeedbackWidget({ onClose, defaultType = 'suggestion' }) {
     } catch (err) {
       const existingFeedback = JSON.parse(sessionStorage.getItem('flashrv_feedback') || '[]')
       sessionStorage.setItem('flashrv_feedback', JSON.stringify([...existingFeedback, feedbackData]))
-      toast.error("Erreur lors de lenvoi. Nous avons gardé une copie locale.")
+      toast.error("Erreur lors de l’envoi. Nous avons gardé une copie locale.")
     } finally {
       setIsSubmitting(false)
     }
@@ -960,7 +960,7 @@ function FeedbackWidget({ onClose, defaultType = 'suggestion' }) {
             disabled={isSubmitting}
             className="bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 px-6 rounded-xl transition-all disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? 'Envoi' : 'Envoyer'}
+            {isSubmitting ? 'Envoi…' : 'Envoyer'}
           </button>
         </div>
       </form>

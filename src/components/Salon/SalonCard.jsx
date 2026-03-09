@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { FiStar, FiMapPin, FiClock, FiCheck, FiCamera, FiShoppingBag } from 'react-icons/fi'
+import { FiStar, FiMapPin, FiClock, FiCheck, FiCamera, FiShoppingBag, FiScissors } from 'react-icons/fi'
 import { motion } from 'framer-motion'
 import { formatPrice } from '../../utils/helpers'
 import { resolveMediaUrl } from '../../utils/media'
@@ -63,21 +63,21 @@ function SalonCard({ salon, index = 0, variant = 'featured' }) {
   // Badge config for salon types
   const getSalonTypeBadge = () => {
     if (isBoutique) {
-      return { icon: '???', label: 'Boutique', bg: 'bg-amber-500', text: 'text-white' }
+      return { icon: <FiShoppingBag className="w-3 h-3" />, label: 'Boutique', bg: 'bg-amber-500', text: 'text-white' }
     }
     if (isShootingStudio) {
-      return { icon: '??', label: 'Studio Photo', bg: 'bg-blue-500', text: 'text-white' }
+      return { icon: <FiCamera className="w-3 h-3" />, label: 'Studio Photo', bg: 'bg-blue-500', text: 'text-white' }
     }
     if (isBarber) {
-      return { icon: '??', label: 'Barbershop', bg: 'bg-gray-800', text: 'text-white' }
+      return { icon: <FiScissors className="w-3 h-3" />, label: 'Barbershop', bg: 'bg-gray-800', text: 'text-white' }
     }
     switch (salon.salonType) {
       case 'coiffure':
-        return { icon: '?????', label: 'Coiffure', bg: 'bg-amber-100', text: 'text-amber-800' }
+        return { icon: <FiScissors className="w-3 h-3" />, label: 'Coiffure', bg: 'bg-amber-100', text: 'text-amber-800' }
       case 'beaute':
-        return { icon: '??', label: 'Beauté', bg: 'bg-pink-100', text: 'text-pink-800' }
+        return { icon: <FiStar className="w-3 h-3" />, label: 'Beauté', bg: 'bg-pink-100', text: 'text-pink-800' }
       case 'mixte':
-        return { icon: '??', label: 'Coiffure & Beauté', bg: 'bg-purple-100', text: 'text-purple-800' }
+        return { icon: <FiStar className="w-3 h-3" />, label: 'Coiffure & Beauté', bg: 'bg-purple-100', text: 'text-purple-800' }
       default:
         return null
     }
@@ -132,7 +132,7 @@ function SalonCard({ salon, index = 0, variant = 'featured' }) {
             )}
             {salon.featured && !isShootingStudio && (
               <span className="bg-amber-400 text-gray-900 text-xs font-bold px-2.5 py-1 rounded-full shadow">
-                ? Vedette
+                ★ Vedette
               </span>
             )}
           </div>
@@ -205,7 +205,7 @@ function SalonCard({ salon, index = 0, variant = 'featured' }) {
               )}
             </div>
             <span className="inline-flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-full bg-gray-900 text-white shadow-sm group-hover:translate-x-1 transition-transform">
-              {ctaLabel} ?
+              {ctaLabel} →
             </span>
           </div>
         </div>

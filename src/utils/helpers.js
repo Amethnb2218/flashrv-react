@@ -49,7 +49,7 @@ export const formatPriceRange = (min, max) => {
   const hasMin = min != null && !isNaN(min)
   const hasMax = max != null && !isNaN(max)
 
-  if (!hasMin && !hasMax) return ''
+  if (!hasMin && !hasMax) return '—'
   if (hasMin && !hasMax) return formatPrice(min)
   if (!hasMin && hasMax) return formatPrice(max)
 

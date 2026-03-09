@@ -114,9 +114,9 @@ function Salons() {
         return "high"
       }
       const normalized =
-        filters.priceRange === "" ? "low" :
-        filters.priceRange === "" ? "mid" :
-        filters.priceRange === "" ? "high" :
+        filters.priceRange === "€" ? "low" :
+        filters.priceRange === "€€" ? "mid" :
+        filters.priceRange === "€€€" ? "high" :
         filters.priceRange
       result = result.filter(s => priceBucket(s) === normalized)
     }
@@ -176,9 +176,9 @@ function Salons() {
     if (filters.category) chips.push({ key: 'category', label: `Catégorie: ${filters.category}` })
     if (filters.priceRange) {
       const priceLabel =
-        filters.priceRange === 'low' ? 'Budget: = 5?000 F' :
-        filters.priceRange === 'mid' ? 'Budget: 5?00015?000 F' :
-        filters.priceRange === 'high' ? 'Budget: = 15?000 F' :
+        filters.priceRange === 'low' ? 'Budget: ≤ 5 000 F' :
+        filters.priceRange === 'mid' ? 'Budget: 5 000–15 000 F' :
+        filters.priceRange === 'high' ? 'Budget: ≥ 15 000 F' :
         `Budget: ${filters.priceRange}`
       chips.push({ key: 'priceRange', label: priceLabel })
     }
@@ -382,9 +382,9 @@ function Salons() {
                   className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500"
                 >
                   <option value="">Tous</option>
-                  <option value="low">= 5?000 F</option>
-                  <option value="mid">5?00015?000 F</option>
-                  <option value="high">= 15?000 F</option>
+                  <option value="low">≤ 5 000 F</option>
+                  <option value="mid">5 000–15 000 F</option>
+                  <option value="high">≥ 15 000 F</option>
                 </select>
               </div>
 
@@ -397,9 +397,9 @@ function Salons() {
                   className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500"
                 >
                   <option value="">Toutes</option>
-                  <option value="4.5">? 4.5+</option>
-                  <option value="4">? 4+</option>
-                  <option value="3.5">? 3.5+</option>
+                  <option value="4.5">★ 4.5+</option>
+                  <option value="4">★ 4+</option>
+                  <option value="3.5">★ 3.5+</option>
                 </select>
               </div>
 
@@ -412,8 +412,8 @@ function Salons() {
                   className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500"
                 >
                   <option value="rating">Mieux notés</option>
-                  <option value="reviews">Plus davis</option>
-                  <option value="name">Nom AZ</option>
+                  <option value="reviews">Plus d’avis</option>
+                  <option value="name">Nom A–Z</option>
                 </select>
               </div>
             </div>
