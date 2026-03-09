@@ -162,9 +162,7 @@ ${variantNotes.join('\n')}` : '']
           meta: { orderId: order?.id, salonId: salon.id },
         })
 
-        const paymentResult = await apiFetch('/payments/create', {
-          method: 'POST',
-          body: buildPaydunyaPaymentPayload({
+        const paymentBody = buildPaydunyaPaymentPayload({
             bookingId: order?.id,
             amount: grandTotal,
             customerName: form.clientName || user?.name || '',
@@ -175,8 +173,23 @@ ${variantNotes.join('\n')}` : '']
             successPath: '/order/payment/success',
             cancelPath: '/order/payment/cancel',
             resourceKey: 'orderId',
-          }),
-        })
+          })
+
+        let paymentResult
+        for (let attempt = 0; attempt <= 2; attempt++) {
+          try {
+            paymentResult = await apiFetch('/payments/create', {
+              method: 'POST',
+              timeoutMs: 35000,
+              body: paymentBody,
+            })
+            break
+          } catch (retryErr) {
+            const isRetryable = [0, 502, 503, 504].includes(retryErr?.status)
+            if (!isRetryable || attempt === 2) throw retryErr
+            await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)))
+          }
+        }
 
         const paymentPayload = paymentResult?.data || paymentResult
         if (!paymentPayload?.invoiceUrl) {

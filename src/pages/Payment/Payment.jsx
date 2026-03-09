@@ -177,19 +177,32 @@ function Payment() {
       }
 
       const serviceLabel = bookingState.services.map((service) => service.name).filter(Boolean).join(', ')
-      const result = await apiFetch('/payments/create', {
-        method: 'POST',
-        timeoutMs: 20000,
-        body: buildPaydunyaPaymentPayload({
-          bookingId: appointmentId,
-          amount: depositAmount,
-          customerName: `${bookingState.clientFirstName || ''} ${bookingState.clientLastName || ''}`.trim() || user?.name || '',
-          customerEmail: user?.email || bookingState.clientEmail || '',
-          customerPhone: bookingState.clientPhone || user?.phoneNumber || user?.phone || '',
-          salonName: bookingState.salon?.name,
-          serviceLabel,
-        }),
+      const paymentBody = buildPaydunyaPaymentPayload({
+        bookingId: appointmentId,
+        amount: depositAmount,
+        customerName: `${bookingState.clientFirstName || ''} ${bookingState.clientLastName || ''}`.trim() || user?.name || '',
+        customerEmail: user?.email || bookingState.clientEmail || '',
+        customerPhone: bookingState.clientPhone || user?.phoneNumber || user?.phone || '',
+        salonName: bookingState.salon?.name,
+        serviceLabel,
       })
+
+      let result
+      const maxRetries = 2
+      for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+          result = await apiFetch('/payments/create', {
+            method: 'POST',
+            timeoutMs: 35000,
+            body: paymentBody,
+          })
+          break
+        } catch (retryErr) {
+          const isRetryable = [0, 502, 503, 504].includes(retryErr?.status)
+          if (!isRetryable || attempt === maxRetries) throw retryErr
+          await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)))
+        }
+      }
 
       const payload = result?.data || result
       if (!payload?.invoiceUrl) {
@@ -201,7 +214,7 @@ function Payment() {
     } catch (err) {
       const hasPendingPaydunyaBooking = selectedMethod === 'paydunya' && Boolean(appointmentId)
       if (hasPendingPaydunyaBooking) {
-        setError(`${err?.message || 'Le paiement est indisponible pour le moment.'} Votre reservation est conservee, reessayez dans un instant.`)
+        setError('Le serveur est temporairement indisponible. Reessayez dans un instant. Votre reservation est conservee, reessayez dans un instant.')
       } else {
         setError(
           selectedMethod === 'paydunya'

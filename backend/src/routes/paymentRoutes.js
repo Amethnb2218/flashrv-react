@@ -9,15 +9,33 @@ const router = express.Router();
 
 const ALLOWED_PROVIDERS = ['PAYDUNYA', 'PAY_ON_SITE'];
 const invoiceCreationInFlight = new Map();
+const INFLIGHT_TTL_MS = 25000;
+const ROUTE_TIMEOUT_MS = 28000;
 
 const buildInvoiceLockKey = ({ type, id, userId }) => {
   return `${String(type || '').toUpperCase()}:${String(id || '').trim()}:${String(userId || '').trim()}`;
 };
 
+const withRouteTimeout = (promise, label = 'operation') => {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => {
+      const err = new Error('Le serveur est temporairement indisponible. Reessayez dans un instant.');
+      err.statusCode = 503;
+      err.expose = true;
+      reject(err);
+    }, ROUTE_TIMEOUT_MS);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+};
+
 const runSingleFlightInvoiceCreation = async ({ lockKey, task }) => {
   const existing = invoiceCreationInFlight.get(lockKey);
+  if (existing && (Date.now() - existing.startedAt) < INFLIGHT_TTL_MS) {
+    return existing.promise;
+  }
   if (existing) {
-    return existing;
+    invoiceCreationInFlight.delete(lockKey);
   }
 
   const pending = (async () => {
@@ -28,7 +46,7 @@ const runSingleFlightInvoiceCreation = async ({ lockKey, task }) => {
     }
   })();
 
-  invoiceCreationInFlight.set(lockKey, pending);
+  invoiceCreationInFlight.set(lockKey, { promise: pending, startedAt: Date.now() });
   return pending;
 };
 
@@ -433,18 +451,20 @@ const resolvePaymentTarget = async ({ bookingId, orderId, userId }) => {
 
   if (!normalizedBookingId) return null;
 
-  const appointment = await prisma.appointment.findUnique({
-    where: { id: normalizedBookingId },
-    select: { id: true, clientId: true },
-  });
+  const [appointment, fallbackOrder] = await Promise.all([
+    prisma.appointment.findUnique({
+      where: { id: normalizedBookingId },
+      select: { id: true, clientId: true },
+    }),
+    prisma.order.findUnique({
+      where: { id: normalizedBookingId },
+      select: { id: true, clientId: true },
+    }),
+  ]);
+
   if (appointment && appointment.clientId === userId) {
     return { type: 'APPOINTMENT', id: normalizedBookingId };
   }
-
-  const fallbackOrder = await prisma.order.findUnique({
-    where: { id: normalizedBookingId },
-    select: { id: true, clientId: true },
-  });
   if (fallbackOrder && fallbackOrder.clientId === userId) {
     return { type: 'ORDER', id: normalizedBookingId };
   }
@@ -502,53 +522,60 @@ router.post('/create', authenticate, async (req, res, next) => {
       return res.status(400).json({ status: 'error', message: 'bookingId ou orderId requis' });
     }
 
-    const target = await resolvePaymentTarget({
-      bookingId,
-      orderId,
-      userId: req.user.id,
-    });
-    if (!target) {
-      return res.status(404).json({ status: 'error', message: 'Reservation ou commande introuvable' });
-    }
+    const result = await withRouteTimeout((async () => {
+      const target = await resolvePaymentTarget({
+        bookingId,
+        orderId,
+        userId: req.user.id,
+      });
+      if (!target) {
+        const err = new Error('Reservation ou commande introuvable');
+        err.statusCode = 404;
+        err.expose = true;
+        throw err;
+      }
 
-    const lockKey = buildInvoiceLockKey({
-      type: target.type,
-      id: target.id,
-      userId: req.user.id,
-    });
+      const lockKey = buildInvoiceLockKey({
+        type: target.type,
+        id: target.id,
+        userId: req.user.id,
+      });
 
-    const result = await runSingleFlightInvoiceCreation({
-      lockKey,
-      task: async () => (target.type === 'ORDER'
-        ? createPaydunyaPaymentForOrder({
-            orderId: target.id,
-            amount,
-            customerName,
-            customerEmail,
-            successUrl,
-            cancelUrl,
-            user: req.user,
-          })
-        : createPaydunyaPaymentForBooking({
-            bookingId: target.id,
-            amount,
-            customerName,
-            customerEmail,
-            successUrl,
-            cancelUrl,
-            user: req.user,
-          })),
-    });
+      const invoiceResult = await runSingleFlightInvoiceCreation({
+        lockKey,
+        task: async () => (target.type === 'ORDER'
+          ? createPaydunyaPaymentForOrder({
+              orderId: target.id,
+              amount,
+              customerName,
+              customerEmail,
+              successUrl,
+              cancelUrl,
+              user: req.user,
+            })
+          : createPaydunyaPaymentForBooking({
+              bookingId: target.id,
+              amount,
+              customerName,
+              customerEmail,
+              successUrl,
+              cancelUrl,
+              user: req.user,
+            })),
+      });
+
+      return { invoiceResult, target };
+    })(), 'payments/create');
 
     res.status(200).json({
       status: 'success',
       message: 'Facture PayDunya creee',
       data: {
-        paymentId: result.payment.id,
-        bookingId: target.type === 'APPOINTMENT' ? target.id : null,
-        orderId: target.type === 'ORDER' ? target.id : null,
-        invoiceUrl: result.invoiceUrl,
-        token: result.token,
+        paymentId: result.invoiceResult.payment.id,
+        bookingId: result.target.type === 'APPOINTMENT' ? result.target.id : null,
+        orderId: result.target.type === 'ORDER' ? result.target.id : null,
+        invoiceUrl: result.invoiceResult.invoiceUrl,
+        token: result.invoiceResult.token,
         provider: 'PAYDUNYA',
       },
     });
@@ -595,7 +622,7 @@ router.post('/init', authenticate, async (req, res, next) => {
       userId: req.user.id,
     });
 
-    const result = await runSingleFlightInvoiceCreation({
+    const result = await withRouteTimeout(runSingleFlightInvoiceCreation({
       lockKey,
       task: async () => (target.type === 'ORDER'
         ? createPaydunyaPaymentForOrder({
@@ -616,7 +643,7 @@ router.post('/init', authenticate, async (req, res, next) => {
             cancelUrl,
             user: req.user,
           })),
-    });
+    }), 'payments/init');
 
     res.status(200).json({
       status: 'success',

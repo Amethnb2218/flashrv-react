@@ -32,7 +32,7 @@ function PaymentCancel() {
         return await apiFetch('/payments/create', {
           method: 'POST',
           body: paymentPayload,
-          timeoutMs: 20000,
+          timeoutMs: 35000,
         })
       } catch (err) {
         lastError = err

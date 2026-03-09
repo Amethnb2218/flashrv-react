@@ -1,6 +1,6 @@
 const https = require('https');
 
-const DEFAULT_PAYDUNYA_TIMEOUT_MS = 12000;
+const DEFAULT_PAYDUNYA_TIMEOUT_MS = 20000;
 const PAYDUNYA_TEST_BASE_URL = 'https://app.paydunya.com/sandbox-api/v1';
 const PAYDUNYA_LIVE_BASE_URL = 'https://app.paydunya.com/api/v1';
 
