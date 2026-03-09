@@ -279,39 +279,26 @@ function Home() {
                     type="button"
                     onClick={handleGeolocation}
                     disabled={isLocating}
-                    className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full text-sm transition-all disabled:opacity-50"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full text-xs transition-all disabled:opacity-50"
                   >
                     {isLocating ? (
-                      <div className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                      <div className="w-3.5 h-3.5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
                     ) : (
-                      <FiNavigation className="w-4 h-4 text-amber-600" />
+                      <FiNavigation className="w-3.5 h-3.5 text-amber-600" />
                     )}
-                    <span>{isLocating ? 'Localisation...' : 'Utiliser ma position'}</span>
+                    <span>{isLocating ? 'Localisation...' : 'Ma position'}</span>
                   </button>
-                  <div className="flex flex-wrap gap-2">
-                    {quickFilters.map((chip) => (
+                    {quickFilters.slice(0, 2).map((chip) => (
                       <button
                         key={chip.label}
                         type="button"
                         onClick={() => handleQuickFilter(chip.params)}
-                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium bg-white text-gray-600 border border-gray-200 hover:border-amber-200 hover:text-amber-700 hover:bg-amber-50 transition-all"
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium bg-white text-gray-600 border border-gray-200 hover:border-amber-200 hover:text-amber-700 hover:bg-amber-50 transition-all"
                       >
                         <span className="text-amber-500">{chip.icon}</span>
                         {chip.label}
                       </button>
                     ))}
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {categories.slice(0, 4).map(cat => (
-                      <Link
-                        key={cat.id}
-                        to={`/salons?category=${cat.id}`}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-white text-gray-600 rounded-full text-sm hover:bg-amber-50 hover:text-amber-700 transition-all border border-gray-200 hover:border-amber-200"
-                      >
-                        <span>{cat.name}</span>
-                      </Link>
-                    ))}
-                  </div>
                 </div>
               </form>
 
