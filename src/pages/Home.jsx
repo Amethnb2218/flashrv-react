@@ -207,7 +207,7 @@ function Home() {
               <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">
                 Gratuit · Sans engagement
               </span>
-              <h1 className="mt-2 text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">
+              <h1 className="mt-2 text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight">
                 Réservez votre{' '}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-yellow-600">
                   salon de beauté
