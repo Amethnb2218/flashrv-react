@@ -230,7 +230,7 @@ function Home() {
                       aria-expanded={showSuggestions && suggestions.length > 0}
                       aria-controls="home-suggestions"
                       placeholder="Quartier, ville, salon..."
-                      className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl focus:ring-2 focus:ring-amber-400 focus:bg-white transition-all outline-none text-gray-800 placeholder-gray-400 text-sm"
+                      className="w-full pl-12 pr-4 py-3 md:py-4 bg-gray-50 rounded-xl focus:ring-2 focus:ring-amber-400 focus:bg-white transition-all outline-none text-gray-800 placeholder-gray-400 text-sm"
                     />
                     <AnimatePresence>
                       {showSuggestions && suggestions.length > 0 && (
@@ -461,7 +461,7 @@ function Home() {
                 <div className="w-8 h-8 bg-gray-900 text-white rounded-lg flex items-center justify-center mx-auto mb-1.5">
                   {step.icon}
                 </div>
-                <h3 className="text-xs font-bold text-gray-900 mb-0.5">{step.title}</h3>
+                <h3 className="text-[11px] sm:text-xs font-bold text-gray-900 mb-0.5">{step.title}</h3>
                 <p className="text-[10px] text-gray-500 leading-snug hidden sm:block">{step.description}</p>
               </div>
             ))}
@@ -537,7 +537,7 @@ function Home() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: reduceMotion ? 0 : 0.2 }}
-              className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+              className="fixed inset-0 z-[9999] flex items-start justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto"
               onClick={closeFeedback}
             >
               <motion.div
@@ -545,7 +545,7 @@ function Home() {
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: 20, opacity: 0 }}
                 transition={{ duration: reduceMotion ? 0 : 0.25 }}
-                className="w-full max-w-3xl"
+                className="w-full max-w-3xl my-auto"
                 onClick={(e) => e.stopPropagation()}
               >
                 <FeedbackWidget
