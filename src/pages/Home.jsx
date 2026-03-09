@@ -460,13 +460,13 @@ function Home() {
               <Link
                 key={i}
                 to={step.link}
-                className="relative bg-white border border-gray-100 rounded-xl p-2.5 text-center shadow-sm hover:border-amber-200 hover:shadow-md transition-all cursor-pointer"
+                className="relative bg-white border border-gray-100 rounded-xl p-2.5 md:p-5 text-center shadow-sm hover:border-amber-200 hover:shadow-md transition-all cursor-pointer"
               >
-                <div className="w-8 h-8 bg-gray-900 text-white rounded-lg flex items-center justify-center mx-auto mb-1.5">
+                <div className="w-8 h-8 md:w-11 md:h-11 bg-gray-900 text-white rounded-lg flex items-center justify-center mx-auto mb-1.5 md:mb-3">
                   {step.icon}
                 </div>
-                <h3 className="text-[11px] sm:text-xs font-bold text-gray-900 mb-0.5">{step.title}</h3>
-                <p className="text-[10px] text-gray-500 leading-snug hidden sm:block">{step.description}</p>
+                <h3 className="text-[11px] sm:text-sm md:text-base font-bold text-gray-900 mb-0.5 md:mb-1">{step.title}</h3>
+                <p className="text-[10px] md:text-sm text-gray-500 leading-snug hidden sm:block">{step.description}</p>
               </Link>
             ))}
           </div>
