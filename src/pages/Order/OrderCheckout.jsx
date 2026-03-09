@@ -12,7 +12,6 @@ import { buildPaydunyaPaymentPayload } from '../../utils/payments'
 import { saveOrderPaymentSession } from '../../utils/orderPaymentSession'
 
 const PAYMENT_METHODS = [
-  { id: 'wave', name: 'Wave', icon: '🌊', color: 'blue', description: 'Paiement rapide via Wave Mobile Money' },
   { id: 'paydunya', name: 'PayDunya', icon: 'PD', color: 'amber', description: 'Paiement en ligne securise (Orange, Free, Carte bancaire)' },
   { id: 'pay_on_pickup', name: 'Paiement au retrait', icon: 'PICK', color: 'gray', description: 'Reglez en boutique au moment du retrait' },
   { id: 'cash_on_delivery', name: 'Paiement a la livraison', icon: 'COD', color: 'gray', description: 'Payez en especes a la reception' },
@@ -152,36 +151,6 @@ ${variantNotes.join('\n')}` : '']
         deliveryAddress: form.deliveryAddress,
         grandTotal,
         deliveryFee,
-      }
-
-      if (selectedPayment === 'wave') {
-        saveOrderPaymentSession(receiptPayload)
-        pushSiteNotification({
-          userId: user?.id || user?.email,
-          type: 'order_pending_payment',
-          message: `Commande en attente de paiement Wave chez ${salon.name}. Ref: ${order?.id || 'N/A'}`,
-          meta: { orderId: order?.id, salonId: salon.id },
-        })
-
-        const waveResult = await apiFetch('/payments/wave/create', {
-          method: 'POST',
-          timeoutMs: 35000,
-          body: {
-            orderId: order?.id,
-            amount: grandTotal,
-            customerPhone: form.clientPhone || user?.phoneNumber || user?.phone || '',
-          },
-        })
-
-        const wavePayload = waveResult?.data || waveResult
-        if (wavePayload?.checkoutUrl) {
-          clearCart()
-          window.location.href = wavePayload.checkoutUrl
-        } else {
-          clearCart()
-          navigate('/order/receipt', { state: receiptPayload, replace: true })
-        }
-        return
       }
 
       if (selectedPayment === 'paydunya') {

@@ -12,12 +12,6 @@ import { buildPaydunyaPaymentPayload } from '../../utils/payments'
 
 const PAYMENT_METHODS = [
   {
-    id: 'wave',
-    name: 'Wave',
-    icon: '🌊',
-    description: 'Paiement rapide via Wave Mobile Money',
-  },
-  {
     id: 'paydunya',
     name: 'PayDunya',
     icon: 'PD',
@@ -113,9 +107,9 @@ function Payment() {
       clientAddress: clientAddress || null,
     }
 
-    if (paymentMethod === 'paydunya' || paymentMethod === 'wave') {
+    if (paymentMethod === 'paydunya') {
       payload.status = 'PENDING_PAYMENT'
-      payload.paymentMethod = paymentMethod === 'wave' ? 'WAVE' : 'PAYDUNYA'
+      payload.paymentMethod = 'PAYDUNYA'
       payload.paymentStatus = 'PENDING'
       payload.requiresOnlinePayment = true
       payload.skipConfirmationEmail = true
@@ -182,27 +176,6 @@ function Payment() {
         return
       }
 
-      if (selectedMethod === 'wave') {
-        const waveResult = await apiFetch('/payments/wave/create', {
-          method: 'POST',
-          timeoutMs: 35000,
-          body: {
-            bookingId: appointmentId,
-            amount: depositAmount,
-            customerPhone: bookingState.clientPhone || user?.phoneNumber || user?.phone || '',
-          },
-        })
-
-        const wavePayload = waveResult?.data || waveResult
-        if (wavePayload?.checkoutUrl) {
-          setPaymentStatus('pending_confirmation')
-          window.location.href = wavePayload.checkoutUrl
-        } else {
-          handlePaymentSuccess(wavePayload, appointmentId)
-        }
-        return
-      }
-
       const serviceLabel = bookingState.services.map((service) => service.name).filter(Boolean).join(', ')
       const paymentBody = buildPaydunyaPaymentPayload({
         bookingId: appointmentId,
@@ -239,7 +212,7 @@ function Payment() {
       setPaymentStatus('pending_confirmation')
       window.location.href = payload.invoiceUrl
     } catch (err) {
-      const hasPendingOnlineBooking = (selectedMethod === 'paydunya' || selectedMethod === 'wave') && Boolean(appointmentId)
+      const hasPendingOnlineBooking = selectedMethod === 'paydunya' && Boolean(appointmentId)
       if (hasPendingOnlineBooking) {
         setError('Le serveur est temporairement indisponible. Reessayez dans un instant. Votre reservation est conservee, reessayez dans un instant.')
       } else {
