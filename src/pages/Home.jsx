@@ -214,7 +214,7 @@ function Home() {
                 </span>{' '}
                 en 30 secondes
               </h1>
-              <p className="mt-2 text-sm text-gray-600 max-w-xl leading-relaxed">
+              <p className="mt-2 text-base text-gray-600 max-w-xl leading-relaxed">
                 Trouvez un salon vérifié près de chez vous, comparez les services et tarifs, et réservez en ligne — sans appel ni attente.
               </p>
 
@@ -233,7 +233,7 @@ function Home() {
                       aria-expanded={showSuggestions && suggestions.length > 0}
                       aria-controls="home-suggestions"
                       placeholder="Quartier, ville, salon..."
-                      className="w-full pl-12 pr-4 py-3 md:py-4 bg-gray-50 rounded-xl focus:ring-2 focus:ring-amber-400 focus:bg-white transition-all outline-none text-gray-800 placeholder-gray-400 text-sm"
+                      className="w-full pl-12 pr-4 py-3 md:py-4 bg-gray-50 rounded-xl focus:ring-2 focus:ring-amber-400 focus:bg-white transition-all outline-none text-gray-800 placeholder-gray-400"
                     />
                     <AnimatePresence>
                       {showSuggestions && suggestions.length > 0 && (
@@ -270,7 +270,7 @@ function Home() {
                   </div>
                   <button
                     type="submit"
-                    className="flex items-center justify-center gap-2 bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 px-6 rounded-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 text-sm"
+                    className="flex items-center justify-center gap-2 bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 px-6 rounded-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
                   >
                     <FiSearch className="w-5 h-5" />
                     <span>Rechercher</span>
@@ -282,7 +282,7 @@ function Home() {
                     type="button"
                     onClick={handleGeolocation}
                     disabled={isLocating}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full text-xs transition-all disabled:opacity-50"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full text-sm transition-all disabled:opacity-50"
                   >
                     {isLocating ? (
                       <div className="w-3.5 h-3.5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
@@ -296,7 +296,7 @@ function Home() {
                         key={chip.label}
                         type="button"
                         onClick={() => handleQuickFilter(chip.params)}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium bg-white text-gray-600 border border-gray-200 hover:border-amber-200 hover:text-amber-700 hover:bg-amber-50 transition-all"
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-sm font-medium bg-white text-gray-600 border border-gray-200 hover:border-amber-200 hover:text-amber-700 hover:bg-amber-50 transition-all"
                       >
                         <span className="text-amber-500">{chip.icon}</span>
                         {chip.label}
