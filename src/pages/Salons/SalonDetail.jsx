@@ -618,14 +618,9 @@ function SalonDetail() {
   const activeServiceImages = activeService ? getServiceImages(activeService) : []
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-amber-50/20 pt-16 relative overflow-hidden">
-      {/* Decorative background elements */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-amber-100/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
-      <div className="absolute bottom-0 left-0 w-80 h-80 bg-yellow-100/30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4"></div>
-      <div className="absolute top-1/3 left-1/4 w-64 h-64 bg-orange-100/20 rounded-full blur-3xl"></div>
-      
-      {/* Image Gallery */}
-      <div className="relative z-10 h-[220px] sm:h-[320px] md:h-[420px] lg:h-[520px] max-h-[60vh] bg-gray-900 overflow-hidden rounded-b-[32px] shadow-[0_30px_80px_-50px_rgba(15,23,42,0.6)]">
+    <div className="min-h-screen bg-gray-50 pt-16 relative">
+      {/* Image Gallery — compact on mobile */}
+      <div className="relative z-10 h-[160px] sm:h-[280px] md:h-[380px] lg:h-[480px] max-h-[50vh] bg-gray-900 overflow-hidden rounded-b-2xl sm:rounded-b-[32px] shadow-lg">
         {galleryImages.length > 0 ? (
           <img
             src={galleryImages[currentImageIndex]}
@@ -682,131 +677,98 @@ function SalonDetail() {
             <FiHeart className="w-5 h-5" />
           </button>
         </div>
-        <div className="absolute bottom-5 left-5">
-          <div className="inline-flex items-center gap-2 rounded-full bg-white/85 px-3 py-1.5 text-xs font-semibold text-gray-800 shadow-sm backdrop-blur">
-            <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
-            Galerie {galleryImages.length || 0} photo{galleryImages.length > 1 ? 's' : ''}
+        <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5">
+          <h1 className="text-lg sm:text-2xl md:text-3xl font-extrabold text-white drop-shadow-lg leading-tight">{salon.name}</h1>
+          <div className="flex items-center gap-2 mt-1 flex-wrap">
+            {salon.verified && (
+              <span className="inline-flex items-center gap-1 bg-white/90 text-green-700 text-[10px] font-semibold px-2 py-0.5 rounded-full">
+                <FiCheck className="w-3 h-3" /> Vérifié
+              </span>
+            )}
+            {todayHoursDetail ? (
+              isOpenNow ? (
+                <span className="inline-flex items-center gap-1 bg-emerald-500/90 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" /> Ouvert
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 bg-red-500/90 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full">Fermé</span>
+              )
+            ) : null}
+            <span className="inline-flex items-center gap-1 bg-white/90 text-gray-800 text-[10px] font-semibold px-2 py-0.5 rounded-full">
+              <FiStar className="w-3 h-3 text-yellow-500 fill-current" /> {ratingLabel}
+              {hasRating && <span className="text-gray-500">({reviewCount})</span>}
+            </span>
+            {galleryImages.length > 1 && (
+              <span className="inline-flex items-center gap-1 bg-black/40 text-white text-[10px] font-medium px-2 py-0.5 rounded-full">
+                {currentImageIndex + 1}/{galleryImages.length}
+              </span>
+            )}
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 sm:-mt-24 relative z-10 pb-12">
-        <div className="grid lg:grid-cols-3 gap-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 relative z-10 pb-12">
+        {/* Compact info strip */}
+        <div className="flex items-center gap-2 py-3 overflow-x-auto scrollbar-hide text-xs">
+          <span className="shrink-0 inline-flex items-center gap-1 text-gray-600">
+            <FiMapPin className="w-3 h-3" /> {[salon.address, salon.city].filter(Boolean).join(', ') || 'Localisation'}
+          </span>
+          <span className="text-gray-300">•</span>
+          <span className="shrink-0 font-semibold text-gray-700">
+            {isBoutique ? `${boutiqueProducts.length} article${boutiqueProducts.length > 1 ? 's' : ''}` : `${services.length} services`}
+          </span>
+          {priceLabel !== '—' && (
+            <>
+              <span className="text-gray-300">•</span>
+              <span className="shrink-0 font-semibold text-amber-600">{priceLabel}</span>
+            </>
+          )}
+          {(salon.whatsapp || salon.phone) && (
+            <>
+              <span className="text-gray-300">•</span>
+              <a
+                href={`https://wa.me/${(salon.whatsapp || salon.phone).replace(/[^0-9]/g, '')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0 inline-flex items-center gap-1 text-green-600 font-semibold"
+              >
+                WhatsApp
+              </a>
+            </>
+          )}
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-6">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Header Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: reduceMotion ? 0 : 0.4 }}
-              className="bg-white/90 backdrop-blur rounded-3xl shadow-2xl border border-white/60 ring-1 ring-black/5 p-7"
-            >
-              <div className="h-1.5 w-16 rounded-full bg-gradient-to-r from-amber-500 via-yellow-400 to-orange-500 mb-5" />
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <div className="flex items-center space-x-2 mb-2">
-                    <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{salon.name}</h1>
-                    {salon.verified && (
-                      <span className="bg-green-100 text-green-600 p-1 rounded-full">
-                        <FiCheck className="w-4 h-4" />
-                      </span>
-                    )}
-                    {todayHoursDetail ? (
-                      isOpenNow ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700">
-                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                          Ouvert
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-600">
-                          <span className="w-2 h-2 rounded-full bg-red-400" />
-                          Fermé
-                        </span>
-                      )
-                    ) : null}
-                  </div>
-                  <div className="flex items-center space-x-4 text-gray-500">
-                    <div className="flex items-center">
-                      <FiMapPin className="w-4 h-4 mr-1" />
-                      <span>{[salon.address, salon.city].filter(Boolean).join(', ')}</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2 bg-yellow-50 px-3 py-2 rounded-xl">
-                  <FiStar className="w-5 h-5 text-yellow-500 fill-current" />
-                  <div className="leading-tight">
-                    <span className="font-bold text-lg">{ratingLabel}</span>
-                    <span className="block text-xs text-gray-500">
-                      {ratingHint}
-                    </span>
-                  </div>
-                </div>
-              </div>
+          <div className="lg:col-span-2 space-y-0">
 
-              <p className="text-gray-600 mb-4">{salon.description}</p>
-
-              <div className="flex flex-wrap gap-2 mb-6">
-                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">
-                  {isBoutique ? `${boutiqueProducts.length} article${boutiqueProducts.length > 1 ? 's' : ''}` : `${services.length} services`}
-                </span>
-                {priceLabel !== '—' && (
-                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700">
-                    {priceLabel}
-                  </span>
-                )}
-                {hasRating ? (
-                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-50 text-yellow-700">
-                    Note {ratingLabel}/5 ({reviewCount})
-                  </span>
-                ) : (
-                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700">
-                    Soyez le premier à noter
-                  </span>
-                )}
-              </div>
-
-              {/* Specialties */}
-              <div className="flex flex-wrap gap-2 mb-4">
-                {(salon.specialties || []).map((specialty, i) => (
-                  <span key={i} className="bg-primary-50 text-primary-600 px-3 py-1 rounded-full text-sm">
-                    {specialty}
-                  </span>
-                ))}
-              </div>
-
-              {/* Amenities */}
-              <div className="flex flex-wrap gap-3">
-                {(salon.amenities || []).map((amenity, i) => (
-                  <div key={i} className="flex items-center space-x-1 text-gray-600 text-sm">
-                    <span>{amenityIcons[amenity] || '?'}</span>
-                    <span className="capitalize">{amenity}</span>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-
-            {/* Tabs */}
-            <div className="bg-white/90 backdrop-blur rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
-              <div className="flex gap-2 p-2 bg-gray-50 border-b border-gray-100">
-                {(isBoutique ? ['articles', 'equipe', 'avis'] : ['services', 'equipe', 'avis']).map(tab => (
+            {/* Tabs — sticky on scroll */}
+            <div className="bg-white rounded-t-2xl shadow-sm border border-gray-100 overflow-hidden sticky top-16 z-20">
+              <div className="flex border-b border-gray-100">
+                {(isBoutique ? ['articles', 'avis', 'infos'] : ['services', 'avis', 'infos']).map(tab => (
                   <button
                     key={tab}
                     onClick={() => (tab === 'articles' ? openArticlesTab() : setActiveTab(tab))}
-                    className={`flex-1 py-3 rounded-xl text-center font-semibold transition-colors ${
+                    className={`flex-1 py-3 text-center text-sm font-semibold transition-colors relative ${
                       activeTab === tab
-                        ? 'bg-white text-primary-700 shadow-sm border border-gray-100'
-                        : 'text-gray-500 hover:text-gray-700'
+                        ? 'text-gray-900'
+                        : 'text-gray-400 hover:text-gray-600'
                     }`}
                   >
                     {tab === 'services' && 'Services'}
-                    {tab === 'articles' && 'Articles'}
-                    {tab === 'equipe' && 'Équipe'}
+                    {tab === 'articles' && `Articles (${boutiqueProducts.filter(p => p.isActive !== false).length})`}
                     {tab === 'avis' && `Avis (${salonReviews.length})`}
+                    {tab === 'infos' && 'Infos'}
+                    {activeTab === tab && (
+                      <span className="absolute bottom-0 left-1/4 right-1/4 h-0.5 bg-gray-900 rounded-full" />
+                    )}
                   </button>
                 ))}
               </div>
+            </div>
 
-              <div className="p-6">
+            <div className="bg-white rounded-b-2xl shadow-sm border border-x border-b border-gray-100 overflow-hidden">
+              <div className="p-3 sm:p-5">
                 {/* Services Tab */}
                 {activeTab === 'services' && (
                   <div className="space-y-6">
@@ -866,183 +828,76 @@ function SalonDetail() {
                         <p className="text-gray-500">Aucun article disponible pour le moment.</p>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 gap-2 sm:gap-3">
                         {boutiqueProducts.filter(p => p.isActive !== false).map(product => {
                           const img = resolveMediaUrl(product.imageUrl || product.image)
                           const inCartItems = getCartItemForProduct(product.id)
                           const inCartTotal = inCartItems.reduce((s, c) => s + c.quantity, 0)
-                          const { variantEntries, resolvedSizes, resolvedColors, resolvedAvailableColors, deliveryMeta } = getResolvedVariantOptions(product)
+                          const { resolvedSizes, resolvedColors, deliveryMeta } = getResolvedVariantOptions(product)
                           const hasSizes = Array.isArray(resolvedSizes) && resolvedSizes.length > 0
                           const hasColors = Array.isArray(resolvedColors) && resolvedColors.length > 0
-                          const selSize = variantSelections[product.id]?.size || null
-                          const selColor = variantSelections[product.id]?.color || null
                           const needsVariant = (hasSizes || hasColors)
-                          const variantChosen = (!hasSizes || selSize) && (!hasColors || selColor)
-                          const isSizeAvailable = (sizeValue) => {
-                            if (variantEntries.length === 0) return true
-                            return variantEntries.some((v) =>
-                              v.isAvailable &&
-                              v.size === sizeValue &&
-                              (!selColor || !v.color || v.color === selColor)
-                            )
-                          }
-                          const isColorAvailable = (colorValue) => {
-                            if (variantEntries.length === 0) {
-                              if (Array.isArray(resolvedAvailableColors) && resolvedAvailableColors.length > 0) {
-                                return resolvedAvailableColors.includes(colorValue)
-                              }
-                              return true
-                            }
-                            return variantEntries.some((v) =>
-                              v.isAvailable &&
-                              v.color === colorValue &&
-                              (!selSize || !v.size || v.size === selSize)
-                            )
-                          }
+                          const isNew = product.createdAt && (Date.now() - new Date(product.createdAt).getTime()) < 7 * 86400000
+                          const isLowStock = product.stock > 0 && product.stock <= 5
+
                           return (
                             <div
                               key={product.id}
                               role="button"
                               tabIndex={0}
                               onClick={() => openProductDetail(product)}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter' || e.key === ' ') {
-                                  e.preventDefault()
-                                  openProductDetail(product)
-                                }
-                              }}
-                              className="bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+                              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openProductDetail(product) } }}
+                              className="bg-white border border-gray-100 rounded-xl overflow-hidden hover:shadow-md transition-shadow cursor-pointer group"
                             >
-                              {img ? (
-                                <div className="w-full h-56 bg-gray-50 flex items-center justify-center">
-                                  <img src={img} alt={product.name} className="w-full h-full object-contain p-2" loading="lazy" />
-                                </div>
-                              ) : (
-                                <div className="w-full h-56 bg-gray-50 flex items-center justify-center">
-                                  <FiBox className="w-10 h-10 text-gray-300" />
-                                </div>
-                              )}
-                              <div className="p-4">
-                                <div className="flex justify-between items-start mb-2">
-                                  <div>
-                                    <h4 className="font-semibold text-gray-900">{product.name}</h4>
-                                    {product.category && <p className="text-xs text-gray-500">{product.category}</p>}
-                                  </div>
-                                  <span className="font-bold text-amber-600">{formatPrice(product.price)}</span>
-                                </div>
-                                {product.description && (
-                                  <p className="text-sm text-gray-600 mb-3 line-clamp-2">{product.description}</p>
-                                )}
-
-                                {/* Variant: Sizes */}
-                                {hasSizes && (
-                                  <div className="mb-3">
-                                    <p className="text-xs font-medium text-gray-500 mb-1.5">Taille</p>
-                                    <div className="flex flex-wrap gap-1.5">
-                                      {resolvedSizes.map(s => {
-                                        const sizeValue = String(s)
-                                        const available = isSizeAvailable(sizeValue)
-                                        return (
-                                        <button
-                                          key={sizeValue}
-                                          onClick={(e) => {
-                                            e.stopPropagation()
-                                            setVariantSelections(prev => ({ ...prev, [product.id]: { ...prev[product.id], size: prev[product.id]?.size === sizeValue ? null : sizeValue } }))
-                                          }}
-                                          disabled={!available}
-                                          className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition ${
-                                            !available
-                                              ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-60'
-                                              : selSize === sizeValue
-                                                ? 'bg-gray-900 text-white border-gray-900'
-                                                : 'bg-white text-gray-700 border-gray-200 hover:border-gray-400'
-                                          }`}
-                                        >
-                                          {sizeValue}
-                                        </button>
-                                        )
-                                      })}
-                                    </div>
+                              {/* Image + badges overlay */}
+                              <div className="relative w-full aspect-square bg-gray-50">
+                                {img ? (
+                                  <img src={img} alt={product.name} className="w-full h-full object-cover" loading="lazy" />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center">
+                                    <FiBox className="w-8 h-8 text-gray-300" />
                                   </div>
                                 )}
-
-                                {/* Variant: Colors */}
-                                {hasColors && (
-                                  <div className="mb-3">
-                                    <p className="text-xs font-medium text-gray-500 mb-1.5">Couleur</p>
-                                    <div className="flex flex-wrap gap-1.5">
-                                      {resolvedColors.map(c => {
-                                        const colorValue = String(c)
-                                        const available = isColorAvailable(colorValue)
-                                        return (
-                                        <button
-                                          key={colorValue}
-                                          onClick={(e) => {
-                                            e.stopPropagation()
-                                            setVariantSelections(prev => ({ ...prev, [product.id]: { ...prev[product.id], color: prev[product.id]?.color === colorValue ? null : colorValue } }))
-                                          }}
-                                          disabled={!available}
-                                          className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition ${
-                                            !available
-                                              ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-60 line-through'
-                                              : selColor === colorValue
-                                                ? 'bg-gray-900 text-white border-gray-900'
-                                                : 'bg-white text-gray-700 border-gray-200 hover:border-gray-400'
-                                          }`}
-                                        >
-                                          {colorValue}{!available ? ' (indispo)' : ''}
-                                        </button>
-                                        )
-                                      })}
-                                    </div>
-                                  </div>
+                                {/* Badges */}
+                                <div className="absolute top-1.5 left-1.5 flex flex-col gap-1">
+                                  {isNew && <span className="bg-green-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">NOUVEAU</span>}
+                                  {isLowStock && <span className="bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">Stock faible</span>}
+                                  {product.stock === 0 && <span className="bg-gray-800 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">Épuisé</span>}
+                                </div>
+                                {/* Heart */}
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); toggleProductLike(product.id) }}
+                                  className="absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-white/80 flex items-center justify-center shadow-sm"
+                                >
+                                  <FiHeart className={`w-3.5 h-3.5 ${isProductLiked(product.id) ? 'text-red-500 fill-current' : 'text-gray-500'}`} />
+                                </button>
+                                {/* Cart badge */}
+                                {inCartTotal > 0 && (
+                                  <span className="absolute bottom-1.5 right-1.5 bg-amber-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow">{inCartTotal}</span>
                                 )}
-
-                                <p className="mb-2 text-[11px] text-gray-500">
-                                  {deliveryMeta?.isDeliverable
-                                    ? `Livraison disponible${deliveryMeta?.deliveryFee > 0 ? ` a partir de ${formatPrice(deliveryMeta.deliveryFee)}` : ''}`
-                                    : 'Retrait uniquement'}
-                                </p>
-
-                                {needsVariant && !variantChosen && (
-                                  <p className="mb-2 text-[11px] text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-2 py-1">
-                                    Choisissez les variantes requises avant d'ajouter au panier.
-                                  </p>
-                                )}
-
-                                <div className="flex items-center justify-between">
-                                  <span className={`text-xs font-medium px-2 py-1 rounded-full ${product.stock > 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-                                    {product.stock > 0 ? `${product.stock} en stock` : 'Rupture'}
-                                  </span>
-                                  {product.stock > 0 && (
-                                    inCartTotal > 0 ? (
-                                      <div className="flex items-center gap-2">
-                                        <button onClick={(e) => { e.stopPropagation(); removeFromCart(product.id, selSize, selColor) }} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200">
-                                          <FiMinus className="w-4 h-4" />
-                                        </button>
-                                        <span className="font-semibold text-sm">{inCartTotal}</span>
-                                        <button onClick={(e) => { e.stopPropagation(); addToCart(product, selSize, selColor) }} className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center hover:bg-amber-200" disabled={needsVariant && !variantChosen}>
-                                          <FiPlus className="w-4 h-4" />
-                                        </button>
-                                      </div>
-                                    ) : (
-                                      <button
-                                        onClick={(e) => { e.stopPropagation(); addToCart(product, selSize, selColor) }}
-                                        disabled={needsVariant && !variantChosen}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                                      >
-                                        <FiShoppingCart className="w-4 h-4" /> Ajouter
-                                      </button>
-                                    )
+                              </div>
+                              {/* Info */}
+                              <div className="p-2 sm:p-2.5">
+                                <h4 className="font-semibold text-gray-900 text-xs sm:text-sm leading-tight line-clamp-1">{product.name}</h4>
+                                {product.category && <p className="text-[10px] text-gray-400 mt-0.5 line-clamp-1">{product.category}</p>}
+                                <div className="flex items-center justify-between mt-1.5">
+                                  <span className="font-extrabold text-amber-600 text-sm">{formatPrice(product.price)}</span>
+                                  {product.stock > 0 ? (
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); if (needsVariant) { openProductDetail(product) } else { addToCart(product) } }}
+                                      className="w-7 h-7 rounded-full bg-gray-900 text-white flex items-center justify-center hover:bg-gray-800 transition"
+                                    >
+                                      <FiPlus className="w-3.5 h-3.5" />
+                                    </button>
+                                  ) : (
+                                    <span className="text-[10px] text-red-500 font-medium">Rupture</span>
                                   )}
                                 </div>
-                                <button
-                                  type="button"
-                                  onClick={(e) => { e.stopPropagation(); openProductDetail(product) }}
-                                  className="mt-3 w-full rounded-xl border border-gray-200 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
-                                >
-                                  Voir la fiche
-                                </button>
+                                {deliveryMeta?.isDeliverable && (
+                                  <p className="text-[10px] text-gray-400 mt-1 flex items-center gap-0.5">
+                                    <FiBox className="w-2.5 h-2.5" /> Livraison dispo
+                                  </p>
+                                )}
                               </div>
                             </div>
                           )
@@ -1052,85 +907,18 @@ function SalonDetail() {
                   </div>
                 )}
 
-                {/* Team Tab */}
-                {activeTab === 'equipe' && (
-                  <div>
-                    {coiffeurs.length === 0 ? (
-                      <div className="text-center py-12">
-                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                          <FiUsers className="w-8 h-8 text-gray-400" />
-                        </div>
-                        <p className="text-gray-500 mb-2">Équipe non renseignée</p>
-                        <p className="text-sm text-gray-400">Les membres de l'équipe seront bientôt ajoutés.</p>
-                      </div>
-                    ) : (
-                    <div className="grid md:grid-cols-2 gap-4">
-                    {coiffeurs.map((coiffeur, idx) => {
-                      const name = coiffeur.user?.name || coiffeur.name || 'Coiffeur'
-                      const avatar = coiffeur.user?.picture || coiffeur.picture || coiffeur.avatar
-                      const rating = typeof coiffeur.rating === 'number' ? coiffeur.rating : null
-                      return (
-                        <motion.div
-                          key={coiffeur.id || idx}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: reduceMotion ? 0 : idx * 0.04, duration: reduceMotion ? 0 : 0.25 }}
-                          className="relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
-                        >
-                          <div className="absolute -top-12 -right-12 w-28 h-28 bg-amber-100/50 rounded-full blur-2xl" />
-                          <div className="flex items-center gap-4">
-                            {avatar ? (
-                              <img
-                                src={resolveMediaUrl(avatar)}
-                                alt={name}
-                                className="w-16 h-16 rounded-2xl object-cover ring-2 ring-white shadow"
-                              />
-                            ) : (
-                              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center text-white font-bold text-xl">
-                                {String(name).split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-                              </div>
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between">
-                                <h4 className="font-semibold text-gray-900 truncate">{name}</h4>
-                                <span className="text-[10px] font-semibold px-2 py-1 rounded-full bg-emerald-50 text-emerald-600">
-                                  Disponible
-                                </span>
-                              </div>
-                              <p className="text-sm text-gray-500 truncate">{coiffeur.specialty || 'Expert'}</p>
-                              <div className="flex items-center gap-2 mt-2 text-sm">
-                                <FiStar className="w-4 h-4 text-yellow-500 fill-current" />
-                                <span className="font-semibold text-gray-700">{rating != null ? rating.toFixed(1) : '—'}</span>
-                                <span className="text-gray-300">•</span>
-                                <span className="text-gray-500">{coiffeur.experience || '—'}</span>
-                              </div>
-                            </div>
-                          </div>
-                        </motion.div>
-                      )
-                    })}
-                  </div>
-                    )}
-                  </div>
-                )}
-
                 {/* Reviews Tab */}
                 {activeTab === 'avis' && (
                   <div className="space-y-4">
-                    <div className="bg-gray-50 rounded-2xl p-5 border border-gray-100">
-                      <div className="flex items-center justify-between mb-4">
-                        <h4 className="font-semibold text-gray-900">Laisser un avis</h4>
-                        <span className="text-xs text-gray-500">Votre avis aide la communauté</span>
-                      </div>
+                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                      <h4 className="font-semibold text-gray-900 mb-3 text-sm">Laisser un avis</h4>
 
                       {!isAuthenticated ? (
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                          <p className="text-sm text-gray-600">
-                            Connectez-vous pour noter ce salon et partager votre expérience.
-                          </p>
+                          <p className="text-sm text-gray-600">Connectez-vous pour noter.</p>
                           <button
                             onClick={() => navigate('/login', { state: { from: { pathname: `/salon/${id}` } } })}
-                            className="px-4 py-2 rounded-lg bg-primary-600 text-white font-semibold hover:bg-primary-700 transition-colors"
+                            className="px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-semibold hover:bg-gray-800 transition-colors"
                           >
                             Se connecter
                           </button>
@@ -1148,36 +936,30 @@ function SalonDetail() {
                                     onMouseEnter={() => setHoverRating(star)}
                                     onMouseLeave={() => setHoverRating(0)}
                                     onClick={() => setReviewRating(star)}
-                                    className="p-1"
-                                    aria-label={`Noter ${star} étoile${star > 1 ? 's' : ''}`}
+                                    className="p-0.5"
                                   >
-                                    <FiStar className={`${active ? 'text-yellow-500 fill-current' : 'text-gray-300'} w-6 h-6`} />
+                                    <FiStar className={`${active ? 'text-yellow-500 fill-current' : 'text-gray-300'} w-5 h-5`} />
                                   </button>
                                 )
                               })}
                             </div>
-                            <span className="text-sm text-gray-600">
-                              {reviewRating > 0 ? `${reviewRating}/5` : 'Choisissez une note'}
-                            </span>
+                            <span className="text-xs text-gray-500">{reviewRating > 0 ? `${reviewRating}/5` : ''}</span>
                           </div>
                           <textarea
-                            rows={4}
+                            rows={3}
                             value={reviewComment}
                             onChange={(e) => setReviewComment(e.target.value)}
-                            placeholder="Décrivez votre expérience : accueil, ponctualité, résultat, ambiance."
-                            className="w-full resize-none rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                            placeholder="Votre expérience..."
+                            className="w-full resize-none rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                           />
-                          {reviewError && (
-                            <p className="text-sm text-red-600 mt-2">{reviewError}</p>
-                          )}
-                          <div className="mt-4 flex items-center justify-between">
-                            <span className="text-xs text-gray-400">Vous pouvez modifier votre avis plus tard.</span>
+                          {reviewError && <p className="text-xs text-red-600 mt-1">{reviewError}</p>}
+                          <div className="mt-3 flex justify-end">
                             <button
                               onClick={handleSubmitReview}
                               disabled={reviewSubmitting}
-                              className="px-5 py-2 rounded-lg bg-gray-900 text-white font-semibold hover:bg-gray-800 transition-colors disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+                              className="px-4 py-2 rounded-lg bg-gray-900 text-white text-sm font-semibold hover:bg-gray-800 transition-colors disabled:opacity-60"
                             >
-                              {reviewSubmitting ? 'Envoi...' : 'Publier l\'avis'}
+                              {reviewSubmitting ? 'Envoi...' : 'Publier'}
                             </button>
                           </div>
                         </>
@@ -1185,12 +967,10 @@ function SalonDetail() {
                     </div>
 
                     {salonReviews.length === 0 ? (
-                      <div className="text-center py-12">
-                        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                          <FiStar className="w-8 h-8 text-gray-400" />
-                        </div>
-                        <p className="text-gray-500 mb-2">Aucun avis pour le moment</p>
-                        <p className="text-sm text-gray-400">Soyez le premier à laisser un avis après votre visite !</p>
+                      <div className="text-center py-8">
+                        <FiStar className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                        <p className="text-gray-500 text-sm">Aucun avis pour le moment</p>
+                        <p className="text-xs text-gray-400 mt-1">Soyez le premier à noter !</p>
                       </div>
                     ) : (
                       salonReviews.map(review => {
@@ -1199,189 +979,267 @@ function SalonDetail() {
                           ? new Date(review.createdAt).toLocaleDateString('fr-FR')
                           : review.date
                         return (
-                        <div key={review.id} className="border-b border-gray-100 pb-4 last:border-0">
-                          <div className="flex items-center space-x-3 mb-2">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-accent-500 flex items-center justify-center text-white font-bold">
+                        <div key={review.id} className="border-b border-gray-100 pb-3 last:border-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center text-white font-bold text-xs">
                               {String(reviewerName).charAt(0)}
                             </div>
                             <div>
-                              <div className="flex items-center space-x-2">
-                                <h4 className="font-medium text-gray-900">{reviewerName}</h4>
-                                {review.verified && (
-                                  <span className="bg-green-100 text-green-600 text-xs px-2 py-0.5 rounded-full">Vérifié</span>
-                                )}
-                              </div>
-                              <div className="flex items-center space-x-2">
+                              <h4 className="font-medium text-gray-900 text-sm">{reviewerName}</h4>
+                              <div className="flex items-center gap-1">
                                 <div className="flex text-yellow-500">
                                   {[...Array(review.rating)].map((_, i) => (
-                                    <span key={i}>?</span>
+                                    <FiStar key={i} className="w-3 h-3 fill-current" />
                                   ))}
                                 </div>
-                                <span className="text-sm text-gray-400">{reviewDate}</span>
+                                <span className="text-xs text-gray-400">{reviewDate}</span>
                               </div>
                             </div>
                           </div>
-                          <p className="text-gray-600">{review.comment}</p>
+                          {review.comment && <p className="text-sm text-gray-600 ml-10">{review.comment}</p>}
                         </div>
                       )})
                     )}
+                  </div>
+                )}
+
+                {/* Infos Tab — description, team, contact, hours, payment */}
+                {activeTab === 'infos' && (
+                  <div className="space-y-5">
+                    {/* Description */}
+                    {salon.description && (
+                      <div>
+                        <h4 className="font-semibold text-gray-900 text-sm mb-2">À propos</h4>
+                        <p className="text-sm text-gray-600 leading-relaxed">{salon.description}</p>
+                      </div>
+                    )}
+
+                    {/* Specialties */}
+                    {(salon.specialties || []).length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {salon.specialties.map((s, i) => (
+                          <span key={i} className="bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full text-xs font-medium">{s}</span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Amenities */}
+                    {(salon.amenities || []).length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {salon.amenities.map((a, i) => (
+                          <span key={i} className="inline-flex items-center gap-1 text-xs text-gray-600 bg-gray-50 px-2.5 py-1 rounded-full">
+                            {amenityIcons[a] || '✓'} {a}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Team */}
+                    {coiffeurs.length > 0 && (
+                      <div>
+                        <h4 className="font-semibold text-gray-900 text-sm mb-3">Équipe</h4>
+                        <div className="grid grid-cols-2 gap-2">
+                          {coiffeurs.map((coiffeur, idx) => {
+                            const name = coiffeur.user?.name || coiffeur.name || 'Coiffeur'
+                            const avatar = coiffeur.user?.picture || coiffeur.picture || coiffeur.avatar
+                            return (
+                              <div key={coiffeur.id || idx} className="flex items-center gap-2 bg-gray-50 rounded-xl p-2.5">
+                                {avatar ? (
+                                  <img src={resolveMediaUrl(avatar)} alt={name} className="w-10 h-10 rounded-full object-cover" />
+                                ) : (
+                                  <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold text-sm">
+                                    {String(name).charAt(0)}
+                                  </div>
+                                )}
+                                <div className="min-w-0">
+                                  <p className="font-medium text-gray-900 text-xs truncate">{name}</p>
+                                  <p className="text-[10px] text-gray-500 truncate">{coiffeur.specialty || 'Expert'}</p>
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Contact */}
+                    <div>
+                      <h4 className="font-semibold text-gray-900 text-sm mb-3">Contact</h4>
+                      <div className="space-y-2">
+                        {salon.phone && (
+                          <a href={`tel:${salon.phone}`} className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
+                            <FiPhone className="w-4 h-4" /> {salon.phone}
+                          </a>
+                        )}
+                        {salon.email && (
+                          <a href={`mailto:${salon.email}`} className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
+                            <FiMail className="w-4 h-4" /> {salon.email}
+                          </a>
+                        )}
+                        {(salon.whatsapp || salon.phone) && (
+                          <a
+                            href={`https://wa.me/${(salon.whatsapp || salon.phone).replace(/[^0-9]/g, '')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 text-sm text-green-600 font-medium"
+                          >
+                            WhatsApp
+                          </a>
+                        )}
+                        {salon.coordinates && (
+                          <a
+                            href={`https://www.google.com/maps/search/?api=1&query=${salon.coordinates.lat},${salon.coordinates.lng}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
+                          >
+                            <FiMapPin className="w-4 h-4" /> Voir sur Google Maps
+                          </a>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Payment Methods */}
+                    {salon.paymentMethods?.length > 0 && (
+                      <div>
+                        <h4 className="font-semibold text-gray-900 text-sm mb-2">Paiement accepté</h4>
+                        <div className="flex flex-wrap gap-1.5">
+                          {salon.paymentMethods.map((pm) => {
+                            const method = pm.method || pm
+                            const labels = {
+                              PAYDUNYA: { label: 'PayDunya', color: 'bg-indigo-50 text-indigo-700' },
+                              WAVE: { label: 'Wave', color: 'bg-blue-50 text-blue-700' },
+                              ORANGE_MONEY: { label: 'Orange Money', color: 'bg-orange-50 text-orange-700' },
+                              FREE_MONEY: { label: 'Free Money', color: 'bg-green-50 text-green-700' },
+                              CASH: { label: 'Espèces', color: 'bg-gray-100 text-gray-700' },
+                              CARD: { label: 'Carte bancaire', color: 'bg-purple-50 text-purple-700' },
+                            }
+                            const info = labels[method] || { label: method, color: 'bg-gray-100 text-gray-600' }
+                            return (
+                              <span key={method} className={`px-2.5 py-1 rounded-full text-[11px] font-semibold ${info.color}`}>{info.label}</span>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Opening Hours */}
+                    {Object.keys(openingHoursMap).length > 0 && (
+                      <div>
+                        <h4 className="font-semibold text-gray-900 text-sm mb-2 flex items-center gap-1">
+                          <FiClock className="w-4 h-4" /> Horaires
+                        </h4>
+                        <div className="space-y-1 text-sm">
+                          {Object.entries(openingHoursMap).map(([day, hours]) => (
+                            <div key={day} className="flex justify-between">
+                              <span className="text-gray-600">{getDayName(day)}</span>
+                              <span className={hours ? 'text-gray-900 font-medium' : 'text-red-500'}>
+                                {hours ? `${hours.open} - ${hours.close}` : 'Fermé'}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Reassurance strip */}
+                    <div className="grid grid-cols-2 gap-2 pt-2">
+                      <div className="flex items-center gap-2 bg-gray-50 rounded-lg p-2.5">
+                        <FiCheck className="w-4 h-4 text-green-600 shrink-0" />
+                        <span className="text-xs text-gray-700">Paiement sécurisé</span>
+                      </div>
+                      <div className="flex items-center gap-2 bg-gray-50 rounded-lg p-2.5">
+                        <FiBox className="w-4 h-4 text-amber-600 shrink-0" />
+                        <span className="text-xs text-gray-700">Retrait disponible</span>
+                      </div>
+                      <div className="flex items-center gap-2 bg-gray-50 rounded-lg p-2.5">
+                        <FiStar className="w-4 h-4 text-yellow-500 shrink-0" />
+                        <span className="text-xs text-gray-700">{hasRating ? `${ratingLabel}/5 (${reviewCount})` : 'Nouveau'}</span>
+                      </div>
+                      <div className="flex items-center gap-2 bg-gray-50 rounded-lg p-2.5">
+                        <FiPhone className="w-4 h-4 text-blue-600 shrink-0" />
+                        <span className="text-xs text-gray-700">Support rapide</span>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Book Now Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: reduceMotion ? 0 : 0.2, duration: reduceMotion ? 0 : 0.35 }}
-              className="bg-white/95 backdrop-blur rounded-3xl shadow-2xl p-6 sticky top-24 border border-white/70 ring-1 ring-black/5"
-            >
+          {/* Sidebar — desktop only */}
+          <div className="hidden lg:block space-y-6">
+            <div className="bg-white rounded-2xl shadow-sm p-5 sticky top-24 border border-gray-100">
               {isBoutique ? (
                 <>
-                  <div className="text-center mb-6">
-                    <span className="text-xs uppercase tracking-wide text-gray-500">Boutique</span>
-                    <p className="text-3xl font-extrabold text-gray-900 mt-1">{boutiqueProducts.length} article{boutiqueProducts.length > 1 ? 's' : ''}</p>
-                    <p className="text-xs text-gray-500 mt-2">{ratingHint}</p>
-                  </div>
-
+                  <p className="text-2xl font-extrabold text-gray-900 mb-1">{boutiqueProducts.length} article{boutiqueProducts.length > 1 ? 's' : ''}</p>
+                  <p className="text-xs text-gray-500 mb-4">{ratingHint}</p>
                   {cartCount > 0 && (
-                    <div className="mb-4 p-4 bg-amber-50 border border-amber-100 rounded-2xl">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-semibold text-gray-900">Panier ({cartCount})</span>
-                        <span className="font-bold text-amber-600">{formatPrice(cartTotal)}</span>
+                    <div className="mb-4 p-3 bg-amber-50 border border-amber-100 rounded-xl text-sm">
+                      <div className="flex justify-between font-semibold mb-1">
+                        <span>Panier ({cartCount})</span>
+                        <span className="text-amber-600">{formatPrice(cartTotal)}</span>
                       </div>
                       {cart.map((c, idx) => (
-                        <div key={`${c.product.id}-${c.selectedSize}-${c.selectedColor}-${idx}`} className="flex items-center justify-between text-sm py-1">
-                          <span className="text-gray-700">
-                            {c.product.name} × {c.quantity}
-                            {c.selectedSize ? ` · ${c.selectedSize}` : ''}
-                            {c.selectedColor ? ` · ${c.selectedColor}` : ''}
-                          </span>
-                          <span className="text-gray-500">{formatPrice(c.product.price * c.quantity)}</span>
+                        <div key={`${c.product.id}-${c.selectedSize}-${c.selectedColor}-${idx}`} className="flex justify-between text-xs text-gray-600 py-0.5">
+                          <span>{c.product.name} × {c.quantity}</span>
+                          <span>{formatPrice(c.product.price * c.quantity)}</span>
                         </div>
                       ))}
                     </div>
                   )}
-
                   <button
                     onClick={() => cartCount > 0 ? setShowCartModal(true) : openArticlesTab()}
-                    className="w-full mb-4 rounded-xl bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 text-white font-semibold py-3.5 shadow-lg hover:shadow-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+                    className="w-full mb-3 rounded-xl bg-gray-900 text-white font-semibold py-3 hover:bg-gray-800 transition"
                   >
                     {cartCount > 0 ? `Commander (${formatPrice(cartTotal)})` : 'Voir les articles'}
                   </button>
                 </>
               ) : (
                 <>
-                  <div className="text-center mb-6">
-                    <span className="text-xs uppercase tracking-wide text-gray-500">À partir de</span>
-                    <p className="text-3xl font-extrabold text-gray-900 mt-1">{priceText}</p>
-                    <p className="text-xs text-gray-500 mt-2">
-                      {services.length} service{services.length > 1 ? 's' : ''} • {ratingHint}
-                    </p>
-                  </div>
-
+                  <p className="text-xs text-gray-500">À partir de</p>
+                  <p className="text-2xl font-extrabold text-gray-900 mb-1">{priceText}</p>
+                  <p className="text-xs text-gray-500 mb-4">{services.length} service{services.length > 1 ? 's' : ''}</p>
                   <button
                     onClick={handleBookNow}
-                    className="w-full mb-4 rounded-xl bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white font-semibold py-3.5 shadow-lg hover:shadow-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+                    className="w-full mb-3 rounded-xl bg-gray-900 text-white font-semibold py-3 hover:bg-gray-800 transition"
                   >
                     Réserver maintenant
                   </button>
                 </>
               )}
-
-              {/* WhatsApp Button */}
               {(salon.whatsapp || salon.phone) && (
                 <a
                   href={`https://wa.me/${(salon.whatsapp || salon.phone).replace(/[^0-9]/g, '')}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full flex items-center justify-center space-x-2 py-3 bg-green-500 hover:bg-green-600 text-white font-medium rounded-full transition-colors mb-4"
+                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-green-500 hover:bg-green-600 text-white font-medium rounded-xl transition-colors text-sm"
                 >
-                  <span>WA</span>
-                  <span>Contacter sur WhatsApp</span>
+                  WhatsApp
                 </a>
               )}
-
-              {/* Contact */}
-              <div className="space-y-3 pt-4 border-t border-gray-100">
-                <a
-                  href={`tel:${salon.phone}`}
-                  className="flex items-center space-x-3 text-gray-600 hover:text-primary-600"
-                >
-                  <FiPhone className="w-5 h-5" />
-                  <span>{salon.phone}</span>
-                </a>
-                <a
-                  href={`mailto:${salon.email}`}
-                  className="flex items-center space-x-3 text-gray-600 hover:text-primary-600"
-                >
-                  <FiMail className="w-5 h-5" />
-                  <span>{salon.email}</span>
-                </a>
-                {/* Google Maps link */}
-                {salon.coordinates && (
-                  <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${salon.coordinates.lat},${salon.coordinates.lng}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center space-x-3 text-gray-600 hover:text-primary-600"
-                  >
-                    <FiMapPin className="w-5 h-5" />
-                    <span>Voir sur Google Maps</span>
-                  </a>
+              <div className="mt-4 pt-4 border-t border-gray-100 space-y-2 text-sm">
+                {salon.phone && (
+                  <a href={`tel:${salon.phone}`} className="flex items-center gap-2 text-gray-600 hover:text-gray-900"><FiPhone className="w-4 h-4" /> {salon.phone}</a>
+                )}
+                {salon.email && (
+                  <a href={`mailto:${salon.email}`} className="flex items-center gap-2 text-gray-600 hover:text-gray-900"><FiMail className="w-4 h-4" /> {salon.email}</a>
                 )}
               </div>
-
-              {/* Opening Hours */}
-              <div className="mt-6 pt-4 border-t border-gray-100">
-
-              {/* Payment Methods */}
-              {salon.paymentMethods?.length > 0 && (
-                <div className="mb-6">
-                  <h4 className="font-medium text-gray-900 mb-3 flex items-center text-sm">
-                    Moyens de paiement acceptés
-                  </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {salon.paymentMethods.map((pm) => {
-                      const method = pm.method || pm
-                      const labels = {
-                        PAYDUNYA: { label: 'PayDunya', color: 'bg-indigo-50 text-indigo-700' },
-                        WAVE: { label: 'Wave (via PayDunya)', color: 'bg-blue-50 text-blue-700' },
-                        ORANGE_MONEY: { label: 'Orange Money (via PayDunya)', color: 'bg-orange-50 text-orange-700' },
-                        FREE_MONEY: { label: 'Free Money (via PayDunya)', color: 'bg-green-50 text-green-700' },
-                        CASH: { label: 'Especes', color: 'bg-gray-100 text-gray-700' },
-                        CARD: { label: 'Carte bancaire (via PayDunya)', color: 'bg-purple-50 text-purple-700' },
-                      }
-                      const info = labels[method] || { label: method, color: 'bg-gray-100 text-gray-600' }
-                      return (
-                        <span key={method} className={`px-3 py-1.5 rounded-full text-xs font-semibold ${info.color}`}>
-                          {info.label}
-                        </span>
-                      )
-                    })}
+              {Object.keys(openingHoursMap).length > 0 && (
+                <div className="mt-4 pt-4 border-t border-gray-100">
+                  <h4 className="font-medium text-gray-900 mb-2 text-sm flex items-center gap-1"><FiClock className="w-4 h-4" /> Horaires</h4>
+                  <div className="space-y-1 text-sm">
+                    {Object.entries(openingHoursMap).map(([day, hours]) => (
+                      <div key={day} className="flex justify-between">
+                        <span className="text-gray-600">{getDayName(day)}</span>
+                        <span className={hours ? 'text-gray-900' : 'text-red-500'}>{hours ? `${hours.open} - ${hours.close}` : 'Fermé'}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
-                <h4 className="font-medium text-gray-900 mb-3 flex items-center">
-                  <FiClock className="w-5 h-5 mr-2" />
-                  Horaires d'ouverture
-                </h4>
-                <div className="space-y-2 text-sm">
-                  {Object.entries(openingHoursMap).map(([day, hours]) => (
-                    <div key={day} className="flex justify-between">
-                      <span className="text-gray-600">{getDayName(day)}</span>
-                      <span className={hours ? 'text-gray-900' : 'text-red-500'}>
-                        {hours ? `${hours.open} - ${hours.close}` : 'Fermé'}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>
@@ -1803,32 +1661,46 @@ function SalonDetail() {
       </AnimatePresence>
 
       {/* Sticky mobile CTA bar */}
-      <div className="fixed bottom-0 inset-x-0 z-40 lg:hidden bg-white/95 backdrop-blur border-t border-gray-200 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] px-4 py-3 safe-area-pb">
-        <div className="flex items-center justify-between gap-3 max-w-lg mx-auto">
-          <div className="min-w-0">
-            <p className="text-xs text-gray-500 truncate">{salon.name}</p>
-            <p className="font-bold text-gray-900">{isBoutique ? `${boutiqueProducts.length} article${boutiqueProducts.length > 1 ? 's' : ''}` : priceText}</p>
-          </div>
+      <div className="fixed bottom-0 inset-x-0 z-40 lg:hidden bg-white border-t border-gray-200 shadow-[0_-2px_12px_rgba(0,0,0,0.06)] px-3 py-2.5 safe-area-pb">
+        <div className="flex items-center gap-2 max-w-lg mx-auto">
           {isBoutique ? (
-            <button
-              onClick={() => cartCount > 0 ? setShowCartModal(true) : openArticlesTab()}
-              className="flex-shrink-0 rounded-xl bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 text-white font-semibold py-3 px-6 shadow-lg text-sm"
-            >
-              {cartCount > 0 ? `Commander (${formatPrice(cartTotal)})` : 'Voir articles'}
-            </button>
+            <>
+              <button
+                onClick={() => setShowCartModal(true)}
+                className="relative flex items-center justify-center w-11 h-11 rounded-xl border border-gray-200 bg-gray-50"
+                disabled={cartCount === 0}
+              >
+                <FiShoppingCart className="w-5 h-5 text-gray-700" />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-amber-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">{cartCount}</span>
+                )}
+              </button>
+              <button
+                onClick={() => cartCount > 0 ? setShowCartModal(true) : openArticlesTab()}
+                className="flex-1 rounded-xl bg-gray-900 text-white font-semibold py-3 text-sm hover:bg-gray-800 transition"
+              >
+                {cartCount > 0 ? `Commander · ${formatPrice(cartTotal)}` : 'Voir les articles'}
+              </button>
+            </>
           ) : (
-            <button
-              onClick={handleBookNow}
-              className="flex-shrink-0 rounded-xl bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white font-semibold py-3 px-6 shadow-lg text-sm"
-            >
-              Réserver
-            </button>
+            <>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-gray-500 truncate">à partir de</p>
+                <p className="font-bold text-gray-900 text-sm">{priceText}</p>
+              </div>
+              <button
+                onClick={handleBookNow}
+                className="flex-shrink-0 rounded-xl bg-gray-900 text-white font-semibold py-3 px-6 text-sm hover:bg-gray-800 transition"
+              >
+                Réserver
+              </button>
+            </>
           )}
         </div>
       </div>
 
       {/* Spacer for sticky mobile bar */}
-      <div className="h-20 lg:hidden" />
+      <div className="h-16 lg:hidden" />
 
       {/* Cart / Order Modal (Boutique) */}
       {showCartModal && isBoutique && (
