@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { FiShoppingCart, FiTrash2, FiMinus, FiPlus, FiArrowLeft, FiShoppingBag } from 'react-icons/fi'
 import { motion } from 'framer-motion'
-import { readCart, subscribeCart, removeItemFromCart, addItemToCart, clearCart } from '../../utils/cartStore'
-import { deriveDeliveryConfigFromItems } from '../../utils/productMeta'
+import { readCart, subscribeCart, removeItemFromCart, addItemToCart, clearCart, deriveDeliveryConfigFromItems } from '../../utils/cartStore'
 import { useAuth } from '../../context/AuthContext'
 
 const formatPrice = (v) => `${Number(v || 0).toLocaleString('fr-FR')} F`
