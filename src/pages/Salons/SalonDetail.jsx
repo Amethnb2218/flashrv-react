@@ -618,9 +618,9 @@ function SalonDetail() {
   const activeServiceImages = activeService ? getServiceImages(activeService) : []
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-16 relative">
-      {/* Image Gallery — compact on mobile */}
-      <div className="relative z-10 h-[160px] sm:h-[280px] md:h-[380px] lg:h-[480px] max-h-[50vh] bg-gray-900 overflow-hidden rounded-b-2xl sm:rounded-b-[32px] shadow-lg">
+    <div className="min-h-screen bg-gray-50 relative">
+      {/* Image Gallery — flush under navbar */}
+      <div className="relative z-10 -mt-14 h-[276px] sm:h-[396px] md:h-[476px] lg:h-[576px] max-h-[60vh] bg-gray-900 overflow-hidden">
         {galleryImages.length > 0 ? (
           <img
             src={galleryImages[currentImageIndex]}
