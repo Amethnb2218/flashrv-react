@@ -29,9 +29,9 @@ function Modal({ isOpen, onClose, title, children, size = 'md' }) {
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className={`fixed inset-0 z-50 flex items-center justify-center ${size === 'mobile-full' ? 'p-0 sm:p-4' : 'p-4'}`}
+            className={`fixed inset-0 z-50 flex items-end sm:items-center justify-center ${size === 'mobile-full' ? 'p-0 sm:p-4' : 'p-4'}`}
           >
-            <div className={`relative bg-gradient-to-br from-white/90 via-blue-50/80 to-fuchsia-100/60 shadow-2xl border border-white/30 backdrop-blur-2xl w-full ${sizes[size]} overflow-hidden animate-fade-in ${size === 'mobile-full' ? 'h-full sm:h-auto sm:max-h-[90vh] rounded-none sm:rounded-2xl' : 'max-h-[90vh] rounded-2xl'}`} style={{ boxShadow: '0 8px 32px 0 #3b82f633, 0 0 24px 2px #a21caf22' }}>
+            <div className={`relative bg-gradient-to-br from-white/90 via-blue-50/80 to-fuchsia-100/60 shadow-2xl border border-white/30 backdrop-blur-2xl w-full ${sizes[size]} overflow-hidden animate-fade-in ${size === 'mobile-full' ? 'max-h-[85vh] sm:max-h-[90vh] rounded-t-2xl sm:rounded-2xl' : 'max-h-[90vh] rounded-2xl'}`} style={{ boxShadow: '0 8px 32px 0 #3b82f633, 0 0 24px 2px #a21caf22' }}>
               {/* Glow mesh effect */}
               <div className="absolute -inset-2 z-0 rounded-2xl blur-2xl opacity-40 pointer-events-none bg-gradient-to-br from-blue-400/20 via-amber-200/10 to-fuchsia-400/10" />
               {/* Header */}
@@ -48,7 +48,7 @@ function Modal({ isOpen, onClose, title, children, size = 'md' }) {
               )}
 
               {/* Content */}
-              <div className={`relative overflow-y-auto z-10 ${size === 'mobile-full' ? 'h-[calc(100%-60px)] sm:max-h-[calc(90vh-80px)]' : 'max-h-[calc(90vh-80px)]'}`}>
+              <div className={`relative overflow-y-auto z-10 ${size === 'mobile-full' ? 'max-h-[calc(85vh-60px)] sm:max-h-[calc(90vh-80px)]' : 'max-h-[calc(90vh-80px)]'}`}>
                 {children}
               </div>
             </div>
