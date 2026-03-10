@@ -74,11 +74,8 @@ router.post('/', authenticate, uploadProductImages, async (req, res, next) => {
     const parsedDeliveryZones = Array.from(new Set(parseListField(deliveryZones)));
     const parsedDeliveryFee = Number(deliveryFee || 0);
 
-    if (parsedColors.length === 0) {
-      return res.status(400).json({ status: 'error', message: 'Au moins une couleur est requise.' });
-    }
-    if (parsedAvailableColors.length === 0) {
-      return res.status(400).json({ status: 'error', message: 'Indiquez les couleurs disponibles.' });
+    if (parsedAvailableColors.length > 0 && parsedColors.length === 0) {
+      return res.status(400).json({ status: 'error', message: 'Ajoutez les couleurs du produit avant d\'indiquer les couleurs disponibles.' });
     }
     if (parsedAvailableColors.some((c) => !parsedColors.includes(c))) {
       return res.status(400).json({
@@ -246,24 +243,19 @@ router.patch('/:id', authenticate, uploadProductImages, async (req, res, next) =
     let nextColors = existingColors;
     if (colors !== undefined) {
       const parsedColors = Array.from(new Set(parseListField(colors)));
-      if (parsedColors.length === 0) {
-        return res.status(400).json({ status: 'error', message: 'Au moins une couleur est requise.' });
-      }
       nextColors = parsedColors;
-      updateData.colors = JSON.stringify(parsedColors);
+      updateData.colors = parsedColors.length > 0 ? JSON.stringify(parsedColors) : null;
     }
 
     let nextAvailableColors = existingAvailableColors;
     if (availableColors !== undefined) {
       const parsedAvailableColors = Array.from(new Set(parseListField(availableColors)));
-      if (parsedAvailableColors.length === 0) {
-        return res.status(400).json({ status: 'error', message: 'Indiquez les couleurs disponibles.' });
-      }
       nextAvailableColors = parsedAvailableColors;
-      updateData.availableColors = JSON.stringify(parsedAvailableColors);
+      updateData.availableColors = parsedAvailableColors.length > 0 ? JSON.stringify(parsedAvailableColors) : null;
     }
-    if (nextColors.length > 0 && nextAvailableColors.length === 0) {
-      return res.status(400).json({ status: 'error', message: 'Indiquez les couleurs disponibles.' });
+    if (nextColors.length === 0 && nextAvailableColors.length > 0) {
+      updateData.availableColors = null;
+      nextAvailableColors = [];
     }
     if (nextAvailableColors.length > 0 && nextAvailableColors.some((c) => !nextColors.includes(c))) {
       return res.status(400).json({
