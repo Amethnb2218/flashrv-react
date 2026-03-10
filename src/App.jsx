@@ -20,6 +20,7 @@ import AdminDashboard from './pages/Admin/AdminDashboard'
 import NotFound from './pages/NotFound'
 import ProtectedRoute from './components/Auth/ProtectedRoute'
 import InstallPrompt from './components/PWA/InstallPrompt'
+import Cart from './pages/Order/Cart'
 import OrderCheckout from './pages/Order/OrderCheckout'
 import OrderReceipt from './pages/Order/OrderReceipt'
 import OrderPaymentSuccess from './pages/Order/OrderPaymentSuccess'
@@ -61,6 +62,7 @@ function App() {
             <PaymentCancel />
           </ProtectedRoute>
         } />
+        <Route path="cart" element={<Cart />} />
         <Route path="order/checkout" element={
           <ProtectedRoute>
             <OrderCheckout />

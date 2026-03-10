@@ -112,7 +112,7 @@ function Navbar() {
     const cartState = readCart()
     const items = Array.isArray(cartState?.items) ? cartState.items : []
     if (items.length === 0 || !cartState?.salon?.id) {
-      navigate('/salons?businessType=BOUTIQUE')
+      navigate('/cart')
       return
     }
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+ï»¿import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import apiFetch from "@/api/client";
 import { useAuth } from "../../context/AuthContext";
@@ -2425,14 +2425,14 @@ active
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             {filteredOrders.map((order, idx) => {
         const statusKey = String(order.status || "").toUpperCase();
-        const statusOpt = orderStatusOptions.find((s) => s.value === statusKey) || { label: statusKey || "—", tone: "gray" };
+        const statusOpt = orderStatusOptions.find((s) => s.value === statusKey) || { label: statusKey || "â€”", tone: "gray" };
         const currentStepIdx = orderStatusFlow.indexOf(statusKey);
         const nextAction = orderNextStatus[statusKey] || null;
         const itemCount = (order.items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
         const { note, variantLines } = splitOrderNotes(order.notes);
         const createdAtLabel = order.createdAt
           ? new Date(order.createdAt).toLocaleString("fr-FR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })
-          : "—";
+          : "â€”";
         const paymentMethodKey = String(order.paymentMethod || order.payment?.method || "").toUpperCase();
         const paymentLabel = paymentMethodKey === "CASH_ON_DELIVERY"
           ? "Paiement a la livraison"
@@ -2482,7 +2482,7 @@ active
               <div className="mt-4 space-y-1.5">
                 {(order.items || []).map((item, i) => (
                   <div key={i} className="flex items-start justify-between text-sm gap-3">
-                    <span className="text-gray-700">{item.product?.name || "Article"} × {item.quantity}</span>
+                    <span className="text-gray-700">{item.product?.name || "Article"} Ã—{item.quantity}</span>
                     <span className="font-medium">{formatMoney(item.unitPrice * item.quantity)}</span>
                   </div>
                 ))}
