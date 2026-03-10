@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { 
   FiCalendar, FiClock, FiMapPin, FiStar, FiMoreVertical, 
-  FiX, FiRefreshCw, FiHeart, FiSettings, FiChevronRight,
+  FiX, FiRefreshCw, FiHeart, FiSettings, FiChevronRight, FiChevronDown,
   FiGift, FiAward, FiPercent, FiMessageCircle, FiShoppingBag, FiPackage
 } from 'react-icons/fi'
 import { useAuth } from '../../context/AuthContext'
@@ -27,6 +27,8 @@ function ClientDashboard() {
   const [orders, setOrders] = useState([])
   const [ordersLoading, setOrdersLoading] = useState(true)
   const [cancellingOrderId, setCancellingOrderId] = useState(null)
+  const [expandedBookingId, setExpandedBookingId] = useState(null)
+  const [visibleBookings, setVisibleBookings] = useState(8)
 
   const getSalonImage = (salon) => {
     if (!salon) return ''
@@ -203,120 +205,109 @@ function ClientDashboard() {
     )
   }
 
-  const BookingCard = ({ booking }) => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -3 }}
-      transition={{ type: 'spring', stiffness: 260, damping: 22 }}
-      className="bg-white/90 backdrop-blur rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:border-gray-200 transition-shadow"
-    >
-      <div className="h-1 w-full bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-400" />
-      <div className="p-6">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center">
-            {getSalonImage(booking.salon) ? (
-              <img
-                src={getSalonImage(booking.salon)}
-                alt={booking.salon?.name}
-                className="w-16 h-16 rounded-xl object-cover"
-              />
-            ) : (
-              <div className="w-16 h-16 rounded-xl bg-primary-100 flex items-center justify-center text-primary-700 font-bold text-lg">
-                {booking.salon?.name?.charAt(0) || 'S'}
-              </div>
-            )}
-            <div className="ml-4">
-              <h3 className="font-bold text-gray-900">{booking.salon?.name}</h3>
-              <div className="flex items-center text-gray-500 text-sm mt-1">
-                <FiMapPin className="w-4 h-4 mr-1" />
-                {booking.salon?.address || booking.salon?.city || ''}
-              </div>
+  const BookingCard = ({ booking }) => {
+    const isExpanded = expandedBookingId === booking.id
+    const canAct = ['PENDING', 'PENDING_PAYMENT', 'PENDING_ASSIGNMENT', 'CONFIRMED', 'CONFIRMED_ON_SITE', 'PAID'].includes(String(booking.status || '').toUpperCase()) && new Date(booking.date) >= new Date()
+    const isCompleted = String(booking.status || '').toUpperCase() === 'COMPLETED'
+
+    return (
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        {/* Compact header row */}
+        <button
+          type="button"
+          onClick={() => setExpandedBookingId(isExpanded ? null : booking.id)}
+          className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition"
+        >
+          {getSalonImage(booking.salon) ? (
+            <img src={getSalonImage(booking.salon)} alt={booking.salon?.name} className="w-10 h-10 rounded-lg object-cover shrink-0" />
+          ) : (
+            <div className="w-10 h-10 rounded-lg bg-primary-100 flex items-center justify-center text-primary-700 font-bold text-sm shrink-0">
+              {booking.salon?.name?.charAt(0) || 'S'}
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-semibold text-gray-900 text-sm truncate">{booking.salon?.name}</span>
+              <span className="text-xs text-gray-400 truncate">{booking.services?.map(s => s.name).join(', ') || ''}</span>
+            </div>
+            <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+              <span className="text-xs text-gray-500 flex items-center gap-1">
+                <FiCalendar className="w-3 h-3" />
+                {new Date(booking.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+              </span>
+              <span className="text-xs text-gray-500 flex items-center gap-1">
+                <FiClock className="w-3 h-3" /> {booking.time || '—'}
+              </span>
+              <span className="font-bold text-amber-600 text-sm">{booking.totalPrice?.toLocaleString()} FCFA</span>
             </div>
           </div>
           {getStatusBadge(booking.status)}
-        </div>
-
-        <div className="grid sm:grid-cols-3 gap-4 py-4 border-t border-b border-gray-100">
-          <div className="flex items-center">
-            <FiCalendar className="w-5 h-5 text-primary-600 mr-2" />
-            <div>
-              <p className="text-xs text-gray-500">Date</p>
-              <p className="font-medium text-gray-900">
-                {new Date(booking.date).toLocaleDateString('fr-FR', {
-                  weekday: 'short',
-                  day: 'numeric',
-                  month: 'short'
-                })}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center">
-            <FiClock className="w-5 h-5 text-primary-600 mr-2" />
-            <div>
-              <p className="text-xs text-gray-500">Heure</p>
-              <p className="font-medium text-gray-900">{booking.time}</p>
-            </div>
-          </div>
-          <div>
-            <p className="text-xs text-gray-500">Montant</p>
-            <p className="font-bold text-primary-600">{booking.totalPrice?.toLocaleString()} FCFA</p>
-          </div>
-        </div>
-
-        <div className="mt-4">
-          <p className="text-sm text-gray-500 mb-2">Services</p>
-          <div className="flex flex-wrap gap-2">
-            {booking.services?.map(service => (
-              <span 
-                key={service.id}
-                className="px-3 py-1 bg-primary-50 text-primary-600 rounded-full text-sm"
-              >
-                {service.name}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        {['PENDING', 'PENDING_PAYMENT', 'PENDING_ASSIGNMENT', 'CONFIRMED', 'CONFIRMED_ON_SITE', 'PAID'].includes(String(booking.status || '').toUpperCase()) && new Date(booking.date) >= new Date() && (
-          <div className="flex gap-3 mt-6">
-            <button
-              onClick={() => {
-                setSelectedBooking(booking)
-                setShowCancelModal(true)
-              }}
-              className="flex-1 py-2 border border-red-300 text-red-600 rounded-xl hover:bg-red-50 transition-colors text-sm font-medium"
-            >
-              <FiX className="inline w-4 h-4 mr-1" />
-              Annuler
-            </button>
-            <button className="flex-1 py-2 border border-primary-300 text-primary-600 rounded-xl hover:bg-primary-50 transition-colors text-sm font-medium">
-              <FiRefreshCw className="inline w-4 h-4 mr-1" />
-              Modifier
-            </button>
-          </div>
-        )}
-
-        <button
-          onClick={() => {
-            setChatBooking(booking)
-            setShowChatModal(true)
-          }}
-          className="w-full mt-3 py-2 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors text-sm font-medium"
-        >
-          <FiMessageCircle className="inline w-4 h-4 mr-1" />
-          Ouvrir le chat avec le salon
+          <FiChevronDown className={`w-4 h-4 text-gray-400 shrink-0 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
         </button>
 
-        {String(booking.status || '').toUpperCase() === 'COMPLETED' && (
-          <button className="w-full mt-4 py-2 bg-yellow-50 text-yellow-700 rounded-xl hover:bg-yellow-100 transition-colors text-sm font-medium">
-            <FiStar className="inline w-4 h-4 mr-1" />
-            Laisser un avis
-          </button>
-        )}
+        {/* Expanded details */}
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <div className="px-4 pb-4 border-t border-gray-100 pt-3 space-y-3">
+                {/* Location */}
+                {(booking.salon?.address || booking.salon?.city) && (
+                  <p className="text-xs text-gray-500 flex items-center gap-1">
+                    <FiMapPin className="w-3 h-3" /> {booking.salon.address || booking.salon.city}
+                  </p>
+                )}
+
+                {/* Services */}
+                {booking.services?.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {booking.services.map(service => (
+                      <span key={service.id} className="px-2.5 py-1 bg-primary-50 text-primary-600 rounded-full text-xs">
+                        {service.name}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Actions */}
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {canAct && (
+                    <>
+                      <button
+                        onClick={() => { setSelectedBooking(booking); setShowCancelModal(true) }}
+                        className="px-3 py-1.5 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-xs font-medium"
+                      >
+                        <FiX className="inline w-3 h-3 mr-1" /> Annuler
+                      </button>
+                      <button className="px-3 py-1.5 border border-primary-300 text-primary-600 rounded-lg hover:bg-primary-50 transition-colors text-xs font-medium">
+                        <FiRefreshCw className="inline w-3 h-3 mr-1" /> Modifier
+                      </button>
+                    </>
+                  )}
+                  <button
+                    onClick={() => { setChatBooking(booking); setShowChatModal(true) }}
+                    className="px-3 py-1.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-xs font-medium"
+                  >
+                    <FiMessageCircle className="inline w-3 h-3 mr-1" /> Chat
+                  </button>
+                  {isCompleted && (
+                    <button className="px-3 py-1.5 bg-yellow-50 text-yellow-700 rounded-lg hover:bg-yellow-100 transition-colors text-xs font-medium">
+                      <FiStar className="inline w-3 h-3 mr-1" /> Avis
+                    </button>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
-    </motion.div>
-  )
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-amber-50/20 py-8 relative overflow-hidden">
@@ -536,10 +527,15 @@ function ClientDashboard() {
               </div>
             ) : activeTab === 'upcoming' ? (
               upcomingBookings.length > 0 ? (
-                <div className="grid gap-6">
-                  {upcomingBookings.map(booking => (
+                <div className="space-y-2">
+                  {upcomingBookings.slice(0, visibleBookings).map(booking => (
                     <BookingCard key={booking.id} booking={booking} />
                   ))}
+                  {upcomingBookings.length > visibleBookings && (
+                    <button type="button" onClick={() => setVisibleBookings(v => v + 10)} className="w-full mt-3 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition">
+                      Voir plus ({upcomingBookings.length - visibleBookings} restants)
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="text-center py-12">
@@ -562,10 +558,15 @@ function ClientDashboard() {
               )
             ) : (
               pastBookings.length > 0 ? (
-                <div className="grid gap-6">
-                  {pastBookings.map(booking => (
+                <div className="space-y-2">
+                  {pastBookings.slice(0, visibleBookings).map(booking => (
                     <BookingCard key={booking.id} booking={booking} />
                   ))}
+                  {pastBookings.length > visibleBookings && (
+                    <button type="button" onClick={() => setVisibleBookings(v => v + 10)} className="w-full mt-3 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition">
+                      Voir plus ({pastBookings.length - visibleBookings} restants)
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="text-center py-12">

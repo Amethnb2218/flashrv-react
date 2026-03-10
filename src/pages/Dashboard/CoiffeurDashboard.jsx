@@ -26,6 +26,7 @@ FiGrid,
 FiSearch,
 FiFilter,
 FiChevronDown,
+FiChevronUp,
 FiAlertTriangle,
 FiXCircle,
 FiUsers,
@@ -540,6 +541,10 @@ const [notifications, setNotifications] = useState([]);
 const [unreadNotifications, setUnreadNotifications] = useState(0);
 const [chatAppointment, setChatAppointment] = useState(null);
 const [showChatModal, setShowChatModal] = useState(false);
+const [expandedOrderId, setExpandedOrderId] = useState(null);
+const [visibleOrders, setVisibleOrders] = useState(6);
+const [expandedApptId, setExpandedApptId] = useState(null);
+const [visibleAppts, setVisibleAppts] = useState(6);
 
 // Boutique state
 const [businessType, setBusinessType] = useState("SALON");
@@ -2422,11 +2427,11 @@ active
   ) : filteredOrders.length === 0 ? (
     <EmptyState icon={<FiShoppingCart />} title="Aucune commande" subtitle="Les commandes apparaîtront ici." />
   ) : (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            {filteredOrders.map((order, idx) => {
+    <>
+    <div className="space-y-2">
+            {filteredOrders.slice(0, visibleOrders).map((order, idx) => {
         const statusKey = String(order.status || "").toUpperCase();
         const statusOpt = orderStatusOptions.find((s) => s.value === statusKey) || { label: statusKey || "—", tone: "gray" };
-        const currentStepIdx = orderStatusFlow.indexOf(statusKey);
         const nextAction = orderNextStatus[statusKey] || null;
         const itemCount = (order.items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
         const { note, variantLines } = splitOrderNotes(order.notes);
@@ -2435,114 +2440,130 @@ active
           : "—";
         const paymentMethodKey = String(order.paymentMethod || order.payment?.method || "").toUpperCase();
         const paymentLabel = paymentMethodKey === "CASH_ON_DELIVERY"
-          ? "Paiement a la livraison"
+          ? "À la livraison"
           : paymentMethodKey === "PAY_ON_PICKUP"
-            ? "Paiement au retrait"
+            ? "Au retrait"
             : paymentMethodKey === "PAYDUNYA"
               ? "PayDunya"
-              : "Non precise";
+              : "Non précisé";
+        const isExpanded = expandedOrderId === order.id;
 
         return (
-          <motion.div
+          <div
             key={order.id || idx}
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.25, delay: idx * 0.03 }}
-            className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
+            className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden"
           >
-            <div className="flex">
-              {orderStatusFlow.map((step, i) => (
-                <div key={step} className={`flex-1 h-1 ${statusKey === "CANCELLED" ? "bg-red-400" : i <= currentStepIdx ? "bg-green-500" : "bg-gray-200"}`} />
-              ))}
-            </div>
-
-            <div className="p-5">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="font-bold text-gray-900">{order.clientName || "Client"}</p>
-                  <p className="text-xs text-gray-500">{order.clientPhone || ""}</p>
-                  {order.deliveryMode === "DELIVERY" && order.deliveryAddress && (
-                    <p className="text-xs text-gray-400 mt-1 flex items-center gap-1"><FiMapPin className="w-3 h-3" /> {order.deliveryAddress}</p>
-                  )}
+            {/* Compact header — always visible */}
+            <button
+              type="button"
+              onClick={() => setExpandedOrderId(isExpanded ? null : order.id)}
+              className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition"
+            >
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs font-bold text-gray-400">{getOrderRef(order)}</span>
+                  <span className="font-semibold text-gray-900 text-sm truncate">{order.clientName || "Client"}</span>
+                  <span className="text-xs text-gray-500">{itemCount} art.</span>
                 </div>
-                <div className="text-right">
-                  <Badge tone={statusOpt.tone}>{statusOpt.label}</Badge>
-                  <p className="text-[11px] mt-1 text-gray-500 font-semibold">{getOrderRef(order)}</p>
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                  <span className="font-bold text-amber-600 text-sm">{formatMoney(order.totalPrice)}</span>
+                  <Badge tone={order.deliveryMode === "DELIVERY" ? "blue" : "purple"} className="!text-[10px] !px-1.5 !py-0.5">
+                    {order.deliveryMode === "DELIVERY" ? "Livraison" : "Retrait"}
+                  </Badge>
+                  <span className="text-[11px] text-gray-400">{createdAtLabel}</span>
                 </div>
               </div>
-
-              <div className="mt-3 flex flex-wrap gap-2">
-                <Badge tone="gray">{itemCount} article(s)</Badge>
-                <Badge tone={order.deliveryMode === "DELIVERY" ? "blue" : "purple"}>
-                  {order.deliveryMode === "DELIVERY" ? "Livraison" : "Retrait boutique"}
-                </Badge>
-                <Badge tone="gray">{createdAtLabel}</Badge>
-              </div>
-
-              <div className="mt-4 space-y-1.5">
-                {(order.items || []).map((item, i) => (
-                  <div key={i} className="flex items-start justify-between text-sm gap-3">
-                    <span className="text-gray-700">{item.product?.name || "Article"} ×{item.quantity}</span>
-                    <span className="font-medium">{formatMoney(item.unitPrice * item.quantity)}</span>
-                  </div>
-                ))}
-              </div>
-
-              {variantLines.length > 0 && (
-                <div className="mt-3 bg-indigo-50 border border-indigo-100 rounded-xl p-3">
-                  <p className="text-xs font-semibold text-indigo-700 mb-1">Variantes commandees</p>
-                  <div className="space-y-1">
-                    {variantLines.map((line, i) => (
-                      <p key={`${order.id}-variant-${i}`} className="text-xs text-indigo-700">{line}</p>
-                    ))}
-                  </div>
-                </div>
+              <Badge tone={statusOpt.tone}>{statusOpt.label}</Badge>
+              {statusKey !== "DELIVERED" && statusKey !== "CANCELLED" && nextAction && (
+                <Button variant="primary" className="!px-2.5 !py-1.5 !text-xs hidden sm:flex" onClick={(e) => { e.stopPropagation(); handleOrderStatus(order.id, nextAction.next); }}>
+                  <FiCheck className="mr-1 w-3 h-3" /> {nextAction.label}
+                </Button>
               )}
+              <FiChevronDown className={`w-4 h-4 text-gray-400 shrink-0 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+            </button>
 
-              <div className="grid grid-cols-2 gap-3 mt-4 p-3 bg-gray-50 rounded-xl">
-                <div>
-                  <p className="text-xs text-gray-500">Total</p>
-                  <p className="font-bold text-amber-600">{formatMoney(order.totalPrice)}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Paiement</p>
-                  <p className="font-semibold text-gray-900 text-sm">{paymentLabel}</p>
-                </div>
-                {(order.deliveryMode === "DELIVERY" && order.deliveryAddress) && (
-                  <div>
-                    <p className="text-xs text-gray-500">Adresse</p>
-                    <p className="font-semibold text-gray-900 text-sm line-clamp-2">{order.deliveryAddress}</p>
+            {/* Expanded details */}
+            <AnimatePresence>
+              {isExpanded && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <div className="px-4 pb-4 border-t border-gray-100 pt-3 space-y-3">
+                    {/* Client info */}
+                    {(order.clientPhone || (order.deliveryMode === "DELIVERY" && order.deliveryAddress)) && (
+                      <div className="text-xs text-gray-500 space-y-0.5">
+                        {order.clientPhone && <p>Tél : {order.clientPhone}</p>}
+                        {order.deliveryMode === "DELIVERY" && order.deliveryAddress && (
+                          <p className="flex items-center gap-1"><FiMapPin className="w-3 h-3" /> {order.deliveryAddress}</p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Items list */}
+                    <div className="space-y-1">
+                      {(order.items || []).map((item, i) => (
+                        <div key={i} className="flex items-center justify-between text-sm">
+                          <span className="text-gray-700">{item.product?.name || "Article"} ×{item.quantity}</span>
+                          <span className="font-medium text-gray-900">{formatMoney(item.unitPrice * item.quantity)}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Variants */}
+                    {variantLines.length > 0 && (
+                      <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-2.5">
+                        <p className="text-[11px] font-semibold text-indigo-700 mb-1">Variantes</p>
+                        {variantLines.map((line, i) => (
+                          <p key={i} className="text-xs text-indigo-600">{line}</p>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Payment info */}
+                    <div className="flex items-center justify-between text-sm bg-gray-50 rounded-lg px-3 py-2">
+                      <span className="text-gray-500">Paiement : <span className="font-semibold text-gray-700">{paymentLabel}</span></span>
+                      <span className="font-bold text-amber-600">{formatMoney(order.totalPrice)}</span>
+                    </div>
+
+                    {note && (
+                      <p className="text-xs text-gray-600 italic bg-amber-50 px-3 py-2 rounded-lg">Note : {note}</p>
+                    )}
+
+                    {/* Actions */}
+                    {statusKey !== "DELIVERED" && statusKey !== "CANCELLED" && (
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        {nextAction && (
+                          <Button variant="primary" className="px-3 py-1.5 text-sm" onClick={() => handleOrderStatus(order.id, nextAction.next)}>
+                            <FiCheck className="mr-1" /> {nextAction.label}
+                          </Button>
+                        )}
+                        <Button variant="secondary" className="px-3 py-1.5 text-sm text-red-600" onClick={() => handleOrderStatus(order.id, "CANCELLED")}>
+                          <FiX className="mr-1" /> Annuler
+                        </Button>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-
-              <div className="mt-4 flex items-center gap-1">
-                {orderStatusFlow.map((step, i) => (
-                  <div key={`${order.id}-${step}`} className={`flex-1 h-1.5 rounded-full ${statusKey === "CANCELLED" ? "bg-red-200" : i <= currentStepIdx ? "bg-emerald-500" : "bg-gray-200"}`} />
-                ))}
-              </div>
-
-              {note && (
-                <p className="mt-3 text-sm text-gray-600 italic bg-amber-50 px-3 py-2 rounded-lg">Note: {note}</p>
+                </motion.div>
               )}
-
-              {statusKey !== "DELIVERED" && statusKey !== "CANCELLED" && (
-                <div className="flex flex-wrap gap-2 mt-4">
-                  {nextAction && (
-                    <Button variant="primary" className="px-3 py-2" onClick={() => handleOrderStatus(order.id, nextAction.next)}>
-                      <FiCheck className="mr-1" /> {nextAction.label}
-                    </Button>
-                  )}
-                  <Button variant="secondary" className="px-3 py-2 text-red-600" onClick={() => handleOrderStatus(order.id, "CANCELLED")}>
-                    <FiX className="mr-1" /> Annuler
-                  </Button>
-                </div>
-              )}
-            </div>
-          </motion.div>
+            </AnimatePresence>
+          </div>
         );
       })}
     </div>
+    {filteredOrders.length > visibleOrders && (
+      <button
+        type="button"
+        onClick={() => setVisibleOrders((v) => v + 10)}
+        className="w-full mt-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition"
+      >
+        Voir plus ({filteredOrders.length - visibleOrders} restantes)
+      </button>
+    )}
+    </>
   )}
 </div>
 </Card>
@@ -2987,9 +3008,9 @@ title="Aucun rendez-vous"
 subtitle="Les réservations apparaîtront ici."
 />
 ) : (
-<div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-  {filteredAppointments.map((row, idx) => {
-    const avatar = resolveMediaUrl(row.client?.picture || row.client?.avatar);
+<>
+<div className="space-y-2">
+  {filteredAppointments.slice(0, visibleAppts).map((row, idx) => {
     const paymentTone =
       row.paymentStatus === "paid"
         ? "green"
@@ -3014,181 +3035,111 @@ subtitle="Les réservations apparaîtront ici."
         ? "amber"
         : "gray";
     const statusLabel = getStatusLabel(row.status);
-
-    // Appointment progress steps
-    const apptSteps = ["Demandé", "Confirmé", "En cours", "Terminé"];
-    const apptStepIndex = row.status === "completed" ? 4
-      : (row.status === "confirmed" || row.status === "confirmed_on_site" || row.status === "paid") ? 2
-      : (row.status === "pending" || row.status === "pending_payment" || row.status === "pending_assignment") ? 1
-      : row.status === "cancelled" ? -1
-      : 0;
+    const isExpanded = expandedApptId === row.id;
     const isCancelled = row.status === "cancelled";
+    const isCompleted = row.status === "completed";
 
     return (
-      <motion.div
+      <div
         key={row.id || idx}
-        initial={{ opacity: 0, y: 18 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.25, delay: idx * 0.03 }}
-        className="bg-white rounded-2xl border border-gray-100 shadow-[0_20px_50px_-35px_rgba(15,23,42,0.55)] overflow-hidden"
+        className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden"
       >
-        {/* Top progress bar */}
-        <div className="flex h-1.5">
-          {apptSteps.map((_, i) => (
-            <div key={i} className={`flex-1 ${
-              isCancelled ? "bg-red-400"
-              : i < apptStepIndex ? "bg-green-500"
-              : i === apptStepIndex ? "bg-amber-400"
-              : "bg-gray-200"
-            }`} />
-          ))}
-        </div>
-
-        <div className="p-5">
-          {/* Client header */}
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-center gap-3">
-              {avatar ? (
-                <img
-                  src={avatar}
-                  alt={row.clientName}
-                  className="w-12 h-12 rounded-full object-cover ring-2 ring-white shadow-md"
-                />
-              ) : (
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 text-white font-bold flex items-center justify-center text-lg shadow-md">
-                  {(row.clientName || "C").charAt(0).toUpperCase()}
-                </div>
-              )}
-              <div>
-                <p className="font-bold text-gray-900">{row.clientName}</p>
-                {(row.client?.phoneNumber || row.client?.phone) && (
-                  <p className="text-xs text-gray-500 flex items-center gap-1">
-                    <FiUser className="w-3 h-3" /> {row.client.phoneNumber || row.client.phone}
-                  </p>
-                )}
-                {row.clientAddress && (
-                  <p className="text-xs text-gray-400 flex items-center gap-1">
-                    <FiMapPin className="w-3 h-3" /> {row.clientAddress}
-                  </p>
-                )}
-              </div>
+        {/* Compact header */}
+        <button
+          type="button"
+          onClick={() => setExpandedApptId(isExpanded ? null : row.id)}
+          className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition"
+        >
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-semibold text-gray-900 text-sm truncate">{row.clientName || "Client"}</span>
+              <span className="text-xs text-gray-500 truncate">{row.serviceName || "Service"}</span>
+              {row.service?.duration && <span className="text-[10px] text-gray-400">{row.service.duration}min</span>}
             </div>
-            <Badge tone={statusTone}>{statusLabel}</Badge>
-          </div>
-
-          {/* Details grid */}
-          <div className="mt-4 bg-gray-50 rounded-xl p-4">
-            <div className="grid sm:grid-cols-2 gap-3">
-              <div className="flex items-center gap-2">
-                <FiCalendar className="w-4 h-4 text-amber-500" />
-                <div>
-                  <p className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Date</p>
-                  <p className="font-semibold text-gray-900 text-sm">{formatDate(row.date)}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <FiClock className="w-4 h-4 text-blue-500" />
-                <div>
-                  <p className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Heure</p>
-                  <p className="font-semibold text-gray-900 text-sm">{toTime(row.time) || "\u2014"}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <FiScissors className="w-4 h-4 text-purple-500" />
-                <div>
-                  <p className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Service</p>
-                  <p className="font-semibold text-gray-900 text-sm">{row.serviceName}</p>
-                  {row.service?.duration && <p className="text-[11px] text-gray-400">{row.service.duration} min</p>}
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <FiUser className="w-4 h-4 text-green-500" />
-                <div>
-                  <p className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold">Employ\u00e9</p>
-                  <p className="font-semibold text-gray-900 text-sm">{row.staffName || "\u2014"}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-200">
-              <div className="flex items-center gap-2">
-                <FiCreditCard className="w-4 h-4 text-gray-400" />
-                <Badge tone={paymentTone}>{paymentLabel}</Badge>
-              </div>
-              <p className="font-bold text-amber-600 text-lg">{formatMoney(row.amount)}</p>
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
+              <span className="text-xs text-gray-500 flex items-center gap-1"><FiCalendar className="w-3 h-3" /> {formatDate(row.date)}</span>
+              <span className="text-xs text-gray-500 flex items-center gap-1"><FiClock className="w-3 h-3" /> {toTime(row.time) || "—"}</span>
+              <span className="font-bold text-amber-600 text-sm">{formatMoney(row.amount)}</span>
             </div>
           </div>
+          <Badge tone={statusTone}>{statusLabel}</Badge>
+          {!isCompleted && !isCancelled && (
+            <Button variant="primary" className="!px-2.5 !py-1.5 !text-xs hidden sm:flex" onClick={(e) => { e.stopPropagation(); setAppointmentStatus(row.id, "completed"); }}>
+              <FiCheck className="mr-1 w-3 h-3" /> Terminer
+            </Button>
+          )}
+          <FiChevronDown className={`w-4 h-4 text-gray-400 shrink-0 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+        </button>
 
-          {/* Progress timeline */}
-          <div className="mt-4 flex items-center gap-1">
-            {apptSteps.map((step, i) => (
-              <div key={i} className="flex-1 flex flex-col items-center">
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                  isCancelled ? "bg-red-100 text-red-600"
-                  : i < apptStepIndex ? "bg-green-500 text-white"
-                  : i === apptStepIndex ? "bg-amber-400 text-white"
-                  : "bg-gray-200 text-gray-400"
-                }`}>
-                  {isCancelled ? "\u2715" : i < apptStepIndex ? "\u2713" : i + 1}
+        {/* Expanded details */}
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <div className="px-4 pb-4 border-t border-gray-100 pt-3 space-y-3">
+                {/* Client details */}
+                <div className="text-xs text-gray-500 space-y-0.5">
+                  {(row.client?.phoneNumber || row.client?.phone) && (
+                    <p className="flex items-center gap-1"><FiUser className="w-3 h-3" /> {row.client.phoneNumber || row.client.phone}</p>
+                  )}
+                  {row.clientAddress && (
+                    <p className="flex items-center gap-1"><FiMapPin className="w-3 h-3" /> {row.clientAddress}</p>
+                  )}
+                  {row.staffName && (
+                    <p className="flex items-center gap-1"><FiScissors className="w-3 h-3" /> Employé : {row.staffName}</p>
+                  )}
                 </div>
-                <span className={`text-[10px] mt-1 font-medium ${
-                  isCancelled ? "text-red-400"
-                  : i < apptStepIndex ? "text-green-600"
-                  : i === apptStepIndex ? "text-amber-600"
-                  : "text-gray-400"
-                }`}>{step}</span>
-              </div>
-            ))}
-          </div>
 
-          {/* Action buttons */}
-          <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-gray-100">
-            <Button
-              variant="primary"
-              className="px-3 py-2 text-sm"
-              onClick={() => setAppointmentStatus(row.id, "completed")}
-              disabled={row.status === "completed" || row.status === "cancelled"}
-            >
-              <FiCheck className="mr-1.5" /> Terminer
-            </Button>
-            <Button
-              variant="secondary"
-              className="px-3 py-2 text-sm"
-              onClick={() => setAppointmentStatus(row.id, "cancelled")}
-              disabled={row.status === "cancelled" || row.status === "completed"}
-            >
-              <FiX className="mr-1.5" /> Annuler
-            </Button>
-            <Button
-              variant="secondary"
-              className="px-3 py-2 text-sm"
-              onClick={() => generateInvoiceForAppointment(row)}
-            >
-              <FiFileText className="mr-1.5" /> Facture
-            </Button>
-            <Button
-              variant="secondary"
-              className="px-3 py-2 text-sm"
-              onClick={() => refundAppointmentDeposit(row)}
-            >
-              <FiDollarSign className="mr-1.5" /> Rembourser
-            </Button>
-            <Button
-              variant="secondary"
-              className="px-3 py-2 text-sm"
-              onClick={() => {
-                setChatAppointment(row);
-                setShowChatModal(true);
-              }}
-            >
-              <FiMessageCircle className="mr-1.5" /> Chat
-            </Button>
-          </div>
-        </div>
-      </motion.div>
+                {/* Payment info */}
+                <div className="flex items-center justify-between text-sm bg-gray-50 rounded-lg px-3 py-2">
+                  <div className="flex items-center gap-2">
+                    <FiCreditCard className="w-4 h-4 text-gray-400" />
+                    <Badge tone={paymentTone}>{paymentLabel}</Badge>
+                  </div>
+                  <span className="font-bold text-amber-600">{formatMoney(row.amount)}</span>
+                </div>
+
+                {/* Actions */}
+                <div className="flex flex-wrap gap-2 pt-1">
+                  <Button variant="primary" className="px-3 py-1.5 text-sm" onClick={() => setAppointmentStatus(row.id, "completed")} disabled={isCompleted || isCancelled}>
+                    <FiCheck className="mr-1" /> Terminer
+                  </Button>
+                  <Button variant="secondary" className="px-3 py-1.5 text-sm" onClick={() => setAppointmentStatus(row.id, "cancelled")} disabled={isCancelled || isCompleted}>
+                    <FiX className="mr-1" /> Annuler
+                  </Button>
+                  <Button variant="secondary" className="px-3 py-1.5 text-sm" onClick={() => generateInvoiceForAppointment(row)}>
+                    <FiFileText className="mr-1" /> Facture
+                  </Button>
+                  <Button variant="secondary" className="px-3 py-1.5 text-sm" onClick={() => refundAppointmentDeposit(row)}>
+                    <FiDollarSign className="mr-1" /> Remb.
+                  </Button>
+                  <Button variant="secondary" className="px-3 py-1.5 text-sm" onClick={() => { setChatAppointment(row); setShowChatModal(true); }}>
+                    <FiMessageCircle className="mr-1" /> Chat
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     );
   })}
 </div>
+{filteredAppointments.length > visibleAppts && (
+  <button
+    type="button"
+    onClick={() => setVisibleAppts((v) => v + 10)}
+    className="w-full mt-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition"
+  >
+    Voir plus ({filteredAppointments.length - visibleAppts} restants)
+  </button>
+)}
+</>
 )}
 </div>
 </Card>
