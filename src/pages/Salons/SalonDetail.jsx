@@ -620,12 +620,12 @@ function SalonDetail() {
   return (
     <div className="min-h-screen bg-gray-50 relative">
       {/* Image Gallery — flush under navbar */}
-      <div className="relative z-10 -mt-14 h-[276px] sm:h-[396px] md:h-[476px] lg:h-[576px] max-h-[60vh] bg-gray-900 overflow-hidden">
+      <div className="relative z-10 -mt-14 h-[276px] sm:h-[396px] md:h-[420px] lg:h-[420px] max-h-[60vh] bg-gray-900 overflow-hidden">
         {galleryImages.length > 0 ? (
           <img
             src={galleryImages[currentImageIndex]}
             alt={salonData.name}
-            className="w-full h-full object-cover object-center brightness-[0.98] contrast-[1.05]"
+            className="w-full h-full object-cover object-center brightness-[0.98] contrast-[1.05] lg:brightness-100 lg:contrast-100"
             loading="eager"
             decoding="async"
             onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.parentElement.querySelector('.img-fallback')?.classList?.remove('hidden'); }}
@@ -636,7 +636,7 @@ function SalonDetail() {
           <span className="text-sm font-medium">Photo bientôt disponible</span>
         </div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.18),_transparent_55%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.18),_transparent_55%)] lg:hidden" />
         {/* Navigation arrows */}
         {galleryImages.length > 1 && (
           <>
