@@ -249,8 +249,7 @@ function Card({ className = "", children }) {
 return (
 <div
 className={cx(
-"bg-white/90 backdrop-blur rounded-3xl border border-gray-100 shadow-sm",
-"ring-1 ring-black/5",
+"bg-white rounded-2xl border border-gray-100 shadow-sm",
 className
 )}
 >
@@ -261,20 +260,20 @@ className
 
 function CardHeader({ icon, title, subtitle, right }) {
 return (
-<div className="p-6 border-b border-gray-100">
-<div className="flex items-start justify-between gap-4">
-<div className="flex items-start gap-3">
+<div className="px-4 py-3 sm:p-5 border-b border-gray-100">
+<div className="flex items-center justify-between gap-3">
+<div className="flex items-center gap-2.5">
 {icon ? (
-<div className="w-11 h-11 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center">
-<span className="text-xl">{icon}</span>
+<div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+<span className="text-base">{icon}</span>
 </div>
 ) : null}
-<div>
-<h2 className="text-lg md:text-xl font-extrabold text-gray-900">
+<div className="min-w-0">
+<h2 className="text-sm sm:text-base font-extrabold text-gray-900 truncate">
 {title}
 </h2>
 {subtitle ? (
-<p className="text-sm text-gray-500 mt-1">{subtitle}</p>
+<p className="text-xs text-gray-500 hidden sm:block">{subtitle}</p>
 ) : null}
 </div>
 </div>
@@ -345,20 +344,20 @@ toneClasses[tone] || toneClasses.gray
 // Carte Statistique pour dashboard
 function StatCard({ icon, label, value, color }) {
 	const toneClasses = {
-		amber: "bg-amber-100 text-amber-800",
-		blue: "bg-blue-100 text-blue-800",
-		green: "bg-green-100 text-green-800",
-		red: "bg-red-100 text-red-800",
-		gray: "bg-gray-100 text-gray-800",
+		amber: "bg-amber-50 text-amber-800 border-amber-100",
+		blue: "bg-blue-50 text-blue-800 border-blue-100",
+		green: "bg-green-50 text-green-800 border-green-100",
+		red: "bg-red-50 text-red-800 border-red-100",
+		gray: "bg-gray-50 text-gray-800 border-gray-100",
 	};
 	return (
-		<div className={`rounded-3xl p-5 flex items-center gap-4 shadow border border-gray-100 ${toneClasses[color] || toneClasses.gray}`}>
-			<div className="w-12 h-12 flex items-center justify-center rounded-2xl bg-white/60">
+		<div className={`rounded-xl p-2.5 sm:p-4 flex items-center gap-2.5 sm:gap-3 border ${toneClasses[color] || toneClasses.gray}`}>
+			<div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-lg bg-white/70 shrink-0">
 				{icon}
 			</div>
-			<div>
-				<div className="text-lg font-bold">{value}</div>
-				<div className="text-sm font-semibold text-gray-600">{label}</div>
+			<div className="min-w-0">
+				<div className="text-sm sm:text-base font-bold leading-tight truncate">{value}</div>
+				<div className="text-[10px] sm:text-xs text-gray-500 truncate">{label}</div>
 			</div>
 		</div>
 	);
@@ -2278,85 +2277,69 @@ Render
 ----------------------------- */
 return (
 <div className="min-h-screen bg-gray-50">
-{/* subtle premium background */}
-<div className="pointer-events-none fixed inset-0">
-<div className="absolute -top-24 -right-24 w-96 h-96 bg-amber-200/40 blur-3xl rounded-full" />
-<div className="absolute -bottom-24 -left-24 w-96 h-96 bg-blue-200/35 blur-3xl rounded-full" />
-</div>
 
-<div className="relative max-w-7xl mx-auto px-4 py-8">
+<div className="relative max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
 	{/* Stat Cards Section */}
-	<div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-6">
+	<div className="grid grid-cols-4 gap-2 sm:gap-3 mb-4 sm:mb-6">
 		<StatCard
-			icon={<FiTrendingUp className="text-amber-500" />} 
+			icon={<FiTrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" />} 
 			label="Revenus"
 			value={formatMoney(stats.totalRevenue)}
 			color="amber"
 		/>
 		<StatCard
-			icon={isBoutique ? <FiShoppingCart className="text-blue-500" /> : <FiCalendar className="text-blue-500" />} 
+			icon={isBoutique ? <FiShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" /> : <FiCalendar className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />} 
 			label={isBoutique ? "Commandes" : "RDV"}
 			value={isBoutique ? orders.length : stats.totalBookings}
 			color="blue"
 		/>
 		<StatCard
-			icon={<FiCheck className="text-green-500" />} 
+			icon={<FiCheck className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" />} 
 			label={isBoutique ? "Livrées" : "Terminés"}
 			value={isBoutique ? orders.filter(o => o.status === "DELIVERED").length : stats.completedBookings}
 			color="green"
 		/>
 		<StatCard
-			icon={<FiX className="text-red-500" />} 
+			icon={<FiX className="w-4 h-4 sm:w-5 sm:h-5 text-red-500" />} 
 			label="Annulés"
 			value={isBoutique ? orders.filter(o => o.status === "CANCELLED").length : stats.cancelledBookings}
 			color="red"
 		/>
 	</div>
+
 {/* Header */}
-<Card className="p-4 sm:p-6 mb-6 sticky top-4 z-10">
-<div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-<div className="min-w-0">
-<h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 truncate">
+<div className="bg-white rounded-2xl border border-gray-100 p-3 sm:p-5 mb-3 sm:mb-6">
+<div className="flex items-center justify-between gap-3">
+<h1 className="text-lg sm:text-2xl font-extrabold text-gray-900 truncate">
 {salonName}
 </h1>
-<p className="text-sm text-gray-500 mt-1">
-{isBoutique
-  ? "Gestion des commandes, articles, paiements, boutique, avis, promos, CRM et paramètres."
-  : "Gestion des RDV, services, équipe, planning, paiements, salon, avis, promos, CRM et paramètres."}
-</p>
-</div>
-
-<div className="flex items-center gap-2 flex-wrap justify-start md:justify-end">
+<div className="hidden md:flex items-center gap-2 flex-wrap">
 {isBoutique ? (
   <>
     <Badge tone="amber">
-      <FiShoppingCart className="mr-2" /> En attente: {orders.filter(o => o.status === "PENDING").length}
-    </Badge>
-    <Badge tone="green">
-      <FiCheck className="mr-2" /> Livrées: {orders.filter(o => o.status === "DELIVERED").length}
+      <FiShoppingCart className="mr-1" /> {orders.filter(o => o.status === "PENDING").length} en attente
     </Badge>
     <Badge tone="blue">
-      <FiBox className="mr-2" /> Articles: {products.length}
+      <FiBox className="mr-1" /> {products.length} articles
     </Badge>
   </>
 ) : (
   <>
     <Badge tone="blue">
-      <FiCalendar className="mr-2" /> À venir: {upcomingCount}
+      <FiCalendar className="mr-1" /> {upcomingCount} à venir
     </Badge>
     <Badge tone="green">
-      <FiCheck className="mr-2" /> Terminés: {completedCount}
-    </Badge>
-    <Badge tone="red">
-      <FiX className="mr-2" /> Annulés: {cancelledCount}
+      <FiCheck className="mr-1" /> {completedCount} terminés
     </Badge>
   </>
 )}
 </div>
 </div>
+</div>
 
-{/* Tabs */}
-<div className="mt-6 flex gap-2 overflow-x-auto pb-2 sm:flex-wrap sm:overflow-x-visible">
+{/* Tabs — sticky under navbar */}
+<div className="sticky top-14 z-20 -mx-3 sm:-mx-4 px-3 sm:px-4 bg-gray-50 border-b border-gray-200 mb-4 sm:mb-6">
+<div className="flex gap-1 overflow-x-auto pb-0 scrollbar-hide">
 {tabs.map((t) => {
 const Icon = t.icon;
 const active = activeTab === t.id;
@@ -2365,36 +2348,29 @@ return (
 key={t.id}
 onClick={() => setActiveTab(t.id)}
 className={cx(
-"inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-2xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap",
+"inline-flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold transition-all whitespace-nowrap border-b-2 -mb-px",
 active
-? "bg-gray-900 text-white shadow-sm"
-: "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
+? "border-gray-900 text-gray-900"
+: "border-transparent text-gray-500 hover:text-gray-700"
 )}
 >
-<Icon />
+<Icon className="w-3.5 h-3.5" />
 {t.label}
 </button>
 );
 })}
 </div>
-</Card>
+</div>
 
 <AnimatePresence mode="sync">
 
 {/* ------------------ ORDERS (Boutique) ------------------ */}
 {activeTab === "orders" && (
 <motion.div key="orders" {...pageAnim}>
-{/* Order Stats */}
-<div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-  <StatCard icon={<FiShoppingCart className="w-6 h-6" />} label="Total commandes" value={filteredOrders.length} color="amber" />
-  <StatCard icon={<FiClock className="w-6 h-6" />} label="En attente" value={filteredOrders.filter(o => o.status === "PENDING").length} color="amber" />
-  <StatCard icon={<FiPackage className="w-6 h-6" />} label="En préparation" value={filteredOrders.filter(o => ["CONFIRMED", "PREPARING"].includes(o.status)).length} color="blue" />
-  <StatCard icon={<FiCheck className="w-6 h-6" />} label="Livrées" value={filteredOrders.filter(o => o.status === "DELIVERED").length} color="green" />
-</div>
 
 <Card>
 <CardHeader icon={<FiShoppingCart />} title={`Commandes (${filteredOrders.length})`} subtitle="Gérez vos commandes boutique" />
-<div className="p-6">
+<div className="p-3 sm:p-5">
   <div className="flex flex-wrap gap-2 mb-5">
     {[{ value: "all", label: "Toutes" }, ...orderStatusOptions].map((opt) => (
       <button
@@ -2583,7 +2559,7 @@ active
       </Button>
     }
   />
-  <div className="p-6">
+  <div className="p-3 sm:p-5">
     <div className="mb-5">
       <div className="relative max-w-md">
         <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -2919,7 +2895,7 @@ active
 <motion.div key="appointments" {...pageAnim}>
 <Card>
 <CardHeader icon={<FiCalendar />} title="Rendez-vous" subtitle={`${filteredAppointments.length} rendez-vous affichés`} />
-<div className="p-6">
+<div className="p-3 sm:p-5">
 
 <div className="flex flex-col lg:flex-row gap-3 mb-5">
   <div className="relative lg:max-w-md w-full">
@@ -3159,7 +3135,7 @@ right={
 </Button>
 }
 />
-<div className="p-6">
+<div className="p-3 sm:p-5">
 <div className="grid md:grid-cols-12 gap-3 mb-5 items-end">
 <div className="md:col-span-4">
 <div className="relative">
@@ -3617,7 +3593,7 @@ right={
 </Button>
 }
 />
-<div className="p-6">
+<div className="p-3 sm:p-5">
 {loading ? (
 <p className="text-gray-500 font-semibold">Chargementé</p>
 ) : team.length === 0 ? (
@@ -4036,7 +4012,7 @@ Annuler
 <motion.div key="payments" {...pageAnim}>
 <Card>
 <CardHeader icon={<FiDollarSign />} title="Paiements" />
-<div className="p-6">
+<div className="p-3 sm:p-5">
 {/* ? petit fix: afficher payments si dispo, sinon fallback appointments (tu ne perds aucune donnée) */}
 <DataTable
 emptyLabel="Aucun paiement"
@@ -4100,7 +4076,7 @@ data={payments.length ? payments : appointments}
 <motion.div key="paymentMethods" {...pageAnim}>
 <Card>
 <CardHeader icon={<FiCreditCard />} title="Moyens de paiement du salon" right={null} />
-<div className="p-6">
+<div className="p-3 sm:p-5">
 {loadingPaymentMethods ? (
 <p className="text-gray-500 font-semibold">Chargementé</p>
 ) : paymentMethods.length === 0 ? (
@@ -4229,7 +4205,7 @@ right={
 </Button>
 }
 />
-<div className="p-6">
+<div className="p-3 sm:p-5">
 {portfolio.length === 0 ? (
 <EmptyState icon={<FiCamera />} title={isBoutique ? "Boutique vide" : "Salon vide"} subtitle="Ajoute des photos ou vidéos." />
 ) : (
@@ -4359,7 +4335,7 @@ right={
 </Select>
 }
 />
-<div className="p-6">
+<div className="p-3 sm:p-5">
 {filteredReviews.length === 0 ? (
 <EmptyState icon={<FiStar />} title="Aucun avis" subtitle="Les avis apparaîtront ici." />
 ) : (
@@ -4410,7 +4386,7 @@ right={
 </Button>
 }
 />
-<div className="p-6">
+<div className="p-3 sm:p-5">
 {promos.length === 0 ? (
 <EmptyState icon={<FiTag />} title="Aucune promo" subtitle="Ajoute des codes promo." />
 ) : (
@@ -4500,7 +4476,7 @@ Annuler
 <div className="grid lg:grid-cols-3 gap-4">
 <Card className="lg:col-span-1">
 <CardHeader icon={<FiUser />} title="Clients" />
-<div className="p-6">
+<div className="p-3 sm:p-5">
 <div className="relative mb-4">
 <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
 <input
@@ -4552,7 +4528,7 @@ selectedClient ? (
 ) : null
 }
 />
-<div className="p-6">
+<div className="p-3 sm:p-5">
 {!selectedClient ? (
 <EmptyState icon={<FiUser />} title="Sélectionne un client" subtitle="Clique sur un client à gauche pour voir sa fiche." />
 ) : (
@@ -4790,7 +4766,7 @@ right={
 </Button>
 }
 />
-<div className="p-6">
+<div className="p-3 sm:p-5">
 <div className="grid md:grid-cols-2 gap-6">
 <Input label="Nom du salon" value={salonSettings.name} onChange={(e) => setSalonSettings((p) => ({ ...p, name: e.target.value }))} />
 <Input label="Téléphone" value={salonSettings.phone} onChange={(e) => setSalonSettings((p) => ({ ...p, phone: e.target.value }))} />
@@ -4950,9 +4926,9 @@ Ajouter horaires
 <button
   type="button"
   onClick={openFloatingChat}
-  className="fixed bottom-[calc(env(safe-area-inset-bottom)+1rem)] right-4 sm:right-6 z-40 inline-flex items-center gap-2 rounded-full bg-gray-900 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-gray-900/25 transition hover:bg-gray-800"
+  className="fixed bottom-20 right-3 sm:right-6 z-40 inline-flex items-center justify-center gap-2 rounded-full bg-gray-900 w-12 h-12 sm:w-auto sm:h-auto sm:px-5 sm:py-3 text-sm font-semibold text-white shadow-lg shadow-gray-900/25 transition hover:bg-gray-800"
 >
-  <FiMessageCircle className="h-4 w-4" /> Chat rapide
+  <FiMessageCircle className="h-5 w-5 sm:h-4 sm:w-4" /> <span className="hidden sm:inline">Chat rapide</span>
 </button>
 
 <AppointmentChatModal
