@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect, useMemo } from 'react'
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { FiSearch, FiMapPin, FiChevronDown, FiX, FiCheck } from 'react-icons/fi'
 import { zones } from '../../data/zones'
 
@@ -26,11 +27,16 @@ export default function QuartierSelector({
     return () => { document.body.style.overflow = original }
   }, [open])
 
-  // Close on outside click (desktop)
+  const dropdownRef = useRef(null)
+  const [btnRect, setBtnRect] = useState(null)
+
+  // Close on outside click (desktop) — check both container and portal dropdown
   useEffect(() => {
     if (!open) return
     const handler = (e) => {
-      if (containerRef.current && !containerRef.current.contains(e.target)) {
+      const inContainer = containerRef.current && containerRef.current.contains(e.target)
+      const inDropdown = dropdownRef.current && dropdownRef.current.contains(e.target)
+      if (!inContainer && !inDropdown) {
         setOpen(false)
         setSearch('')
       }
@@ -38,6 +44,24 @@ export default function QuartierSelector({
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [open])
+
+  // Track button position for desktop portal dropdown
+  const updateBtnRect = useCallback(() => {
+    if (containerRef.current) {
+      setBtnRect(containerRef.current.getBoundingClientRect())
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!open) return
+    updateBtnRect()
+    window.addEventListener('scroll', updateBtnRect, true)
+    window.addEventListener('resize', updateBtnRect)
+    return () => {
+      window.removeEventListener('scroll', updateBtnRect, true)
+      window.removeEventListener('resize', updateBtnRect)
+    }
+  }, [open, updateBtnRect])
 
   // Focus search when opening
   useEffect(() => {
@@ -82,8 +106,8 @@ export default function QuartierSelector({
   const isForm = variant === 'form'
 
   const buttonClasses = isForm
-    ? 'w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-primary-500 outline-none transition text-base bg-gray-50 text-left flex items-center justify-between gap-2'
-    : 'w-full md:w-56 pl-10 pr-8 py-3 rounded-xl bg-white/95 shadow-sm border border-white/30 focus:ring-2 focus:ring-amber-400 focus:border-transparent text-left flex items-center justify-between gap-2 cursor-pointer'
+    ? 'w-full px-3 py-2 rounded-lg border border-primary-300 focus:border-primary-500 outline-none transition text-base bg-primary-50 text-left flex items-center justify-between gap-2'
+    : 'w-full md:w-56 pl-10 pr-8 py-3 rounded-xl bg-white/95 shadow-sm border border-white/30 focus:ring-2 focus:ring-gold-400 focus:border-transparent text-left flex items-center justify-between gap-2 cursor-pointer'
 
   // Shared list content
   const listContent = (
@@ -94,23 +118,23 @@ export default function QuartierSelector({
         tabIndex={0}
         onClick={() => handleSelect('')}
         onKeyDown={(e) => e.key === 'Enter' && handleSelect('')}
-        className={`px-4 py-3 text-sm cursor-pointer flex items-center gap-2 transition active:bg-gray-100 ${
-          !value ? 'bg-amber-50 text-amber-700 font-medium' : 'text-gray-600 hover:bg-gray-50'
+        className={`px-4 py-3 text-sm cursor-pointer flex items-center gap-2 transition active:bg-primary-100 ${
+          !value ? 'bg-gold-50 text-gold-700 font-medium' : 'text-primary-600 hover:bg-primary-50'
         }`}
       >
         <FiMapPin className="w-4 h-4 flex-shrink-0" />
         <span>{placeholder}</span>
-        {!value && <FiCheck className="w-4 h-4 ml-auto text-amber-600" />}
+        {!value && <FiCheck className="w-4 h-4 ml-auto text-gold-600" />}
       </div>
 
       {filtered.length === 0 ? (
-        <div className="px-4 py-10 text-center text-sm text-gray-400">
+        <div className="px-4 py-10 text-center text-sm text-primary-400">
           Aucun quartier trouvé pour « {search} »
         </div>
       ) : (
         filtered.map(z => (
           <div key={z.zone}>
-            <div className="px-4 py-2 text-xs font-semibold text-gray-500 bg-gray-50 uppercase tracking-wide sticky top-0 border-t border-gray-100">
+            <div className="px-4 py-2 text-xs font-semibold text-primary-500 bg-primary-50 uppercase tracking-wide sticky top-0 border-t border-primary-100">
               {z.zone}
             </div>
             {z.quartiers.map(q => (
@@ -120,14 +144,14 @@ export default function QuartierSelector({
                 tabIndex={0}
                 onClick={() => handleSelect(q)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSelect(q)}
-                className={`px-4 py-3 pl-6 text-sm cursor-pointer flex items-center gap-2 transition active:bg-gray-100 ${
+                className={`px-4 py-3 pl-6 text-sm cursor-pointer flex items-center gap-2 transition active:bg-primary-100 ${
                   value === q
-                    ? 'bg-amber-50 text-amber-700 font-medium'
-                    : 'text-gray-700 hover:bg-gray-50'
+                    ? 'bg-gold-50 text-gold-700 font-medium'
+                    : 'text-primary-700 hover:bg-primary-50'
                 }`}
               >
                 <span className="truncate">{q}</span>
-                {value === q && <FiCheck className="w-4 h-4 ml-auto text-amber-600 flex-shrink-0" />}
+                {value === q && <FiCheck className="w-4 h-4 ml-auto text-gold-600 flex-shrink-0" />}
               </div>
             ))}
           </div>
@@ -140,14 +164,14 @@ export default function QuartierSelector({
     <div ref={containerRef} className={`relative ${className}`}>
       {/* Trigger button */}
       {!isForm && (
-        <FiMapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 z-10 pointer-events-none" />
+        <FiMapPin className="absolute left-3 top-1/2 -translate-y-1/2 text-primary-400 w-5 h-5 z-10 pointer-events-none" />
       )}
       <button
         type="button"
         onClick={() => setOpen(!open)}
         className={buttonClasses}
       >
-        <span className={value ? 'text-gray-900 truncate' : 'text-gray-400 truncate'}>
+        <span className={value ? 'text-primary-900 truncate' : 'text-primary-400 truncate'}>
           {value || placeholder}
         </span>
         <span className="flex items-center gap-1 flex-shrink-0">
@@ -157,106 +181,124 @@ export default function QuartierSelector({
               tabIndex={0}
               onClick={handleClear}
               onKeyDown={(e) => e.key === 'Enter' && handleClear(e)}
-              className="p-0.5 rounded-full hover:bg-gray-200 transition"
+              className="p-0.5 rounded-full hover:bg-primary-200 transition"
             >
-              <FiX className="w-3.5 h-3.5 text-gray-400" />
+              <FiX className="w-3.5 h-3.5 text-primary-400" />
             </span>
           )}
-          <FiChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`} />
+          <FiChevronDown className={`w-4 h-4 text-primary-400 transition-transform ${open ? 'rotate-180' : ''}`} />
         </span>
       </button>
 
-      {/* ========== MOBILE: Full-screen overlay ========== */}
-      {open && (
-        <div className="md:hidden fixed inset-0 z-[9999] flex flex-col bg-white">
-          {/* Header */}
-          <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-white">
-            <h3 className="text-base font-semibold text-gray-900">Choisir un quartier</h3>
-            <button
-              type="button"
-              onClick={() => { setOpen(false); setSearch('') }}
-              className="p-2 -mr-2 rounded-full hover:bg-gray-100 transition"
-            >
-              <FiX className="w-5 h-5 text-gray-500" />
-            </button>
-          </div>
+      {/* ========== MOBILE: Bottom sheet overlay ========== */}
+      {open && createPortal(
+        <div className="md:hidden fixed inset-0 z-[9999]">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => { setOpen(false); setSearch('') }}
+          />
+          {/* Sheet */}
+          <div className="absolute bottom-0 left-0 right-0 max-h-[70vh] flex flex-col bg-white rounded-t-2xl shadow-2xl animate-slide-up">
+            {/* Drag handle */}
+            <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
+              <div className="w-10 h-1 rounded-full bg-primary-300" />
+            </div>
+            {/* Header */}
+            <div className="flex-shrink-0 flex items-center justify-between px-4 py-2 border-b border-primary-200">
+              <h3 className="text-base font-semibold text-primary-900">Choisir un quartier</h3>
+              <button
+                type="button"
+                onClick={() => { setOpen(false); setSearch('') }}
+                className="p-2 -mr-2 rounded-full hover:bg-primary-100 transition"
+              >
+                <FiX className="w-5 h-5 text-primary-500" />
+              </button>
+            </div>
 
-          {/* Search */}
-          <div className="flex-shrink-0 px-4 py-3 border-b border-gray-100 bg-gray-50">
-            <div className="relative">
-              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                ref={inputRef}
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Rechercher un quartier..."
-                className="w-full pl-9 pr-9 py-2.5 text-base rounded-xl border border-gray-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 outline-none transition bg-white"
-              />
+            {/* Search */}
+            <div className="flex-shrink-0 px-4 py-3 border-b border-primary-100 bg-primary-50">
+              <div className="relative">
+                <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-primary-400 w-4 h-4" />
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Rechercher un quartier..."
+                  className="w-full pl-9 pr-9 py-2.5 text-base rounded-xl border border-primary-200 focus:border-gold-400 focus:ring-2 focus:ring-gold-400/20 outline-none transition bg-white"
+                />
+                {search && (
+                  <button
+                    type="button"
+                    onClick={() => setSearch('')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-primary-200"
+                  >
+                    <FiX className="w-4 h-4 text-primary-400" />
+                  </button>
+                )}
+              </div>
               {search && (
-                <button
-                  type="button"
-                  onClick={() => setSearch('')}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-gray-200"
-                >
-                  <FiX className="w-4 h-4 text-gray-400" />
-                </button>
+                <div className="text-xs text-primary-400 mt-1.5 px-1">
+                  {totalResults} résultat{totalResults !== 1 ? 's' : ''}
+                </div>
               )}
             </div>
-            {search && (
-              <div className="text-xs text-gray-400 mt-1.5 px-1">
-                {totalResults} résultat{totalResults !== 1 ? 's' : ''}
-              </div>
-            )}
-          </div>
 
-          {/* Scrollable list */}
-          <div className="flex-1 overflow-y-auto overscroll-contain -webkit-overflow-scrolling-touch">
-            {listContent}
-            {/* Bottom safe area padding */}
-            <div className="h-8" />
+            {/* Scrollable list */}
+            <div className="flex-1 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
+              {listContent}
+              <div className="h-8" />
+            </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* ========== DESKTOP: Dropdown ========== */}
-      {open && (
-        <div className="hidden md:block absolute z-50 mt-1 w-72 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden"
-          style={{ right: isForm ? undefined : 0 }}
+      {/* ========== DESKTOP: Dropdown via portal ========== */}
+      {open && btnRect && createPortal(
+        <div
+          ref={dropdownRef}
+          className="hidden md:block fixed z-[9999] w-96 bg-white rounded-xl shadow-2xl border border-primary-200 overflow-hidden"
+          style={{
+            top: btnRect.bottom + 6,
+            left: Math.min(btnRect.right - 384, window.innerWidth - 400),
+          }}
         >
           {/* Search input */}
-          <div className="p-2 border-b border-gray-100">
+          <div className="p-2.5 border-b border-primary-100">
             <div className="relative">
-              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-primary-400 w-4 h-4" />
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Rechercher un quartier..."
-                className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-gray-200 focus:border-amber-400 focus:ring-1 focus:ring-amber-400 outline-none transition bg-gray-50"
+                className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-primary-200 focus:border-gold-400 focus:ring-1 focus:ring-gold-400 outline-none transition bg-primary-50"
               />
               {search && (
                 <button
                   type="button"
                   onClick={() => setSearch('')}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-gray-200"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-primary-200"
                 >
-                  <FiX className="w-3 h-3 text-gray-400" />
+                  <FiX className="w-3 h-3 text-primary-400" />
                 </button>
               )}
             </div>
             {search && (
-              <div className="text-xs text-gray-400 mt-1 px-1">
+              <div className="text-xs text-primary-400 mt-1 px-1">
                 {totalResults} résultat{totalResults !== 1 ? 's' : ''}
               </div>
             )}
           </div>
 
           {/* Scrollable list */}
-          <div className="max-h-[50vh] overflow-y-auto overscroll-contain">
+          <div className="max-h-[60vh] overflow-y-auto overscroll-contain">
             {listContent}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
