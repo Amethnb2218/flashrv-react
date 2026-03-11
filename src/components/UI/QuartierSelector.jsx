@@ -192,23 +192,37 @@ export default function QuartierSelector({
 
       {/* ========== MOBILE: Bottom sheet overlay ========== */}
       {open && createPortal(
-        <div className="md:hidden fixed inset-0 z-[9999]">
-          {/* Backdrop */}
+        <>
+          {/* Backdrop — full screen dark overlay */}
           <div
-            className="absolute inset-0 bg-black/40"
+            className="md:hidden"
+            style={{ position: 'fixed', inset: 0, zIndex: 9998, backgroundColor: 'rgba(0,0,0,0.45)' }}
             onClick={() => { setOpen(false); setSearch('') }}
           />
-          {/* Sheet — max 65% of screen height */}
+          {/* Sheet — pinned to bottom, max 65% height */}
           <div
-            className="absolute bottom-0 left-0 right-0 flex flex-col bg-white rounded-t-2xl shadow-2xl animate-slide-up"
-            style={{ maxHeight: '65vh' }}
+            className="md:hidden"
+            style={{
+              position: 'fixed',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              zIndex: 9999,
+              maxHeight: '65vh',
+              display: 'flex',
+              flexDirection: 'column',
+              backgroundColor: '#fff',
+              borderTopLeftRadius: 16,
+              borderTopRightRadius: 16,
+              boxShadow: '0 -4px 30px rgba(0,0,0,0.15)',
+            }}
           >
             {/* Drag handle */}
-            <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
-              <div className="w-10 h-1 rounded-full bg-primary-300" />
+            <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 12, paddingBottom: 4, flexShrink: 0 }}>
+              <div style={{ width: 40, height: 4, borderRadius: 4, backgroundColor: '#cbd5e1' }} />
             </div>
             {/* Header */}
-            <div className="flex-shrink-0 flex items-center justify-between px-4 py-2 border-b border-primary-200">
+            <div className="flex items-center justify-between px-4 py-2 border-b border-primary-200" style={{ flexShrink: 0 }}>
               <h3 className="text-base font-semibold text-primary-900">Choisir un quartier</h3>
               <button
                 type="button"
@@ -220,7 +234,7 @@ export default function QuartierSelector({
             </div>
 
             {/* Search */}
-            <div className="flex-shrink-0 px-4 py-3 border-b border-primary-100 bg-primary-50">
+            <div className="px-4 py-3 border-b border-primary-100 bg-primary-50" style={{ flexShrink: 0 }}>
               <div className="relative">
                 <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-primary-400 w-4 h-4" />
                 <input
@@ -249,12 +263,12 @@ export default function QuartierSelector({
             </div>
 
             {/* Scrollable list */}
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
+            <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
               {listContent}
-              <div className="h-8" />
+              <div style={{ height: 32 }} />
             </div>
           </div>
-        </div>,
+        </>,
         document.body
       )}
 
