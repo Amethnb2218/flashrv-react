@@ -260,13 +260,24 @@ export default function QuartierSelector({
         <div
           ref={dropdownRef}
           className="hidden md:block fixed z-[9999] w-96 bg-white rounded-xl shadow-2xl border border-primary-200 overflow-hidden"
-          style={{
-            top: btnRect.bottom + 6,
-            left: Math.min(btnRect.right - 384, window.innerWidth - 400),
-          }}
+          style={(() => {
+            const spaceBelow = window.innerHeight - btnRect.bottom - 12
+            const spaceAbove = btnRect.top - 12
+            const openAbove = spaceBelow < 280 && spaceAbove > spaceBelow
+            const maxH = openAbove ? Math.min(spaceAbove, window.innerHeight * 0.6) : Math.min(spaceBelow, window.innerHeight * 0.6)
+            return {
+              ...(openAbove
+                ? { bottom: window.innerHeight - btnRect.top + 6 }
+                : { top: btnRect.bottom + 6 }),
+              left: Math.min(btnRect.right - 384, window.innerWidth - 400),
+              maxHeight: maxH,
+              display: 'flex',
+              flexDirection: 'column',
+            }
+          })()}
         >
           {/* Search input */}
-          <div className="p-2.5 border-b border-primary-100">
+          <div className="p-2.5 border-b border-primary-100 flex-shrink-0">
             <div className="relative">
               <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-primary-400 w-4 h-4" />
               <input
@@ -294,7 +305,7 @@ export default function QuartierSelector({
           </div>
 
           {/* Scrollable list */}
-          <div className="max-h-[60vh] overflow-y-auto overscroll-contain">
+          <div className="flex-1 overflow-y-auto overscroll-contain">
             {listContent}
           </div>
         </div>,
