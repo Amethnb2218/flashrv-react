@@ -2279,32 +2279,21 @@ return (
 <div className="min-h-screen bg-gray-50">
 
 <div className="relative max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
-	{/* Stat Cards Section */}
-	<div className="grid grid-cols-4 gap-2 sm:gap-3 mb-4 sm:mb-6">
-		<StatCard
-			icon={<FiTrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500" />} 
-			label="Revenus"
-			value={formatMoney(stats.totalRevenue)}
-			color="amber"
-		/>
-		<StatCard
-			icon={isBoutique ? <FiShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" /> : <FiCalendar className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />} 
-			label={isBoutique ? "Commandes" : "RDV"}
-			value={isBoutique ? orders.length : stats.totalBookings}
-			color="blue"
-		/>
-		<StatCard
-			icon={<FiCheck className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" />} 
-			label={isBoutique ? "Livrées" : "Terminés"}
-			value={isBoutique ? orders.filter(o => o.status === "DELIVERED").length : stats.completedBookings}
-			color="green"
-		/>
-		<StatCard
-			icon={<FiX className="w-4 h-4 sm:w-5 sm:h-5 text-red-500" />} 
-			label="Annulés"
-			value={isBoutique ? orders.filter(o => o.status === "CANCELLED").length : stats.cancelledBookings}
-			color="red"
-		/>
+	{/* Stats strip */}
+	<div className="bg-white rounded-xl border border-gray-100 px-1 py-2.5 mb-3 sm:mb-6">
+		<div className="grid grid-cols-4 divide-x divide-gray-100">
+			{[
+				{ label: "Revenus", value: formatMoney(stats.totalRevenue), accent: "text-amber-600" },
+				{ label: isBoutique ? "Commandes" : "RDV", value: isBoutique ? orders.length : stats.totalBookings },
+				{ label: isBoutique ? "Livrées" : "Terminés", value: isBoutique ? orders.filter(o => o.status === "DELIVERED").length : stats.completedBookings, accent: "text-green-600" },
+				{ label: "Annulés", value: isBoutique ? orders.filter(o => o.status === "CANCELLED").length : stats.cancelledBookings, accent: (isBoutique ? orders.filter(o => o.status === "CANCELLED").length : stats.cancelledBookings) > 0 ? "text-red-600" : undefined },
+			].map((s, i) => (
+				<div key={i} className="text-center px-1">
+					<div className="text-[10px] sm:text-xs text-gray-500 leading-tight">{s.label}</div>
+					<div className={`text-sm sm:text-lg font-bold leading-snug ${s.accent || "text-gray-900"}`}>{s.value}</div>
+				</div>
+			))}
+		</div>
 	</div>
 
 {/* Header */}
@@ -2930,18 +2919,27 @@ active
   </div>
 </div>
 
-{/* -- Stat cards -- */}
+{/* -- Stats strip -- */}
 {(() => {
   const total = filteredAppointments.length;
   const upcoming = filteredAppointments.filter((a) => a.status === "confirmed" || a.status === "confirmed_on_site" || a.status === "paid" || a.status === "pending" || a.status === "pending_payment" || a.status === "pending_assignment").length;
   const completed = filteredAppointments.filter((a) => a.status === "completed").length;
   const revenue = filteredAppointments.filter((a) => a.status === "completed").reduce((s, a) => s + (a.amount || 0), 0);
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-      <StatCard icon={<FiCalendar className="w-6 h-6" />} label="Total" value={total} color="blue" />
-      <StatCard icon={<FiClock className="w-6 h-6" />} label="À venir" value={upcoming} color="amber" />
-      <StatCard icon={<FiCheck className="w-6 h-6" />} label="Terminés" value={completed} color="green" />
-      <StatCard icon={<FiDollarSign className="w-6 h-6" />} label="Revenus" value={formatMoney(revenue)} color="amber" />
+    <div className="bg-white rounded-xl border border-gray-100 px-1 py-2.5 mb-4">
+      <div className="grid grid-cols-4 divide-x divide-gray-100">
+        {[
+          { label: "Total", value: total },
+          { label: "À venir", value: upcoming, accent: "text-amber-600" },
+          { label: "Terminés", value: completed, accent: "text-green-600" },
+          { label: "Revenus", value: formatMoney(revenue), accent: "text-amber-600" },
+        ].map((s, i) => (
+          <div key={i} className="text-center px-1">
+            <div className="text-[10px] sm:text-xs text-gray-500 leading-tight">{s.label}</div>
+            <div className={`text-sm sm:text-lg font-bold leading-snug ${s.accent || "text-gray-900"}`}>{s.value}</div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 })()}
@@ -4633,53 +4631,19 @@ statsPeriod === p.id ? "bg-gray-900 text-white" : "bg-white text-gray-700 border
 <p className="text-xs text-gray-500 mt-2">Période : {formatPeriodLabel(statsPeriod)}</p>
 </div>
 
-<div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-<div className="bg-white rounded-3xl p-5 shadow-sm border border-gray-100">
-<div className="flex items-center justify-between">
-<div>
-<p className="text-gray-500 text-sm font-semibold">Chiffre d'affaires</p>
-<p className="text-2xl font-extrabold text-gray-900 mt-1">{formatMoney(stats.totalRevenue)}</p>
-</div>
-<div className="w-12 h-12 bg-green-100 rounded-2xl flex items-center justify-center">
-<FiDollarSign className="w-6 h-6 text-green-700" />
-</div>
-</div>
-</div>
-
-<div className="bg-white rounded-3xl p-5 shadow-sm border border-gray-100">
-<div className="flex items-center justify-between">
-<div>
-<p className="text-gray-500 text-sm font-semibold">Réservations</p>
-<p className="text-2xl font-extrabold text-gray-900 mt-1">{stats.totalBookings}</p>
-</div>
-<div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center">
-<FiCalendar className="w-6 h-6 text-blue-700" />
-</div>
-</div>
-</div>
-
-<div className="bg-white rounded-3xl p-5 shadow-sm border border-gray-100">
-<div className="flex items-center justify-between">
-<div>
-<p className="text-gray-500 text-sm font-semibold">Panier moyen</p>
-<p className="text-2xl font-extrabold text-gray-900 mt-1">{formatMoney(stats.averageTicket)}</p>
-</div>
-<div className="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center">
-<FiTrendingUp className="w-6 h-6 text-amber-700" />
-</div>
-</div>
-</div>
-
-<div className="bg-white rounded-3xl p-5 shadow-sm border border-gray-100">
-<div className="flex items-center justify-between">
-<div>
-<p className="text-gray-500 text-sm font-semibold">Annulations</p>
-<p className="text-2xl font-extrabold text-gray-900 mt-1">{stats.cancelledBookings}</p>
-</div>
-<div className="w-12 h-12 bg-red-100 rounded-2xl flex items-center justify-center">
-<FiX className="w-6 h-6 text-red-700" />
-</div>
-</div>
+<div className="bg-white rounded-xl border border-gray-100 px-1 py-2.5 mb-4">
+<div className="grid grid-cols-4 divide-x divide-gray-100">
+  {[
+    { label: "C.A.", value: formatMoney(stats.totalRevenue), accent: "text-green-600" },
+    { label: "Réservations", value: stats.totalBookings },
+    { label: "Panier moy.", value: formatMoney(stats.averageTicket), accent: "text-amber-600" },
+    { label: "Annulations", value: stats.cancelledBookings, accent: stats.cancelledBookings > 0 ? "text-red-600" : undefined },
+  ].map((s, i) => (
+    <div key={i} className="text-center px-1">
+      <div className="text-[10px] sm:text-xs text-gray-500 leading-tight">{s.label}</div>
+      <div className={`text-sm sm:text-lg font-bold leading-snug ${s.accent || "text-gray-900"}`}>{s.value}</div>
+    </div>
+  ))}
 </div>
 </div>
 
