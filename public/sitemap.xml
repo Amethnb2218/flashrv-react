@@ -2,26 +2,61 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
         <loc>https://styleflow.me/</loc>
+        <lastmod>2026-03-11</lastmod>
         <changefreq>daily</changefreq>
         <priority>1.0</priority>
     </url>
     <url>
         <loc>https://styleflow.me/salons</loc>
+        <lastmod>2026-03-11</lastmod>
         <changefreq>daily</changefreq>
         <priority>0.9</priority>
     </url>
     <url>
         <loc>https://styleflow.me/salons?businessType=BOUTIQUE</loc>
+        <lastmod>2026-03-11</lastmod>
         <changefreq>daily</changefreq>
         <priority>0.8</priority>
     </url>
     <url>
+        <loc>https://styleflow.me/salons?zone=Dakar+Plateau</loc>
+        <lastmod>2026-03-11</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://styleflow.me/salons?zone=Almadies</loc>
+        <lastmod>2026-03-11</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://styleflow.me/salons?zone=M%C3%A9dina</loc>
+        <lastmod>2026-03-11</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://styleflow.me/salons?zone=Ouakam</loc>
+        <lastmod>2026-03-11</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
         <loc>https://styleflow.me/login</loc>
+        <lastmod>2026-03-11</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.4</priority>
+    </url>
+    <url>
+        <loc>https://styleflow.me/register</loc>
+        <lastmod>2026-03-11</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://styleflow.me/register</loc>
+        <loc>https://styleflow.me/register?role=pro</loc>
+        <lastmod>2026-03-11</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.6</priority>
     </url>

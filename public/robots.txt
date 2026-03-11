@@ -1,9 +1,23 @@
 User-agent: *
 Allow: /
+Allow: /salons
+Allow: /salons?businessType=BOUTIQUE
 Disallow: /admin
 Disallow: /pro/dashboard
 Disallow: /dashboard
 Disallow: /profile
 Disallow: /payment
+Disallow: /checkout
+Disallow: /order
+
+# Google
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 1
+
+# Bing
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 2
 
 Sitemap: https://styleflow.me/sitemap.xml

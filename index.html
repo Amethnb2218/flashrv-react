@@ -16,46 +16,121 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
     <!-- SEO -->
-    <title>StyleFlow — Réservation salon coiffure, beauté & boutiques au Sénégal</title>
-    <meta name="description" content="StyleFlow : trouvez et réservez les meilleurs salons de coiffure, soins beauté et boutiques à Dakar et au Sénégal. Réservation en ligne 24h/24, paiement sécurisé." />
-    <meta name="keywords" content="StyleFlow, salon coiffure Dakar, réservation coiffeur Sénégal, beauté Dakar, boutique mode Sénégal, réservation en ligne, coiffure africaine, soins beauté" />
+    <title>StyleFlow — Salon de coiffure, réservation en ligne & boutique au Sénégal | Dakar</title>
+    <meta name="description" content="StyleFlow est la plateforme n°1 au Sénégal pour réserver un salon de coiffure, un institut de beauté ou commander dans une boutique en ligne à Dakar. Réservation en ligne 24h/24, paiement sécurisé Wave & Orange Money." />
+    <meta name="keywords" content="salon de coiffure, salon de coiffure Dakar, réservation en ligne, réservation coiffeur, boutique en ligne Sénégal, beauté Dakar, coiffure africaine, tresses, soins beauté Dakar, coiffeur Sénégal, barbier Dakar, manucure Dakar, StyleFlow, réserver salon, prendre rendez-vous coiffeur, boutique mode Dakar, vêtements Sénégal, achat en ligne Sénégal" />
     <meta name="author" content="StyleFlow" />
     <link rel="canonical" href="https://styleflow.me/" />
-    <meta name="robots" content="index, follow" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <meta name="googlebot" content="index, follow" />
+    <meta name="geo.region" content="SN-DK" />
+    <meta name="geo.placename" content="Dakar" />
+    <meta name="geo.position" content="14.6928;-17.4467" />
+    <meta name="ICBM" content="14.6928, -17.4467" />
+    <meta name="language" content="French" />
+    <meta name="revisit-after" content="3 days" />
+    <meta name="rating" content="general" />
     
     <!-- Open Graph (Facebook / LinkedIn) -->
-    <meta property="og:title" content="StyleFlow — Réservation salon coiffure, beauté & boutiques au Sénégal" />
-    <meta property="og:description" content="Trouvez et réservez les meilleurs salons de coiffure, beauté et boutiques à Dakar. Réservation en ligne 24h/24." />
+    <meta property="og:title" content="StyleFlow — Salon de coiffure & réservation en ligne au Sénégal" />
+    <meta property="og:description" content="Trouvez et réservez les meilleurs salons de coiffure, beauté et boutiques à Dakar. Réservation en ligne 24h/24, paiement Wave & Orange Money." />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://styleflow.me/" />
     <meta property="og:site_name" content="StyleFlow" />
     <meta property="og:locale" content="fr_SN" />
+    <meta property="og:image" content="https://styleflow.me/icons/icon-512.png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:image:alt" content="StyleFlow - Réservation salon de coiffure au Sénégal" />
     
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="StyleFlow — Salons & Boutiques au Sénégal" />
-    <meta name="twitter:description" content="Réservez votre salon de coiffure ou commandez en boutique en quelques clics." />
+    <meta name="twitter:title" content="StyleFlow — Salon de coiffure & boutique en ligne au Sénégal" />
+    <meta name="twitter:description" content="Réservez votre salon de coiffure ou commandez en boutique en quelques clics à Dakar." />
+    <meta name="twitter:image" content="https://styleflow.me/icons/icon-512.png" />
+    <meta name="twitter:image:alt" content="StyleFlow - Réservation salon de coiffure" />
     
     <!-- Structured Data (JSON-LD) -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "StyleFlow",
-      "url": "https://styleflow.me",
-      "description": "Plateforme de réservation de salons de coiffure, beauté et boutiques au Sénégal",
-      "applicationCategory": "BusinessApplication",
-      "operatingSystem": "Web",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "XOF"
-      },
-      "areaServed": {
-        "@type": "Country",
-        "name": "Sénégal"
-      }
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://styleflow.me/#website",
+          "url": "https://styleflow.me",
+          "name": "StyleFlow",
+          "description": "Plateforme de réservation de salons de coiffure, beauté et boutiques en ligne au Sénégal",
+          "inLanguage": "fr",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://styleflow.me/salons?q={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "Organization",
+          "@id": "https://styleflow.me/#organization",
+          "name": "StyleFlow",
+          "url": "https://styleflow.me",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://styleflow.me/icons/icon-512.png"
+          },
+          "sameAs": [],
+          "description": "StyleFlow est la plateforme n°1 de réservation de salons de coiffure et boutiques en ligne au Sénégal.",
+          "areaServed": {
+            "@type": "Country",
+            "name": "Sénégal"
+          },
+          "serviceType": ["Réservation salon de coiffure", "Boutique en ligne", "Réservation beauté", "Réservation barbier"]
+        },
+        {
+          "@type": "WebApplication",
+          "name": "StyleFlow",
+          "url": "https://styleflow.me",
+          "applicationCategory": "BusinessApplication",
+          "operatingSystem": "Web",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "XOF"
+          },
+          "areaServed": {
+            "@type": "Country",
+            "name": "Sénégal"
+          }
+        },
+        {
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "Comment réserver un salon de coiffure à Dakar ?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Sur StyleFlow, choisissez un salon, sélectionnez vos services, choisissez une date et un créneau, puis confirmez votre réservation. Paiement sécurisé par Wave ou Orange Money."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Est-ce que StyleFlow est gratuit ?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Oui, StyleFlow est entièrement gratuit pour les clients. Vous pouvez réserver dans n'importe quel salon ou commander dans une boutique sans frais supplémentaires."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Quels moyens de paiement sont acceptés ?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "StyleFlow accepte Wave, Orange Money et le paiement sur place au salon ou à la boutique."
+              }
+            }
+          ]
+        }
+      ]
     }
     </script>
     
