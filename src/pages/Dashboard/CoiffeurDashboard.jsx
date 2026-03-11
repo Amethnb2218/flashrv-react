@@ -249,7 +249,7 @@ function Card({ className = "", children }) {
 return (
 <div
 className={cx(
-"bg-white rounded-2xl border border-gray-100 shadow-sm",
+"bg-white rounded-2xl border border-primary-100 shadow-sm",
 className
 )}
 >
@@ -260,20 +260,20 @@ className
 
 function CardHeader({ icon, title, subtitle, right }) {
 return (
-<div className="px-4 py-3 sm:p-5 border-b border-gray-100">
+<div className="px-4 py-3 sm:p-5 border-b border-primary-100">
 <div className="flex items-center justify-between gap-3">
 <div className="flex items-center gap-2.5">
 {icon ? (
-<div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+<div className="w-9 h-9 rounded-xl bg-gold-100 text-gold-800 flex items-center justify-center shrink-0">
 <span className="text-base">{icon}</span>
 </div>
 ) : null}
 <div className="min-w-0">
-<h2 className="text-sm sm:text-base font-extrabold text-gray-900 truncate">
+<h2 className="text-sm sm:text-base font-extrabold text-primary-900 truncate">
 {title}
 </h2>
 {subtitle ? (
-<p className="text-xs text-gray-500 hidden sm:block">{subtitle}</p>
+<p className="text-xs text-primary-500 hidden sm:block">{subtitle}</p>
 ) : null}
 </div>
 </div>
@@ -286,10 +286,10 @@ return (
 function Button({ variant = "primary", className = "", ...props }) {
 const styles =
 variant === "primary"
-? "bg-gray-900 text-white hover:bg-gray-800"
+? "bg-primary-900 text-white hover:bg-primary-800"
 : variant === "danger"
 ? "bg-red-600 text-white hover:bg-red-700"
-: "border border-gray-200 bg-white text-gray-800 hover:bg-gray-50";
+: "border border-primary-200 bg-white text-primary-800 hover:bg-primary-50";
 
 return (
 <button
@@ -312,7 +312,7 @@ return (
 title={title}
 className={cx(
 "inline-flex items-center justify-center w-10 h-10 rounded-2xl",
-"border border-gray-200 bg-white text-gray-800 hover:bg-gray-50 transition-colors",
+"border border-primary-200 bg-white text-primary-800 hover:bg-primary-50 transition-colors",
 "active:translate-y-[1px]",
 className
 )}
@@ -322,8 +322,8 @@ className
 
 function Badge({ tone = "gray", children }) {
 const toneClasses = {
-gray: "bg-gray-100 text-gray-800",
-amber: "bg-amber-100 text-amber-800",
+gray: "bg-primary-100 text-primary-800",
+amber: "bg-gold-100 text-gold-800",
 green: "bg-green-100 text-green-800",
 red: "bg-red-100 text-red-800",
 blue: "bg-blue-100 text-blue-800",
@@ -344,11 +344,11 @@ toneClasses[tone] || toneClasses.gray
 // Carte Statistique pour dashboard
 function StatCard({ icon, label, value, color }) {
 	const toneClasses = {
-		amber: "bg-amber-50 text-amber-800 border-amber-100",
+		amber: "bg-gold-50 text-gold-800 border-gold-100",
 		blue: "bg-blue-50 text-blue-800 border-blue-100",
 		green: "bg-green-50 text-green-800 border-green-100",
 		red: "bg-red-50 text-red-800 border-red-100",
-		gray: "bg-gray-50 text-gray-800 border-gray-100",
+		gray: "bg-primary-50 text-primary-800 border-primary-100",
 	};
 	return (
 		<div className={`rounded-xl p-2.5 sm:p-4 flex items-center gap-2.5 sm:gap-3 border ${toneClasses[color] || toneClasses.gray}`}>
@@ -357,7 +357,7 @@ function StatCard({ icon, label, value, color }) {
 			</div>
 			<div className="min-w-0">
 				<div className="text-sm sm:text-base font-bold leading-tight truncate">{value}</div>
-				<div className="text-[10px] sm:text-xs text-gray-500 truncate">{label}</div>
+				<div className="text-[10px] sm:text-xs text-primary-500 truncate">{label}</div>
 			</div>
 		</div>
 	);
@@ -367,18 +367,18 @@ function Input({ label, className = "", hint, ...props }) {
 return (
 <div className={className}>
 {label ? (
-<label className="block text-sm font-semibold text-gray-700 mb-1">
+<label className="block text-sm font-semibold text-primary-700 mb-1">
 {label}
 </label>
 ) : null}
 <input
 {...props}
 className={cx(
-"w-full px-4 py-2.5 border border-gray-200 rounded-2xl bg-white",
-"focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+"w-full px-4 py-2.5 border border-primary-200 rounded-2xl bg-white",
+"focus:ring-2 focus:ring-gold-500 focus:border-transparent outline-none"
 )}
 />
-{hint ? <p className="text-xs text-gray-500 mt-1">{hint}</p> : null}
+{hint ? <p className="text-xs text-primary-500 mt-1">{hint}</p> : null}
 </div>
 );
 }
@@ -387,15 +387,15 @@ function Textarea({ label, className = "", ...props }) {
 return (
 <div className={className}>
 {label ? (
-<label className="block text-sm font-semibold text-gray-700 mb-1">
+<label className="block text-sm font-semibold text-primary-700 mb-1">
 {label}
 </label>
 ) : null}
 <textarea
 {...props}
 className={cx(
-"w-full px-4 py-2.5 border border-gray-200 rounded-2xl bg-white",
-"focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+"w-full px-4 py-2.5 border border-primary-200 rounded-2xl bg-white",
+"focus:ring-2 focus:ring-gold-500 focus:border-transparent outline-none"
 )}
 />
 </div>
@@ -406,7 +406,7 @@ function Select({ label, className = "", children, ...props }) {
 return (
 <div className={className}>
 {label ? (
-<label className="block text-sm font-semibold text-gray-700 mb-1">
+<label className="block text-sm font-semibold text-primary-700 mb-1">
 {label}
 </label>
 ) : null}
@@ -414,13 +414,13 @@ return (
 <select
 {...props}
 className={cx(
-"w-full appearance-none px-4 py-2.5 border border-gray-200 rounded-2xl bg-white",
-"focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+"w-full appearance-none px-4 py-2.5 border border-primary-200 rounded-2xl bg-white",
+"focus:ring-2 focus:ring-gold-500 focus:border-transparent outline-none"
 )}
 >
 {children}
 </select>
-<FiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
+<FiChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-primary-400" />
 </div>
 </div>
 );
@@ -429,11 +429,11 @@ className={cx(
 function EmptyState({ icon, title, subtitle, action }) {
 return (
 <div className="text-center py-12">
-<div className="w-16 h-16 rounded-3xl bg-gray-50 border border-gray-100 mx-auto flex items-center justify-center">
-<div className="text-gray-300 text-3xl">{icon}</div>
+<div className="w-16 h-16 rounded-3xl bg-primary-50 border border-primary-100 mx-auto flex items-center justify-center">
+<div className="text-primary-300 text-3xl">{icon}</div>
 </div>
-<h3 className="text-lg font-extrabold text-gray-900 mt-4">{title}</h3>
-{subtitle ? <p className="text-gray-500 mt-1">{subtitle}</p> : null}
+<h3 className="text-lg font-extrabold text-primary-900 mt-4">{title}</h3>
+{subtitle ? <p className="text-primary-500 mt-1">{subtitle}</p> : null}
 {action ? <div className="mt-5">{action}</div> : null}
 </div>
 );
@@ -452,16 +452,16 @@ onClick={onClose}
 >
 <motion.div
 {...modalAnim}
-className="bg-white w-full max-w-lg rounded-3xl shadow-xl border border-gray-100 overflow-hidden"
+className="bg-white w-full max-w-lg rounded-3xl shadow-xl border border-primary-100 overflow-hidden"
 onClick={(e) => e.stopPropagation()}
 >
-<div className="p-5 border-b border-gray-100 flex items-center justify-between">
-<h3 className="text-base md:text-lg font-extrabold text-gray-900">
+<div className="p-5 border-b border-primary-100 flex items-center justify-between">
+<h3 className="text-base md:text-lg font-extrabold text-primary-900">
 {title}
 </h3>
 <button
 onClick={onClose}
-className="w-10 h-10 rounded-2xl border border-gray-200 hover:bg-gray-50 flex items-center justify-center"
+className="w-10 h-10 rounded-2xl border border-primary-200 hover:bg-primary-50 flex items-center justify-center"
 title="Fermer"
 >
 <FiXCircle />
@@ -469,7 +469,7 @@ title="Fermer"
 </div>
 <div className="p-5 max-h-[70vh] overflow-y-auto">{children}</div>
 {footer ? (
-<div className="p-5 border-t border-gray-100 bg-gray-50">
+<div className="p-5 border-t border-primary-100 bg-primary-50">
 {footer}
 </div>
 ) : null}
@@ -485,14 +485,14 @@ if (!data?.length) {
 return <EmptyState icon={<FiGrid />} title={emptyLabel || "Aucune donnée"} />;
 }
 return (
-<div className="overflow-x-auto rounded-2xl border border-gray-100">
+<div className="overflow-x-auto rounded-2xl border border-primary-100">
 <table className="min-w-full text-left">
-<thead className="bg-gray-50">
+<thead className="bg-primary-50">
 <tr>
 {columns.map((c) => (
 <th
 key={c.key}
-className="px-4 py-3 text-xs font-extrabold uppercase tracking-wide text-gray-600"
+className="px-4 py-3 text-xs font-extrabold uppercase tracking-wide text-primary-600"
 >
 {c.label}
 </th>
@@ -504,12 +504,12 @@ className="px-4 py-3 text-xs font-extrabold uppercase tracking-wide text-gray-60
 <tr
 key={row.id || idx}
 className={cx(
-"border-t border-gray-100",
-"hover:bg-gray-50/60 transition-colors"
+"border-t border-primary-100",
+"hover:bg-primary-50/60 transition-colors"
 )}
 >
 {columns.map((c) => (
-<td key={c.key} className="px-4 py-3 text-sm text-gray-800">
+<td key={c.key} className="px-4 py-3 text-sm text-primary-800">
 {typeof c.render === "function" ? c.render(row) : row[c.key] ?? "-"}
 </td>
 ))}
@@ -2276,30 +2276,30 @@ useEffect(() => {
 Render
 ----------------------------- */
 return (
-<div className="min-h-screen bg-gray-50">
+<div className="min-h-screen bg-primary-50">
 
 <div className="relative max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
 	{/* Stats strip */}
-	<div className="bg-white rounded-xl border border-gray-100 px-1 py-2.5 mb-3 sm:mb-6">
-		<div className="grid grid-cols-4 divide-x divide-gray-100">
+	<div className="bg-white rounded-xl border border-primary-100 px-1 py-2.5 mb-3 sm:mb-6">
+		<div className="grid grid-cols-4 divide-x divide-primary-100">
 			{[
-				{ label: "Revenus", value: formatMoney(stats.totalRevenue), accent: "text-amber-600" },
+				{ label: "Revenus", value: formatMoney(stats.totalRevenue), accent: "text-gold-600" },
 				{ label: isBoutique ? "Commandes" : "RDV", value: isBoutique ? orders.length : stats.totalBookings },
 				{ label: isBoutique ? "Livrées" : "Terminés", value: isBoutique ? orders.filter(o => o.status === "DELIVERED").length : stats.completedBookings, accent: "text-green-600" },
 				{ label: "Annulés", value: isBoutique ? orders.filter(o => o.status === "CANCELLED").length : stats.cancelledBookings, accent: (isBoutique ? orders.filter(o => o.status === "CANCELLED").length : stats.cancelledBookings) > 0 ? "text-red-600" : undefined },
 			].map((s, i) => (
 				<div key={i} className="text-center px-1">
-					<div className="text-[10px] sm:text-xs text-gray-500 leading-tight">{s.label}</div>
-					<div className={`text-sm sm:text-lg font-bold leading-snug ${s.accent || "text-gray-900"}`}>{s.value}</div>
+					<div className="text-[10px] sm:text-xs text-primary-500 leading-tight">{s.label}</div>
+					<div className={`text-sm sm:text-lg font-bold leading-snug ${s.accent || "text-primary-900"}`}>{s.value}</div>
 				</div>
 			))}
 		</div>
 	</div>
 
 {/* Header */}
-<div className="bg-white rounded-2xl border border-gray-100 p-3 sm:p-5 mb-3 sm:mb-6">
+<div className="bg-white rounded-2xl border border-primary-100 p-3 sm:p-5 mb-3 sm:mb-6">
 <div className="flex items-center justify-between gap-3">
-<h1 className="text-lg sm:text-2xl font-extrabold text-gray-900 truncate">
+<h1 className="text-lg sm:text-2xl font-extrabold text-primary-900 truncate">
 {salonName}
 </h1>
 <div className="hidden md:flex items-center gap-2 flex-wrap">
@@ -2327,7 +2327,7 @@ return (
 </div>
 
 {/* Tabs — sticky under navbar */}
-<div className="sticky top-14 z-20 -mx-3 sm:-mx-4 px-3 sm:px-4 bg-gray-50 border-b border-gray-200 mb-4 sm:mb-6">
+<div className="sticky top-14 z-20 -mx-3 sm:-mx-4 px-3 sm:px-4 bg-primary-50 border-b border-primary-200 mb-4 sm:mb-6">
 <div className="flex gap-1 overflow-x-auto pb-0 scrollbar-hide">
 {tabs.map((t) => {
 const Icon = t.icon;
@@ -2339,8 +2339,8 @@ onClick={() => setActiveTab(t.id)}
 className={cx(
 "inline-flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold transition-all whitespace-nowrap border-b-2 -mb-px",
 active
-? "border-gray-900 text-gray-900"
-: "border-transparent text-gray-500 hover:text-gray-700"
+? "border-primary-900 text-primary-900"
+: "border-transparent text-primary-500 hover:text-primary-700"
 )}
 >
 <Icon className="w-3.5 h-3.5" />
@@ -2368,8 +2368,8 @@ active
         className={cx(
           "px-3 py-1.5 rounded-xl text-sm font-medium transition",
           orderFilter === opt.value
-            ? "bg-gray-900 text-white"
-            : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
+            ? "bg-primary-900 text-white"
+            : "bg-white border border-primary-200 text-primary-600 hover:bg-primary-50"
         )}
       >
         {opt.label}
@@ -2378,17 +2378,17 @@ active
   </div>
   <div className="mb-5">
     <div className="relative max-w-md">
-      <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+      <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-primary-400" />
       <input
         value={orderQuery}
         onChange={(e) => setOrderQuery(e.target.value)}
         placeholder="Rechercher client, téléphone, article ou ID..."
-        className="w-full pl-11 pr-4 py-2.5 border border-gray-200 rounded-2xl bg-white focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+        className="w-full pl-11 pr-4 py-2.5 border border-primary-200 rounded-2xl bg-white focus:ring-2 focus:ring-gold-500 focus:border-transparent outline-none"
       />
     </div>
   </div>
   {loading ? (
-    <p className="text-gray-500 font-semibold">Chargement…</p>
+    <p className="text-primary-500 font-semibold">Chargement…</p>
   ) : filteredOrders.length === 0 ? (
     <EmptyState icon={<FiShoppingCart />} title="Aucune commande" subtitle="Les commandes apparaîtront ici." />
   ) : (
@@ -2416,26 +2416,26 @@ active
         return (
           <div
             key={order.id || idx}
-            className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden"
+            className="bg-white rounded-xl border border-primary-100 shadow-sm overflow-hidden"
           >
             {/* Compact header — always visible */}
             <button
               type="button"
               onClick={() => setExpandedOrderId(isExpanded ? null : order.id)}
-              className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition"
+              className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-primary-50 transition"
             >
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xs font-bold text-gray-400">{getOrderRef(order)}</span>
-                  <span className="font-semibold text-gray-900 text-sm truncate">{order.clientName || "Client"}</span>
-                  <span className="text-xs text-gray-500">{itemCount} art.</span>
+                  <span className="text-xs font-bold text-primary-400">{getOrderRef(order)}</span>
+                  <span className="font-semibold text-primary-900 text-sm truncate">{order.clientName || "Client"}</span>
+                  <span className="text-xs text-primary-500">{itemCount} art.</span>
                 </div>
                 <div className="flex items-center gap-2 mt-1 flex-wrap">
-                  <span className="font-bold text-amber-600 text-sm">{formatMoney(order.totalPrice)}</span>
+                  <span className="font-bold text-gold-600 text-sm">{formatMoney(order.totalPrice)}</span>
                   <Badge tone={order.deliveryMode === "DELIVERY" ? "blue" : "purple"} className="!text-[10px] !px-1.5 !py-0.5">
                     {order.deliveryMode === "DELIVERY" ? "Livraison" : "Retrait"}
                   </Badge>
-                  <span className="text-[11px] text-gray-400">{createdAtLabel}</span>
+                  <span className="text-[11px] text-primary-400">{createdAtLabel}</span>
                 </div>
               </div>
               <Badge tone={statusOpt.tone}>{statusOpt.label}</Badge>
@@ -2444,7 +2444,7 @@ active
                   <FiCheck className="mr-1 w-3 h-3" /> {nextAction.label}
                 </Button>
               )}
-              <FiChevronDown className={`w-4 h-4 text-gray-400 shrink-0 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+              <FiChevronDown className={`w-4 h-4 text-primary-400 shrink-0 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
             </button>
 
             {/* Expanded details */}
@@ -2457,10 +2457,10 @@ active
                   transition={{ duration: 0.2 }}
                   className="overflow-hidden"
                 >
-                  <div className="px-4 pb-4 border-t border-gray-100 pt-3 space-y-3">
+                  <div className="px-4 pb-4 border-t border-primary-100 pt-3 space-y-3">
                     {/* Client info */}
                     {(order.clientPhone || (order.deliveryMode === "DELIVERY" && order.deliveryAddress)) && (
-                      <div className="text-xs text-gray-500 space-y-0.5">
+                      <div className="text-xs text-primary-500 space-y-0.5">
                         {order.clientPhone && <p>Tél : {order.clientPhone}</p>}
                         {order.deliveryMode === "DELIVERY" && order.deliveryAddress && (
                           <p className="flex items-center gap-1"><FiMapPin className="w-3 h-3" /> {order.deliveryAddress}</p>
@@ -2472,8 +2472,8 @@ active
                     <div className="space-y-1">
                       {(order.items || []).map((item, i) => (
                         <div key={i} className="flex items-center justify-between text-sm">
-                          <span className="text-gray-700">{item.product?.name || "Article"} ×{item.quantity}</span>
-                          <span className="font-medium text-gray-900">{formatMoney(item.unitPrice * item.quantity)}</span>
+                          <span className="text-primary-700">{item.product?.name || "Article"} ×{item.quantity}</span>
+                          <span className="font-medium text-primary-900">{formatMoney(item.unitPrice * item.quantity)}</span>
                         </div>
                       ))}
                     </div>
@@ -2489,13 +2489,13 @@ active
                     )}
 
                     {/* Payment info */}
-                    <div className="flex items-center justify-between text-sm bg-gray-50 rounded-lg px-3 py-2">
-                      <span className="text-gray-500">Paiement : <span className="font-semibold text-gray-700">{paymentLabel}</span></span>
-                      <span className="font-bold text-amber-600">{formatMoney(order.totalPrice)}</span>
+                    <div className="flex items-center justify-between text-sm bg-primary-50 rounded-lg px-3 py-2">
+                      <span className="text-primary-500">Paiement : <span className="font-semibold text-primary-700">{paymentLabel}</span></span>
+                      <span className="font-bold text-gold-600">{formatMoney(order.totalPrice)}</span>
                     </div>
 
                     {note && (
-                      <p className="text-xs text-gray-600 italic bg-amber-50 px-3 py-2 rounded-lg">Note : {note}</p>
+                      <p className="text-xs text-primary-600 italic bg-gold-50 px-3 py-2 rounded-lg">Note : {note}</p>
                     )}
 
                     {/* Actions */}
@@ -2523,7 +2523,7 @@ active
       <button
         type="button"
         onClick={() => setVisibleOrders((v) => v + 10)}
-        className="w-full mt-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition"
+        className="w-full mt-4 py-2.5 rounded-xl border border-primary-200 text-sm font-medium text-primary-600 hover:bg-primary-50 transition"
       >
         Voir plus ({filteredOrders.length - visibleOrders} restantes)
       </button>
@@ -2551,18 +2551,18 @@ active
   <div className="p-3 sm:p-5">
     <div className="mb-5">
       <div className="relative max-w-md">
-        <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+        <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-primary-400" />
         <input
           value={productQuery}
           onChange={(e) => setProductQuery(e.target.value)}
           placeholder="Rechercher un article..."
-          className="w-full pl-11 pr-4 py-2.5 border border-gray-200 rounded-2xl bg-white focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+          className="w-full pl-11 pr-4 py-2.5 border border-primary-200 rounded-2xl bg-white focus:ring-2 focus:ring-gold-500 focus:border-transparent outline-none"
         />
       </div>
     </div>
 
     {loading ? (
-      <p className="text-gray-500 font-semibold">Chargement...</p>
+      <p className="text-primary-500 font-semibold">Chargement...</p>
     ) : filteredProducts.length === 0 ? (
       <EmptyState icon={<FiBox />} title="Aucun article" subtitle="Ajoutez vos articles pour commencer à vendre." />
     ) : (
@@ -2578,10 +2578,10 @@ active
               key={product.id}
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden"
+              className="bg-white rounded-2xl border border-primary-100 shadow-sm overflow-hidden"
             >
               {img ? (
-                <div className="relative w-full h-56 bg-gray-50 flex items-center justify-center">
+                <div className="relative w-full h-56 bg-primary-50 flex items-center justify-center">
                   <img src={img} alt={product.name} className="w-full h-full object-contain p-2" />
                   {allImages.length > 1 && (
                     <span className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-0.5 rounded-full">
@@ -2590,20 +2590,20 @@ active
                   )}
                 </div>
               ) : (
-                <div className="w-full h-56 bg-gray-100 flex items-center justify-center">
-                  <FiBox className="w-10 h-10 text-gray-300" />
+                <div className="w-full h-56 bg-primary-100 flex items-center justify-center">
+                  <FiBox className="w-10 h-10 text-primary-300" />
                 </div>
               )}
               <div className="p-4">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="font-semibold text-gray-900">{product.name}</h3>
-                    {product.category && <p className="text-xs text-gray-500">{product.category}</p>}
+                    <h3 className="font-semibold text-primary-900">{product.name}</h3>
+                    {product.category && <p className="text-xs text-primary-500">{product.category}</p>}
                   </div>
-                  <p className="font-bold text-amber-600">{formatMoney(product.price)}</p>
+                  <p className="font-bold text-gold-600">{formatMoney(product.price)}</p>
                 </div>
                 {product.description && (
-                  <p className="text-sm text-gray-600 mt-2 line-clamp-2">{product.description}</p>
+                  <p className="text-sm text-primary-600 mt-2 line-clamp-2">{product.description}</p>
                 )}
                 <div className="flex items-center justify-between mt-3">
                   <span className={cx(
@@ -2618,9 +2618,9 @@ active
                         setEditingProduct(mapProductToForm(product));
                         setShowProductModal(true);
                       }}
-                      className="p-2 rounded-xl hover:bg-gray-100"
+                      className="p-2 rounded-xl hover:bg-primary-100"
                     >
-                      <FiEdit2 className="w-4 h-4 text-gray-500" />
+                      <FiEdit2 className="w-4 h-4 text-primary-500" />
                     </button>
                     <button
                       onClick={() => handleDeleteProduct(product.id)}
@@ -2647,12 +2647,12 @@ active
       animate={{ opacity: 1, scale: 1 }}
       className="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6"
     >
-      <h2 className="text-xl font-bold text-gray-900 mb-4">
+      <h2 className="text-xl font-bold text-primary-900 mb-4">
         {editingProduct?.id ? "Modifier l'article" : "Nouvel article"}
       </h2>
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Nom *</label>
+          <label className="block text-sm font-medium text-primary-700 mb-1">Nom *</label>
           <input
             value={(editingProduct || newProduct).name}
             onChange={(e) => {
@@ -2661,12 +2661,12 @@ active
                 ? setEditingProduct((p) => ({ ...p, name: val }))
                 : setNewProduct((p) => ({ ...p, name: val }));
             }}
-            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
+            className="w-full px-4 py-2.5 border border-primary-200 rounded-xl focus:ring-2 focus:ring-gold-500 outline-none"
             placeholder="Nom de l'article"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+          <label className="block text-sm font-medium text-primary-700 mb-1">Description</label>
           <textarea
             value={(editingProduct || newProduct).description}
             onChange={(e) => {
@@ -2676,13 +2676,13 @@ active
                 : setNewProduct((p) => ({ ...p, description: val }));
             }}
             rows={3}
-            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
+            className="w-full px-4 py-2.5 border border-primary-200 rounded-xl focus:ring-2 focus:ring-gold-500 outline-none"
             placeholder="Description de l'article"
           />
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Prix (FCFA) *</label>
+            <label className="block text-sm font-medium text-primary-700 mb-1">Prix (FCFA) *</label>
             <input
               type="number"
               value={(editingProduct || newProduct).price}
@@ -2692,12 +2692,12 @@ active
                   ? setEditingProduct((p) => ({ ...p, price: val }))
                   : setNewProduct((p) => ({ ...p, price: val }));
               }}
-              className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
+              className="w-full px-4 py-2.5 border border-primary-200 rounded-xl focus:ring-2 focus:ring-gold-500 outline-none"
               placeholder="0"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Stock</label>
+            <label className="block text-sm font-medium text-primary-700 mb-1">Stock</label>
             <input
               type="number"
               value={(editingProduct || newProduct).stock}
@@ -2707,13 +2707,13 @@ active
                   ? setEditingProduct((p) => ({ ...p, stock: val }))
                   : setNewProduct((p) => ({ ...p, stock: val }));
               }}
-              className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
+              className="w-full px-4 py-2.5 border border-primary-200 rounded-xl focus:ring-2 focus:ring-gold-500 outline-none"
               placeholder="0"
             />
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Categorie</label>
+          <label className="block text-sm font-medium text-primary-700 mb-1">Categorie</label>
           <input
             value={(editingProduct || newProduct).category}
             onChange={(e) => {
@@ -2722,12 +2722,12 @@ active
                 ? setEditingProduct((p) => ({ ...p, category: val }))
                 : setNewProduct((p) => ({ ...p, category: val }));
             }}
-            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
+            className="w-full px-4 py-2.5 border border-primary-200 rounded-xl focus:ring-2 focus:ring-gold-500 outline-none"
             placeholder="ex: Accessoires, Vetements"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Tailles (optionnel)</label>
+          <label className="block text-sm font-medium text-primary-700 mb-1">Tailles (optionnel)</label>
           <input
             value={(editingProduct || newProduct).sizesText}
             onChange={(e) => {
@@ -2736,12 +2736,12 @@ active
                 ? setEditingProduct((p) => ({ ...p, sizesText: val }))
                 : setNewProduct((p) => ({ ...p, sizesText: val }));
             }}
-            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
+            className="w-full px-4 py-2.5 border border-primary-200 rounded-xl focus:ring-2 focus:ring-gold-500 outline-none"
             placeholder="ex: S, M, L, XL"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Couleurs</label>
+          <label className="block text-sm font-medium text-primary-700 mb-1">Couleurs</label>
           <input
             value={(editingProduct || newProduct).colorsText}
             onChange={(e) => {
@@ -2750,13 +2750,13 @@ active
                 ? setEditingProduct((p) => ({ ...p, colorsText: val }))
                 : setNewProduct((p) => ({ ...p, colorsText: val }));
             }}
-            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
+            className="w-full px-4 py-2.5 border border-primary-200 rounded-xl focus:ring-2 focus:ring-gold-500 outline-none"
             placeholder="ex: Rouge, Vert, Noir"
           />
-          <p className="text-xs text-gray-500 mt-1">Optionnel. Laissez vide si l'article n'a pas de declinaison de couleur.</p>
+          <p className="text-xs text-primary-500 mt-1">Optionnel. Laissez vide si l'article n'a pas de declinaison de couleur.</p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Couleurs disponibles</label>
+          <label className="block text-sm font-medium text-primary-700 mb-1">Couleurs disponibles</label>
           <input
             value={(editingProduct || newProduct).availableColorsText}
             onChange={(e) => {
@@ -2765,13 +2765,13 @@ active
                 ? setEditingProduct((p) => ({ ...p, availableColorsText: val }))
                 : setNewProduct((p) => ({ ...p, availableColorsText: val }));
             }}
-            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
+            className="w-full px-4 py-2.5 border border-primary-200 rounded-xl focus:ring-2 focus:ring-gold-500 outline-none"
             placeholder="ex: Rouge, Noir"
           />
-          <p className="text-xs text-gray-500 mt-1">Optionnel. Si vide mais que des couleurs sont definies, toutes les couleurs seront disponibles cote client.</p>
+          <p className="text-xs text-primary-500 mt-1">Optionnel. Si vide mais que des couleurs sont definies, toutes les couleurs seront disponibles cote client.</p>
         </div>
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">Livraison *</label>
+          <label className="block text-sm font-medium text-primary-700">Livraison *</label>
           <div className="grid grid-cols-2 gap-3">
             <button
               type="button"
@@ -2783,8 +2783,8 @@ active
               className={cx(
                 "px-3 py-2 rounded-xl border text-sm font-medium",
                 (editingProduct || newProduct).deliveryChoice === "DELIVERY"
-                  ? "border-gray-900 bg-gray-900 text-white"
-                  : "border-gray-200 text-gray-700 hover:bg-gray-50"
+                  ? "border-primary-900 bg-primary-900 text-white"
+                  : "border-primary-200 text-primary-700 hover:bg-primary-50"
               )}
             >
               Livre
@@ -2799,8 +2799,8 @@ active
               className={cx(
                 "px-3 py-2 rounded-xl border text-sm font-medium",
                 (editingProduct || newProduct).deliveryChoice === "PICKUP_ONLY"
-                  ? "border-gray-900 bg-gray-900 text-white"
-                  : "border-gray-200 text-gray-700 hover:bg-gray-50"
+                  ? "border-primary-900 bg-primary-900 text-white"
+                  : "border-primary-200 text-primary-700 hover:bg-primary-50"
               )}
             >
               Retrait uniquement
@@ -2810,7 +2810,7 @@ active
         {(editingProduct || newProduct).deliveryChoice === "DELIVERY" && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Zones de livraison *</label>
+              <label className="block text-sm font-medium text-primary-700 mb-1">Zones de livraison *</label>
               <input
                 value={(editingProduct || newProduct).deliveryZonesText}
                 onChange={(e) => {
@@ -2819,12 +2819,12 @@ active
                     ? setEditingProduct((p) => ({ ...p, deliveryZonesText: val }))
                     : setNewProduct((p) => ({ ...p, deliveryZonesText: val }));
                 }}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
+                className="w-full px-4 py-2.5 border border-primary-200 rounded-xl focus:ring-2 focus:ring-gold-500 outline-none"
                 placeholder="ex: Dakar, Centre-ville"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Livraison a partir de (FCFA)</label>
+              <label className="block text-sm font-medium text-primary-700 mb-1">Livraison a partir de (FCFA)</label>
               <input
                 type="number"
                 min="0"
@@ -2835,14 +2835,14 @@ active
                     ? setEditingProduct((p) => ({ ...p, deliveryFee: val }))
                     : setNewProduct((p) => ({ ...p, deliveryFee: val }));
                 }}
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
+                className="w-full px-4 py-2.5 border border-primary-200 rounded-xl focus:ring-2 focus:ring-gold-500 outline-none"
                 placeholder="1000"
               />
             </div>
           </div>
         )}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Photos (plusieurs possibles)</label>
+          <label className="block text-sm font-medium text-primary-700 mb-1">Photos (plusieurs possibles)</label>
           <input
             type="file"
             accept="image/*"
@@ -2860,7 +2860,7 @@ active
             const currentFiles = (editingProduct || newProduct).imageFiles || [];
             if (currentFiles.length <= 1) return null;
             return (
-              <p className="text-xs text-gray-500 mt-1">{currentFiles.length} photos selectionnees</p>
+              <p className="text-xs text-primary-500 mt-1">{currentFiles.length} photos selectionnees</p>
             );
           })()}
         </div>
@@ -2888,12 +2888,12 @@ active
 
 <div className="flex flex-col lg:flex-row gap-3 mb-5">
   <div className="relative lg:max-w-md w-full">
-    <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+    <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-primary-400" />
     <input
       value={appointmentQuery}
       onChange={(e) => setAppointmentQuery(e.target.value)}
       placeholder="Rechercher client, service, coiffeur..."
-      className="w-full pl-11 pr-4 py-2.5 border border-gray-200 rounded-2xl bg-white focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+      className="w-full pl-11 pr-4 py-2.5 border border-primary-200 rounded-2xl bg-white focus:ring-2 focus:ring-gold-500 focus:border-transparent outline-none"
     />
   </div>
   <div className="flex flex-wrap gap-2">
@@ -2909,8 +2909,8 @@ active
         className={cx(
           "px-3 py-1.5 rounded-xl text-sm font-medium transition",
           appointmentFilter === opt.value
-            ? "bg-gray-900 text-white"
-            : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
+            ? "bg-primary-900 text-white"
+            : "bg-white border border-primary-200 text-primary-600 hover:bg-primary-50"
         )}
       >
         {opt.label}
@@ -2926,17 +2926,17 @@ active
   const completed = filteredAppointments.filter((a) => a.status === "completed").length;
   const revenue = filteredAppointments.filter((a) => a.status === "completed").reduce((s, a) => s + (a.amount || 0), 0);
   return (
-    <div className="bg-white rounded-xl border border-gray-100 px-1 py-2.5 mb-4">
-      <div className="grid grid-cols-4 divide-x divide-gray-100">
+    <div className="bg-white rounded-xl border border-primary-100 px-1 py-2.5 mb-4">
+      <div className="grid grid-cols-4 divide-x divide-primary-100">
         {[
           { label: "Total", value: total },
-          { label: "À venir", value: upcoming, accent: "text-amber-600" },
+          { label: "À venir", value: upcoming, accent: "text-gold-600" },
           { label: "Terminés", value: completed, accent: "text-green-600" },
-          { label: "Revenus", value: formatMoney(revenue), accent: "text-amber-600" },
+          { label: "Revenus", value: formatMoney(revenue), accent: "text-gold-600" },
         ].map((s, i) => (
           <div key={i} className="text-center px-1">
-            <div className="text-[10px] sm:text-xs text-gray-500 leading-tight">{s.label}</div>
-            <div className={`text-sm sm:text-lg font-bold leading-snug ${s.accent || "text-gray-900"}`}>{s.value}</div>
+            <div className="text-[10px] sm:text-xs text-primary-500 leading-tight">{s.label}</div>
+            <div className={`text-sm sm:text-lg font-bold leading-snug ${s.accent || "text-primary-900"}`}>{s.value}</div>
           </div>
         ))}
       </div>
@@ -2944,37 +2944,37 @@ active
   );
 })()}
 
-<div ref={notificationsPanelRef} className="mb-5 border border-gray-200 rounded-2xl p-4 bg-gray-50">
+<div ref={notificationsPanelRef} className="mb-5 border border-primary-200 rounded-2xl p-4 bg-primary-50">
   <div className="flex items-center justify-between mb-3">
-    <p className="font-semibold text-gray-900">Notifications</p>
+    <p className="font-semibold text-primary-900">Notifications</p>
     <div className="flex items-center gap-2">
-      <span className="text-xs px-2 py-1 rounded-full bg-amber-100 text-amber-800">
+      <span className="text-xs px-2 py-1 rounded-full bg-gold-100 text-gold-800">
         {unreadNotifications} non lues
       </span>
       <button
         type="button"
         onClick={markAllNotificationsRead}
-        className="text-xs px-2 py-1 rounded-lg border border-gray-200 hover:bg-white"
+        className="text-xs px-2 py-1 rounded-lg border border-primary-200 hover:bg-white"
       >
         Tout lire
       </button>
     </div>
   </div>
   {notifications.slice(0, 4).length === 0 ? (
-    <p className="text-sm text-gray-500">Aucune notification.</p>
+    <p className="text-sm text-primary-500">Aucune notification.</p>
   ) : (
     <div className="space-y-2">
       {notifications.slice(0, 4).map((n) => (
-        <div key={n.id} className={`text-sm rounded-xl px-3 py-2 ${n.isRead ? "bg-white text-gray-600" : "bg-amber-50 text-gray-800 border border-amber-100"}`}>
+        <div key={n.id} className={`text-sm rounded-xl px-3 py-2 ${n.isRead ? "bg-white text-primary-600" : "bg-gold-50 text-primary-800 border border-gold-100"}`}>
           <p>{n.message}</p>
-          <p className="text-xs text-gray-500 mt-1">{new Date(n.createdAt).toLocaleString("fr-FR")}</p>
+          <p className="text-xs text-primary-500 mt-1">{new Date(n.createdAt).toLocaleString("fr-FR")}</p>
         </div>
       ))}
     </div>
   )}
 </div>
 {loading ? (
-<p className="text-gray-500 font-semibold">Chargement...</p>
+<p className="text-primary-500 font-semibold">Chargement...</p>
 ) : filteredAppointments.length === 0 ? (
 <EmptyState
 icon={<FiCalendar />}
@@ -3016,24 +3016,24 @@ subtitle="Les réservations apparaîtront ici."
     return (
       <div
         key={row.id || idx}
-        className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden"
+        className="bg-white rounded-xl border border-primary-100 shadow-sm overflow-hidden"
       >
         {/* Compact header */}
         <button
           type="button"
           onClick={() => setExpandedApptId(isExpanded ? null : row.id)}
-          className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition"
+          className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-primary-50 transition"
         >
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-semibold text-gray-900 text-sm truncate">{row.clientName || "Client"}</span>
-              <span className="text-xs text-gray-500 truncate">{row.serviceName || "Service"}</span>
-              {row.service?.duration && <span className="text-[10px] text-gray-400">{row.service.duration}min</span>}
+              <span className="font-semibold text-primary-900 text-sm truncate">{row.clientName || "Client"}</span>
+              <span className="text-xs text-primary-500 truncate">{row.serviceName || "Service"}</span>
+              {row.service?.duration && <span className="text-[10px] text-primary-400">{row.service.duration}min</span>}
             </div>
             <div className="flex items-center gap-2 mt-1 flex-wrap">
-              <span className="text-xs text-gray-500 flex items-center gap-1"><FiCalendar className="w-3 h-3" /> {formatDate(row.date)}</span>
-              <span className="text-xs text-gray-500 flex items-center gap-1"><FiClock className="w-3 h-3" /> {toTime(row.time) || "—"}</span>
-              <span className="font-bold text-amber-600 text-sm">{formatMoney(row.amount)}</span>
+              <span className="text-xs text-primary-500 flex items-center gap-1"><FiCalendar className="w-3 h-3" /> {formatDate(row.date)}</span>
+              <span className="text-xs text-primary-500 flex items-center gap-1"><FiClock className="w-3 h-3" /> {toTime(row.time) || "—"}</span>
+              <span className="font-bold text-gold-600 text-sm">{formatMoney(row.amount)}</span>
             </div>
           </div>
           <Badge tone={statusTone}>{statusLabel}</Badge>
@@ -3042,7 +3042,7 @@ subtitle="Les réservations apparaîtront ici."
               <FiCheck className="mr-1 w-3 h-3" /> Terminer
             </Button>
           )}
-          <FiChevronDown className={`w-4 h-4 text-gray-400 shrink-0 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+          <FiChevronDown className={`w-4 h-4 text-primary-400 shrink-0 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
         </button>
 
         {/* Expanded details */}
@@ -3055,9 +3055,9 @@ subtitle="Les réservations apparaîtront ici."
               transition={{ duration: 0.2 }}
               className="overflow-hidden"
             >
-              <div className="px-4 pb-4 border-t border-gray-100 pt-3 space-y-3">
+              <div className="px-4 pb-4 border-t border-primary-100 pt-3 space-y-3">
                 {/* Client details */}
-                <div className="text-xs text-gray-500 space-y-0.5">
+                <div className="text-xs text-primary-500 space-y-0.5">
                   {(row.client?.phoneNumber || row.client?.phone) && (
                     <p className="flex items-center gap-1"><FiUser className="w-3 h-3" /> {row.client.phoneNumber || row.client.phone}</p>
                   )}
@@ -3070,12 +3070,12 @@ subtitle="Les réservations apparaîtront ici."
                 </div>
 
                 {/* Payment info */}
-                <div className="flex items-center justify-between text-sm bg-gray-50 rounded-lg px-3 py-2">
+                <div className="flex items-center justify-between text-sm bg-primary-50 rounded-lg px-3 py-2">
                   <div className="flex items-center gap-2">
-                    <FiCreditCard className="w-4 h-4 text-gray-400" />
+                    <FiCreditCard className="w-4 h-4 text-primary-400" />
                     <Badge tone={paymentTone}>{paymentLabel}</Badge>
                   </div>
-                  <span className="font-bold text-amber-600">{formatMoney(row.amount)}</span>
+                  <span className="font-bold text-gold-600">{formatMoney(row.amount)}</span>
                 </div>
 
                 {/* Actions */}
@@ -3108,7 +3108,7 @@ subtitle="Les réservations apparaîtront ici."
   <button
     type="button"
     onClick={() => setVisibleAppts((v) => v + 10)}
-    className="w-full mt-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition"
+    className="w-full mt-4 py-2.5 rounded-xl border border-primary-200 text-sm font-medium text-primary-600 hover:bg-primary-50 transition"
   >
     Voir plus ({filteredAppointments.length - visibleAppts} restants)
   </button>
@@ -3137,14 +3137,14 @@ right={
 <div className="grid md:grid-cols-12 gap-3 mb-5 items-end">
 <div className="md:col-span-4">
 <div className="relative">
-<FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+<FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-primary-400" />
 <input
 value={serviceQuery}
 onChange={(e) => setServiceQuery(e.target.value)}
 placeholder="Rechercher un serviceé"
 className={cx(
-"w-full pl-11 pr-4 py-2.5 border border-gray-200 rounded-2xl bg-white",
-"focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+"w-full pl-11 pr-4 py-2.5 border border-primary-200 rounded-2xl bg-white",
+"focus:ring-2 focus:ring-gold-500 focus:border-transparent outline-none"
 )}
 />
 </div>
@@ -3177,7 +3177,7 @@ onChange={(e) => setServiceCategory(e.target.value)}
 </div>
 
 {loading ? (
-<p className="text-gray-500 font-semibold">Chargementé</p>
+<p className="text-primary-500 font-semibold">Chargementé</p>
 ) : filteredServices.length === 0 ? (
 <EmptyState
 icon={<FiFilter />}
@@ -3196,7 +3196,7 @@ const mediaUrl = resolveMediaUrl(service.media);
 return (
 <div
 key={service.id}
-className="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm hover:shadow-md transition-shadow"
+className="bg-white border border-primary-100 rounded-3xl p-5 shadow-sm hover:shadow-md transition-shadow"
 >
 <div className="mb-3">
 {service.media ? (
@@ -3205,13 +3205,13 @@ isImage(mediaUrl) ? (
 ) : isVideo(mediaUrl) ? (
 <video src={mediaUrl} controls className="w-full h-64 object-cover rounded-2xl" />
 ) : (
-<div className="w-full h-64 rounded-2xl bg-gray-50 border border-dashed border-gray-200 flex items-center justify-center">
-<FiImage className="w-8 h-8 text-gray-300" />
+<div className="w-full h-64 rounded-2xl bg-primary-50 border border-dashed border-primary-200 flex items-center justify-center">
+<FiImage className="w-8 h-8 text-primary-300" />
 </div>
 )
 ) : (
-<div className="w-full h-64 rounded-2xl bg-gray-50 border border-dashed border-gray-200 flex items-center justify-center">
-<FiImage className="w-8 h-8 text-gray-300" />
+<div className="w-full h-64 rounded-2xl bg-primary-50 border border-dashed border-primary-200 flex items-center justify-center">
+<FiImage className="w-8 h-8 text-primary-300" />
 </div>
 )}
 </div>
@@ -3219,11 +3219,11 @@ isImage(mediaUrl) ? (
 <div className="flex items-start justify-between gap-2">
 <div className="min-w-0">
 <Badge tone="amber">{service.category}</Badge>
-<h4 className="mt-2 text-base font-extrabold text-gray-900 truncate">
+<h4 className="mt-2 text-base font-extrabold text-primary-900 truncate">
 {service.name}
 </h4>
 {service.description ? (
-<p className="text-sm text-gray-500 mt-1 line-clamp-2">{service.description}</p>
+<p className="text-sm text-primary-500 mt-1 line-clamp-2">{service.description}</p>
 ) : null}
 </div>
 
@@ -3253,15 +3253,15 @@ title="Modifier"
 </div>
 
 <div className="flex items-center justify-between mt-4">
-<span className="flex items-center text-sm text-gray-500 font-semibold">
+<span className="flex items-center text-sm text-primary-500 font-semibold">
 <FiClock className="mr-1" />
 {service.duration} min
 </span>
-<span className="text-lg font-extrabold text-gray-900">{formatMoney(service.price)}</span>
+<span className="text-lg font-extrabold text-primary-900">{formatMoney(service.price)}</span>
 </div>
 
-<div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between">
-<span className="text-xs text-gray-500 font-semibold">
+<div className="mt-3 pt-3 border-t border-primary-100 flex items-center justify-between">
+<span className="text-xs text-primary-500 font-semibold">
 Acompte : {service.depositPercentage ?? 30}%
 </span>
 {service.depositPercentage > 0 ? (
@@ -3305,7 +3305,7 @@ Annuler
 >
 <div className="space-y-4">
 <div>
-<label className="block text-sm font-semibold text-gray-700 mb-1">Photos du service</label>
+<label className="block text-sm font-semibold text-primary-700 mb-1">Photos du service</label>
 <input
 ref={fileInputRef}
 type="file"
@@ -3317,16 +3317,16 @@ if (!files || files.length === 0) return;
 appendServiceMedia(files, setNewService);
 e.target.value = "";
 }}
-className="w-full px-4 py-2.5 border border-gray-200 rounded-2xl"
+className="w-full px-4 py-2.5 border border-primary-200 rounded-2xl"
 />
 {newService.mediaList && newService.mediaList.length ? (
 <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-3">
 {newService.mediaList.map((item, idx) => (
 <div key={`${item}-${idx}`} className="relative group">
 {isImage(resolveMediaUrl(item)) ? (
-<img src={resolveMediaUrl(item)} alt="preview" className="w-full h-24 object-cover rounded-2xl border border-gray-100" />
+<img src={resolveMediaUrl(item)} alt="preview" className="w-full h-24 object-cover rounded-2xl border border-primary-100" />
 ) : (
-<video src={resolveMediaUrl(item)} className="w-full h-24 object-cover rounded-2xl border border-gray-100" />
+<video src={resolveMediaUrl(item)} className="w-full h-24 object-cover rounded-2xl border border-primary-100" />
 )}
 <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
 <button
@@ -3345,7 +3345,7 @@ className="w-7 h-7 rounded-full bg-white/90 shadow flex items-center justify-cen
 </button>
 </div>
 {idx === 0 && (
-<span className="absolute bottom-2 left-2 px-2 py-0.5 text-[10px] font-semibold rounded-full bg-amber-500 text-white shadow">
+<span className="absolute bottom-2 left-2 px-2 py-0.5 text-[10px] font-semibold rounded-full bg-gold-500 text-white shadow">
 Couverture
 </span>
 )}
@@ -3353,7 +3353,7 @@ Couverture
 ))}
 </div>
 ) : (
-<p className="text-xs text-gray-500 mt-2">
+<p className="text-xs text-primary-500 mt-2">
 Max {MAX_MEDIA_MB}MB par fichier • jusqu'à {MAX_SERVICE_MEDIA} photos
 </p>
 )}
@@ -3440,7 +3440,7 @@ Annuler
 {editingService ? (
 <div className="space-y-4">
 <div>
-<label className="block text-sm font-semibold text-gray-700 mb-1">Photos du service</label>
+<label className="block text-sm font-semibold text-primary-700 mb-1">Photos du service</label>
 <input
 type="file"
 accept="image/*,video/*"
@@ -3451,16 +3451,16 @@ if (!files || files.length === 0) return;
 appendServiceMedia(files, setEditingService);
 e.target.value = "";
 }}
-className="w-full px-4 py-2.5 border border-gray-200 rounded-2xl"
+className="w-full px-4 py-2.5 border border-primary-200 rounded-2xl"
 />
 {editingService.mediaList && editingService.mediaList.length ? (
 <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-3">
 {editingService.mediaList.map((item, idx) => (
 <div key={`${item}-${idx}`} className="relative group">
 {isImage(resolveMediaUrl(item)) ? (
-<img src={resolveMediaUrl(item)} alt="preview" className="w-full h-24 object-cover rounded-2xl border border-gray-100" />
+<img src={resolveMediaUrl(item)} alt="preview" className="w-full h-24 object-cover rounded-2xl border border-primary-100" />
 ) : (
-<video src={resolveMediaUrl(item)} className="w-full h-24 object-cover rounded-2xl border border-gray-100" />
+<video src={resolveMediaUrl(item)} className="w-full h-24 object-cover rounded-2xl border border-primary-100" />
 )}
 <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
 <button
@@ -3479,7 +3479,7 @@ className="w-7 h-7 rounded-full bg-white/90 shadow flex items-center justify-cen
 </button>
 </div>
 {idx === 0 && (
-<span className="absolute bottom-2 left-2 px-2 py-0.5 text-[10px] font-semibold rounded-full bg-amber-500 text-white shadow">
+<span className="absolute bottom-2 left-2 px-2 py-0.5 text-[10px] font-semibold rounded-full bg-gold-500 text-white shadow">
 Couverture
 </span>
 )}
@@ -3487,7 +3487,7 @@ Couverture
 ))}
 </div>
 ) : (
-<p className="text-xs text-gray-500 mt-2">
+<p className="text-xs text-primary-500 mt-2">
 Max {MAX_MEDIA_MB}MB par fichier • jusqu'à {MAX_SERVICE_MEDIA} photos
 </p>
 )}
@@ -3570,8 +3570,8 @@ Annuler
 <FiAlertTriangle className="text-xl" />
 </div>
 <div>
-<p className="font-extrabold text-gray-900">Supprimer "{confirmDelete?.name}" ?</p>
-<p className="text-sm text-gray-500 mt-1">Cette action est irréversible.</p>
+<p className="font-extrabold text-primary-900">Supprimer "{confirmDelete?.name}" ?</p>
+<p className="text-sm text-primary-500 mt-1">Cette action est irréversible.</p>
 </div>
 </div>
 </Modal>
@@ -3593,7 +3593,7 @@ right={
 />
 <div className="p-3 sm:p-5">
 {loading ? (
-<p className="text-gray-500 font-semibold">Chargementé</p>
+<p className="text-primary-500 font-semibold">Chargementé</p>
 ) : team.length === 0 ? (
 <EmptyState icon={<FiUsers />} title="Aucun employé" subtitle="Ajoutez les membres de votre équipe." />
 ) : (
@@ -3603,10 +3603,10 @@ const avatar = resolveMediaUrl(m.picture || m.avatar || m.photo);
 return (
 <div
 key={m.id}
-className="relative overflow-hidden bg-white/90 border border-gray-100 rounded-3xl p-5 shadow-[0_18px_40px_-30px_rgba(15,23,42,0.6)] hover:shadow-lg transition-shadow"
+className="relative overflow-hidden bg-white/90 border border-primary-100 rounded-3xl p-5 shadow-[0_18px_40px_-30px_rgba(15,23,42,0.6)] hover:shadow-lg transition-shadow"
 >
-<div className="absolute -top-10 -right-10 w-32 h-32 bg-amber-100/60 rounded-full blur-2xl" />
-<div className="h-1 w-12 rounded-full bg-gradient-to-r from-amber-500 to-orange-400 mb-4" />
+<div className="absolute -top-10 -right-10 w-32 h-32 bg-gold-100/60 rounded-full blur-2xl" />
+<div className="h-1 w-12 rounded-full bg-gradient-to-r from-gold-500 to-orange-400 mb-4" />
 <div className="flex items-start gap-4">
 {avatar ? (
 <img
@@ -3615,16 +3615,16 @@ alt={m.name}
 className="w-14 h-14 rounded-2xl object-cover ring-2 ring-white shadow"
 />
 ) : (
-<div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 text-white flex items-center justify-center font-extrabold">
+<div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-gold-400 to-gold-600 text-white flex items-center justify-center font-extrabold">
 {getInitials(m.name)}
 </div>
 )}
 <div className="flex-1 min-w-0">
 <div className="flex items-start justify-between gap-3">
 <div className="min-w-0">
-<h4 className="text-base font-extrabold text-gray-900 truncate">{m.name}</h4>
-{m.email ? <p className="text-xs text-gray-500 mt-1 truncate">{m.email}</p> : null}
-{m.phone ? <p className="text-sm text-gray-500 mt-1">{m.phone}</p> : null}
+<h4 className="text-base font-extrabold text-primary-900 truncate">{m.name}</h4>
+{m.email ? <p className="text-xs text-primary-500 mt-1 truncate">{m.email}</p> : null}
+{m.phone ? <p className="text-sm text-primary-500 mt-1">{m.phone}</p> : null}
 </div>
 <div className="flex gap-2">
 <IconButton title="Modifier" onClick={() => setEditingMember({ ...m })}>
@@ -3642,15 +3642,15 @@ className="w-14 h-14 rounded-2xl object-cover ring-2 ring-white shadow"
 </div>
 </div>
 
-<div className="mt-4 pt-4 border-t border-gray-100">
-<p className="text-xs font-extrabold text-gray-700 mb-2">Disponibilités</p>
+<div className="mt-4 pt-4 border-t border-primary-100">
+<p className="text-xs font-extrabold text-primary-700 mb-2">Disponibilités</p>
 <div className="space-y-1.5">
 {weekDays.map(([label, key]) => {
 const h = m.availability?.[key];
 return (
 <div key={key} className="flex items-center justify-between text-xs">
-<span className="font-semibold text-gray-700">{label}</span>
-<span className="text-gray-500">{h ? `${h.open} - ${h.close}` : "Fermé"}</span>
+<span className="font-semibold text-primary-700">{label}</span>
+<span className="text-primary-500">{h ? `${h.open} - ${h.close}` : "Fermé"}</span>
 </div>
 );
 })}
@@ -3696,17 +3696,17 @@ Annuler
 
 <div className="flex items-center gap-2">
 <input type="checkbox" checked={newMember.active} onChange={(e) => setNewMember((p) => ({ ...p, active: e.target.checked }))} />
-<span className="text-sm font-semibold text-gray-700">Actif</span>
+<span className="text-sm font-semibold text-primary-700">Actif</span>
 </div>
 
 <div className="pt-2">
-<p className="text-sm font-extrabold text-gray-900 mb-2">Disponibilités</p>
+<p className="text-sm font-extrabold text-primary-900 mb-2">Disponibilités</p>
 <div className="space-y-3">
 {weekDays.map(([label, key]) => {
 const h = newMember.availability[key];
 return (
-<div key={key} className="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl">
-<span className="w-24 font-extrabold text-gray-900 text-sm">{label}</span>
+<div key={key} className="flex items-center gap-3 p-3 bg-primary-50 rounded-2xl">
+<span className="w-24 font-extrabold text-primary-900 text-sm">{label}</span>
 {h ? (
 <>
 <input
@@ -3718,9 +3718,9 @@ setNewMember((p) => ({
 availability: { ...p.availability, [key]: { ...h, open: e.target.value } },
 }))
 }
-className="px-3 py-2 border border-gray-200 rounded-xl bg-white"
+className="px-3 py-2 border border-primary-200 rounded-xl bg-white"
 />
-<span className="text-gray-500 font-semibold">à</span>
+<span className="text-primary-500 font-semibold">à</span>
 <input
 type="time"
 value={h.close}
@@ -3730,7 +3730,7 @@ setNewMember((p) => ({
 availability: { ...p.availability, [key]: { ...h, close: e.target.value } },
 }))
 }
-className="px-3 py-2 border border-gray-200 rounded-xl bg-white"
+className="px-3 py-2 border border-primary-200 rounded-xl bg-white"
 />
 <button
 onClick={() =>
@@ -3752,7 +3752,7 @@ setNewMember((p) => ({
 availability: { ...p.availability, [key]: { open: "09:00", close: "18:00" } },
 }))
 }
-className="text-amber-700 hover:text-amber-800 font-semibold text-sm"
+className="text-gold-700 hover:text-gold-800 font-semibold text-sm"
 >
 Ajouter horaires
 </button>
@@ -3795,17 +3795,17 @@ Annuler
 
 <div className="flex items-center gap-2">
 <input type="checkbox" checked={!!editingMember.active} onChange={(e) => setEditingMember((p) => ({ ...p, active: e.target.checked }))} />
-<span className="text-sm font-semibold text-gray-700">Actif</span>
+<span className="text-sm font-semibold text-primary-700">Actif</span>
 </div>
 
 <div className="pt-2">
-<p className="text-sm font-extrabold text-gray-900 mb-2">Disponibilités</p>
+<p className="text-sm font-extrabold text-primary-900 mb-2">Disponibilités</p>
 <div className="space-y-3">
 {weekDays.map(([label, key]) => {
 const h = editingMember.availability?.[key] || null;
 return (
-<div key={key} className="flex items-center gap-3 p-3 bg-gray-50 rounded-2xl">
-<span className="w-24 font-extrabold text-gray-900 text-sm">{label}</span>
+<div key={key} className="flex items-center gap-3 p-3 bg-primary-50 rounded-2xl">
+<span className="w-24 font-extrabold text-primary-900 text-sm">{label}</span>
 {h ? (
 <>
 <input
@@ -3817,9 +3817,9 @@ setEditingMember((p) => ({
 availability: { ...p.availability, [key]: { ...h, open: e.target.value } },
 }))
 }
-className="px-3 py-2 border border-gray-200 rounded-xl bg-white"
+className="px-3 py-2 border border-primary-200 rounded-xl bg-white"
 />
-<span className="text-gray-500 font-semibold">à</span>
+<span className="text-primary-500 font-semibold">à</span>
 <input
 type="time"
 value={h.close}
@@ -3829,7 +3829,7 @@ setEditingMember((p) => ({
 availability: { ...p.availability, [key]: { ...h, close: e.target.value } },
 }))
 }
-className="px-3 py-2 border border-gray-200 rounded-xl bg-white"
+className="px-3 py-2 border border-primary-200 rounded-xl bg-white"
 />
 <button
 onClick={() =>
@@ -3851,7 +3851,7 @@ setEditingMember((p) => ({
 availability: { ...p.availability, [key]: { open: "09:00", close: "18:00" } },
 }))
 }
-className="text-amber-700 hover:text-amber-800 font-semibold text-sm"
+className="text-gold-700 hover:text-gold-800 font-semibold text-sm"
 >
 Ajouter horaires
 </button>
@@ -3883,16 +3883,16 @@ right={
 <div className="p-6 space-y-6">
 <div className="grid lg:grid-cols-3 gap-4">
 <Card className="p-5">
-<h4 className="font-extrabold text-gray-900 mb-3">Pauses</h4>
+<h4 className="font-extrabold text-primary-900 mb-3">Pauses</h4>
 {planning.breaks.length === 0 ? (
-<p className="text-sm text-gray-500">Aucune pause.</p>
+<p className="text-sm text-primary-500">Aucune pause.</p>
 ) : (
 <div className="space-y-2">
 {planning.breaks.map((b) => (
-<div key={b.id} className="p-3 bg-gray-50 rounded-2xl flex items-center justify-between">
+<div key={b.id} className="p-3 bg-primary-50 rounded-2xl flex items-center justify-between">
 <div>
-<p className="text-sm font-extrabold text-gray-900">{b.label}</p>
-<p className="text-xs text-gray-500">{b.date} • {b.start}-{b.end}</p>
+<p className="text-sm font-extrabold text-primary-900">{b.label}</p>
+<p className="text-xs text-primary-500">{b.date} • {b.start}-{b.end}</p>
 </div>
 <IconButton title="Supprimer" onClick={() => removePlanningItem("breaks", b.id)}>
 <FiTrash2 />
@@ -3904,16 +3904,16 @@ right={
 </Card>
 
 <Card className="p-5">
-<h4 className="font-extrabold text-gray-900 mb-3">Exceptions</h4>
+<h4 className="font-extrabold text-primary-900 mb-3">Exceptions</h4>
 {planning.exceptions.length === 0 ? (
-<p className="text-sm text-gray-500">Aucune exception.</p>
+<p className="text-sm text-primary-500">Aucune exception.</p>
 ) : (
 <div className="space-y-2">
 {planning.exceptions.map((ex) => (
-<div key={ex.id} className="p-3 bg-gray-50 rounded-2xl flex items-center justify-between">
+<div key={ex.id} className="p-3 bg-primary-50 rounded-2xl flex items-center justify-between">
 <div>
-<p className="text-sm font-extrabold text-gray-900">{ex.date}</p>
-<p className="text-xs text-gray-500">{ex.closed ? "Fermé" : `${ex.open}-${ex.close}`}</p>
+<p className="text-sm font-extrabold text-primary-900">{ex.date}</p>
+<p className="text-xs text-primary-500">{ex.closed ? "Fermé" : `${ex.open}-${ex.close}`}</p>
 </div>
 <IconButton title="Supprimer" onClick={() => removePlanningItem("exceptions", ex.id)}>
 <FiTrash2 />
@@ -3925,16 +3925,16 @@ right={
 </Card>
 
 <Card className="p-5">
-<h4 className="font-extrabold text-gray-900 mb-3">Jours fériés</h4>
+<h4 className="font-extrabold text-primary-900 mb-3">Jours fériés</h4>
 {planning.holidays.length === 0 ? (
-<p className="text-sm text-gray-500">Aucun jour férié.</p>
+<p className="text-sm text-primary-500">Aucun jour férié.</p>
 ) : (
 <div className="space-y-2">
 {planning.holidays.map((h) => (
-<div key={h.id} className="p-3 bg-gray-50 rounded-2xl flex items-center justify-between">
+<div key={h.id} className="p-3 bg-primary-50 rounded-2xl flex items-center justify-between">
 <div>
-<p className="text-sm font-extrabold text-gray-900">{h.name}</p>
-<p className="text-xs text-gray-500">{h.date}</p>
+<p className="text-sm font-extrabold text-primary-900">{h.name}</p>
+<p className="text-xs text-primary-500">{h.date}</p>
 </div>
 <IconButton title="Supprimer" onClick={() => removePlanningItem("holidays", h.id)}>
 <FiTrash2 />
@@ -3986,7 +3986,7 @@ Annuler
 <>
 <div className="flex items-center gap-2">
 <input type="checkbox" checked={planningForm.closed} onChange={(e) => setPlanningForm((p) => ({ ...p, closed: e.target.checked }))} />
-<span className="text-sm font-semibold text-gray-700">Fermé ce jour</span>
+<span className="text-sm font-semibold text-primary-700">Fermé ce jour</span>
 </div>
 {!planningForm.closed ? (
 <div className="grid grid-cols-2 gap-4">
@@ -4026,7 +4026,7 @@ const dep = Math.round((r.amount * (r.depositPct || 0)) / 100);
 return (
 <div className="flex items-center gap-2">
 <Badge tone={r.depositPaid ? "blue" : "gray"}>{r.depositPct || 0}%</Badge>
-<span className="text-sm text-gray-700 font-semibold">{formatMoney(dep)}</span>
+<span className="text-sm text-primary-700 font-semibold">{formatMoney(dep)}</span>
 </div>
 );
 },
@@ -4076,7 +4076,7 @@ data={payments.length ? payments : appointments}
 <CardHeader icon={<FiCreditCard />} title="Moyens de paiement du salon" right={null} />
 <div className="p-3 sm:p-5">
 {loadingPaymentMethods ? (
-<p className="text-gray-500 font-semibold">Chargementé</p>
+<p className="text-primary-500 font-semibold">Chargementé</p>
 ) : paymentMethods.length === 0 ? (
 <EmptyState
 icon={<FiCreditCard />}
@@ -4099,12 +4099,12 @@ action={
 {paymentMethods.map((pm) => (
 <div
 key={pm.id}
-className="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm flex items-center gap-4"
+className="bg-white border border-primary-100 rounded-3xl p-5 shadow-sm flex items-center gap-4"
 >
-<FiCreditCard className="w-8 h-8 text-amber-500" />
+<FiCreditCard className="w-8 h-8 text-gold-500" />
 <div className="flex-1">
-<div className="font-bold text-gray-900 text-base">{formatPaymentMethodLabel(pm.method)}</div>
-<div className="text-xs text-gray-500">{pm.enabled ? "Activé" : "Désactivé"}</div>
+<div className="font-bold text-primary-900 text-base">{formatPaymentMethodLabel(pm.method)}</div>
+<div className="text-xs text-primary-500">{pm.enabled ? "Activé" : "Désactivé"}</div>
 </div>
 <div className="flex items-center gap-2">
 <Badge tone={pm.enabled ? "green" : "gray"}>{pm.enabled ? "OK" : "OFF"}</Badge>
@@ -4179,10 +4179,10 @@ Supprimer
 <FiAlertTriangle />
 </span>
 <div>
-<p className="font-semibold text-gray-900">Cette action est définitive.</p>
-<p className="text-sm text-gray-500">
+<p className="font-semibold text-primary-900">Cette action est définitive.</p>
+<p className="text-sm text-primary-500">
 Voulez-vous vraiment supprimer le moyen de paiement{" "}
-<span className="font-semibold text-gray-700">{confirmPaymentMethod?.method}</span> ?
+<span className="font-semibold text-primary-700">{confirmPaymentMethod?.method}</span> ?
 </p>
 </div>
 </div>
@@ -4213,12 +4213,12 @@ const mediaUrl = resolveMediaUrl(p.media);
 const beforeUrl = resolveMediaUrl(p.beforeMedia);
 const afterUrl = resolveMediaUrl(p.afterMedia);
 return (
-<div key={p.id} className="bg-white border border-gray-100 rounded-3xl p-5 shadow-sm">
+<div key={p.id} className="bg-white border border-primary-100 rounded-3xl p-5 shadow-sm">
 <div className="flex items-start justify-between gap-2">
 <div className="min-w-0">
 <Badge tone="purple">{p.type === "video" ? "Vidéo" : "Galerie"}</Badge>
-<h4 className="mt-2 text-base font-extrabold text-gray-900 truncate">{p.title}</h4>
-<p className="text-xs text-gray-500 mt-1">{formatDate(p.createdAt)}</p>
+<h4 className="mt-2 text-base font-extrabold text-primary-900 truncate">{p.title}</h4>
+<p className="text-xs text-primary-500 mt-1">{formatDate(p.createdAt)}</p>
 </div>
 <div className="flex gap-1">
 {p.type === "gallery" && (
@@ -4254,8 +4254,8 @@ isImage(mediaUrl) ? (
 <video src={mediaUrl} controls className="w-full h-44 object-cover rounded-2xl" />
 )
 ) : (
-<div className="w-full h-44 rounded-2xl bg-gray-50 border border-dashed border-gray-200 flex items-center justify-center">
-<FiImage className="w-8 h-8 text-gray-300" />
+<div className="w-full h-44 rounded-2xl bg-primary-50 border border-dashed border-primary-200 flex items-center justify-center">
+<FiImage className="w-8 h-8 text-primary-300" />
 </div>
 )}
 </div>
@@ -4299,7 +4299,7 @@ onChange={(e) => setPortfolioForm((p) => ({ ...p, title: e.target.value }))}
 />
 
 <div>
-<label className="block text-sm font-semibold text-gray-700 mb-1">{portfolioForm.type === "video" ? "Vidéo *" : "Photo *"}</label>
+<label className="block text-sm font-semibold text-primary-700 mb-1">{portfolioForm.type === "video" ? "Vidéo *" : "Photo *"}</label>
 <input
 type="file"
 accept={portfolioForm.type === "video" ? "video/*" : "image/*"}
@@ -4309,7 +4309,7 @@ if (!file) return;
 if (!validateMedia(file)) return;
 readMediaAsDataUrl(file, (dataUrl) => setPortfolioForm((p) => ({ ...p, media: dataUrl, mediaFile: file })));
 }}
-className="w-full px-4 py-2.5 border border-gray-200 rounded-2xl"
+className="w-full px-4 py-2.5 border border-primary-200 rounded-2xl"
 />
 </div>
 </div>
@@ -4339,18 +4339,18 @@ right={
 ) : (
 <div className="space-y-3">
 {filteredReviews.map((r) => (
-<div key={r.id} className="p-5 bg-white border border-gray-100 rounded-3xl shadow-sm">
+<div key={r.id} className="p-5 bg-white border border-primary-100 rounded-3xl shadow-sm">
 <div className="flex items-start justify-between gap-3">
 <div>
 <div className="flex items-center gap-2 flex-wrap">
-<span className="font-extrabold text-gray-900">{r.clientName}</span>
+<span className="font-extrabold text-primary-900">{r.clientName}</span>
 <Badge tone="amber">? {r.rating}/5</Badge>
 <Badge tone={r.status === "approved" ? "green" : r.status === "rejected" ? "red" : "blue"}>
 {getStatusLabel(r.status)}
 </Badge>
 </div>
-<p className="text-sm text-gray-600 mt-2">{r.comment}</p>
-<p className="text-xs text-gray-400 mt-2">{formatDate(r.createdAt)}</p>
+<p className="text-sm text-primary-600 mt-2">{r.comment}</p>
+<p className="text-xs text-primary-400 mt-2">{formatDate(r.createdAt)}</p>
 </div>
 <div className="flex gap-2">
 <Button variant="secondary" className="px-3 py-2" onClick={() => setReviewStatus(r.id, "approved")}>
@@ -4390,14 +4390,14 @@ right={
 ) : (
 <div className="space-y-3">
 {promos.map((p) => (
-<div key={p.id} className="p-4 bg-gray-50 rounded-2xl flex items-start justify-between gap-3">
+<div key={p.id} className="p-4 bg-primary-50 rounded-2xl flex items-start justify-between gap-3">
 <div>
 <div className="flex items-center gap-2 flex-wrap">
-<span className="font-extrabold text-gray-900">{p.code}</span>
+<span className="font-extrabold text-primary-900">{p.code}</span>
 <Badge tone="purple">{p.type === "percent" ? `${p.value}%` : `${formatMoney(p.value)}`}</Badge>
 {p.active ? <Badge tone="green">Active</Badge> : <Badge tone="red">Inactive</Badge>}
 </div>
-<p className="text-xs text-gray-500 mt-2">Expire: {p.expiresAt || "—"}</p>
+<p className="text-xs text-primary-500 mt-2">Expire: {p.expiresAt || "—"}</p>
 </div>
 <div className="flex gap-2">
 <Button variant="secondary" className="px-3 py-2" onClick={() => togglePromo(p.id)}>
@@ -4419,7 +4419,7 @@ right={
 <div className="p-6 space-y-4">
 <div className="flex items-center gap-2">
 <input type="checkbox" checked={!!loyalty.enabled} onChange={(e) => setLoyalty((p) => ({ ...p, enabled: e.target.checked }))} />
-<span className="text-sm font-semibold text-gray-700">Activer la fidélité</span>
+<span className="text-sm font-semibold text-primary-700">Activer la fidélité</span>
 </div>
 
 <div className="grid grid-cols-2 gap-4">
@@ -4461,7 +4461,7 @@ Annuler
 <Input label="Expiration" type="date" value={promoForm.expiresAt} onChange={(e) => setPromoForm((p) => ({ ...p, expiresAt: e.target.value }))} />
 <div className="flex items-center gap-2">
 <input type="checkbox" checked={promoForm.active} onChange={(e) => setPromoForm((p) => ({ ...p, active: e.target.checked }))} />
-<span className="text-sm font-semibold text-gray-700">Active</span>
+<span className="text-sm font-semibold text-primary-700">Active</span>
 </div>
 </div>
 </Modal>
@@ -4476,14 +4476,14 @@ Annuler
 <CardHeader icon={<FiUser />} title="Clients" />
 <div className="p-3 sm:p-5">
 <div className="relative mb-4">
-<FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+<FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-primary-400" />
 <input
 value={clientQuery}
 onChange={(e) => setClientQuery(e.target.value)}
 placeholder="Rechercher client..."
 className={cx(
-"w-full pl-11 pr-4 py-2.5 border border-gray-200 rounded-2xl bg-white",
-"focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+"w-full pl-11 pr-4 py-2.5 border border-primary-200 rounded-2xl bg-white",
+"focus:ring-2 focus:ring-gold-500 focus:border-transparent outline-none"
 )}
 />
 </div>
@@ -4496,15 +4496,15 @@ onClick={() => setSelectedClient(c)}
 className={cx(
 "w-full text-left p-4 rounded-2xl border transition-colors",
 selectedClient?.id === c.id
-? "border-gray-900 bg-gray-50"
-: "border-gray-100 bg-white hover:bg-gray-50"
+? "border-primary-900 bg-primary-50"
+: "border-primary-100 bg-white hover:bg-primary-50"
 )}
 >
 <div className="flex items-center justify-between gap-2">
 <div>
-<p className="font-extrabold text-gray-900">{c.name}</p>
-<p className="text-xs text-gray-500 mt-1">{c.phone || "—"}</p>
-<p className="text-xs text-gray-400">{c.address || ""}</p>
+<p className="font-extrabold text-primary-900">{c.name}</p>
+<p className="text-xs text-primary-500 mt-1">{c.phone || "—"}</p>
+<p className="text-xs text-primary-400">{c.address || ""}</p>
 </div>
 <Badge tone={c.noShowCount > 0 ? "red" : "green"}>No-show: {c.noShowCount}</Badge>
 </div>
@@ -4533,9 +4533,9 @@ selectedClient ? (
 <div className="space-y-5">
 <div className="flex items-start justify-between gap-3">
 <div>
-<h3 className="text-xl font-extrabold text-gray-900">{selectedClient.name}</h3>
-<p className="text-sm text-gray-500 mt-1">{selectedClient.phone || "—"}</p>
-<p className="text-sm text-gray-500">{selectedClient.email || "—"}</p>
+<h3 className="text-xl font-extrabold text-primary-900">{selectedClient.name}</h3>
+<p className="text-sm text-primary-500 mt-1">{selectedClient.phone || "—"}</p>
+<p className="text-sm text-primary-500">{selectedClient.email || "—"}</p>
 </div>
 <Badge tone={selectedClient.noShowCount > 0 ? "red" : "green"}>No-show: {selectedClient.noShowCount}</Badge>
 </div>
@@ -4584,15 +4584,15 @@ setSelectedClient((p) => ({ ...p, notes: e.target.value }));
 </div>
 
 <div>
-<h4 className="font-extrabold text-gray-900 mb-3">Historique</h4>
+<h4 className="font-extrabold text-primary-900 mb-3">Historique</h4>
 <div className="space-y-2">
 {(selectedClient.history || []).map((h) => (
-<div key={h.id} className="p-4 bg-gray-50 rounded-2xl flex items-center justify-between">
+<div key={h.id} className="p-4 bg-primary-50 rounded-2xl flex items-center justify-between">
 <div>
-<p className="font-extrabold text-gray-900">{h.service}</p>
-<p className="text-xs text-gray-500 mt-1">{h.date} • {getStatusLabel(h.status)}</p>
+<p className="font-extrabold text-primary-900">{h.service}</p>
+<p className="text-xs text-primary-500 mt-1">{h.date} • {getStatusLabel(h.status)}</p>
 </div>
-<span className="font-extrabold text-gray-900">{formatMoney(h.amount)}</span>
+<span className="font-extrabold text-primary-900">{formatMoney(h.amount)}</span>
 </div>
 ))}
 </div>
@@ -4621,35 +4621,35 @@ key={p.id}
 onClick={() => setStatsPeriod(p.id)}
 className={cx(
 "px-4 py-2 rounded-2xl font-semibold text-sm transition-all",
-statsPeriod === p.id ? "bg-gray-900 text-white" : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
+statsPeriod === p.id ? "bg-primary-900 text-white" : "bg-white text-primary-700 border border-primary-200 hover:bg-primary-50"
 )}
 >
 {p.label}
 </button>
 ))}
 </div>
-<p className="text-xs text-gray-500 mt-2">Période : {formatPeriodLabel(statsPeriod)}</p>
+<p className="text-xs text-primary-500 mt-2">Période : {formatPeriodLabel(statsPeriod)}</p>
 </div>
 
-<div className="bg-white rounded-xl border border-gray-100 px-1 py-2.5 mb-4">
-<div className="grid grid-cols-4 divide-x divide-gray-100">
+<div className="bg-white rounded-xl border border-primary-100 px-1 py-2.5 mb-4">
+<div className="grid grid-cols-4 divide-x divide-primary-100">
   {[
     { label: "C.A.", value: formatMoney(stats.totalRevenue), accent: "text-green-600" },
     { label: "Réservations", value: stats.totalBookings },
-    { label: "Panier moy.", value: formatMoney(stats.averageTicket), accent: "text-amber-600" },
+    { label: "Panier moy.", value: formatMoney(stats.averageTicket), accent: "text-gold-600" },
     { label: "Annulations", value: stats.cancelledBookings, accent: stats.cancelledBookings > 0 ? "text-red-600" : undefined },
   ].map((s, i) => (
     <div key={i} className="text-center px-1">
-      <div className="text-[10px] sm:text-xs text-gray-500 leading-tight">{s.label}</div>
-      <div className={`text-sm sm:text-lg font-bold leading-snug ${s.accent || "text-gray-900"}`}>{s.value}</div>
+      <div className="text-[10px] sm:text-xs text-primary-500 leading-tight">{s.label}</div>
+      <div className={`text-sm sm:text-lg font-bold leading-snug ${s.accent || "text-primary-900"}`}>{s.value}</div>
     </div>
   ))}
 </div>
 </div>
 
 <div className="grid lg:grid-cols-2 gap-4">
-<div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
-<h3 className="font-extrabold text-gray-900 mb-4 flex items-center gap-2">
+<div className="bg-white rounded-3xl shadow-sm border border-primary-100 p-6">
+<h3 className="font-extrabold text-primary-900 mb-4 flex items-center gap-2">
 <FiGrid />
 Top services
 </h3>
@@ -4662,30 +4662,30 @@ const pct = (count / maxCount) * 100;
 return (
 <div key={name}>
 <div className="flex items-center justify-between mb-1">
-<span className="text-gray-700 font-semibold">{name}</span>
-<span className="font-extrabold text-gray-900">{count}</span>
+<span className="text-primary-700 font-semibold">{name}</span>
+<span className="font-extrabold text-primary-900">{count}</span>
 </div>
-<div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-<div className="h-full bg-gradient-to-r from-amber-400 to-amber-600 rounded-full" style={{ width: `${pct}%` }} />
+<div className="h-2 bg-primary-100 rounded-full overflow-hidden">
+<div className="h-full bg-gradient-to-r from-gold-400 to-gold-600 rounded-full" style={{ width: `${pct}%` }} />
 </div>
 </div>
 );
 })}
 </div>
 ) : (
-<p className="text-gray-500 text-center py-8">Pas encore de données pour cette période.</p>
+<p className="text-primary-500 text-center py-8">Pas encore de données pour cette période.</p>
 )}
 </div>
 
-<div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
-<h3 className="font-extrabold text-gray-900 mb-4">Résumé d'activité</h3>
+<div className="bg-white rounded-3xl shadow-sm border border-primary-100 p-6">
+<h3 className="font-extrabold text-primary-900 mb-4">Résumé d'activité</h3>
 <div className="space-y-3">
 <div className="flex items-center justify-between p-4 bg-green-50 rounded-2xl">
 <div className="flex items-center">
 <div className="w-10 h-10 bg-green-600 rounded-2xl flex items-center justify-center mr-3">
 <FiCheck className="w-5 h-5 text-white" />
 </div>
-<span className="font-bold text-gray-900">RDV terminés</span>
+<span className="font-bold text-primary-900">RDV terminés</span>
 </div>
 <span className="text-xl font-extrabold text-green-700">{stats.completedBookings}</span>
 </div>
@@ -4695,7 +4695,7 @@ return (
 <div className="w-10 h-10 bg-blue-600 rounded-2xl flex items-center justify-center mr-3">
 <FiClock className="w-5 h-5 text-white" />
 </div>
-<span className="font-bold text-gray-900">RDV À venir</span>
+<span className="font-bold text-primary-900">RDV À venir</span>
 </div>
 <span className="text-xl font-extrabold text-blue-700">
 {appointments.filter((a) => a.status === "upcoming").length}
@@ -4707,7 +4707,7 @@ return (
 <div className="w-10 h-10 bg-red-600 rounded-2xl flex items-center justify-center mr-3">
 <FiX className="w-5 h-5 text-white" />
 </div>
-<span className="font-bold text-gray-900">Annulations</span>
+<span className="font-bold text-primary-900">Annulations</span>
 </div>
 <span className="text-xl font-extrabold text-red-700">{stats.cancelledBookings}</span>
 </div>
@@ -4737,7 +4737,7 @@ right={
 <Input label="WhatsApp" value={salonSettings.whatsapp} onChange={(e) => setSalonSettings((p) => ({ ...p, whatsapp: e.target.value }))} />
 <Input label="Adresse" value={salonSettings.address} onChange={(e) => setSalonSettings((p) => ({ ...p, address: e.target.value }))} />
 <div>
-  <label className="block text-sm font-semibold text-gray-700 mb-1">Quartier</label>
+  <label className="block text-sm font-semibold text-primary-700 mb-1">Quartier</label>
   <QuartierSelector
     value={salonSettings.neighborhood}
     onChange={(v) => setSalonSettings((p) => ({ ...p, neighborhood: v }))}
@@ -4747,13 +4747,13 @@ right={
 </div>
 <Textarea className="md:col-span-2" label="Description" rows={4} value={salonSettings.description} onChange={(e) => setSalonSettings((p) => ({ ...p, description: e.target.value }))} />
 <div className="md:col-span-2">
-  <label className="block text-sm font-semibold text-gray-700 mb-2">Photo du salon</label>
+  <label className="block text-sm font-semibold text-primary-700 mb-2">Photo du salon</label>
   <div className="flex flex-col md:flex-row gap-4">
-    <div className="w-full md:w-64 h-40 rounded-2xl overflow-hidden bg-gray-50 border border-dashed border-gray-200 flex items-center justify-center">
+    <div className="w-full md:w-64 h-40 rounded-2xl overflow-hidden bg-primary-50 border border-dashed border-primary-200 flex items-center justify-center">
       {salonSettings.image ? (
         <img src={resolveMediaUrl(salonSettings.image)} alt="Salon" className="w-full h-full object-cover" />
       ) : (
-        <FiImage className="w-10 h-10 text-gray-300" />
+        <FiImage className="w-10 h-10 text-primary-300" />
       )}
     </div>
     <input
@@ -4804,7 +4804,7 @@ right={
           <FiImage className="mr-2" /> Ajouter une photo
         </Button>
       )}
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-primary-500">
         Image carrée ou paysage. Affichée sur la page d'accueil et la fiche salon.
       </p>
     </div>
@@ -4828,8 +4828,8 @@ right={
 {weekDays.map(([label, key]) => {
 const hours = salonSettings.openingHours?.[key];
 return (
-<div key={key} className="flex flex-col md:flex-row md:items-center gap-3 p-4 bg-gray-50 rounded-2xl">
-<span className="w-24 font-extrabold text-gray-900">{label}</span>
+<div key={key} className="flex flex-col md:flex-row md:items-center gap-3 p-4 bg-primary-50 rounded-2xl">
+<span className="w-24 font-extrabold text-primary-900">{label}</span>
 {hours ? (
 <>
 <input
@@ -4841,9 +4841,9 @@ setSalonSettings((p) => ({
 openingHours: { ...p.openingHours, [key]: { ...hours, open: e.target.value } },
 }))
 }
-className="px-3 py-2 border border-gray-200 rounded-xl bg-white"
+className="px-3 py-2 border border-primary-200 rounded-xl bg-white"
 />
-<span className="text-gray-500 font-semibold">à</span>
+<span className="text-primary-500 font-semibold">à</span>
 <input
 type="time"
 value={hours.close}
@@ -4853,7 +4853,7 @@ setSalonSettings((p) => ({
 openingHours: { ...p.openingHours, [key]: { ...hours, close: e.target.value } },
 }))
 }
-className="px-3 py-2 border border-gray-200 rounded-xl bg-white"
+className="px-3 py-2 border border-primary-200 rounded-xl bg-white"
 />
 <button
 onClick={() => setSalonSettings((p) => ({ ...p, openingHours: { ...p.openingHours, [key]: null } }))}
@@ -4864,7 +4864,7 @@ Marquer fermé
 </>
 ) : (
 <>
-<span className="text-gray-400 font-semibold">Fermé</span>
+<span className="text-primary-400 font-semibold">Fermé</span>
 <button
 onClick={() =>
 setSalonSettings((p) => ({
@@ -4872,7 +4872,7 @@ setSalonSettings((p) => ({
 openingHours: { ...p.openingHours, [key]: { open: "09:00", close: "18:00" } },
 }))
 }
-className="text-amber-700 hover:text-amber-800 font-semibold text-sm"
+className="text-gold-700 hover:text-gold-800 font-semibold text-sm"
 >
 Ajouter horaires
 </button>
@@ -4890,7 +4890,7 @@ Ajouter horaires
 <button
   type="button"
   onClick={openFloatingChat}
-  className="fixed bottom-32 right-3 sm:bottom-20 sm:right-6 z-40 inline-flex items-center justify-center gap-2 rounded-full bg-gray-900 w-12 h-12 sm:w-auto sm:h-auto sm:px-5 sm:py-3 text-sm font-semibold text-white shadow-lg shadow-gray-900/25 transition hover:bg-gray-800"
+  className="fixed bottom-32 right-3 sm:bottom-20 sm:right-6 z-40 inline-flex items-center justify-center gap-2 rounded-full bg-primary-900 w-12 h-12 sm:w-auto sm:h-auto sm:px-5 sm:py-3 text-sm font-semibold text-white shadow-lg shadow-primary-900/25 transition hover:bg-primary-800"
 >
   <FiMessageCircle className="h-5 w-5 sm:h-4 sm:w-4" /> <span className="hidden sm:inline">Chat rapide</span>
 </button>

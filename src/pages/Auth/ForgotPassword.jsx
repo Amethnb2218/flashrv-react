@@ -28,10 +28,10 @@ function ForgotPassword() {
 
   if (isSent) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 pt-20 bg-gradient-to-br from-gray-50 via-white to-amber-50/30 relative overflow-hidden">
+      <div className="min-h-screen flex items-center justify-center px-4 pt-20 bg-gradient-to-br from-primary-50 via-white to-gold-50/30 relative overflow-hidden">
         {/* Decorative background elements */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-amber-100/40 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-yellow-100/30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4"></div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gold-100/40 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-gold-100/30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4"></div>
         <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-green-100/30 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
         
         <motion.div
@@ -42,10 +42,10 @@ function ForgotPassword() {
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <FiCheck className="w-8 h-8 text-green-600" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+          <h1 className="text-2xl font-bold text-primary-900 mb-2">
             Email envoyé !
           </h1>
-          <p className="text-gray-600 mb-6">
+          <p className="text-primary-600 mb-6">
             Si un compte existe avec l'adresse <strong>{email}</strong>, 
             vous recevrez un lien pour réinitialiser votre mot de passe.
           </p>
@@ -62,10 +62,10 @@ function ForgotPassword() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 pt-20 bg-gradient-to-br from-gray-50 via-white to-amber-50/30 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center px-4 pt-20 bg-gradient-to-br from-primary-50 via-white to-gold-50/30 relative overflow-hidden">
       {/* Decorative background elements */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-amber-100/40 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
-      <div className="absolute bottom-0 left-0 w-80 h-80 bg-yellow-100/30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4"></div>
+      <div className="absolute top-0 right-0 w-96 h-96 bg-gold-100/40 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
+      <div className="absolute bottom-0 left-0 w-80 h-80 bg-gold-100/30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4"></div>
       <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-orange-100/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
       
       <motion.div
@@ -75,26 +75,26 @@ function ForgotPassword() {
       >
         <Link 
           to="/login" 
-          className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-6"
+          className="inline-flex items-center text-primary-600 hover:text-primary-900 mb-6"
         >
           <FiArrowLeft className="w-5 h-5 mr-2" />
           Retour
         </Link>
 
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Mot de passe oublié ?</h1>
-          <p className="mt-2 text-gray-600">
+          <h1 className="text-3xl font-bold text-primary-900">Mot de passe oublié ?</h1>
+          <p className="mt-2 text-primary-600">
             Entrez votre email pour recevoir un lien de réinitialisation
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-primary-700 mb-2">
               Adresse email
             </label>
             <div className="relative">
-              <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-primary-400 w-5 h-5" />
               <input
                 type="email"
                 value={email}
@@ -119,7 +119,7 @@ function ForgotPassword() {
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-gray-600">
+        <p className="mt-6 text-center text-sm text-primary-600">
           Besoin d'aide ?{' '}
           <a 
             href="https://wa.me/221776762784" 

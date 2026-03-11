@@ -115,7 +115,7 @@ function ClientDashboard() {
   }
 
   const orderStatusLabels = {
-    PENDING: { label: 'En attente', className: 'bg-yellow-100 text-yellow-700' },
+    PENDING: { label: 'En attente', className: 'bg-gold-100 text-yellow-700' },
     CONFIRMED: { label: 'Confirmée', className: 'bg-blue-100 text-blue-700' },
     PREPARING: { label: 'En préparation', className: 'bg-purple-100 text-purple-700' },
     READY: { label: 'Prête', className: 'bg-green-100 text-green-700' },
@@ -179,13 +179,13 @@ function ClientDashboard() {
       CONFIRMED: 'bg-green-100 text-green-700',
       CONFIRMED_ON_SITE: 'bg-green-100 text-green-700',
       PAID: 'bg-emerald-100 text-emerald-700',
-      PENDING: 'bg-yellow-100 text-yellow-700',
-      PENDING_PAYMENT: 'bg-amber-100 text-amber-700',
-      PENDING_ASSIGNMENT: 'bg-yellow-100 text-yellow-700',
+      PENDING: 'bg-gold-100 text-yellow-700',
+      PENDING_PAYMENT: 'bg-gold-100 text-gold-700',
+      PENDING_ASSIGNMENT: 'bg-gold-100 text-yellow-700',
       IN_PROGRESS: 'bg-blue-100 text-blue-700',
       CANCELLED: 'bg-red-100 text-red-700',
       NO_SHOW: 'bg-red-100 text-red-700',
-      COMPLETED: 'bg-gray-100 text-gray-700',
+      COMPLETED: 'bg-primary-100 text-primary-700',
     }
     const labels = {
       CONFIRMED: 'Confirmée',
@@ -212,12 +212,12 @@ function ClientDashboard() {
     const isCompleted = String(booking.status || '').toUpperCase() === 'COMPLETED'
 
     return (
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-xl border border-primary-100 shadow-sm overflow-hidden">
         {/* Compact header row */}
         <button
           type="button"
           onClick={() => setExpandedBookingId(isExpanded ? null : booking.id)}
-          className="w-full text-left px-3 py-2 flex items-center gap-2.5 hover:bg-gray-50 transition"
+          className="w-full text-left px-3 py-2 flex items-center gap-2.5 hover:bg-primary-50 transition"
         >
           {getSalonImage(booking.salon) ? (
             <img src={getSalonImage(booking.salon)} alt={booking.salon?.name} className="w-8 h-8 rounded-lg object-cover shrink-0" />
@@ -228,22 +228,22 @@ function ClientDashboard() {
           )}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-semibold text-gray-900 text-sm truncate">{booking.salon?.name}</span>
-              <span className="text-xs text-gray-400 truncate">{booking.services?.map(s => s.name).join(', ') || ''}</span>
+              <span className="font-semibold text-primary-900 text-sm truncate">{booking.salon?.name}</span>
+              <span className="text-xs text-primary-400 truncate">{booking.services?.map(s => s.name).join(', ') || ''}</span>
             </div>
             <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-              <span className="text-xs text-gray-500 flex items-center gap-1">
+              <span className="text-xs text-primary-500 flex items-center gap-1">
                 <FiCalendar className="w-3 h-3" />
                 {new Date(booking.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
               </span>
-              <span className="text-xs text-gray-500 flex items-center gap-1">
+              <span className="text-xs text-primary-500 flex items-center gap-1">
                 <FiClock className="w-3 h-3" /> {booking.time || '—'}
               </span>
-              <span className="font-bold text-amber-600 text-sm">{booking.totalPrice?.toLocaleString()} FCFA</span>
+              <span className="font-bold text-gold-600 text-sm">{booking.totalPrice?.toLocaleString()} FCFA</span>
             </div>
           </div>
           {getStatusBadge(booking.status)}
-          <FiChevronDown className={`w-4 h-4 text-gray-400 shrink-0 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+          <FiChevronDown className={`w-4 h-4 text-primary-400 shrink-0 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
         </button>
 
         {/* Expanded details */}
@@ -256,10 +256,10 @@ function ClientDashboard() {
               transition={{ duration: 0.2 }}
               className="overflow-hidden"
             >
-              <div className="px-3 pb-3 border-t border-gray-100 pt-2.5 space-y-2">
+              <div className="px-3 pb-3 border-t border-primary-100 pt-2.5 space-y-2">
                 {/* Location */}
                 {(booking.salon?.address || booking.salon?.city) && (
-                  <p className="text-xs text-gray-500 flex items-center gap-1">
+                  <p className="text-xs text-primary-500 flex items-center gap-1">
                     <FiMapPin className="w-3 h-3" /> {booking.salon.address || booking.salon.city}
                   </p>
                 )}
@@ -292,12 +292,12 @@ function ClientDashboard() {
                   )}
                   <button
                     onClick={() => { setChatBooking(booking); setShowChatModal(true) }}
-                    className="px-3 py-1.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-xs font-medium"
+                    className="px-3 py-1.5 border border-primary-300 text-primary-700 rounded-lg hover:bg-primary-50 transition-colors text-xs font-medium"
                   >
                     <FiMessageCircle className="inline w-3 h-3 mr-1" /> Chat
                   </button>
                   {isCompleted && (
-                    <button className="px-3 py-1.5 bg-yellow-50 text-yellow-700 rounded-lg hover:bg-yellow-100 transition-colors text-xs font-medium">
+                    <button className="px-3 py-1.5 bg-yellow-50 text-yellow-700 rounded-lg hover:bg-gold-100 transition-colors text-xs font-medium">
                       <FiStar className="inline w-3 h-3 mr-1" /> Avis
                     </button>
                   )}
@@ -311,21 +311,21 @@ function ClientDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-amber-50/20 pt-4 sm:pt-8 pb-28 relative">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-gold-50/20 pt-4 sm:pt-8 pb-28 relative">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-4 sm:mb-8">
           <div>
-            <h1 className="text-lg sm:text-2xl font-bold text-gray-900">
+            <h1 className="text-lg sm:text-2xl font-bold text-primary-900">
               Bonjour, {user?.name?.split(' ')[0]} 👋
             </h1>
-            <p className="text-gray-500 mt-0.5 text-xs sm:text-sm hidden sm:block">
+            <p className="text-primary-500 mt-0.5 text-xs sm:text-sm hidden sm:block">
               {loading ? 'Chargement...' : 'Gérez vos réservations et votre compte'}
             </p>
           </div>
           <Link
             to="/salons"
-            className="inline-flex items-center px-3 py-1.5 sm:px-5 sm:py-2.5 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-lg sm:rounded-xl transition-colors text-xs sm:text-sm"
+            className="inline-flex items-center px-3 py-1.5 sm:px-5 sm:py-2.5 bg-primary-900 hover:bg-primary-800 text-white font-semibold rounded-lg sm:rounded-xl transition-colors text-xs sm:text-sm"
           >
             <span className="hidden sm:inline">Nouvelle réservation</span>
             <span className="sm:hidden">Réserver</span>
@@ -335,33 +335,33 @@ function ClientDashboard() {
 
         {/* Quick stats */}
         <div className="grid grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-8">
-          <div className="bg-white rounded-xl sm:rounded-2xl p-2 sm:p-5 shadow-sm border border-gray-100 text-center sm:text-left">
+          <div className="bg-white rounded-xl sm:rounded-2xl p-2 sm:p-5 shadow-sm border border-primary-100 text-center sm:text-left">
             <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-1 sm:gap-0">
               <div>
-                <p className="text-gray-500 text-[10px] sm:text-sm leading-tight">À venir</p>
-                <p className="text-base sm:text-2xl font-bold text-gray-900">{loading ? '—' : upcomingBookings.length}</p>
+                <p className="text-primary-500 text-[10px] sm:text-sm leading-tight">À venir</p>
+                <p className="text-base sm:text-2xl font-bold text-primary-900">{loading ? '—' : upcomingBookings.length}</p>
               </div>
               <div className="hidden sm:flex w-10 h-10 bg-primary-100 rounded-xl items-center justify-center">
                 <FiCalendar className="w-5 h-5 text-primary-600" />
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-xl sm:rounded-2xl p-2 sm:p-5 shadow-sm border border-gray-100 text-center sm:text-left">
+          <div className="bg-white rounded-xl sm:rounded-2xl p-2 sm:p-5 shadow-sm border border-primary-100 text-center sm:text-left">
             <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-1 sm:gap-0">
               <div>
-                <p className="text-gray-500 text-[10px] sm:text-sm leading-tight">Passées</p>
-                <p className="text-base sm:text-2xl font-bold text-gray-900">{loading ? '—' : pastBookings.length}</p>
+                <p className="text-primary-500 text-[10px] sm:text-sm leading-tight">Passées</p>
+                <p className="text-base sm:text-2xl font-bold text-primary-900">{loading ? '—' : pastBookings.length}</p>
               </div>
               <div className="hidden sm:flex w-10 h-10 bg-green-100 rounded-xl items-center justify-center">
                 <FiClock className="w-5 h-5 text-green-600" />
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-xl sm:rounded-2xl p-2 sm:p-5 shadow-sm border border-gray-100 text-center sm:text-left">
+          <div className="bg-white rounded-xl sm:rounded-2xl p-2 sm:p-5 shadow-sm border border-primary-100 text-center sm:text-left">
             <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-1 sm:gap-0">
               <div>
-                <p className="text-gray-500 text-[10px] sm:text-sm leading-tight">Favoris</p>
-                <p className="text-base sm:text-2xl font-bold text-gray-900">{loading ? '—' : favoriteSalonsCount}</p>
+                <p className="text-primary-500 text-[10px] sm:text-sm leading-tight">Favoris</p>
+                <p className="text-base sm:text-2xl font-bold text-primary-900">{loading ? '—' : favoriteSalonsCount}</p>
               </div>
               <div className="hidden sm:flex w-10 h-10 bg-pink-100 rounded-xl items-center justify-center">
                 <FiHeart className="w-5 h-5 text-accent-600" />
@@ -386,15 +386,15 @@ function ClientDashboard() {
         </div>
 
         {/* Tabs */}
-        <div className="sm:bg-white sm:rounded-2xl sm:shadow-sm sm:border sm:border-gray-100">
-          <div className="sticky top-14 z-20 bg-white border-b border-gray-200">
+        <div className="sm:bg-white sm:rounded-2xl sm:shadow-sm sm:border sm:border-primary-100">
+          <div className="sticky top-14 z-20 bg-white border-b border-primary-200">
             <div className="flex">
               <button
                 onClick={() => setActiveTab('upcoming')}
                 className={`flex-1 py-2.5 sm:py-3 text-center text-xs sm:text-sm font-medium transition-colors ${
                   activeTab === 'upcoming'
                     ? 'text-primary-600 border-b-2 border-primary-600'
-                    : 'text-gray-500 hover:text-gray-700'
+                    : 'text-primary-500 hover:text-primary-700'
                 }`}
               >
                 À venir ({upcomingBookings.length})
@@ -404,7 +404,7 @@ function ClientDashboard() {
                 className={`flex-1 py-2.5 sm:py-3 text-center text-xs sm:text-sm font-medium transition-colors ${
                   activeTab === 'past'
                     ? 'text-primary-600 border-b-2 border-primary-600'
-                    : 'text-gray-500 hover:text-gray-700'
+                    : 'text-primary-500 hover:text-primary-700'
                 }`}
               >
                 Historique ({pastBookings.length})
@@ -414,7 +414,7 @@ function ClientDashboard() {
                 className={`flex-1 py-2.5 sm:py-3 text-center text-xs sm:text-sm font-medium transition-colors flex items-center justify-center gap-1 ${
                   activeTab === 'orders'
                     ? 'text-primary-600 border-b-2 border-primary-600'
-                    : 'text-gray-500 hover:text-gray-700'
+                    : 'text-primary-500 hover:text-primary-700'
                 }`}
               >
                 <FiShoppingBag className="w-3.5 h-3.5" />
@@ -429,15 +429,15 @@ function ClientDashboard() {
               ordersLoading ? (
                 <div className="text-center py-12">
                   <div className="w-10 h-10 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin mx-auto mb-4"></div>
-                  <p className="text-gray-500">Chargement des commandes...</p>
+                  <p className="text-primary-500">Chargement des commandes...</p>
                 </div>
               ) : orders.length === 0 ? (
                 <div className="text-center py-12">
-                  <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <FiShoppingBag className="w-10 h-10 text-gray-400" />
+                  <div className="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <FiShoppingBag className="w-10 h-10 text-primary-400" />
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Aucune commande</h3>
-                  <p className="text-gray-500 mb-6">Vos commandes boutique apparaîtront ici</p>
+                  <h3 className="text-lg font-semibold text-primary-900 mb-2">Aucune commande</h3>
+                  <p className="text-primary-500 mb-6">Vos commandes boutique apparaîtront ici</p>
                   <Link to="/salons?businessType=BOUTIQUE" className="inline-flex items-center px-6 py-3 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-colors">
                     Explorer les boutiques
                   </Link>
@@ -445,30 +445,30 @@ function ClientDashboard() {
               ) : (
                 <div className="space-y-2">
                   {orders.map(order => {
-                    const st = orderStatusLabels[order.status] || { label: order.status, className: 'bg-gray-100 text-gray-700' }
+                    const st = orderStatusLabels[order.status] || { label: order.status, className: 'bg-primary-100 text-primary-700' }
                     const canCancel = ['PENDING', 'CONFIRMED'].includes(order.status)
                     const isOrderExpanded = expandedOrderId === order.id
                     return (
-                      <div key={order.id} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                      <div key={order.id} className="bg-white rounded-xl border border-primary-100 shadow-sm overflow-hidden">
                         <button
                           type="button"
                           onClick={() => setExpandedOrderId(isOrderExpanded ? null : order.id)}
-                          className="w-full text-left px-3 py-2.5 flex items-center gap-2.5 hover:bg-gray-50 transition"
+                          className="w-full text-left px-3 py-2.5 flex items-center gap-2.5 hover:bg-primary-50 transition"
                         >
-                          <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center shrink-0">
-                            <FiShoppingBag className="w-4 h-4 text-amber-600" />
+                          <div className="w-8 h-8 bg-gold-100 rounded-lg flex items-center justify-center shrink-0">
+                            <FiShoppingBag className="w-4 h-4 text-gold-600" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <span className="font-semibold text-gray-900 text-sm truncate block">{order.salon?.name || 'Boutique'}</span>
+                            <span className="font-semibold text-primary-900 text-sm truncate block">{order.salon?.name || 'Boutique'}</span>
                             <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-xs text-gray-500">
+                              <span className="text-xs text-primary-500">
                                 {new Date(order.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                               </span>
-                              <span className="font-bold text-amber-600 text-sm">{(order.totalPrice || 0).toLocaleString()} F</span>
+                              <span className="font-bold text-gold-600 text-sm">{(order.totalPrice || 0).toLocaleString()} F</span>
                             </div>
                           </div>
                           <span className={`px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold shrink-0 ${st.className}`}>{st.label}</span>
-                          <FiChevronDown className={`w-4 h-4 text-gray-400 shrink-0 transition-transform ${isOrderExpanded ? 'rotate-180' : ''}`} />
+                          <FiChevronDown className={`w-4 h-4 text-primary-400 shrink-0 transition-transform ${isOrderExpanded ? 'rotate-180' : ''}`} />
                         </button>
                         <AnimatePresence>
                           {isOrderExpanded && (
@@ -479,14 +479,14 @@ function ClientDashboard() {
                               transition={{ duration: 0.2 }}
                               className="overflow-hidden"
                             >
-                              <div className="px-3 pb-3 border-t border-gray-100 pt-2.5 space-y-2">
+                              <div className="px-3 pb-3 border-t border-primary-100 pt-2.5 space-y-2">
                                 {(order.items || []).map((item, i) => (
                                   <div key={i} className="flex justify-between text-sm">
-                                    <span className="text-gray-700">{item.product?.name || 'Article'} × {item.quantity}</span>
-                                    <span className="font-medium text-gray-900">{(item.unitPrice * item.quantity).toLocaleString()} F</span>
+                                    <span className="text-primary-700">{item.product?.name || 'Article'} × {item.quantity}</span>
+                                    <span className="font-medium text-primary-900">{(item.unitPrice * item.quantity).toLocaleString()} F</span>
                                   </div>
                                 ))}
-                                <div className="flex items-center gap-2 pt-2 border-t border-gray-100 text-xs text-gray-500">
+                                <div className="flex items-center gap-2 pt-2 border-t border-primary-100 text-xs text-primary-500">
                                   <FiPackage className="w-3.5 h-3.5" />
                                   {order.deliveryMode === 'DELIVERY' ? 'Livraison' : 'Retrait'}
                                 </div>
@@ -495,7 +495,7 @@ function ClientDashboard() {
                                     const steps = ['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'DELIVERED']
                                     const currentIdx = steps.indexOf(order.status)
                                     const isDone = i <= currentIdx && order.status !== 'CANCELLED'
-                                    return <div key={step} className={`flex-1 h-1 rounded-full ${isDone ? 'bg-green-500' : 'bg-gray-200'}`} />
+                                    return <div key={step} className={`flex-1 h-1 rounded-full ${isDone ? 'bg-green-500' : 'bg-primary-200'}`} />
                                   })}
                                 </div>
                                 {canCancel && (
@@ -519,7 +519,7 @@ function ClientDashboard() {
             ) : loading ? (
               <div className="text-center py-12">
                 <div className="w-10 h-10 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin mx-auto mb-4"></div>
-                <p className="text-gray-500">Chargement des réservations...</p>
+                <p className="text-primary-500">Chargement des réservations...</p>
               </div>
             ) : activeTab === 'upcoming' ? (
               upcomingBookings.length > 0 ? (
@@ -528,20 +528,20 @@ function ClientDashboard() {
                     <BookingCard key={booking.id} booking={booking} />
                   ))}
                   {upcomingBookings.length > visibleBookings && (
-                    <button type="button" onClick={() => setVisibleBookings(v => v + 10)} className="w-full mt-3 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition">
+                    <button type="button" onClick={() => setVisibleBookings(v => v + 10)} className="w-full mt-3 py-2.5 rounded-xl border border-primary-200 text-sm font-medium text-primary-600 hover:bg-primary-50 transition">
                       Voir plus ({upcomingBookings.length - visibleBookings} restants)
                     </button>
                   )}
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <FiCalendar className="w-10 h-10 text-gray-400" />
+                  <div className="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <FiCalendar className="w-10 h-10 text-primary-400" />
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  <h3 className="text-lg font-semibold text-primary-900 mb-2">
                     Aucune réservation à venir
                   </h3>
-                  <p className="text-gray-500 mb-6">
+                  <p className="text-primary-500 mb-6">
                     Découvrez nos salons partenaires et réservez votre prochain rendez-vous
                   </p>
                   <Link
@@ -559,20 +559,20 @@ function ClientDashboard() {
                     <BookingCard key={booking.id} booking={booking} />
                   ))}
                   {pastBookings.length > visibleBookings && (
-                    <button type="button" onClick={() => setVisibleBookings(v => v + 10)} className="w-full mt-3 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition">
+                    <button type="button" onClick={() => setVisibleBookings(v => v + 10)} className="w-full mt-3 py-2.5 rounded-xl border border-primary-200 text-sm font-medium text-primary-600 hover:bg-primary-50 transition">
                       Voir plus ({pastBookings.length - visibleBookings} restants)
                     </button>
                   )}
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <FiClock className="w-10 h-10 text-gray-400" />
+                  <div className="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <FiClock className="w-10 h-10 text-primary-400" />
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  <h3 className="text-lg font-semibold text-primary-900 mb-2">
                     Aucun historique
                   </h3>
-                  <p className="text-gray-500">
+                  <p className="text-primary-500">
                     Vos réservations passées apparaîtront ici
                   </p>
                 </div>
@@ -585,7 +585,7 @@ function ClientDashboard() {
       <button
         type="button"
         onClick={openFloatingChat}
-        className="fixed bottom-32 right-3 sm:bottom-20 sm:right-6 z-40 inline-flex items-center justify-center w-12 h-12 sm:w-auto sm:h-auto rounded-full bg-gray-900 sm:px-5 sm:py-3 text-sm font-semibold text-white shadow-lg shadow-gray-900/25 transition hover:bg-gray-800"
+        className="fixed bottom-32 right-3 sm:bottom-20 sm:right-6 z-40 inline-flex items-center justify-center w-12 h-12 sm:w-auto sm:h-auto rounded-full bg-primary-900 sm:px-5 sm:py-3 text-sm font-semibold text-white shadow-lg shadow-primary-900/25 transition hover:bg-primary-800"
       >
         <FiMessageCircle className="h-5 w-5 sm:h-4 sm:w-4" />
         <span className="hidden sm:inline ml-2">Chat rapide</span>
@@ -598,27 +598,27 @@ function ClientDashboard() {
         title="Annuler la réservation"
       >
         <div className="p-6">
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
-            <p className="text-amber-800 font-medium text-sm flex items-center gap-2">
+          <div className="bg-gold-50 border border-gold-200 rounded-xl p-4 mb-4">
+            <p className="text-gold-800 font-medium text-sm flex items-center gap-2">
               <span>⚠️</span>
               Politique d'annulation
             </p>
-            <p className="text-amber-700 text-sm mt-2">
+            <p className="text-gold-700 text-sm mt-2">
               Si vous annulez moins de <strong>30 minutes</strong> après la confirmation de votre réservation, 
               votre acompte sera intégralement remboursé.
             </p>
-            <p className="text-amber-700 text-sm mt-1">
+            <p className="text-gold-700 text-sm mt-1">
               Au-delà de 30 minutes, <strong>l'acompte n'est pas remboursable</strong>.
             </p>
           </div>
-          <p className="text-gray-600 mb-6">
+          <p className="text-primary-600 mb-6">
             Êtes-vous sûr de vouloir annuler cette réservation ? 
             Cette action est irréversible.
           </p>
           <div className="flex gap-4">
             <button
               onClick={() => setShowCancelModal(false)}
-              className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors font-medium"
+              className="flex-1 py-3 border border-primary-300 text-primary-700 rounded-xl hover:bg-primary-50 transition-colors font-medium"
             >
               Non, garder
             </button>

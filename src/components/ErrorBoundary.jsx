@@ -13,12 +13,12 @@ class ErrorBoundary extends Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
+        <div className="min-h-screen flex items-center justify-center bg-primary-50 p-6">
           <div className="text-center max-w-md">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+            <h1 className="text-2xl font-bold text-primary-900 mb-4">
               Oups, une erreur est survenue
             </h1>
-            <p className="text-gray-600 mb-6">
+            <p className="text-primary-600 mb-6">
               Veuillez rafraîchir la page ou réessayer plus tard.
             </p>
             <button

@@ -105,7 +105,7 @@ function PaymentSuccess() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-primary-50">
         <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent" />
       </div>
     )
@@ -113,16 +113,16 @@ function PaymentSuccess() {
 
   if (!appointment) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-amber-50/30 py-12 flex items-center justify-center relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-amber-100/40 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-yellow-100/30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-gold-50/30 py-12 flex items-center justify-center relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gold-100/40 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-gold-100/30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
         <div className="relative z-10 max-w-md mx-auto px-4 text-center">
           <div className="bg-white rounded-3xl shadow-xl p-8">
-            <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FiAlertCircle className="w-8 h-8 text-yellow-600" />
+            <div className="w-16 h-16 bg-gold-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <FiAlertCircle className="w-8 h-8 text-gold-600" />
             </div>
-            <h2 className="text-xl font-bold text-gray-900 mb-2">Reservation introuvable</h2>
-            <p className="text-gray-600 mb-6">
+            <h2 className="text-xl font-bold text-primary-900 mb-2">Reservation introuvable</h2>
+            <p className="text-primary-600 mb-6">
               {error || 'Impossible de recuperer la reservation.'}
             </p>
             <div className="flex flex-col gap-3">
@@ -160,8 +160,8 @@ function PaymentSuccess() {
   const salonImage = resolveMediaUrl(booking.salon?.image || booking.salon?.gallery?.[0]?.url || '')
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-amber-50/30 py-12 relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-96 h-96 bg-amber-100/40 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-gold-50/30 py-12 relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-96 h-96 bg-gold-100/40 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
       <div className="absolute bottom-0 left-0 w-80 h-80 bg-green-100/30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
 
       <div className="relative z-10 max-w-2xl mx-auto px-4">
@@ -171,7 +171,7 @@ function PaymentSuccess() {
           transition={{ duration: 0.3 }}
           className="bg-white rounded-3xl shadow-xl overflow-hidden"
         >
-          <div className={`px-6 py-12 text-center ${isPaid ? 'bg-gradient-to-r from-green-500 to-emerald-500' : 'bg-gradient-to-r from-amber-500 to-orange-500'}`}>
+          <div className={`px-6 py-12 text-center ${isPaid ? 'bg-gradient-to-r from-green-500 to-emerald-500' : 'bg-gradient-to-r from-gold-500 to-orange-500'}`}>
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
@@ -181,25 +181,25 @@ function PaymentSuccess() {
               {isPaid ? (
                 <FiCheck className="w-10 h-10 text-green-500" />
               ) : (
-                <FiAlertCircle className="w-10 h-10 text-amber-500" />
+                <FiAlertCircle className="w-10 h-10 text-gold-500" />
               )}
             </motion.div>
             <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
               {isPaid ? 'Paiement confirme !' : 'Paiement en attente'}
             </h1>
-            <p className={`${isPaid ? 'text-green-100' : 'text-amber-100'}`}>
+            <p className={`${isPaid ? 'text-green-100' : 'text-gold-100'}`}>
               {isPaid ? 'Votre reservation est payee et enregistree.' : 'Votre reservation est creee, finalisez le paiement pour confirmer.'}
             </p>
           </div>
 
           <div className="p-6 sm:p-8">
             <div className="text-center mb-8">
-              <p className="text-sm text-gray-500 mb-1">Reference reservation</p>
+              <p className="text-sm text-primary-500 mb-1">Reference reservation</p>
               <p className="text-lg sm:text-2xl font-bold text-primary-600 font-mono break-all">{booking.id}</p>
             </div>
 
-            <div className="bg-gray-50 rounded-2xl p-6 mb-8">
-              <div className="flex flex-col sm:flex-row items-start mb-6 pb-6 border-b border-gray-200 gap-3 sm:gap-0">
+            <div className="bg-primary-50 rounded-2xl p-6 mb-8">
+              <div className="flex flex-col sm:flex-row items-start mb-6 pb-6 border-b border-primary-200 gap-3 sm:gap-0">
                 {salonImage ? (
                   <img src={salonImage} alt={booking.salon.name} className="w-20 h-20 rounded-xl object-cover" />
                 ) : (
@@ -208,8 +208,8 @@ function PaymentSuccess() {
                   </div>
                 )}
                 <div className="ml-4">
-                  <h3 className="font-bold text-gray-900 text-lg">{booking.salon.name}</h3>
-                  <div className="flex items-center text-gray-500 text-sm mt-1">
+                  <h3 className="font-bold text-primary-900 text-lg">{booking.salon.name}</h3>
+                  <div className="flex items-center text-primary-500 text-sm mt-1">
                     <FiMapPin className="w-4 h-4 mr-1" />
                     {booking.salon.address}
                   </div>
@@ -222,8 +222,8 @@ function PaymentSuccess() {
                     <FiCalendar className="w-5 h-5 text-primary-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Date</p>
-                    <p className="font-semibold text-gray-900">{formatDate(booking.date)}</p>
+                    <p className="text-sm text-primary-500">Date</p>
+                    <p className="font-semibold text-primary-900">{formatDate(booking.date)}</p>
                   </div>
                 </div>
 
@@ -232,8 +232,8 @@ function PaymentSuccess() {
                     <FiClock className="w-5 h-5 text-primary-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Heure</p>
-                    <p className="font-semibold text-gray-900">{booking.time}</p>
+                    <p className="text-sm text-primary-500">Heure</p>
+                    <p className="font-semibold text-primary-900">{booking.time}</p>
                   </div>
                 </div>
 
@@ -242,34 +242,34 @@ function PaymentSuccess() {
                     <FiUser className="w-5 h-5 text-primary-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Coiffeur(se)</p>
-                    <p className="font-semibold text-gray-900">{booking.coiffeur?.name || 'A assigner'}</p>
+                    <p className="text-sm text-primary-500">Coiffeur(se)</p>
+                    <p className="font-semibold text-primary-900">{booking.coiffeur?.name || 'A assigner'}</p>
                   </div>
                 </div>
 
                 <div className="flex items-start">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center mr-3 ${isPaid ? 'bg-green-100' : 'bg-amber-100'}`}>
-                    {isPaid ? <FiCheck className="w-5 h-5 text-green-600" /> : <FiAlertCircle className="w-5 h-5 text-amber-600" />}
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center mr-3 ${isPaid ? 'bg-green-100' : 'bg-gold-100'}`}>
+                    {isPaid ? <FiCheck className="w-5 h-5 text-green-600" /> : <FiAlertCircle className="w-5 h-5 text-gold-600" />}
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Statut</p>
-                    <p className={`font-semibold ${isPaid ? 'text-green-600' : 'text-amber-700'}`}>{statusLabel}</p>
+                    <p className="text-sm text-primary-500">Statut</p>
+                    <p className={`font-semibold ${isPaid ? 'text-green-600' : 'text-gold-700'}`}>{statusLabel}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <p className="text-sm text-gray-500 mb-3">Services reserves</p>
+              <div className="mt-6 pt-6 border-t border-primary-200">
+                <p className="text-sm text-primary-500 mb-3">Services reserves</p>
                 <div className="space-y-2">
                   {booking.services.map((service) => (
                     <div key={service.id} className="flex justify-between">
-                      <span className="text-gray-700">{service.name}</span>
-                      <span className="font-medium text-gray-900">{formatPrice(service.price)} FCFA</span>
+                      <span className="text-primary-700">{service.name}</span>
+                      <span className="font-medium text-primary-900">{formatPrice(service.price)} FCFA</span>
                     </div>
                   ))}
                 </div>
-                <div className="flex justify-between mt-4 pt-4 border-t border-gray-200">
-                  <span className="font-bold text-gray-900">Total</span>
+                <div className="flex justify-between mt-4 pt-4 border-t border-primary-200">
+                  <span className="font-bold text-primary-900">Total</span>
                   <span className="font-bold text-primary-600 text-xl">{formatPrice(booking.totalPrice)} FCFA</span>
                 </div>
               </div>
@@ -287,7 +287,7 @@ function PaymentSuccess() {
               )}
               <Link
                 to="/dashboard"
-                className="flex items-center justify-center px-6 py-3 border border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-colors"
+                className="flex items-center justify-center px-6 py-3 border border-primary-300 text-primary-700 font-semibold rounded-xl hover:bg-primary-50 transition-colors"
               >
                 Voir mes reservations
               </Link>

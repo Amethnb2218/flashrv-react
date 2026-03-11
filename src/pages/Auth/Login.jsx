@@ -105,9 +105,9 @@ function Login() {
       {/* Left side - Form */}
       <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-8 relative overflow-hidden">
         {/* Background decorations */}
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-white to-amber-50/30"></div>
-        <div className="absolute top-0 right-0 w-96 h-96 bg-amber-100/50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-yellow-100/40 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-50 via-white to-gold-50/30"></div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gold-100/50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-gold-100/40 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
         
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -120,8 +120,8 @@ function Login() {
                   <span className="text-white font-bold text-2xl" style={{ fontFamily: "'Poppins', sans-serif" }}>F</span>
                 </div>
               </Link>
-              <h1 className="text-3xl font-bold text-gray-900">Bon retour !</h1>
-              <p className="mt-2 text-gray-600">
+              <h1 className="text-3xl font-bold text-primary-900">Bon retour !</h1>
+              <p className="mt-2 text-primary-600">
                 Connectez-vous pour accéder à votre compte
               </p>
             </div>
@@ -129,7 +129,7 @@ function Login() {
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Identifier (Email / Phone / Username) */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-primary-700 mb-2">
                   Email, téléphone ou identifiant
                 </label>
                 <input
@@ -145,7 +145,7 @@ function Login() {
 
               {/* Password */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-primary-700 mb-2">
                   Mot de passe
                 </label>
                 <div className="relative">
@@ -160,7 +160,7 @@ function Login() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-primary-400 hover:text-primary-600"
                   >
                     {showPassword ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
                   </button>
@@ -171,8 +171,8 @@ function Login() {
               {/* Remember & Forgot */}
               <div className="flex items-center justify-between">
                 <label className="flex items-center cursor-pointer">
-                  <input type="checkbox" className="rounded border-gray-300 text-primary-600 focus:ring-primary-500" />
-                  <span className="ml-2 text-sm text-gray-600">Se souvenir de moi</span>
+                  <input type="checkbox" className="rounded border-primary-300 text-primary-600 focus:ring-primary-500" />
+                  <span className="ml-2 text-sm text-primary-600">Se souvenir de moi</span>
                 </label>
                 <Link to="/forgot-password" className="text-sm text-primary-600 hover:text-primary-700">
                   Mot de passe oublié ?
@@ -198,10 +198,10 @@ function Login() {
               {/* Divider */}
               <div className="relative my-6">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300"></div>
+                  <div className="w-full border-t border-primary-300"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-white text-gray-500">Ou continuer avec</span>
+                  <span className="px-4 bg-white text-primary-500">Ou continuer avec</span>
                 </div>
               </div>
 
@@ -223,7 +223,7 @@ function Login() {
             </form>
 
             {/* Register link */}
-            <p className="mt-8 text-center text-gray-600">
+            <p className="mt-8 text-center text-primary-600">
               Pas encore de compte ?{' '}
               <Link to="/register" className="text-primary-600 font-medium hover:text-primary-700">
                 Créer un compte

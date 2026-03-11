@@ -5,7 +5,7 @@ const statusMap = {
   PENDING: {
     label: "En attente",
     icon: <FiClock className="w-4 h-4 mr-1" />,
-    className: "bg-amber-50 text-amber-800 border-amber-200",
+    className: "bg-gold-50 text-gold-800 border-gold-200",
   },
   APPROVED: {
     label: "Approuvé",

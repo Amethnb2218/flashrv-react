@@ -119,9 +119,9 @@ function Checkout() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-amber-50/20 py-8 relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-96 h-96 bg-amber-100/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
-      <div className="absolute bottom-0 left-0 w-80 h-80 bg-yellow-100/30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-gold-50/20 py-8 relative overflow-hidden">
+      <div className="absolute top-0 right-0 w-96 h-96 bg-gold-100/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
+      <div className="absolute bottom-0 left-0 w-80 h-80 bg-gold-100/30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
 
       <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
@@ -129,13 +129,13 @@ function Checkout() {
           <button
             onClick={() => navigate(-1)}
             disabled={submitting}
-            className="flex items-center text-gray-600 hover:text-gray-900 transition-colors mb-4 disabled:opacity-50"
+            className="flex items-center text-primary-600 hover:text-primary-900 transition-colors mb-4 disabled:opacity-50"
           >
             <FiChevronLeft className="w-5 h-5 mr-1" />
             Retour
           </button>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Finaliser la commande</h1>
-          <p className="text-gray-500 mt-1">Chez {salon.name}</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-primary-900">Finaliser la commande</h1>
+          <p className="text-primary-500 mt-1">Chez {salon.name}</p>
         </div>
 
         {/* Progress Steps */}
@@ -150,16 +150,16 @@ function Checkout() {
                 onClick={() => { if (s.n < step || canProceed(s.n)) setStep(s.n) }}
                 className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold transition-all ${
                   step === s.n
-                    ? 'bg-gray-900 text-white shadow-sm'
+                    ? 'bg-primary-900 text-white shadow-sm'
                     : step > s.n
                     ? 'bg-green-100 text-green-700'
-                    : 'bg-gray-100 text-gray-500'
+                    : 'bg-primary-100 text-primary-500'
                 }`}
               >
                 {step > s.n ? <FiCheck className="w-4 h-4" /> : <s.icon className="w-4 h-4" />}
                 <span className="hidden sm:inline">{s.label}</span>
               </button>
-              {i < 2 && <div className="flex-1 h-px bg-gray-200 mx-2" />}
+              {i < 2 && <div className="flex-1 h-px bg-primary-200 mx-2" />}
             </div>
           ))}
         </div>
@@ -177,26 +177,26 @@ function Checkout() {
                   exit={{ opacity: 0, x: 20 }}
                   className="bg-white rounded-2xl shadow-sm p-5 sm:p-6"
                 >
-                  <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <h2 className="text-lg font-bold text-primary-900 mb-4 flex items-center gap-2">
                     <FiShoppingBag className="w-5 h-5" /> Votre panier ({cartCount} article{cartCount > 1 ? 's' : ''})
                   </h2>
                   <div className="space-y-3">
                     {cart.map(c => {
                       const img = resolveMediaUrl(c.product.imageUrl || c.product.image)
                       return (
-                        <div key={c.product.id} className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl">
+                        <div key={c.product.id} className="flex items-center gap-4 p-3 bg-primary-50 rounded-xl">
                           {img ? (
                             <img src={img} alt={c.product.name} className="w-16 h-16 rounded-xl object-contain bg-white border" />
                           ) : (
-                            <div className="w-16 h-16 rounded-xl bg-gray-100 flex items-center justify-center">
-                              <FiPackage className="w-6 h-6 text-gray-300" />
+                            <div className="w-16 h-16 rounded-xl bg-primary-100 flex items-center justify-center">
+                              <FiPackage className="w-6 h-6 text-primary-300" />
                             </div>
                           )}
                           <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-gray-900 truncate">{c.product.name}</p>
-                            <p className="text-sm text-gray-500">{formatPrice(c.product.price)} × {c.quantity}</p>
+                            <p className="font-semibold text-primary-900 truncate">{c.product.name}</p>
+                            <p className="text-sm text-primary-500">{formatPrice(c.product.price)} × {c.quantity}</p>
                           </div>
-                          <p className="font-bold text-gray-900">{formatPrice(c.product.price * c.quantity)}</p>
+                          <p className="font-bold text-primary-900">{formatPrice(c.product.price * c.quantity)}</p>
                         </div>
                       )
                     })}
@@ -204,7 +204,7 @@ function Checkout() {
 
                   <button
                     onClick={() => setStep(2)}
-                    className="w-full mt-6 py-3.5 rounded-xl bg-gray-900 text-white font-semibold hover:bg-gray-800 transition-all"
+                    className="w-full mt-6 py-3.5 rounded-xl bg-primary-900 text-white font-semibold hover:bg-primary-800 transition-all"
                   >
                     Continuer
                   </button>
@@ -220,40 +220,40 @@ function Checkout() {
                   exit={{ opacity: 0, x: 20 }}
                   className="bg-white rounded-2xl shadow-sm p-5 sm:p-6"
                 >
-                  <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <h2 className="text-lg font-bold text-primary-900 mb-4 flex items-center gap-2">
                     <FiTruck className="w-5 h-5" /> Informations de livraison
                   </h2>
 
                   {/* Delivery Mode */}
                   <div className="mb-5">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Mode de réception</label>
+                    <label className="block text-sm font-medium text-primary-700 mb-2">Mode de réception</label>
                     <div className="grid grid-cols-2 gap-3">
                       <button
                         onClick={() => setDeliveryMode('PICKUP')}
                         className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${
                           deliveryMode === 'PICKUP'
-                            ? 'border-gray-900 bg-gray-50'
-                            : 'border-gray-200 hover:border-gray-300'
+                            ? 'border-primary-900 bg-primary-50'
+                            : 'border-primary-200 hover:border-primary-300'
                         }`}
                       >
                         <FiHome className="w-5 h-5" />
                         <div className="text-left">
                           <p className="font-semibold text-sm">Retrait en boutique</p>
-                          <p className="text-xs text-gray-500">Gratuit</p>
+                          <p className="text-xs text-primary-500">Gratuit</p>
                         </div>
                       </button>
                       <button
                         onClick={() => setDeliveryMode('DELIVERY')}
                         className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all ${
                           deliveryMode === 'DELIVERY'
-                            ? 'border-gray-900 bg-gray-50'
-                            : 'border-gray-200 hover:border-gray-300'
+                            ? 'border-primary-900 bg-primary-50'
+                            : 'border-primary-200 hover:border-primary-300'
                         }`}
                       >
                         <FiTruck className="w-5 h-5" />
                         <div className="text-left">
                           <p className="font-semibold text-sm">Livraison</p>
-                          <p className="text-xs text-gray-500">À domicile</p>
+                          <p className="text-xs text-primary-500">À domicile</p>
                         </div>
                       </button>
                     </div>
@@ -261,27 +261,27 @@ function Checkout() {
 
                   {/* Name */}
                   <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-primary-700 mb-1">
                       <FiUser className="inline w-4 h-4 mr-1" /> Nom complet
                     </label>
                     <input
                       value={clientName}
                       onChange={e => setClientName(e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+                      className="w-full px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-gold-500 focus:border-transparent outline-none"
                       placeholder="Votre nom"
                     />
                   </div>
 
                   {/* Phone */}
                   <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-primary-700 mb-1">
                       <FiPhone className="inline w-4 h-4 mr-1" /> Téléphone *
                     </label>
                     <input
                       value={clientPhone}
                       onChange={e => setClientPhone(e.target.value)}
                       type="tel"
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+                      className="w-full px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-gold-500 focus:border-transparent outline-none"
                       placeholder="77 123 45 67"
                     />
                   </div>
@@ -289,13 +289,13 @@ function Checkout() {
                   {/* Address */}
                   {deliveryMode === 'DELIVERY' && (
                     <div className="mb-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-primary-700 mb-1">
                         <FiMapPin className="inline w-4 h-4 mr-1" /> Adresse de livraison *
                       </label>
                       <input
                         value={deliveryAddress}
                         onChange={e => setDeliveryAddress(e.target.value)}
-                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none"
+                        className="w-full px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-gold-500 focus:border-transparent outline-none"
                         placeholder="Votre adresse complète"
                       />
                     </div>
@@ -303,12 +303,12 @@ function Checkout() {
 
                   {/* Notes */}
                   <div className="mb-5">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Notes (optionnel)</label>
+                    <label className="block text-sm font-medium text-primary-700 mb-1">Notes (optionnel)</label>
                     <textarea
                       value={notes}
                       onChange={e => setNotes(e.target.value)}
                       rows={2}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none resize-none"
+                      className="w-full px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-gold-500 focus:border-transparent outline-none resize-none"
                       placeholder="Instructions spéciales..."
                     />
                   </div>
@@ -316,7 +316,7 @@ function Checkout() {
                   <div className="flex gap-3">
                     <button
                       onClick={() => setStep(1)}
-                      className="px-5 py-3 rounded-xl border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 transition-all"
+                      className="px-5 py-3 rounded-xl border border-primary-200 text-primary-700 font-semibold hover:bg-primary-50 transition-all"
                     >
                       Retour
                     </button>
@@ -327,7 +327,7 @@ function Checkout() {
                         setError('')
                         setStep(3)
                       }}
-                      className="flex-1 py-3 rounded-xl bg-gray-900 text-white font-semibold hover:bg-gray-800 transition-all"
+                      className="flex-1 py-3 rounded-xl bg-primary-900 text-white font-semibold hover:bg-primary-800 transition-all"
                     >
                       Continuer
                     </button>
@@ -344,7 +344,7 @@ function Checkout() {
                   exit={{ opacity: 0, x: 20 }}
                   className="bg-white rounded-2xl shadow-sm p-5 sm:p-6"
                 >
-                  <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <h2 className="text-lg font-bold text-primary-900 mb-4 flex items-center gap-2">
                     <FiSmartphone className="w-5 h-5" /> Mode de paiement
                   </h2>
 
@@ -355,16 +355,16 @@ function Checkout() {
                         onClick={() => { setPaymentMethod(m.id); setError('') }}
                         className={`w-full flex items-center p-4 border-2 rounded-xl transition-all ${
                           paymentMethod === m.id
-                            ? 'border-gray-900 bg-gray-50'
-                            : 'border-gray-200 hover:border-gray-300'
+                            ? 'border-primary-900 bg-primary-50'
+                            : 'border-primary-200 hover:border-primary-300'
                         }`}
                       >
                         <span className="text-2xl mr-4">{m.icon}</span>
                         <div className="text-left flex-1">
-                          <p className="font-semibold text-gray-900">{m.name}</p>
-                          <p className="text-sm text-gray-500">{m.desc}</p>
+                          <p className="font-semibold text-primary-900">{m.name}</p>
+                          <p className="text-sm text-primary-500">{m.desc}</p>
                         </div>
-                        {paymentMethod === m.id && <FiCheck className="w-5 h-5 text-gray-900" />}
+                        {paymentMethod === m.id && <FiCheck className="w-5 h-5 text-primary-900" />}
                       </button>
                     ))}
                   </div>
@@ -379,14 +379,14 @@ function Checkout() {
                   <div className="flex gap-3 mt-6">
                     <button
                       onClick={() => setStep(2)}
-                      className="px-5 py-3 rounded-xl border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 transition-all"
+                      className="px-5 py-3 rounded-xl border border-primary-200 text-primary-700 font-semibold hover:bg-primary-50 transition-all"
                     >
                       Retour
                     </button>
                     <button
                       onClick={handleSubmitOrder}
                       disabled={submitting || !paymentMethod}
-                      className="flex-1 py-3.5 rounded-xl bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-60"
+                      className="flex-1 py-3.5 rounded-xl bg-gradient-to-r from-gold-600 via-gold-500 to-gold-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-60"
                     >
                       {submitting ? (
                         <span className="flex items-center justify-center gap-2">
@@ -405,24 +405,24 @@ function Checkout() {
           {/* Order Summary Sidebar */}
           <div className="md:col-span-2">
             <div className="bg-white rounded-2xl shadow-sm p-5 md:sticky md:top-24">
-              <h3 className="font-bold text-gray-900 mb-4">Récapitulatif</h3>
+              <h3 className="font-bold text-primary-900 mb-4">Récapitulatif</h3>
 
               {/* Boutique info */}
-              <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
-                <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-amber-700 font-bold">
+              <div className="flex items-center gap-3 pb-4 border-b border-primary-100">
+                <div className="w-10 h-10 rounded-xl bg-gold-100 flex items-center justify-center text-gold-700 font-bold">
                   {salon.name?.charAt(0) || 'B'}
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-900 text-sm">{salon.name}</p>
-                  <p className="text-xs text-gray-500">{salon.address || salon.city || 'Boutique'}</p>
+                  <p className="font-semibold text-primary-900 text-sm">{salon.name}</p>
+                  <p className="text-xs text-primary-500">{salon.address || salon.city || 'Boutique'}</p>
                 </div>
               </div>
 
               {/* Items */}
-              <div className="py-3 border-b border-gray-100 space-y-2">
+              <div className="py-3 border-b border-primary-100 space-y-2">
                 {cart.map(c => (
                   <div key={c.product.id} className="flex justify-between text-sm">
-                    <span className="text-gray-600">{c.product.name} × {c.quantity}</span>
+                    <span className="text-primary-600">{c.product.name} × {c.quantity}</span>
                     <span className="font-medium">{formatPrice(c.product.price * c.quantity)}</span>
                   </div>
                 ))}
@@ -430,14 +430,14 @@ function Checkout() {
 
               {/* Delivery info */}
               {step >= 2 && (
-                <div className="py-3 border-b border-gray-100 space-y-1">
+                <div className="py-3 border-b border-primary-100 space-y-1">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Livraison</span>
+                    <span className="text-primary-500">Livraison</span>
                     <span className="font-medium">{deliveryMode === 'PICKUP' ? 'Retrait' : 'Livraison'}</span>
                   </div>
                   {clientPhone && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-500">Tél</span>
+                      <span className="text-primary-500">Tél</span>
                       <span className="font-medium">{clientPhone}</span>
                     </div>
                   )}
@@ -446,9 +446,9 @@ function Checkout() {
 
               {/* Payment method */}
               {step >= 3 && paymentMethod && (
-                <div className="py-3 border-b border-gray-100">
+                <div className="py-3 border-b border-primary-100">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Paiement</span>
+                    <span className="text-primary-500">Paiement</span>
                     <span className="font-medium">{PAYMENT_METHODS.find(m => m.id === paymentMethod)?.name}</span>
                   </div>
                 </div>
@@ -458,7 +458,7 @@ function Checkout() {
               <div className="pt-3">
                 <div className="flex justify-between text-lg font-bold">
                   <span>Total</span>
-                  <span className="text-amber-600">{formatPrice(totalWithDelivery)}</span>
+                  <span className="text-gold-600">{formatPrice(totalWithDelivery)}</span>
                 </div>
               </div>
             </div>

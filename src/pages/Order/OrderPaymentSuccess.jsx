@@ -12,7 +12,7 @@ function OrderPaymentSuccess() {
   const orderId = searchParams.get('orderId') || sessionData?.order?.id || ''
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-amber-50/20 py-10 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-gold-50/20 py-10 px-4">
       <div className="max-w-xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 18 }}
@@ -28,22 +28,22 @@ function OrderPaymentSuccess() {
           </div>
 
           <div className="p-6 space-y-5">
-            <div className="rounded-2xl bg-gray-50 border border-gray-100 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-gray-500 mb-1">Commande</p>
-              <p className="text-lg font-bold text-gray-900">{orderId || 'Reference en attente'}</p>
+            <div className="rounded-2xl bg-primary-50 border border-primary-100 p-4">
+              <p className="text-xs uppercase tracking-[0.2em] text-primary-500 mb-1">Commande</p>
+              <p className="text-lg font-bold text-primary-900">{orderId || 'Reference en attente'}</p>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
               <button
                 onClick={() => navigate('/order/receipt', { state: sessionData || undefined, replace: true })}
-                className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gray-900 text-white font-semibold hover:bg-gray-800 transition"
+                className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary-900 text-white font-semibold hover:bg-primary-800 transition"
               >
                 <FiShoppingBag className="w-4 h-4" />
                 Voir le recu
               </button>
               <Link
                 to="/dashboard"
-                className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition"
+                className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-primary-300 text-primary-700 font-semibold hover:bg-primary-50 transition"
               >
                 Mes commandes
                 <FiArrowRight className="w-4 h-4" />

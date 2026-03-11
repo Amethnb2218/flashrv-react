@@ -17,7 +17,7 @@ function Layout() {
   const showFooter = !noFooterPages.some(page => location.pathname.includes(page))
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-primary-50">
       <Navbar />
       <main className="flex-grow pt-14">
         <Outlet />

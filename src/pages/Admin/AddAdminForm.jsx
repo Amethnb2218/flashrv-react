@@ -53,7 +53,7 @@ export default function AddAdminForm({ onAdminAdded }) {
           placeholder="Email de l'utilisateur à promouvoir"
           value={email}
           onChange={e => setEmail(e.target.value)}
-          className="flex-1 border border-indigo-200 bg-white text-slate-800 placeholder:text-slate-400 px-4 py-2.5 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 text-sm transition"
+          className="flex-1 border border-indigo-200 bg-white text-primary-800 placeholder:text-primary-400 px-4 py-2.5 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 text-sm transition"
         />
         <button
           type="submit"

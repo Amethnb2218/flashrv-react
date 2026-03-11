@@ -286,7 +286,7 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-[#F7FAFC] overflow-x-hidden">
       <div className="max-w-7xl mx-auto px-4">
         {/* Header */}
-        <header className="sticky top-0 z-20 flex flex-col gap-2 py-5 sm:py-8 mb-6 sm:mb-8 bg-white rounded-2xl shadow-md border border-gray-200 px-4 sm:px-6">
+        <header className="sticky top-0 z-20 flex flex-col gap-2 py-5 sm:py-8 mb-6 sm:mb-8 bg-white rounded-2xl shadow-md border border-primary-200 px-4 sm:px-6">
           <div className="flex items-center justify-between gap-2">
             <h1 className="text-xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-[#1E293B] font-poppins">Dashboard Style • Flow</h1>
             <div className="flex items-center gap-3">
@@ -294,10 +294,10 @@ export default function AdminDashboard() {
               <div className="relative" ref={notifRef}>
                 <button
                   onClick={toggleNotif}
-                  className="relative p-2.5 rounded-xl bg-slate-50 border border-slate-200 hover:bg-slate-100 transition"
+                  className="relative p-2.5 rounded-xl bg-primary-50 border border-primary-200 hover:bg-primary-100 transition"
                   title="Notifications"
                 >
-                  <FiBell className="w-5 h-5 text-slate-600" />
+                  <FiBell className="w-5 h-5 text-primary-600" />
                   {unreadCount > 0 && (
                     <span className="absolute -top-1 -right-1 min-w-[20px] h-5 flex items-center justify-center px-1 rounded-full bg-rose-500 text-white text-[11px] font-bold ring-2 ring-white">
                       {unreadCount > 99 ? '99+' : unreadCount}
@@ -320,20 +320,20 @@ export default function AdminDashboard() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -8, scale: 0.95 }}
                         transition={{ duration: 0.15 }}
-                        className="fixed inset-x-3 top-20 z-50 sm:absolute sm:inset-x-auto sm:top-auto sm:right-0 sm:mt-2 w-auto sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden"
+                        className="fixed inset-x-3 top-20 z-50 sm:absolute sm:inset-x-auto sm:top-auto sm:right-0 sm:mt-2 w-auto sm:w-96 bg-white rounded-2xl shadow-2xl border border-primary-200 overflow-hidden"
                       >
-                        <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
-                          <h3 className="text-sm font-bold text-slate-800">Nouvelles inscriptions PRO</h3>
+                        <div className="px-4 py-3 border-b border-primary-100 flex items-center justify-between">
+                          <h3 className="text-sm font-bold text-primary-800">Nouvelles inscriptions PRO</h3>
                           <div className="flex items-center gap-2">
-                            <span className="text-xs text-slate-400">{pendingCount} en attente</span>
-                            <button onClick={() => setNotifOpen(false)} className="sm:hidden p-1 rounded-lg hover:bg-slate-100 transition">
-                              <FiX className="w-4 h-4 text-slate-400" />
+                            <span className="text-xs text-primary-400">{pendingCount} en attente</span>
+                            <button onClick={() => setNotifOpen(false)} className="sm:hidden p-1 rounded-lg hover:bg-primary-100 transition">
+                              <FiX className="w-4 h-4 text-primary-400" />
                             </button>
                           </div>
                         </div>
-                      <div className="max-h-80 overflow-y-auto divide-y divide-slate-50">
+                      <div className="max-h-80 overflow-y-auto divide-y divide-primary-50">
                         {pendingPros.length === 0 ? (
-                          <div className="px-4 py-8 text-center text-sm text-slate-400">Aucune inscription en attente</div>
+                          <div className="px-4 py-8 text-center text-sm text-primary-400">Aucune inscription en attente</div>
                         ) : (
                           pendingPros.slice(0, 10).map(pro => (
                             <button
@@ -342,22 +342,22 @@ export default function AdminDashboard() {
                                 setActiveTab('pending')
                                 setNotifOpen(false)
                               }}
-                              className="w-full text-left px-4 py-3 hover:bg-slate-50 transition flex items-start gap-3"
+                              className="w-full text-left px-4 py-3 hover:bg-primary-50 transition flex items-start gap-3"
                             >
-                              <div className="w-9 h-9 shrink-0 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center text-sm font-bold text-amber-600">
+                              <div className="w-9 h-9 shrink-0 rounded-full bg-gold-50 border border-gold-200 flex items-center justify-center text-sm font-bold text-gold-600">
                                 {pro.name?.[0]?.toUpperCase() || pro.email?.[0]?.toUpperCase()}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <div className="text-sm font-semibold text-slate-800 truncate">{pro.salon?.name || pro.name || pro.email}</div>
-                                <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
+                                <div className="text-sm font-semibold text-primary-800 truncate">{pro.salon?.name || pro.name || pro.email}</div>
+                                <div className="flex items-center gap-2 text-xs text-primary-500 mt-0.5">
                                   {pro.salon?.city && <span className="flex items-center gap-0.5"><FiMapPin className="w-3 h-3" />{pro.salon.city}</span>}
                                   <span>{pro.email}</span>
                                 </div>
-                                <div className="text-[11px] text-slate-400 mt-0.5">
+                                <div className="text-[11px] text-primary-400 mt-0.5">
                                   {pro.createdAt ? new Date(pro.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}
                                 </div>
                               </div>
-                              <span className="shrink-0 mt-1 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                              <span className="shrink-0 mt-1 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gold-50 text-gold-700 border border-gold-200">
                                 <FiClock className="w-3 h-3 mr-0.5" />En attente
                               </span>
                             </button>
@@ -365,7 +365,7 @@ export default function AdminDashboard() {
                         )}
                       </div>
                       {pendingPros.length > 0 && (
-                        <div className="px-4 py-2.5 border-t border-slate-100">
+                        <div className="px-4 py-2.5 border-t border-primary-100">
                           <button
                             onClick={() => { setActiveTab('pending'); setNotifOpen(false); }}
                             className="w-full text-center text-sm font-semibold text-blue-600 hover:text-blue-700 transition"
@@ -427,8 +427,8 @@ export default function AdminDashboard() {
         )}
 
         {/* Tabs */}
-        <div className="bg-white rounded-xl shadow border border-gray-200 mb-6">
-          <div className="flex border-b border-gray-200 overflow-x-auto">
+        <div className="bg-white rounded-xl shadow border border-primary-200 mb-6">
+          <div className="flex border-b border-primary-200 overflow-x-auto">
             {tabs.map(tab => (
               <button
                 key={tab.id}
@@ -436,7 +436,7 @@ export default function AdminDashboard() {
                 className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-3 sm:py-4 text-sm sm:text-base font-semibold whitespace-nowrap transition-colors ${
                   activeTab === tab.id
                     ? 'text-blue-700 border-b-2 border-blue-700 bg-blue-50'
-                    : 'text-gray-500 hover:text-blue-700 hover:bg-blue-50'
+                    : 'text-primary-500 hover:text-blue-700 hover:bg-blue-50'
                 }`}
               >
                 <tab.icon className="w-5 h-5" />
@@ -445,7 +445,7 @@ export default function AdminDashboard() {
                   <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
                     activeTab === tab.id
                       ? 'bg-blue-200 text-blue-800'
-                      : 'bg-gray-100 text-gray-600'
+                      : 'bg-primary-100 text-primary-600'
                   }`}>
                     {tab.count}
                   </span>
@@ -484,15 +484,15 @@ export default function AdminDashboard() {
         )}
 
         {activeTab === 'feedback' && (
-          <div className="bg-white rounded-xl shadow border border-gray-200 p-6">
+          <div className="bg-white rounded-xl shadow border border-primary-200 p-6">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-xl font-bold text-gray-900">Retours utilisateurs</h2>
-                <p className="text-sm text-gray-500">Bugs, suggestions et problèmes signalés.</p>
+                <h2 className="text-xl font-bold text-primary-900">Retours utilisateurs</h2>
+                <p className="text-sm text-primary-500">Bugs, suggestions et problèmes signalés.</p>
               </div>
               <button
                 onClick={fetchFeedback}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-primary-200 text-sm font-semibold text-primary-700 hover:bg-primary-50"
               >
                 <FiRefreshCw className="w-4 h-4" />
                 Actualiser
@@ -500,9 +500,9 @@ export default function AdminDashboard() {
             </div>
 
             {feedbackLoading ? (
-              <div className="text-sm text-gray-500">Chargement…</div>
+              <div className="text-sm text-primary-500">Chargement…</div>
             ) : feedbacks.length === 0 ? (
-              <div className="text-sm text-gray-500">Aucun feedback pour le moment.</div>
+              <div className="text-sm text-primary-500">Aucun feedback pour le moment.</div>
             ) : (
               <div className="space-y-4">
                 {feedbacks.map((fb) => {
@@ -527,24 +527,24 @@ export default function AdminDashboard() {
                         ]
 
                   return (
-                    <div key={fb.id} className="border border-gray-100 rounded-2xl p-4 shadow-sm">
+                    <div key={fb.id} className="border border-primary-100 rounded-2xl p-4 shadow-sm">
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div>
-                          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700">
+                          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-gold-50 text-gold-700">
                             <FiMessageSquare className="w-3.5 h-3.5" />
                             {typeLabel}
                           </div>
-                          <p className="mt-2 text-xs text-gray-500">
+                          <p className="mt-2 text-xs text-primary-500">
                             {fb.createdAt ? new Date(fb.createdAt).toLocaleString('fr-FR') : ''}
                           </p>
-                          <p className="mt-1 text-sm text-gray-700">
+                          <p className="mt-1 text-sm text-primary-700">
                             {fb.user?.name || fb.user?.email || fb.contact || 'Anonyme'}
                           </p>
                           {fb.contact && (
-                            <p className="text-xs text-gray-400">Contact : {fb.contact}</p>
+                            <p className="text-xs text-primary-400">Contact : {fb.contact}</p>
                           )}
                         </div>
-                        <span className="text-xs font-semibold text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
+                        <span className="text-xs font-semibold text-primary-600 bg-primary-100 px-3 py-1 rounded-full">
                           {fb.status || 'NEW'}
                         </span>
                       </div>
@@ -554,8 +554,8 @@ export default function AdminDashboard() {
                           .filter((item) => item.value)
                           .map((item) => (
                             <div key={item.label} className="text-sm">
-                              <div className="text-xs text-gray-500">{item.label}</div>
-                              <div className="text-gray-800">{item.value}</div>
+                              <div className="text-xs text-primary-500">{item.label}</div>
+                              <div className="text-primary-800">{item.value}</div>
                             </div>
                           ))}
                       </div>

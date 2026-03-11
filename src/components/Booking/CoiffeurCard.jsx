@@ -21,7 +21,7 @@ function CoiffeurCard({ coiffeur, isSelected, onSelect }) {
         p-4 rounded-xl border-2 cursor-pointer transition-all duration-200
         ${isSelected 
           ? 'border-primary-500 bg-primary-50 shadow-lg shadow-primary-500/20' 
-          : 'border-gray-200 hover:border-primary-300 bg-white hover:shadow-md'
+          : 'border-primary-200 hover:border-primary-300 bg-white hover:shadow-md'
         }
       `}
     >
@@ -45,17 +45,17 @@ function CoiffeurCard({ coiffeur, isSelected, onSelect }) {
         </div>
 
         <div className="flex-1 min-w-0">
-          <h4 className={`font-semibold truncate ${isSelected ? 'text-primary-700' : 'text-gray-900'}`}>
+          <h4 className={`font-semibold truncate ${isSelected ? 'text-primary-700' : 'text-primary-900'}`}>
             {coiffeur.name}
           </h4>
-          <p className="text-sm text-gray-500 truncate">{coiffeur.specialty}</p>
+          <p className="text-sm text-primary-500 truncate">{coiffeur.specialty}</p>
           <div className="flex items-center space-x-2 mt-1">
             <div className="flex items-center text-sm">
-              <FiStar className="w-4 h-4 text-amber-400 fill-amber-400" />
+              <FiStar className="w-4 h-4 text-gold-400 fill-gold-400" />
               <span className="font-medium ml-1">{coiffeur.rating}</span>
             </div>
-            <span className="text-gray-300">•</span>
-            <span className="text-xs text-gray-400">{coiffeur.experience}</span>
+            <span className="text-primary-300">•</span>
+            <span className="text-xs text-primary-400">{coiffeur.experience}</span>
           </div>
         </div>
       </div>

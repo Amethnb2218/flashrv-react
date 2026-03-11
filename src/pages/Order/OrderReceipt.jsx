@@ -62,7 +62,7 @@ function OrderReceipt() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-amber-50/20 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-gold-50/20 py-8">
       <div className="max-w-2xl mx-auto px-4">
         <motion.div
           initial={{ scale: 0 }}
@@ -73,24 +73,24 @@ function OrderReceipt() {
           <div className="w-20 h-20 rounded-full bg-green-500 flex items-center justify-center shadow-lg shadow-green-500/30 mb-4">
             <FiCheck className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Commande confirmee !</h1>
-          <p className="text-gray-500 mt-1">Merci pour votre achat</p>
+          <h1 className="text-2xl font-bold text-primary-900">Commande confirmee !</h1>
+          <p className="text-primary-500 mt-1">Merci pour votre achat</p>
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-white rounded-2xl border border-gray-100 shadow-lg overflow-hidden"
+          className="bg-white rounded-2xl border border-primary-100 shadow-lg overflow-hidden"
         >
-          <div className="bg-gray-900 text-white p-6">
+          <div className="bg-primary-900 text-white p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-gray-400 uppercase tracking-wider">Recu de commande</p>
+                <p className="text-xs text-primary-400 uppercase tracking-wider">Recu de commande</p>
                 <p className="text-lg font-bold mt-1">{salon?.name || 'Boutique'}</p>
               </div>
               <div className="text-right">
-                <p className="text-xs text-gray-400">Reference</p>
+                <p className="text-xs text-primary-400">Reference</p>
                 <div className="flex items-center gap-2 mt-1">
                   <p className="text-lg font-mono font-bold">{orderRef}</p>
                   <button onClick={handleCopyRef} className="p-1.5 rounded-lg hover:bg-white/10 transition" title="Copier">
@@ -99,14 +99,14 @@ function OrderReceipt() {
                 </div>
               </div>
             </div>
-            <div className="flex gap-4 mt-4 text-sm text-gray-300">
+            <div className="flex gap-4 mt-4 text-sm text-primary-300">
               <span>{orderDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span>
               <span>{orderDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
             </div>
           </div>
 
           <div className="p-6">
-            <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+            <h3 className="font-bold text-primary-900 mb-3 flex items-center gap-2">
               <FiShoppingBag className="w-4 h-4" /> Articles commandes
             </h3>
             <div className="space-y-3">
@@ -114,69 +114,69 @@ function OrderReceipt() {
                 const product = c.product || c
                 const img = resolveMediaUrl(product.imageUrl || product.image)
                 return (
-                  <div key={product.id || idx} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                  <div key={product.id || idx} className="flex items-center gap-3 p-3 bg-primary-50 rounded-xl">
                     {img ? (
                       <img src={img} alt={product.name} className="w-12 h-12 rounded-lg object-cover" />
                     ) : (
-                      <div className="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center text-gray-400 text-xs">IMG</div>
+                      <div className="w-12 h-12 rounded-lg bg-primary-200 flex items-center justify-center text-primary-400 text-xs">IMG</div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-900 truncate">{product.name}</p>
-                      <div className="flex gap-2 text-xs text-gray-500">
+                      <p className="font-medium text-primary-900 truncate">{product.name}</p>
+                      <div className="flex gap-2 text-xs text-primary-500">
                         <span>Qte: {c.quantity}</span>
                         {c.selectedSize && <span>- Taille: {c.selectedSize}</span>}
                         {c.selectedColor && <span>- Couleur: {c.selectedColor}</span>}
                       </div>
                     </div>
-                    <p className="font-semibold text-gray-900">{formatPrice(product.price * c.quantity)}</p>
+                    <p className="font-semibold text-primary-900">{formatPrice(product.price * c.quantity)}</p>
                   </div>
                 )
               })}
             </div>
           </div>
 
-          <div className="mx-6 border-t border-dashed border-gray-200" />
+          <div className="mx-6 border-t border-dashed border-primary-200" />
 
           <div className="p-6 space-y-2">
-            <div className="flex justify-between text-sm text-gray-600">
+            <div className="flex justify-between text-sm text-primary-600">
               <span>Sous-total</span>
               <span>{formatPrice(items.reduce((s, c) => s + (c.product || c).price * c.quantity, 0))}</span>
             </div>
-            <div className="flex justify-between text-sm text-gray-600">
+            <div className="flex justify-between text-sm text-primary-600">
               <span>Frais de livraison</span>
               <span>{deliveryFee > 0 ? formatPrice(deliveryFee) : 'Gratuit'}</span>
             </div>
-            <div className="flex justify-between text-xl font-bold border-t border-gray-200 pt-3 mt-2">
+            <div className="flex justify-between text-xl font-bold border-t border-primary-200 pt-3 mt-2">
               <span>Total</span>
-              <span className="text-amber-600">{formatPrice(grandTotal)}</span>
+              <span className="text-gold-600">{formatPrice(grandTotal)}</span>
             </div>
           </div>
 
-          <div className="mx-6 border-t border-dashed border-gray-200" />
+          <div className="mx-6 border-t border-dashed border-primary-200" />
 
           <div className="p-6 grid sm:grid-cols-2 gap-6">
             <div>
-              <h4 className="font-bold text-gray-900 mb-2 flex items-center gap-2">
+              <h4 className="font-bold text-primary-900 mb-2 flex items-center gap-2">
                 {deliveryMode === 'DELIVERY' ? <FiTruck className="w-4 h-4" /> : <FiHome className="w-4 h-4" />}
                 {deliveryMode === 'DELIVERY' ? 'Livraison' : 'Retrait en boutique'}
               </h4>
               {deliveryMode === 'DELIVERY' && deliveryAddress ? (
-                <p className="text-sm text-gray-600 flex items-start gap-1.5">
+                <p className="text-sm text-primary-600 flex items-start gap-1.5">
                   <FiMapPin className="w-4 h-4 mt-0.5 shrink-0" />
                   {deliveryAddress}
                 </p>
               ) : (
-                <p className="text-sm text-gray-600">{salon?.address || 'Adresse de la boutique'}</p>
+                <p className="text-sm text-primary-600">{salon?.address || 'Adresse de la boutique'}</p>
               )}
             </div>
             <div>
-              <h4 className="font-bold text-gray-900 mb-2">Paiement</h4>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <span className="text-xs font-semibold text-gray-700 bg-gray-100 rounded-full px-2.5 py-1">{pm.icon}</span>
+              <h4 className="font-bold text-primary-900 mb-2">Paiement</h4>
+              <div className="flex items-center gap-2 text-sm text-primary-600">
+                <span className="text-xs font-semibold text-primary-700 bg-primary-100 rounded-full px-2.5 py-1">{pm.icon}</span>
                 <span>{pm.name}</span>
               </div>
               {paymentMethod === 'cash_on_delivery' ? (
-                <p className="text-xs text-amber-600 font-medium mt-2 bg-amber-50 px-3 py-1.5 rounded-lg">
+                <p className="text-xs text-gold-600 font-medium mt-2 bg-gold-50 px-3 py-1.5 rounded-lg">
                   Preparez le montant exact si possible
                 </p>
               ) : paymentMethod === 'paydunya' ? (
@@ -204,13 +204,13 @@ function OrderReceipt() {
           )}
           <Link
             to="/dashboard"
-            className="flex-1 py-3.5 text-center rounded-xl border border-gray-200 font-semibold text-gray-700 hover:bg-gray-50 transition"
+            className="flex-1 py-3.5 text-center rounded-xl border border-primary-200 font-semibold text-primary-700 hover:bg-primary-50 transition"
           >
             Mes commandes
           </Link>
           <Link
             to="/salons?businessType=BOUTIQUE"
-            className="flex-1 py-3.5 text-center rounded-xl bg-gray-900 text-white font-semibold hover:bg-gray-800 transition flex items-center justify-center gap-2"
+            className="flex-1 py-3.5 text-center rounded-xl bg-primary-900 text-white font-semibold hover:bg-primary-800 transition flex items-center justify-center gap-2"
           >
             Continuer mes achats <FiArrowRight className="w-4 h-4" />
           </Link>

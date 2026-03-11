@@ -12,19 +12,19 @@ export default function StatsSection({ stats }) {
       >
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-slate-700 font-medium">Clients</span>
-            <span className="font-semibold text-slate-900">{stats.clients || 0}</span>
+            <span className="text-primary-700 font-medium">Clients</span>
+            <span className="font-semibold text-primary-900">{stats.clients || 0}</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-slate-700 font-medium">Professionnels approuvés</span>
+            <span className="text-primary-700 font-medium">Professionnels approuvés</span>
             <span className="font-semibold text-emerald-700">{stats.pros?.approved || 0}</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-slate-700 font-medium">En attente de validation</span>
-            <span className="font-semibold text-amber-700">{stats.pros?.pending || 0}</span>
+            <span className="text-primary-700 font-medium">En attente de validation</span>
+            <span className="font-semibold text-gold-700">{stats.pros?.pending || 0}</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-slate-700 font-medium">Comptes suspendus</span>
+            <span className="text-primary-700 font-medium">Comptes suspendus</span>
             <span className="font-semibold text-orange-700">0</span>
           </div>
         </div>
@@ -36,16 +36,16 @@ export default function StatsSection({ stats }) {
       >
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-slate-700 font-medium">Réservations totales</span>
-            <span className="font-semibold text-slate-900">{stats.appointments || 0}</span>
+            <span className="text-primary-700 font-medium">Réservations totales</span>
+            <span className="font-semibold text-primary-900">{stats.appointments || 0}</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-slate-700 font-medium">Réservations ce mois</span>
-            <span className="font-semibold text-slate-900">0</span>
+            <span className="text-primary-700 font-medium">Réservations ce mois</span>
+            <span className="font-semibold text-primary-900">0</span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-slate-700 font-medium">Revenus estimés</span>
-            <span className="font-semibold text-slate-900">0 FCFA</span>
+            <span className="text-primary-700 font-medium">Revenus estimés</span>
+            <span className="font-semibold text-primary-900">0 FCFA</span>
           </div>
         </div>
       </SectionCard>

@@ -116,39 +116,39 @@ function PaymentCancel() {
 
   if (initialLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-primary-50">
         <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-amber-50/30 py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-gold-50/30 py-12 px-4">
       <div className="max-w-xl mx-auto bg-white rounded-3xl shadow-xl p-6 sm:p-8">
-        <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <FiAlertCircle className="w-8 h-8 text-amber-600" />
+        <div className="w-16 h-16 bg-gold-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <FiAlertCircle className="w-8 h-8 text-gold-600" />
         </div>
-        <h1 className="text-2xl font-bold text-center text-gray-900 mb-2">
+        <h1 className="text-2xl font-bold text-center text-primary-900 mb-2">
           Paiement annule
         </h1>
-        <p className="text-center text-gray-600 mb-6">
+        <p className="text-center text-primary-600 mb-6">
           La reservation reste en attente de paiement. Vous pouvez relancer le paiement maintenant ou revenir plus tard.
         </p>
 
         {appointment && (
-          <div className="bg-gray-50 rounded-2xl p-4 mb-5 text-sm">
-            <p className="text-gray-800 font-semibold">{appointment.salon?.name || 'Salon'}</p>
-            <p className="text-gray-600 mt-1">
+          <div className="bg-primary-50 rounded-2xl p-4 mb-5 text-sm">
+            <p className="text-primary-800 font-semibold">{appointment.salon?.name || 'Salon'}</p>
+            <p className="text-primary-600 mt-1">
               {appointment.date ? new Date(appointment.date).toLocaleDateString('fr-FR') : '-'} a {appointment.startTime || '-'}
             </p>
-            <p className="text-gray-600 mt-1">
+            <p className="text-primary-600 mt-1">
               Montant: {Number(appointment.totalPrice || appointment.service?.price || 0).toLocaleString('fr-FR')} FCFA
             </p>
           </div>
         )}
 
         {!error && errorReason && (
-          <div className="mb-4 p-3 bg-amber-50 text-amber-700 rounded-xl text-sm">
+          <div className="mb-4 p-3 bg-gold-50 text-gold-700 rounded-xl text-sm">
             {errorReason}
           </div>
         )}
@@ -170,7 +170,7 @@ function PaymentCancel() {
           </button>
           <Link
             to="/dashboard"
-            className="inline-flex items-center justify-center px-4 py-3 rounded-xl border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition"
+            className="inline-flex items-center justify-center px-4 py-3 rounded-xl border border-primary-300 text-primary-700 font-semibold hover:bg-primary-50 transition"
           >
             Mes reservations
           </Link>

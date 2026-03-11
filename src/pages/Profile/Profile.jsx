@@ -172,23 +172,23 @@ function Profile() {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-amber-50/20 py-8 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-gold-50/20 py-8 relative overflow-hidden">
       {/* Decorative background elements */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-amber-100/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
-      <div className="absolute bottom-0 left-0 w-80 h-80 bg-yellow-100/30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4"></div>
+      <div className="absolute top-0 right-0 w-96 h-96 bg-gold-100/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
+      <div className="absolute bottom-0 left-0 w-80 h-80 bg-gold-100/30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4"></div>
       <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-orange-100/20 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
       
       <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Mon Profil</h1>
-          <p className="text-gray-600 mt-1">Gérez vos informations personnelles</p>
+          <h1 className="text-3xl font-bold text-primary-900">Mon Profil</h1>
+          <p className="text-primary-600 mt-1">Gérez vos informations personnelles</p>
         </div>
 
         <div className="grid md:grid-cols-4 gap-6">
           {/* Sidebar */}
           <div className="md:col-span-1">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+            <div className="bg-white rounded-2xl shadow-sm border border-primary-100 p-4">
               {/* Avatar with upload/delete */}
               <div className="text-center mb-6">
                 <div className="relative inline-block">
@@ -234,10 +234,10 @@ function Profile() {
                   
                   {/* Photo menu dropdown */}
                   {showPhotoMenu && (
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-10">
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 bg-white rounded-xl shadow-lg border border-primary-100 py-2 z-10">
                       <button
                         onClick={() => fileInputRef.current?.click()}
-                        className="w-full flex items-center px-4 py-2 text-gray-700 hover:bg-primary-50 hover:text-primary-600"
+                        className="w-full flex items-center px-4 py-2 text-primary-700 hover:bg-primary-50 hover:text-primary-600"
                       >
                         <FiUpload className="w-4 h-4 mr-3" />
                         Changer la photo
@@ -251,7 +251,7 @@ function Profile() {
                       </button>
                       <button
                         onClick={() => setShowPhotoMenu(false)}
-                        className="w-full flex items-center px-4 py-2 text-gray-500 hover:bg-gray-50"
+                        className="w-full flex items-center px-4 py-2 text-primary-500 hover:bg-primary-50"
                       >
                         <FiX className="w-4 h-4 mr-3" />
                         Annuler
@@ -259,8 +259,8 @@ function Profile() {
                     </div>
                   )}
                 </div>
-                <h3 className="font-bold text-gray-900 mt-3">{user?.name}</h3>
-                <p className="text-sm text-gray-500 capitalize">
+                <h3 className="font-bold text-primary-900 mt-3">{user?.name}</h3>
+                <p className="text-sm text-primary-500 capitalize">
                   {user?.role === 'PRO' || user?.role === 'pro' ? 'Professionnel' : 'Client'}
                 </p>
               </div>
@@ -274,7 +274,7 @@ function Profile() {
                     className={`w-full flex items-center px-4 py-3 rounded-xl transition-colors ${
                       activeTab === tab.id
                         ? 'bg-primary-50 text-primary-600'
-                        : 'text-gray-600 hover:bg-gray-50'
+                        : 'text-primary-600 hover:bg-primary-50'
                     }`}
                   >
                     <tab.icon className="w-5 h-5 mr-3" />
@@ -291,7 +291,7 @@ function Profile() {
               key={activeTab}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6"
+              className="bg-white rounded-2xl shadow-sm border border-primary-100 p-6"
             >
               {/* Success Message */}
               {success && (
@@ -304,13 +304,13 @@ function Profile() {
               {/* Profile Tab */}
               {activeTab === 'profile' && (
                 <form onSubmit={handleSaveProfile}>
-                  <h2 className="text-xl font-bold text-gray-900 mb-6">
+                  <h2 className="text-xl font-bold text-primary-900 mb-6">
                     Informations personnelles
                   </h2>
 
                   <div className="grid sm:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-primary-700 mb-2">
                         <FiUser className="inline w-4 h-4 mr-1" />
                         Nom complet
                       </label>
@@ -324,7 +324,7 @@ function Profile() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-primary-700 mb-2">
                         <FiMail className="inline w-4 h-4 mr-1" />
                         Email
                       </label>
@@ -338,7 +338,7 @@ function Profile() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-primary-700 mb-2">
                         <FiPhone className="inline w-4 h-4 mr-1" />
                         Téléphone
                       </label>
@@ -352,7 +352,7 @@ function Profile() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-primary-700 mb-2">
                         <FiMapPin className="inline w-4 h-4 mr-1" />
                         Adresse
                       </label>
@@ -383,13 +383,13 @@ function Profile() {
               {/* Security Tab */}
               {activeTab === 'security' && (
                 <form onSubmit={handleChangePassword}>
-                  <h2 className="text-xl font-bold text-gray-900 mb-6">
+                  <h2 className="text-xl font-bold text-primary-900 mb-6">
                     Changer le mot de passe
                   </h2>
 
                   <div className="space-y-6 max-w-md">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-primary-700 mb-2">
                         Mot de passe actuel
                       </label>
                       <input
@@ -402,7 +402,7 @@ function Profile() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-primary-700 mb-2">
                         Nouveau mot de passe
                       </label>
                       <input
@@ -415,7 +415,7 @@ function Profile() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-primary-700 mb-2">
                         Confirmer le mot de passe
                       </label>
                       <input
@@ -423,7 +423,7 @@ function Profile() {
                         name="confirmPassword"
                         value={passwordData.confirmPassword}
                         onChange={handlePasswordChange}
-                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        className="w-full px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       />
                     </div>
                   </div>
@@ -439,9 +439,9 @@ function Profile() {
                   </div>
 
                   {/* Danger Zone */}
-                  <div className="mt-12 pt-8 border-t border-gray-200">
+                  <div className="mt-12 pt-8 border-t border-primary-200">
                     <h3 className="text-lg font-bold text-red-600 mb-4">Zone dangereuse</h3>
-                    <p className="text-gray-600 mb-4">
+                    <p className="text-primary-600 mb-4">
                       La suppression de votre compte est irréversible. Toutes vos données seront perdues.
                     </p>
                     <button
@@ -458,7 +458,7 @@ function Profile() {
               {/* Notifications Tab */}
               {activeTab === 'notifications' && (
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900 mb-6">
+                  <h2 className="text-xl font-bold text-primary-900 mb-6">
                     Préférences de notification
                   </h2>
 
@@ -471,16 +471,16 @@ function Profile() {
                     ].map(item => (
                       <div 
                         key={item.key}
-                        className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-gray-50 rounded-xl gap-3"
+                        className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-primary-50 rounded-xl gap-3"
                       >
                         <div>
-                          <p className="font-medium text-gray-900">{item.label}</p>
-                          <p className="text-sm text-gray-500">{item.description}</p>
+                          <p className="font-medium text-primary-900">{item.label}</p>
+                          <p className="text-sm text-primary-500">{item.description}</p>
                         </div>
                         <button
                           onClick={() => handleNotificationChange(item.key)}
                           className={`relative w-14 h-8 rounded-full transition-colors ${
-                            notifications[item.key] ? 'bg-primary-600' : 'bg-gray-300'
+                            notifications[item.key] ? 'bg-primary-600' : 'bg-primary-300'
                           }`}
                         >
                           <span

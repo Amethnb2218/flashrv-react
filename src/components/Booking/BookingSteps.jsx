@@ -13,7 +13,7 @@ function BookingSteps({ currentStep, steps }) {
                 ? 'bg-green-500 text-white'
                 : currentStep === index + 1
                   ? 'bg-primary-600 text-white shadow-lg shadow-primary-500/30'
-                  : 'bg-gray-200 text-gray-500'
+                  : 'bg-primary-200 text-primary-500'
               }
             `}>
               {currentStep > index + 1 ? (
@@ -24,7 +24,7 @@ function BookingSteps({ currentStep, steps }) {
             </div>
             <span className={`
               hidden md:block ml-2 font-medium text-sm
-              ${currentStep === index + 1 ? 'text-primary-600' : 'text-gray-500'}
+              ${currentStep === index + 1 ? 'text-primary-600' : 'text-primary-500'}
             `}>
               {step.name}
             </span>
@@ -33,7 +33,7 @@ function BookingSteps({ currentStep, steps }) {
           {index < steps.length - 1 && (
             <div className={`
               w-8 md:w-16 h-1 mx-2 rounded-full
-              ${currentStep > index + 1 ? 'bg-green-500' : 'bg-gray-200'}
+              ${currentStep > index + 1 ? 'bg-green-500' : 'bg-primary-200'}
             `} />
           )}
         </div>

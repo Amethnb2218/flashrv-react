@@ -93,34 +93,34 @@ export default function ProOnboarding({ onComplete }) {
   // Step 1: Choose business type
   if (!businessType) {
     return (
-      <div className={`max-w-lg mx-auto py-10 px-6 bg-white rounded-2xl shadow border border-gray-200 transition-all duration-700 ${showForm ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+      <div className={`max-w-lg mx-auto py-10 px-6 bg-white rounded-2xl shadow border border-primary-200 transition-all duration-700 ${showForm ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
         <div className="mb-8 text-center">
-          <h1 className="text-2xl font-bold text-gray-900">Inscription Pro</h1>
-          <p className="text-gray-500 text-sm mt-2">Quel type d'espace souhaitez-vous créer ?</p>
+          <h1 className="text-2xl font-bold text-primary-900">Inscription Pro</h1>
+          <p className="text-primary-500 text-sm mt-2">Quel type d'espace souhaitez-vous créer ?</p>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <button
             onClick={() => { setBusinessType('SALON'); setForm(f => ({ ...f, type: '' })); }}
-            className="flex flex-col items-center gap-3 p-6 rounded-2xl border-2 border-gray-200 hover:border-primary-500 hover:bg-primary-50 transition cursor-pointer group"
+            className="flex flex-col items-center gap-3 p-6 rounded-2xl border-2 border-primary-200 hover:border-primary-500 hover:bg-primary-50 transition cursor-pointer group"
           >
             <div className="w-14 h-14 rounded-full bg-primary-100 flex items-center justify-center group-hover:bg-primary-200 transition">
               <FiScissors className="text-primary-600 text-2xl" />
             </div>
-            <span className="font-semibold text-gray-800 text-lg">Salon</span>
-            <span className="text-xs text-gray-500 text-center">Coiffure, beauté, esthétique — Réservations & services</span>
+            <span className="font-semibold text-primary-800 text-lg">Salon</span>
+            <span className="text-xs text-primary-500 text-center">Coiffure, beauté, esthétique — Réservations & services</span>
           </button>
           <button
             onClick={() => { setBusinessType('BOUTIQUE'); setForm(f => ({ ...f, type: '' })); }}
-            className="flex flex-col items-center gap-3 p-6 rounded-2xl border-2 border-gray-200 hover:border-amber-500 hover:bg-amber-50 transition cursor-pointer group"
+            className="flex flex-col items-center gap-3 p-6 rounded-2xl border-2 border-primary-200 hover:border-gold-500 hover:bg-gold-50 transition cursor-pointer group"
           >
-            <div className="w-14 h-14 rounded-full bg-amber-100 flex items-center justify-center group-hover:bg-amber-200 transition">
-              <FiShoppingBag className="text-amber-600 text-2xl" />
+            <div className="w-14 h-14 rounded-full bg-gold-100 flex items-center justify-center group-hover:bg-gold-200 transition">
+              <FiShoppingBag className="text-gold-600 text-2xl" />
             </div>
-            <span className="font-semibold text-gray-800 text-lg">Boutique</span>
-            <span className="text-xs text-gray-500 text-center">Vente de produits — Commandes & articles</span>
+            <span className="font-semibold text-primary-800 text-lg">Boutique</span>
+            <span className="text-xs text-primary-500 text-center">Vente de produits — Commandes & articles</span>
           </button>
         </div>
-        <div className="mt-6 text-center text-xs text-gray-400">
+        <div className="mt-6 text-center text-xs text-primary-400">
           Vous pourrez personnaliser votre espace après validation.
         </div>
       </div>
@@ -129,12 +129,12 @@ export default function ProOnboarding({ onComplete }) {
 
   // Step 2: Fill form
   return (
-    <div className={`max-w-md mx-auto py-10 px-6 bg-white rounded-2xl shadow border border-gray-200 transition-all duration-700 ${showForm ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+    <div className={`max-w-md mx-auto py-10 px-6 bg-white rounded-2xl shadow border border-primary-200 transition-all duration-700 ${showForm ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
       <div className="mb-8 text-center">
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="text-2xl font-bold text-primary-900">
           {isBoutique ? 'Créer ma boutique' : 'Créer mon salon'}
         </h1>
-        <p className="text-gray-500 text-sm mt-2">Remplissez les informations pour créer votre espace.</p>
+        <p className="text-primary-500 text-sm mt-2">Remplissez les informations pour créer votre espace.</p>
         <button
           type="button"
           onClick={() => setBusinessType(null)}
@@ -145,31 +145,31 @@ export default function ProOnboarding({ onComplete }) {
       </div>
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label className="block font-medium mb-1 text-gray-700" htmlFor="name">
+          <label className="block font-medium mb-1 text-primary-700" htmlFor="name">
             {isBoutique ? 'Nom de la boutique' : 'Nom du salon'} <span className="text-primary-500">*</span>
           </label>
-          <input id="name" className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-primary-500 outline-none transition placeholder-gray-400 text-base bg-gray-50" placeholder={isBoutique ? 'Ex: Fashion Store, Dakar Bags...' : 'Ex: Bosh Cut, Beauty Palace...'} value={form.name} onChange={e => handleChange('name', e.target.value)} autoComplete="off" />
+          <input id="name" className="w-full px-3 py-2 rounded-lg border border-primary-300 focus:border-primary-500 outline-none transition placeholder-primary-400 text-base bg-primary-50" placeholder={isBoutique ? 'Ex: Fashion Store, Dakar Bags...' : 'Ex: Bosh Cut, Beauty Palace...'} value={form.name} onChange={e => handleChange('name', e.target.value)} autoComplete="off" />
           {errors.name && <div className="text-red-500 text-xs mt-1">{errors.name}</div>}
         </div>
         <div>
-          <label className="block font-medium mb-1 text-gray-700" htmlFor="type">
+          <label className="block font-medium mb-1 text-primary-700" htmlFor="type">
             {isBoutique ? 'Type de boutique' : "Type d'établissement"} <span className="text-primary-500">*</span>
           </label>
-          <select id="type" className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-primary-500 outline-none transition text-base bg-gray-50" value={form.type} onChange={e => handleChange('type', e.target.value)}>
+          <select id="type" className="w-full px-3 py-2 rounded-lg border border-primary-300 focus:border-primary-500 outline-none transition text-base bg-primary-50" value={form.type} onChange={e => handleChange('type', e.target.value)}>
             <option value="">Sélectionner le type</option>
             {typeOptions.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
           </select>
           {errors.type && <div className="text-red-500 text-xs mt-1">{errors.type}</div>}
         </div>
         <div>
-          <label className="block font-medium mb-1 text-gray-700" htmlFor="address">
+          <label className="block font-medium mb-1 text-primary-700" htmlFor="address">
             Adresse <span className="text-primary-500">*</span>
           </label>
-          <input id="address" className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-primary-500 outline-none transition placeholder-gray-400 text-base bg-gray-50" placeholder="Rue, point de repère..." value={form.address} onChange={e => handleChange('address', e.target.value)} autoComplete="off" />
+          <input id="address" className="w-full px-3 py-2 rounded-lg border border-primary-300 focus:border-primary-500 outline-none transition placeholder-primary-400 text-base bg-primary-50" placeholder="Rue, point de repère..." value={form.address} onChange={e => handleChange('address', e.target.value)} autoComplete="off" />
           {errors.address && <div className="text-red-500 text-xs mt-1">{errors.address}</div>}
         </div>
         <div>
-          <label className="block font-medium mb-1 text-gray-700">
+          <label className="block font-medium mb-1 text-primary-700">
             Quartier <span className="text-primary-500">*</span>
           </label>
           <QuartierSelector
@@ -182,25 +182,25 @@ export default function ProOnboarding({ onComplete }) {
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex-1">
-            <label className="block font-medium mb-1 text-gray-700" htmlFor="city">
+            <label className="block font-medium mb-1 text-primary-700" htmlFor="city">
               Ville <span className="text-primary-500">*</span>
             </label>
-            <input id="city" className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-primary-500 outline-none transition placeholder-gray-400 text-base bg-gray-50" placeholder="Ex: Dakar, Rufisque..." value={form.city} onChange={e => handleChange('city', e.target.value)} autoComplete="off" />
+            <input id="city" className="w-full px-3 py-2 rounded-lg border border-primary-300 focus:border-primary-500 outline-none transition placeholder-primary-400 text-base bg-primary-50" placeholder="Ex: Dakar, Rufisque..." value={form.city} onChange={e => handleChange('city', e.target.value)} autoComplete="off" />
             {errors.city && <div className="text-red-500 text-xs mt-1">{errors.city}</div>}
           </div>
           <div className="flex-1">
-            <label className="block font-medium mb-1 text-gray-700" htmlFor="phone">
+            <label className="block font-medium mb-1 text-primary-700" htmlFor="phone">
               Téléphone <span className="text-primary-500">*</span>
             </label>
-            <input id="phone" className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:border-primary-500 outline-none transition placeholder-gray-400 text-base bg-gray-50" placeholder="Numéro WhatsApp ou mobile" value={form.phone} onChange={e => handleChange('phone', e.target.value)} autoComplete="off" />
+            <input id="phone" className="w-full px-3 py-2 rounded-lg border border-primary-300 focus:border-primary-500 outline-none transition placeholder-primary-400 text-base bg-primary-50" placeholder="Numéro WhatsApp ou mobile" value={form.phone} onChange={e => handleChange('phone', e.target.value)} autoComplete="off" />
             {errors.phone && <div className="text-red-500 text-xs mt-1">{errors.phone}</div>}
           </div>
         </div>
-        <button type="submit" className={`w-full py-2 rounded-lg ${isBoutique ? 'bg-amber-600 hover:bg-amber-700' : 'bg-primary-600 hover:bg-primary-700'} text-white font-semibold text-base transition disabled:opacity-60 disabled:cursor-not-allowed`} disabled={loading}>
+        <button type="submit" className={`w-full py-2 rounded-lg ${isBoutique ? 'bg-gold-600 hover:bg-gold-700' : 'bg-primary-600 hover:bg-primary-700'} text-white font-semibold text-base transition disabled:opacity-60 disabled:cursor-not-allowed`} disabled={loading}>
           {loading ? 'Enregistrement...' : isBoutique ? 'Créer ma boutique' : 'Créer mon salon'}
         </button>
       </form>
-      <div className="mt-6 text-center text-xs text-gray-400">
+      <div className="mt-6 text-center text-xs text-primary-400">
         Vos données sont sécurisées et privées.
       </div>
     </div>

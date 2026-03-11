@@ -9,9 +9,9 @@ export default function ProPending() {
   const statusConfig = {
     PENDING: {
       icon: FiClock,
-      color: 'text-yellow-500',
+      color: 'text-gold-500',
       bgColor: 'bg-yellow-50',
-      borderColor: 'border-yellow-200',
+      borderColor: 'border-gold-200',
       title: 'Compte en attente de validation',
       description: 'Votre demande d\'inscription en tant que professionnel est en cours de traitement. Notre équipe examine votre dossier.',
       tips: [
@@ -52,7 +52,7 @@ export default function ProPending() {
   const StatusIcon = config.icon
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
+    <div className="min-h-screen bg-primary-50 flex items-center justify-center py-12 px-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -64,19 +64,19 @@ export default function ProPending() {
             <StatusIcon className={`w-10 h-10 ${config.color}`} />
           </div>
 
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">
+          <h1 className="text-2xl font-bold text-primary-900 mb-4">
             {config.title}
           </h1>
 
-          <p className="text-gray-600 mb-6">
+          <p className="text-primary-600 mb-6">
             {config.description}
           </p>
 
           {/* User Info */}
           <div className="bg-white rounded-xl p-4 mb-6">
-            <p className="text-sm text-gray-500">Connecté en tant que</p>
-            <p className="font-semibold text-gray-900">{user?.name}</p>
-            <p className="text-sm text-gray-600">{user?.email}</p>
+            <p className="text-sm text-primary-500">Connecté en tant que</p>
+            <p className="font-semibold text-primary-900">{user?.name}</p>
+            <p className="text-sm text-primary-600">{user?.email}</p>
             <span className="inline-block mt-2 px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">
               Compte PRO
             </span>
@@ -84,12 +84,12 @@ export default function ProPending() {
 
           {/* Tips */}
           <div className="bg-white rounded-xl p-4 text-left mb-6">
-            <h3 className="font-medium text-gray-900 mb-3">
+            <h3 className="font-medium text-primary-900 mb-3">
               {status === 'PENDING' ? '💡 En attendant...' : '💡 Que faire ?'}
             </h3>
             <ul className="space-y-2">
               {config.tips.map((tip, index) => (
-                <li key={index} className="flex items-start gap-2 text-sm text-gray-600">
+                <li key={index} className="flex items-start gap-2 text-sm text-primary-600">
                   <FiCheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
                   {tip}
                 </li>
@@ -116,7 +116,7 @@ export default function ProPending() {
             </Link>
             <button
               onClick={logout}
-              className="w-full px-4 py-3 bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300 transition-colors"
+              className="w-full px-4 py-3 bg-primary-200 text-primary-700 rounded-xl font-medium hover:bg-primary-300 transition-colors"
             >
               Se déconnecter
             </button>
@@ -124,7 +124,7 @@ export default function ProPending() {
         </div>
 
         {/* Footer */}
-        <p className="text-center text-sm text-gray-500 mt-6">
+        <p className="text-center text-sm text-primary-500 mt-6">
           Vous êtes un client ?{' '}
           <Link to="/login" className="text-blue-600 hover:underline">
             Connectez-vous ici

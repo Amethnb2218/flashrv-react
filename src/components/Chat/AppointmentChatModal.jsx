@@ -202,11 +202,11 @@ function AppointmentChatModal({
   }
 
   const renderThreadList = ({ mobile = false } = {}) => (
-    <aside className={`rounded-xl border border-gray-100 bg-white p-2 ${mobile ? 'h-full' : ''}`}>
-      <p className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-gray-500">Discussions</p>
+    <aside className={`rounded-xl border border-primary-100 bg-white p-2 ${mobile ? 'h-full' : ''}`}>
+      <p className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-primary-500">Discussions</p>
       <div className={`mt-1 ${mobile ? 'h-[60vh]' : 'max-h-80'} overflow-y-auto space-y-1`}>
         {threads.length === 0 ? (
-          <p className="px-2 py-2 text-sm text-gray-500">Aucune reservation disponible pour ouvrir le chat.</p>
+          <p className="px-2 py-2 text-sm text-primary-500">Aucune reservation disponible pour ouvrir le chat.</p>
         ) : null}
         {threads.map((thread) => {
           const active = String(thread.id) === String(appointmentId)
@@ -219,11 +219,11 @@ function AppointmentChatModal({
                 setMobileChatOpen(true)
               }}
               className={`w-full rounded-lg px-3 py-2 text-left transition ${
-                active ? 'bg-amber-50 border border-amber-200' : 'hover:bg-gray-50 border border-transparent'
+                active ? 'bg-gold-50 border border-gold-200' : 'hover:bg-primary-50 border border-transparent'
               }`}
             >
-              <p className="text-sm font-semibold text-gray-900">{getThreadPrimary(thread)}</p>
-              <p className="mt-1 line-clamp-2 text-xs text-gray-500">{getThreadSecondary(thread) || 'Reservation'}</p>
+              <p className="text-sm font-semibold text-primary-900">{getThreadPrimary(thread)}</p>
+              <p className="mt-1 line-clamp-2 text-xs text-primary-500">{getThreadSecondary(thread) || 'Reservation'}</p>
             </button>
           )
         })}
@@ -234,40 +234,40 @@ function AppointmentChatModal({
   const renderChatPanel = ({ mobile = false } = {}) => (
     <div className="flex flex-col gap-2 sm:gap-4 min-h-0 flex-1">
       {showThreadList && mobile ? (
-        <div className="flex items-center gap-2 rounded-xl border border-gray-100 bg-white px-3 py-2">
+        <div className="flex items-center gap-2 rounded-xl border border-primary-100 bg-white px-3 py-2">
           <button
             type="button"
             onClick={() => setMobileChatOpen(false)}
-            className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-sm text-gray-600 hover:bg-gray-100"
+            className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-sm text-primary-600 hover:bg-primary-100"
           >
             <FiChevronLeft className="w-4 h-4" />
             Retour
           </button>
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-gray-900">{activeAppointment ? getThreadPrimary(activeAppointment) : 'Discussion'}</p>
-            <p className="truncate text-xs text-gray-500">{activeAppointment ? getThreadSecondary(activeAppointment) : 'Selectionnez une discussion'}</p>
+            <p className="truncate text-sm font-semibold text-primary-900">{activeAppointment ? getThreadPrimary(activeAppointment) : 'Discussion'}</p>
+            <p className="truncate text-xs text-primary-500">{activeAppointment ? getThreadSecondary(activeAppointment) : 'Selectionnez une discussion'}</p>
           </div>
         </div>
       ) : null}
 
-      <div className="flex-1 min-h-[200px] max-h-[60vh] sm:max-h-[400px] overflow-y-auto border border-gray-100 rounded-xl bg-white p-2 sm:p-3 space-y-3">
+      <div className="flex-1 min-h-[200px] max-h-[60vh] sm:max-h-[400px] overflow-y-auto border border-primary-100 rounded-xl bg-white p-2 sm:p-3 space-y-3">
         {!appointmentId ? (
-          <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+          <p className="text-sm text-gold-700 bg-gold-50 border border-gold-200 rounded-lg px-3 py-2">
             Selectionnez une conversation pour demarrer le chat.
           </p>
         ) : null}
-        {loading ? <p className="text-sm text-gray-500">Chargement...</p> : null}
-        {!loading && appointmentId && messages.length === 0 ? <p className="text-sm text-gray-500">Aucun message.</p> : null}
+        {loading ? <p className="text-sm text-primary-500">Chargement...</p> : null}
+        {!loading && appointmentId && messages.length === 0 ? <p className="text-sm text-primary-500">Aucun message.</p> : null}
 
         {messages.map((m) => {
           const mine = m.senderId === currentUserId
           return (
             <div key={m.id} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[80%] rounded-xl px-3 py-2 ${mine ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'}`}>
-                <p className={`text-xs mb-1 ${mine ? 'text-gray-300' : 'text-gray-500'}`}>{m.sender?.name || 'Utilisateur'}</p>
+              <div className={`max-w-[80%] rounded-xl px-3 py-2 ${mine ? 'bg-primary-900 text-white' : 'bg-primary-100 text-primary-900'}`}>
+                <p className={`text-xs mb-1 ${mine ? 'text-primary-300' : 'text-primary-500'}`}>{m.sender?.name || 'Utilisateur'}</p>
                 {m.text ? <p className="text-sm whitespace-pre-wrap">{m.text}</p> : null}
                 {m.audioUrl ? <audio controls src={resolveMediaUrl(m.audioUrl)} className="mt-2 w-full" /> : null}
-                <p className={`text-[11px] mt-1 ${mine ? 'text-gray-400' : 'text-gray-500'}`}>{new Date(m.createdAt).toLocaleString('fr-FR')}</p>
+                <p className={`text-[11px] mt-1 ${mine ? 'text-primary-400' : 'text-primary-500'}`}>{new Date(m.createdAt).toLocaleString('fr-FR')}</p>
               </div>
             </div>
           )
@@ -276,8 +276,8 @@ function AppointmentChatModal({
       </div>
 
       {voicePreview ? (
-        <div className="border border-gray-200 rounded-xl p-3 bg-gray-50">
-          <p className="text-sm font-medium text-gray-700 mb-2">Message vocal pret</p>
+        <div className="border border-primary-200 rounded-xl p-3 bg-primary-50">
+          <p className="text-sm font-medium text-primary-700 mb-2">Message vocal pret</p>
           <audio controls src={voicePreview} className="w-full" />
           <button
             type="button"
@@ -300,13 +300,13 @@ function AppointmentChatModal({
             }
           }}
           placeholder="Ecrire un message..."
-          className="flex-1 min-w-0 px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-transparent outline-none text-sm sm:text-base"
+          className="flex-1 min-w-0 px-3 sm:px-4 py-2.5 sm:py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-gold-500 focus:border-transparent outline-none text-sm sm:text-base"
         />
         {!recording ? (
           <button
             type="button"
             onClick={startRecording}
-            className="shrink-0 p-2.5 sm:px-3 sm:py-3 rounded-xl border border-gray-200 hover:bg-gray-50"
+            className="shrink-0 p-2.5 sm:px-3 sm:py-3 rounded-xl border border-primary-200 hover:bg-primary-50"
             title="Enregistrer un vocal"
           >
             <FiMic className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -325,7 +325,7 @@ function AppointmentChatModal({
           type="button"
           disabled={!appointmentId || sending || (!text.trim() && !voiceBlob)}
           onClick={sendMessage}
-          className="shrink-0 p-2.5 sm:px-4 sm:py-3 rounded-xl bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
+          className="shrink-0 p-2.5 sm:px-4 sm:py-3 rounded-xl bg-primary-900 text-white hover:bg-primary-800 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2"
         >
           <FiSend className="w-4 h-4 sm:w-5 sm:h-5" />
           <span className="hidden sm:inline">Envoyer</span>

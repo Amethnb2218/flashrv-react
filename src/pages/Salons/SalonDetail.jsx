@@ -5,7 +5,7 @@ import {
   FiMapPin, FiPhone, FiMail, FiClock, FiStar, FiCheck, 
   FiWifi, FiCoffee, FiChevronLeft, FiChevronRight, FiShare2,
   FiHeart, FiX, FiShoppingCart, FiBox, FiPlus, FiMinus, FiUsers,
-  FiMessageSquare
+  FiMessageSquare, FiHelpCircle
 } from 'react-icons/fi'
 // import { salons, servicesBySalon, coiffeursBySalon, reviews } from '../../data/salons'
 import { formatPrice, formatDuration, formatPriceRange } from '../../utils/helpers'
@@ -1524,52 +1524,68 @@ function SalonDetail() {
                       ) : null}
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                    <div className="flex gap-2 items-end">
+                      <div className="flex-1 space-y-2">
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => toggleProductLike(product.id)}
+                            aria-label={isProductLiked(product.id) ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+                            title={isProductLiked(product.id) ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+                            className={`py-3 rounded-xl border transition flex items-center justify-center ${isProductLiked(product.id) ? 'bg-red-50 text-red-600 border-red-200' : 'bg-white text-primary-700 border-primary-200 hover:bg-primary-50'}`}
+                          >
+                            <FiHeart className="w-5 h-5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => shareProduct(product)}
+                            aria-label="Partager"
+                            title="Partager"
+                            className="py-3 rounded-xl border border-primary-200 bg-white text-primary-700 hover:bg-primary-50 flex items-center justify-center"
+                          >
+                            <FiShare2 className="w-5 h-5" />
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            onClick={openProductReview}
+                            aria-label="Avis"
+                            title="Avis"
+                            className="py-3 rounded-xl border border-primary-200 bg-white text-primary-700 hover:bg-primary-50 flex items-center justify-center"
+                          >
+                            <FiMessageSquare className="w-5 h-5" />
+                          </button>
+                          <a
+                            href={salon?.phone ? `tel:${salon.phone}` : '#'}
+                            onClick={(e) => { if (!salon?.phone) e.preventDefault() }}
+                            aria-label="Appeler"
+                            title="Appeler"
+                            className="py-3 rounded-xl border border-primary-200 bg-white text-primary-700 hover:bg-primary-50 flex items-center justify-center text-center"
+                          >
+                            <FiPhone className="w-5 h-5" />
+                          </a>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => buyNow(product, selSize, selColor)}
+                          disabled={product.stock <= 0 || (needsVariant && !variantChosen)}
+                          aria-label="Acheter"
+                          title="Acheter"
+                          className="w-full py-3 rounded-xl border border-primary-900 bg-primary-900 text-white hover:bg-primary-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                        >
+                          <FiShoppingCart className="w-5 h-5" />
+                        </button>
+                      </div>
                       <button
                         type="button"
-                        onClick={() => toggleProductLike(product.id)}
-                        aria-label={isProductLiked(product.id) ? 'Retirer des favoris' : 'Ajouter aux favoris'}
-                        title={isProductLiked(product.id) ? 'Retirer des favoris' : 'Ajouter aux favoris'}
-                        className={`px-2.5 py-2 rounded-xl border transition flex items-center justify-center ${isProductLiked(product.id) ? 'bg-red-50 text-red-600 border-red-200' : 'bg-white text-primary-700 border-primary-200 hover:bg-primary-50'}`}
+                        onClick={() => {/* Aide action */}}
+                        aria-label="Aide"
+                        title="Aide"
+                        className="flex-shrink-0 mb-0.5 w-14 h-14 rounded-full border border-primary-200 bg-white text-primary-600 hover:bg-primary-50 shadow-md flex items-center justify-center gap-1 flex-col"
                       >
-                        <FiHeart className="w-4 h-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => shareProduct(product)}
-                        aria-label="Partager"
-                        title="Partager"
-                        className="px-2.5 py-2 rounded-xl border border-primary-200 bg-white text-primary-700 hover:bg-primary-50 flex items-center justify-center"
-                      >
-                        <FiShare2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={openProductReview}
-                        aria-label="Avis"
-                        title="Avis"
-                        className="px-2.5 py-2 rounded-xl border border-primary-200 bg-white text-primary-700 hover:bg-primary-50 flex items-center justify-center"
-                      >
-                        <FiMessageSquare className="w-4 h-4" />
-                      </button>
-                      <a
-                        href={salon?.phone ? `tel:${salon.phone}` : '#'}
-                        onClick={(e) => { if (!salon?.phone) e.preventDefault() }}
-                        aria-label="Appeler"
-                        title="Appeler"
-                        className="px-2.5 py-2 rounded-xl border border-primary-200 bg-white text-primary-700 hover:bg-primary-50 flex items-center justify-center text-center"
-                      >
-                        <FiPhone className="w-4 h-4" />
-                      </a>
-                      <button
-                        type="button"
-                        onClick={() => buyNow(product, selSize, selColor)}
-                        disabled={product.stock <= 0 || (needsVariant && !variantChosen)}
-                        aria-label="Acheter"
-                        title="Acheter"
-                        className="px-2.5 py-2 rounded-xl border border-primary-900 bg-primary-900 text-white hover:bg-primary-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                      >
-                        <FiShoppingCart className="w-4 h-4" />
+                        <FiHelpCircle className="w-5 h-5" />
+                        <span className="text-[10px] font-medium leading-none">Aide</span>
                       </button>
                     </div>
 

@@ -169,23 +169,23 @@ function Booking() {
   }
 
   return (
-    <div className="relative min-h-screen w-full max-w-[100vw] overflow-x-clip bg-gradient-to-br from-gray-50 via-white to-amber-50/20 py-4 sm:py-8">
+    <div className="relative min-h-screen w-full max-w-[100vw] overflow-x-clip bg-gradient-to-br from-primary-50 via-white to-gold-50/20 py-4 sm:py-8">
       {/* Decorative background elements */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-amber-100/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none"></div>
-      <div className="absolute bottom-0 left-0 w-80 h-80 bg-yellow-100/30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4 pointer-events-none"></div>
+      <div className="absolute top-0 right-0 w-96 h-96 bg-gold-100/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none"></div>
+      <div className="absolute bottom-0 left-0 w-80 h-80 bg-gold-100/30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4 pointer-events-none"></div>
       
       <div className="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Header — compact on mobile */}
         <div className="mb-4 sm:mb-8">
           <button
             onClick={handleBack}
-            className="flex items-center text-gray-600 hover:text-gray-900 transition-colors mb-2 sm:mb-4 text-sm"
+            className="flex items-center text-primary-600 hover:text-primary-900 transition-colors mb-2 sm:mb-4 text-sm"
           >
             <FiChevronLeft className="w-5 h-5 mr-0.5" />
             Retour
           </button>
-          <h1 className="text-xl sm:text-3xl font-bold text-gray-900 break-words">Réservation</h1>
-          <p className="text-gray-500 mt-1 text-xs sm:text-base">{salon.name}</p>
+          <h1 className="text-xl sm:text-3xl font-bold text-primary-900 break-words">Réservation</h1>
+          <p className="text-primary-500 mt-1 text-xs sm:text-base">{salon.name}</p>
         </div>
 
         {/* Steps indicator — compact on mobile */}
@@ -209,7 +209,7 @@ function Booking() {
                         ? 'bg-green-500 text-white'
                         : state.step === step.id
                         ? 'bg-primary-600 text-white shadow-lg shadow-primary-500/30'
-                        : 'bg-gray-100 text-gray-400'
+                        : 'bg-primary-100 text-primary-400'
                     }`}
                   >
                     {state.step > step.id ? (
@@ -219,14 +219,14 @@ function Booking() {
                     )}
                   </div>
                   <span className={`hidden sm:inline text-sm font-medium whitespace-nowrap ${
-                    state.step === step.id ? 'text-gray-900' : state.step > step.id ? 'text-green-600' : 'text-gray-400'
+                    state.step === step.id ? 'text-primary-900' : state.step > step.id ? 'text-green-600' : 'text-primary-400'
                   }`}>
                     {step.title}
                   </span>
                 </button>
                 {index < steps.length - 1 && (
                   <div className={`flex-1 h-0.5 mx-2 sm:mx-3 rounded ${
-                    state.step > step.id ? 'bg-green-500' : 'bg-gray-200'
+                    state.step > step.id ? 'bg-green-500' : 'bg-primary-200'
                   }`} />
                 )}
               </div>
@@ -253,7 +253,7 @@ function Booking() {
                 {/* Step 1: Services */}
                 {state.step === 1 && (
                   <div>
-                    <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6">
+                    <h2 className="text-lg sm:text-xl font-bold text-primary-900 mb-4 sm:mb-6">
                       Choisissez vos services
                     </h2>
                     <div className="grid gap-3 sm:gap-4">
@@ -279,8 +279,8 @@ function Booking() {
                 {state.step === 2 && (
                   <div className="space-y-3 sm:space-y-4">
                     <div className="w-full min-w-0 rounded-2xl border border-primary-100 bg-gradient-to-r from-primary-50 to-white px-3 py-3 sm:px-4">
-                      <h2 className="text-base font-bold text-gray-900 sm:text-xl">Date et heure</h2>
-                      <p className="mt-1 text-xs text-gray-600 sm:text-sm">Choisissez un jour puis un créneau disponible.</p>
+                      <h2 className="text-base font-bold text-primary-900 sm:text-xl">Date et heure</h2>
+                      <p className="mt-1 text-xs text-primary-600 sm:text-sm">Choisissez un jour puis un créneau disponible.</p>
                     </div>
 
                     <div className="w-full min-w-0">
@@ -329,13 +329,13 @@ function Booking() {
                 {/* Step 3: Confirmation */}
                 {state.step === 3 && (
                   <div>
-                    <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6">
+                    <h2 className="text-lg sm:text-xl font-bold text-primary-900 mb-4 sm:mb-6">
                       Confirmer votre réservation
                     </h2>
 
-                    <div className="bg-white border border-gray-200 rounded-xl p-4 mb-6">
-                      <h3 className="font-semibold text-gray-900 mb-4">Vos informations de contact</h3>
-                      <p className="text-sm text-gray-500 mb-4">
+                    <div className="bg-white border border-primary-200 rounded-xl p-4 mb-6">
+                      <h3 className="font-semibold text-primary-900 mb-4">Vos informations de contact</h3>
+                      <p className="text-sm text-primary-500 mb-4">
                         Ces informations seront visibles par le salon pour confirmer le rendez-vous.
                       </p>
                     <div className="grid md:grid-cols-2 gap-3">
@@ -344,28 +344,28 @@ function Booking() {
                           value={state.clientFirstName || ''}
                           onChange={(e) => dispatch({ type: 'SET_CLIENT_DETAILS', payload: { clientFirstName: e.target.value } })}
                           placeholder="Prénom *"
-                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                          className="w-full px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                         />
                         <input
                           type="text"
                           value={state.clientLastName || ''}
                           onChange={(e) => dispatch({ type: 'SET_CLIENT_DETAILS', payload: { clientLastName: e.target.value } })}
                           placeholder="Nom *"
-                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                          className="w-full px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                         />
                         <input
                           type="tel"
                           value={state.clientPhone || ''}
                           onChange={(e) => dispatch({ type: 'SET_CLIENT_DETAILS', payload: { clientPhone: e.target.value } })}
                           placeholder="Téléphone *"
-                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                          className="w-full px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                         />
                         <input
                           type="text"
                           value={state.clientAddress || ''}
                           onChange={(e) => dispatch({ type: 'SET_CLIENT_DETAILS', payload: { clientAddress: e.target.value } })}
                           placeholder="Adresse (optionnel)"
-                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                          className="w-full px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                         />
                       </div>
                     </div>
@@ -386,14 +386,14 @@ function Booking() {
                     <div className="space-y-6">
                       {/* Summary */}
                       <div className="bg-primary-50 rounded-xl p-4 sm:p-6">
-                        <h3 className="font-semibold text-gray-900 mb-4">Récapitulatif</h3>
+                        <h3 className="font-semibold text-primary-900 mb-4">Récapitulatif</h3>
                         
                         <div className="space-y-3">
                           <div className="flex items-start">
                             <FiScissors className="w-5 h-5 text-primary-600 mt-0.5 mr-3" />
                             <div>
-                              <p className="font-medium text-gray-900">Services</p>
-                              <ul className="text-gray-600 text-sm">
+                              <p className="font-medium text-primary-900">Services</p>
+                              <ul className="text-primary-600 text-sm">
                                 {state.services.map(s => (
                                   <li key={s.id} className="break-words">• {s.name} - {s.price.toLocaleString()} FCFA</li>
                                 ))}
@@ -404,8 +404,8 @@ function Booking() {
                           <div className="flex items-center">
                             <FiCalendar className="w-5 h-5 text-primary-600 mr-3" />
                             <div>
-                              <p className="font-medium text-gray-900">Date & Heure</p>
-                              <p className="text-gray-600 text-sm">
+                              <p className="font-medium text-primary-900">Date & Heure</p>
+                              <p className="text-primary-600 text-sm">
                                 {state.date && new Date(state.date).toLocaleDateString('fr-FR', {
                                   weekday: 'long',
                                   day: 'numeric',
@@ -419,8 +419,8 @@ function Booking() {
                           <div className="flex items-center">
                             <FiClock className="w-5 h-5 text-primary-600 mr-3" />
                             <div>
-                              <p className="font-medium text-gray-900">Durée estimée</p>
-                              <p className="text-gray-600 text-sm">{state.totalDuration} min</p>
+                              <p className="font-medium text-primary-900">Durée estimée</p>
+                              <p className="text-primary-600 text-sm">{state.totalDuration} min</p>
                             </div>
                           </div>
                         </div>
@@ -428,14 +428,14 @@ function Booking() {
 
                       {/* Notes */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-primary-700 mb-2">
                           Notes ou demandes spéciales (optionnel)
                         </label>
                         <textarea
                           value={state.notes}
                           onChange={(e) => dispatch({ type: 'SET_NOTES', payload: e.target.value })}
                           rows={3}
-                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                          className="w-full px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
                           placeholder="Ex: Cheveux très épais, préférence pour un style naturel..."
                         />
                       </div>
@@ -446,10 +446,10 @@ function Booking() {
             </AnimatePresence>
 
             {/* Navigation Buttons — fixed bottom bar on mobile */}
-            <div className="fixed bottom-0 left-0 right-0 z-[70] flex justify-between gap-2 border-t border-gray-200 bg-white/95 p-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur sm:static sm:mt-6 sm:border-0 sm:bg-transparent sm:p-0 sm:pb-0 sm:shadow-none">
+            <div className="fixed bottom-0 left-0 right-0 z-[70] flex justify-between gap-2 border-t border-primary-200 bg-white/95 p-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur sm:static sm:mt-6 sm:border-0 sm:bg-transparent sm:p-0 sm:pb-0 sm:shadow-none">
               <button
                 onClick={handleBack}
-                className="flex-1 sm:flex-none px-4 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors flex items-center justify-center text-sm font-medium"
+                className="flex-1 sm:flex-none px-4 py-3 border border-primary-300 text-primary-700 rounded-xl hover:bg-primary-50 transition-colors flex items-center justify-center text-sm font-medium"
               >
                 <FiChevronLeft className="w-4 h-4 mr-1" />
                 {state.step === 1 ? 'Annuler' : 'Retour'}

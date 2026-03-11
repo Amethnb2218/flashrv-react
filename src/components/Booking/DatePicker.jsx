@@ -77,9 +77,9 @@ function DatePicker({ selectedDate, onDateSelect, onSelect, isDateDisabled, days
   }
 
   return (
-    <section className="box-border w-full min-w-0 max-w-full overflow-clip rounded-2xl border border-gray-100 bg-white p-3 sm:p-4">
+    <section className="box-border w-full min-w-0 max-w-full overflow-clip rounded-2xl border border-primary-100 bg-white p-3 sm:p-4">
       <div className="mb-3 flex items-center justify-between gap-2">
-        <p className="text-sm font-semibold text-gray-900">Date</p>
+        <p className="text-sm font-semibold text-primary-900">Date</p>
         {selectedLabel && (
           <span className="max-w-[65%] truncate rounded-full bg-primary-50 px-2.5 py-1 text-[11px] font-medium text-primary-700">
             {selectedLabel}
@@ -92,7 +92,7 @@ function DatePicker({ selectedDate, onDateSelect, onSelect, isDateDisabled, days
           type="button"
           onClick={() => setPageStart((v) => Math.max(v - PAGE_SIZE, 0))}
           disabled={!canGoPrev}
-          className="inline-flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 sm:h-9 sm:w-9"
+          className="inline-flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border border-primary-200 bg-white text-primary-700 transition hover:bg-primary-50 disabled:cursor-not-allowed disabled:opacity-40 sm:h-9 sm:w-9"
           aria-label="Dates precedentes"
         >
           <FiChevronLeft className="h-4 w-4" />
@@ -102,28 +102,28 @@ function DatePicker({ selectedDate, onDateSelect, onSelect, isDateDisabled, days
           <button
             type="button"
             onClick={() => pickFromOffset(1)}
-            className="rounded-full border border-gray-200 px-2.5 py-1 text-gray-700 transition hover:bg-gray-50"
+            className="rounded-full border border-primary-200 px-2.5 py-1 text-primary-700 transition hover:bg-primary-50"
           >
             Demain
           </button>
           <button
             type="button"
             onClick={() => pickFromOffset(7)}
-            className="rounded-full border border-gray-200 px-2.5 py-1 text-gray-700 transition hover:bg-gray-50"
+            className="rounded-full border border-primary-200 px-2.5 py-1 text-primary-700 transition hover:bg-primary-50"
           >
             +1 sem
           </button>
           <button
             type="button"
             onClick={() => pickFromOffset(14)}
-            className="rounded-full border border-gray-200 px-2.5 py-1 text-gray-700 transition hover:bg-gray-50"
+            className="rounded-full border border-primary-200 px-2.5 py-1 text-primary-700 transition hover:bg-primary-50"
           >
             +2 sem
           </button>
           <button
             type="button"
             onClick={() => pickFromOffset(30)}
-            className="rounded-full border border-gray-200 px-2.5 py-1 text-gray-700 transition hover:bg-gray-50"
+            className="rounded-full border border-primary-200 px-2.5 py-1 text-primary-700 transition hover:bg-primary-50"
           >
             +1 mois
           </button>
@@ -133,7 +133,7 @@ function DatePicker({ selectedDate, onDateSelect, onSelect, isDateDisabled, days
           type="button"
           onClick={() => setPageStart((v) => Math.min(v + PAGE_SIZE, Math.max(allDays.length - PAGE_SIZE, 0)))}
           disabled={!canGoNext}
-          className="inline-flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 sm:h-9 sm:w-9"
+          className="inline-flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border border-primary-200 bg-white text-primary-700 transition hover:bg-primary-50 disabled:cursor-not-allowed disabled:opacity-40 sm:h-9 sm:w-9"
           aria-label="Dates suivantes"
         >
           <FiChevronRight className="h-4 w-4" />
@@ -160,28 +160,28 @@ function DatePicker({ selectedDate, onDateSelect, onSelect, isDateDisabled, days
                 disabled={isDisabled}
                 className={`w-[calc(25%-6px)] min-w-[64px] max-w-[90px] flex-shrink-0 rounded-2xl border px-1.5 py-2 text-center transition-colors duration-200 sm:px-2 sm:py-2.5 ${
                   isDisabled
-                    ? 'cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400'
+                    ? 'cursor-not-allowed border-primary-200 bg-primary-100 text-primary-400'
                     : isSelected
                     ? 'border-primary-500 bg-primary-600 text-white shadow-lg shadow-primary-500/25'
-                    : 'border-gray-200 bg-gray-50 text-gray-800 active:bg-gray-100'
+                    : 'border-primary-200 bg-primary-50 text-primary-800 active:bg-primary-100'
                 }`}
               >
-                <p className={`text-[10px] font-semibold uppercase tracking-wide ${isSelected && !isDisabled ? 'text-primary-100' : 'text-gray-500'}`}>
+                <p className={`text-[10px] font-semibold uppercase tracking-wide ${isSelected && !isDisabled ? 'text-primary-100' : 'text-primary-500'}`}>
                   {day.dayName}
                 </p>
                 <p className="mt-0.5 text-xl font-bold leading-none">{day.dayNumber}</p>
-                <p className={`mt-1 text-[11px] ${isSelected && !isDisabled ? 'text-primary-100' : 'text-gray-500'}`}>{day.month}</p>
+                <p className={`mt-1 text-[11px] ${isSelected && !isDisabled ? 'text-primary-100' : 'text-primary-500'}`}>{day.month}</p>
                 {day.isToday && !isDisabled && (
                   <p className={`mt-1 text-[10px] font-semibold ${isSelected ? 'text-primary-100' : 'text-primary-600'}`}>Aujourd&apos;hui</p>
                 )}
-                {isDisabled && <p className="mt-1 text-[10px] font-semibold text-gray-400">Indispo</p>}
+                {isDisabled && <p className="mt-1 text-[10px] font-semibold text-primary-400">Indispo</p>}
               </button>
             )
           })}
         </div>
       </div>
 
-      {!selectedDate && <p className="mt-2 text-center text-[11px] text-gray-500">Faites glisser, ou utilisez les fleches.</p>}
+      {!selectedDate && <p className="mt-2 text-center text-[11px] text-primary-500">Faites glisser, ou utilisez les fleches.</p>}
     </section>
   )
 }

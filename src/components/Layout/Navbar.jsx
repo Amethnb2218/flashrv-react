@@ -254,10 +254,10 @@ function Navbar() {
                     key={link.to}
                     to={link.to}
                     className={`
-                    px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2
+                    px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2
                     ${active 
-                      ? 'text-gray-900 bg-gray-100' 
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      ? 'text-primary-900 bg-primary-100' 
+                      : 'text-primary-600 hover:text-primary-900 hover:bg-primary-50'
                     }
                   `}
                   >
@@ -268,10 +268,10 @@ function Navbar() {
 
               <Link
                 to="/salons?businessType=BOUTIQUE"
-                className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 ${
+                className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 ${
                   isBoutiquePage
-                    ? 'text-gray-900 bg-gray-100'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    ? 'text-primary-900 bg-primary-100'
+                    : 'text-primary-600 hover:text-primary-900 hover:bg-primary-50'
                 }`}
               >
                 Boutiques
@@ -282,7 +282,7 @@ function Navbar() {
             <div className="hidden md:flex items-center space-x-2">
               <button
                 onClick={() => isAuthenticated ? navigate('/dashboard') : navigate('/login')}
-                className="p-2.5 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+                className="p-2.5 text-primary-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2"
                 title="Mes favoris"
               >
                 <FiHeart className="w-5 h-5" />
@@ -290,12 +290,12 @@ function Navbar() {
 
               <button
                 onClick={openCart}
-                className="p-2.5 text-gray-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 relative"
+                className="p-2.5 text-primary-500 hover:text-gold-600 hover:bg-gold-50 rounded-lg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 relative"
                 title="Panier"
               >
                 <FiShoppingCart className="w-5 h-5" />
                 {cartCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-amber-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow">
+                  <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-gold-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow">
                     {cartCount > 9 ? '9+' : cartCount}
                   </span>
                 )}
@@ -306,7 +306,7 @@ function Navbar() {
                 <div className="relative">
                   <button
                     onClick={() => { setShowNotifications(!showNotifications); setShowUserMenu(false) }}
-                    className="p-2.5 text-gray-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 relative"
+                    className="p-2.5 text-primary-500 hover:text-gold-600 hover:bg-gold-50 rounded-lg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 relative"
                     title="Notifications"
                   >
                     <FiBell className="w-5 h-5" />
@@ -323,19 +323,19 @@ function Navbar() {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 10 }}
-                        className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-50"
+                        className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-primary-100 overflow-hidden z-50"
                       >
-                        <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-                          <h3 className="font-bold text-gray-900">Notifications</h3>
+                        <div className="px-4 py-3 border-b border-primary-100 flex items-center justify-between">
+                          <h3 className="font-bold text-primary-900">Notifications</h3>
                           <div className="flex items-center gap-2">
                             {unreadCount > 0 && (
-                              <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">{unreadCount} nouvelles</span>
+                              <span className="text-xs bg-gold-100 text-gold-700 px-2 py-0.5 rounded-full font-medium">{unreadCount} nouvelles</span>
                             )}
                             {notifications.length > 0 && (
                               <button
                                 type="button"
                                 onClick={markAllRead}
-                                className="text-xs text-gray-500 hover:text-gray-800 underline"
+                                className="text-xs text-primary-500 hover:text-primary-800 underline"
                               >
                                 Tout marquer lu
                               </button>
@@ -344,7 +344,7 @@ function Navbar() {
                         </div>
                         <div className="max-h-72 overflow-y-auto">
                           {notifications.length === 0 ? (
-                            <div className="p-6 text-center text-gray-400 text-sm">
+                            <div className="p-6 text-center text-primary-400 text-sm">
                               Aucune notification
                             </div>
                           ) : (
@@ -352,12 +352,12 @@ function Navbar() {
                               <div
                                 key={n.id}
                                 onClick={() => markNotificationRead(n.id)}
-                                className={`px-4 py-3 border-b border-gray-50 cursor-pointer hover:bg-gray-50 transition ${
-                                  !n.isRead ? 'bg-amber-50/50' : ''
+                                className={`px-4 py-3 border-b border-primary-50 cursor-pointer hover:bg-primary-50 transition ${
+                                  !n.isRead ? 'bg-gold-50/50' : ''
                                 }`}
                               >
-                                <p className="text-sm text-gray-800">{n.message}</p>
-                                <p className="text-xs text-gray-400 mt-1">
+                                <p className="text-sm text-primary-800">{n.message}</p>
+                                <p className="text-xs text-primary-400 mt-1">
                                   {new Date(n.createdAt).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                                 </p>
                               </div>
@@ -370,13 +370,13 @@ function Navbar() {
                 </div>
               )}
               
-              <div className="h-6 w-px bg-gray-200"></div>
+              <div className="h-6 w-px bg-primary-200"></div>
               
               {isAuthenticated ? (
                 <div className="relative">
                   <button
                     onClick={() => { setShowUserMenu(!showUserMenu); setShowNotifications(false) }}
-                    className="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+                    className="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-primary-100 hover:bg-primary-200 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2"
                   >
                     {(user.avatar || user.picture) ? (
                       <img
@@ -389,10 +389,10 @@ function Navbar() {
                         {user.name?.charAt(0)?.toUpperCase() || 'U'}
                       </div>
                     )}
-                    <span className="font-medium text-gray-700 text-sm">
+                    <span className="font-medium text-primary-700 text-sm">
                       {user.name?.split(' ')[0]}
                     </span>
-                    <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
@@ -403,17 +403,17 @@ function Navbar() {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 10 }}
-                        className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl py-2 border border-gray-100"
+                        className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl py-2 border border-primary-100"
                       >
-                        <div className="px-4 py-3 border-b border-gray-100">
-                          <p className="font-medium text-gray-800">{user.name}</p>
-                          <p className="text-sm text-gray-500">{user.email}</p>
+                        <div className="px-4 py-3 border-b border-primary-100">
+                          <p className="font-medium text-primary-800">{user.name}</p>
+                          <p className="text-sm text-primary-500">{user.email}</p>
                         </div>
                         
                         <Link
                           to={user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' ? '/admin' : user.role === 'PRO' ? '/pro/dashboard' : '/dashboard'}
                           onClick={() => setShowUserMenu(false)}
-                          className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+                          className="flex items-center space-x-2 px-4 py-2 text-primary-600 hover:bg-primary-50 hover:text-primary-900 transition-colors"
                         >
                           <FiCalendar className="w-4 h-4" />
                           <span>{user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' ? 'Dashboard admin' : user.role === 'PRO' ? 'Mon dashboard' : 'Mes réservations'}</span>
@@ -422,7 +422,7 @@ function Navbar() {
                         <Link
                           to="/profile"
                           onClick={() => setShowUserMenu(false)}
-                          className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+                          className="flex items-center space-x-2 px-4 py-2 text-primary-600 hover:bg-primary-50 hover:text-primary-900 transition-colors"
                         >
                           <FiSettings className="w-4 h-4" />
                           <span>Paramètres</span>
@@ -443,13 +443,13 @@ function Navbar() {
                 <div className="flex items-center space-x-2">
                   <Link
                     to="/login"
-                    className="px-4 py-2 font-medium text-gray-700 hover:text-gray-900 transition-colors rounded-lg hover:bg-gray-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+                    className="px-4 py-2 font-medium text-primary-700 hover:text-primary-900 transition-colors rounded-lg hover:bg-primary-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2"
                   >
                     Connexion
                   </Link>
                   <Link
                     to="/register"
-                    className="px-5 py-2.5 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white font-semibold rounded-xl hover:shadow-lg transition-all shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
+                    className="px-5 py-2.5 bg-gradient-to-r from-primary-900 via-primary-800 to-primary-900 text-white font-semibold rounded-xl hover:shadow-lg transition-all shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2"
                   >
                     S'inscrire gratuitement
                   </Link>
@@ -460,7 +460,7 @@ function Navbar() {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="md:hidden p-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+              className="md:hidden p-2 rounded-lg text-primary-700 hover:bg-primary-100 transition-colors"
               aria-label="Ouvrir le menu"
             >
               {isOpen ? <FiX className="w-6 h-6" /> : <FiMenu className="w-6 h-6" />}
@@ -493,11 +493,11 @@ function Navbar() {
               className="fixed top-0 right-0 bottom-0 z-[9999] w-[80%] max-w-xs bg-white shadow-2xl md:hidden flex flex-col"
             >
                 {/* Drawer header */}
-                <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+                <div className="flex items-center justify-between px-5 py-4 border-b border-primary-100">
                   <Logo variant="default" size="sm" />
                   <button
                     onClick={closeDrawer}
-                    className="p-2 rounded-xl text-gray-500 hover:bg-gray-100 transition-colors"
+                    className="p-2 rounded-xl text-primary-500 hover:bg-primary-100 transition-colors"
                     aria-label="Fermer le menu"
                   >
                     <FiX className="w-5 h-5" />
@@ -515,8 +515,8 @@ function Navbar() {
                       className={({ isActive }) =>
                         `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
                           isActive
-                            ? 'bg-amber-50 text-amber-700'
-                            : 'text-gray-700 hover:bg-gray-50'
+                            ? 'bg-gold-50 text-gold-700'
+                            : 'text-primary-700 hover:bg-primary-50'
                         }`
                       }
                     >
@@ -528,8 +528,8 @@ function Navbar() {
                       onClick={closeDrawer}
                       className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
                         isSalonPage && !isBoutiquePage
-                          ? 'bg-amber-50 text-amber-700'
-                          : 'text-gray-700 hover:bg-gray-50'
+                          ? 'bg-gold-50 text-gold-700'
+                          : 'text-primary-700 hover:bg-primary-50'
                       }`}
                     >
                       <FiScissors className="w-5 h-5" />
@@ -540,8 +540,8 @@ function Navbar() {
                       onClick={closeDrawer}
                       className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
                         isBoutiquePage
-                          ? 'bg-amber-50 text-amber-700'
-                          : 'text-gray-700 hover:bg-gray-50'
+                          ? 'bg-gold-50 text-gold-700'
+                          : 'text-primary-700 hover:bg-primary-50'
                       }`}
                     >
                       <FiShoppingBag className="w-5 h-5" />
@@ -550,7 +550,7 @@ function Navbar() {
                   </div>
 
                   {/* Divider */}
-                  <div className="my-4 border-t border-gray-100" />
+                  <div className="my-4 border-t border-primary-100" />
 
                   {/* User section */}
                   {isAuthenticated ? (
@@ -564,27 +564,27 @@ function Navbar() {
                             className="w-10 h-10 rounded-full border-2 border-white shadow-sm object-cover"
                           />
                         ) : (
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center text-white font-bold text-sm shadow-sm">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold-500 to-orange-500 flex items-center justify-center text-white font-bold text-sm shadow-sm">
                             {user.name?.charAt(0)?.toUpperCase() || 'U'}
                           </div>
                         )}
                         <div className="min-w-0">
-                          <p className="font-semibold text-gray-900 text-sm truncate">{user.name}</p>
-                          <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                          <p className="font-semibold text-primary-900 text-sm truncate">{user.name}</p>
+                          <p className="text-xs text-primary-500 truncate">{user.email}</p>
                         </div>
                       </div>
 
                       <Link
                         to={user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' ? '/admin' : user.role === 'PRO' ? '/pro/dashboard' : '/dashboard'}
                         onClick={closeDrawer}
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-primary-700 hover:bg-primary-50 transition-colors"
                       >
                         <FiCalendar className="w-5 h-5" />
                         <span>{user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' ? 'Dashboard admin' : user.role === 'PRO' ? 'Mon dashboard' : 'Mes réservations'}</span>
                       </Link>
                       <button
                         onClick={openNotificationsPage}
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors w-full"
+                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-primary-700 hover:bg-primary-50 transition-colors w-full"
                       >
                         <div className="relative">
                           <FiBell className="w-5 h-5" />
@@ -598,12 +598,12 @@ function Navbar() {
                       </button>
                       <button
                         onClick={openCart}
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors w-full"
+                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-primary-700 hover:bg-primary-50 transition-colors w-full"
                       >
                         <div className="relative">
                           <FiShoppingCart className="w-5 h-5" />
                           {cartCount > 0 && (
-                            <span className="absolute -top-1 -right-1 w-4 h-4 bg-amber-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                            <span className="absolute -top-1 -right-1 w-4 h-4 bg-gold-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
                               {cartCount > 9 ? '9+' : cartCount}
                             </span>
                           )}
@@ -613,7 +613,7 @@ function Navbar() {
                       <Link
                         to="/dashboard"
                         onClick={closeDrawer}
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-primary-700 hover:bg-primary-50 transition-colors"
                       >
                         <FiHeart className="w-5 h-5 text-red-400" />
                         <span>Mes favoris</span>
@@ -621,7 +621,7 @@ function Navbar() {
                       <Link
                         to="/profile"
                         onClick={closeDrawer}
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-primary-700 hover:bg-primary-50 transition-colors"
                       >
                         <FiSettings className="w-5 h-5" />
                         <span>Paramètres</span>
@@ -632,14 +632,14 @@ function Navbar() {
                       <Link
                         to="/login"
                         onClick={closeDrawer}
-                        className="block py-2.5 px-4 text-center text-sm font-semibold text-gray-700 hover:bg-gray-50 rounded-xl transition-colors border border-gray-200"
+                        className="block py-2.5 px-4 text-center text-sm font-semibold text-primary-700 hover:bg-primary-50 rounded-xl transition-colors border border-primary-200"
                       >
                         Connexion
                       </Link>
                       <Link
                         to="/register"
                         onClick={closeDrawer}
-                        className="block py-2.5 px-4 text-center text-sm font-semibold bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-colors"
+                        className="block py-2.5 px-4 text-center text-sm font-semibold bg-primary-900 text-white rounded-xl hover:bg-primary-800 transition-colors"
                       >
                         S'inscrire gratuitement
                       </Link>
@@ -649,7 +649,7 @@ function Navbar() {
 
                 {/* Drawer footer - logout */}
                 {isAuthenticated && (
-                  <div className="border-t border-gray-100 px-4 py-4">
+                  <div className="border-t border-primary-100 px-4 py-4">
                     <button
                       onClick={handleLogout}
                       className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"

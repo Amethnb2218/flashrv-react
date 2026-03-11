@@ -143,10 +143,10 @@ function Register() {
             alt="Salon"
             className="absolute inset-0 w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-br from-gray-900/80 via-gray-800/70 to-amber-900/60" />
+          <div className="absolute inset-0 bg-gradient-to-br from-primary-900/80 via-primary-800/70 to-gold-900/60" />
           {/* Decorative blobs */}
-          <div className="absolute top-20 left-20 w-64 h-64 bg-amber-400/20 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-20 right-20 w-80 h-80 bg-yellow-300/15 rounded-full blur-3xl"></div>
+          <div className="absolute top-20 left-20 w-64 h-64 bg-gold-400/20 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-20 right-20 w-80 h-80 bg-gold-300/15 rounded-full blur-3xl"></div>
           <div className="absolute inset-0 flex items-center justify-center p-12">
             <div className="text-center text-white">
               <h2 className="text-4xl font-bold mb-4">Rejoignez Style • Flow</h2>
@@ -196,9 +196,9 @@ function Register() {
       {/* Right side - Form */}
       <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-8 relative overflow-hidden">
         {/* Background decorations */}
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-50 via-white to-amber-50/30"></div>
-        <div className="absolute top-0 left-0 w-80 h-80 bg-amber-100/40 rounded-full blur-3xl -translate-y-1/2 -translate-x-1/2"></div>
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-yellow-100/50 rounded-full blur-3xl translate-y-1/2 translate-x-1/2"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-50 via-white to-gold-50/30"></div>
+        <div className="absolute top-0 left-0 w-80 h-80 bg-gold-100/40 rounded-full blur-3xl -translate-y-1/2 -translate-x-1/2"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-gold-100/50 rounded-full blur-3xl translate-y-1/2 translate-x-1/2"></div>
         <div className="absolute top-1/3 right-1/4 w-48 h-48 bg-orange-50/40 rounded-full blur-2xl"></div>
         
         <motion.div
@@ -212,21 +212,21 @@ function Register() {
                 <span className="text-white font-bold text-2xl">F</span>
               </div>
             </Link>
-            <h1 className="text-3xl font-bold text-gray-900">Créer un compte</h1>
-            <p className="mt-2 text-gray-600">
+            <h1 className="text-3xl font-bold text-primary-900">Créer un compte</h1>
+            <p className="mt-2 text-primary-600">
               Rejoignez la communauté Style • Flow
             </p>
           </div>
 
           {/* Role Toggle */}
-          <div className="flex bg-gray-100 rounded-xl p-1 mb-8">
+          <div className="flex bg-primary-100 rounded-xl p-1 mb-8">
             <button
               type="button"
               onClick={() => handleChange('role', 'client')}
               className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${
                 formData.role === 'client'
                   ? 'bg-white shadow text-primary-600'
-                  : 'text-gray-600 hover:text-gray-900'
+                  : 'text-primary-600 hover:text-primary-900'
               }`}
             >
               Je suis client
@@ -237,7 +237,7 @@ function Register() {
               className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${
                 formData.role === 'pro'
                   ? 'bg-white shadow text-primary-600'
-                  : 'text-gray-600 hover:text-gray-900'
+                  : 'text-primary-600 hover:text-primary-900'
               }`}
             >
               Je suis pro
@@ -247,7 +247,7 @@ function Register() {
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-primary-700 mb-2">
                 Nom complet
               </label>
               <input
@@ -263,7 +263,7 @@ function Register() {
 
             {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-primary-700 mb-2">
                 Email
               </label>
               <input
@@ -279,7 +279,7 @@ function Register() {
 
             {/* Phone */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-primary-700 mb-2">
                 Téléphone
               </label>
               <input
@@ -295,7 +295,7 @@ function Register() {
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-primary-700 mb-2">
                 Mot de passe
               </label>
               <div className="relative">
@@ -310,7 +310,7 @@ function Register() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-primary-400 hover:text-primary-600"
                 >
                   {showPassword ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
                 </button>
@@ -320,7 +320,7 @@ function Register() {
 
             {/* Confirm Password */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-primary-700 mb-2">
                 Confirmer le mot de passe
               </label>
               <input
@@ -339,9 +339,9 @@ function Register() {
               <input
                 type="checkbox"
                 required
-                className="mt-1 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                className="mt-1 rounded border-primary-300 text-primary-600 focus:ring-primary-500"
               />
-              <span className="ml-2 text-sm text-gray-600">
+              <span className="ml-2 text-sm text-primary-600">
                 J'accepte les{' '}
                 <a href="#" className="text-primary-600 hover:text-primary-700">conditions d'utilisation</a>
                 {' '}et la{' '}
@@ -368,10 +368,10 @@ function Register() {
             {/* Divider */}
             <div className="relative my-4">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
+                <div className="w-full border-t border-primary-300"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white text-gray-500">Ou s'inscrire avec</span>
+                <span className="px-4 bg-white text-primary-500">Ou s'inscrire avec</span>
               </div>
             </div>
 
@@ -390,7 +390,7 @@ function Register() {
           </form>
 
           {/* Login link */}
-          <p className="mt-8 text-center text-gray-600">
+          <p className="mt-8 text-center text-primary-600">
             Déjà un compte ?{' '}
             <Link to="/login" className="text-primary-600 font-medium hover:text-primary-700">
               Se connecter

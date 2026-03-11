@@ -71,9 +71,9 @@ function TimeSlot({
   const nextDate = dateUnavailable ? getNextAvailableDate?.(selectedDate) : null
 
   return (
-    <section className="box-border w-full min-w-0 max-w-full overflow-clip rounded-2xl border border-gray-100 bg-white p-3 sm:p-4">
+    <section className="box-border w-full min-w-0 max-w-full overflow-clip rounded-2xl border border-primary-100 bg-white p-3 sm:p-4">
       <div className="mb-3 flex items-center justify-between gap-2">
-        <p className="text-sm font-semibold text-gray-900">Heure</p>
+        <p className="text-sm font-semibold text-primary-900">Heure</p>
         {selectedTime && (
           <span className="inline-flex items-center gap-1 rounded-full bg-primary-50 px-2.5 py-1 text-xs font-semibold text-primary-700">
             <FiClock className="h-3.5 w-3.5" />
@@ -96,27 +96,27 @@ function TimeSlot({
                   ? 'border-primary-500 bg-primary-600 text-white shadow-md shadow-primary-500/20'
                   : hasSelected
                   ? 'border-primary-200 bg-primary-50 text-primary-700'
-                  : 'border-gray-200 bg-gray-50 text-gray-700 active:bg-gray-100'
+                  : 'border-primary-200 bg-primary-50 text-primary-700 active:bg-primary-100'
               }`}
             >
               <div className="flex items-center justify-center gap-1.5">
                 <period.Icon className="h-4 w-4" />
                 <span className="text-[13px] font-semibold">{period.label}</span>
               </div>
-              <p className={`mt-1 text-[10px] ${isActive ? 'text-primary-100' : 'text-gray-500'}`}>{period.range}</p>
+              <p className={`mt-1 text-[10px] ${isActive ? 'text-primary-100' : 'text-primary-500'}`}>{period.range}</p>
             </button>
           )
         })}
       </div>
 
       {!hasSlots ? (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-800">
+        <div className="rounded-xl border border-gold-200 bg-gold-50 px-3 py-3 text-sm text-gold-800">
           <p className="font-medium">Aucun creneau disponible pour cette date.</p>
           {nextDate ? (
             <button
               type="button"
               onClick={() => onDateSelect?.(nextDate)}
-              className="mt-2 rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs font-semibold text-amber-700 transition hover:bg-amber-100"
+              className="mt-2 rounded-lg border border-gold-300 bg-white px-3 py-1.5 text-xs font-semibold text-gold-700 transition hover:bg-gold-100"
             >
               Prochaine date disponible: {new Date(`${nextDate}T00:00:00`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
             </button>
@@ -125,7 +125,7 @@ function TimeSlot({
       ) : (
         <div
           ref={scrollRef}
-          className="w-full min-w-0 rounded-xl border border-gray-100 bg-gray-50/60 p-2"
+          className="w-full min-w-0 rounded-xl border border-primary-100 bg-primary-50/60 p-2"
         >
           <div className="grid grid-cols-[repeat(auto-fit,minmax(72px,1fr))] gap-2 sm:grid-cols-[repeat(auto-fit,minmax(90px,1fr))] sm:gap-2.5">
             {currentPeriod.slots.map((time) => {
@@ -139,7 +139,7 @@ function TimeSlot({
                   className={`w-full min-w-0 rounded-xl border py-2.5 text-center text-sm font-semibold transition-colors ${
                     isSelected
                       ? 'border-primary-500 bg-primary-600 text-white shadow-md shadow-primary-500/25'
-                      : 'border-gray-200 bg-white text-gray-800 active:bg-gray-100'
+                      : 'border-primary-200 bg-white text-primary-800 active:bg-primary-100'
                   }`}
                 >
                   {time}
@@ -150,7 +150,7 @@ function TimeSlot({
         </div>
       )}
 
-      <p className="mt-2 text-center text-xs text-gray-500">Duree estimee: {duration} min</p>
+      <p className="mt-2 text-center text-xs text-primary-500">Duree estimee: {duration} min</p>
     </section>
   )
 }

@@ -190,20 +190,20 @@ function Salons() {
   }, [filters])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-amber-50/30 pt-20 relative">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-gold-50/30 pt-20 relative">
       {/* Global decorative background elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-40 right-10 w-[500px] h-[500px] bg-amber-200/50 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 left-10 w-[400px] h-[400px] bg-yellow-200/40 rounded-full blur-3xl"></div>
+        <div className="absolute top-40 right-10 w-[500px] h-[500px] bg-gold-200/50 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 left-10 w-[400px] h-[400px] bg-gold-200/40 rounded-full blur-3xl"></div>
         <div className="absolute top-1/2 left-1/3 w-[300px] h-[300px] bg-orange-200/30 rounded-full blur-3xl"></div>
       </div>
       
       {/* Header */}
-      <div className="relative z-10 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 py-10 overflow-hidden">
+      <div className="relative z-10 bg-gradient-to-r from-primary-900 via-primary-800 to-primary-900 py-10 overflow-hidden">
         {/* Decorative elements */}
         <div className="absolute inset-0">
-          <div className="absolute top-0 left-1/4 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-yellow-400/10 rounded-full blur-3xl"></div>
+          <div className="absolute top-0 left-1/4 w-64 h-64 bg-gold-500/10 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-gold-400/10 rounded-full blur-3xl"></div>
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -224,7 +224,7 @@ function Salons() {
                 onClick={() => { updateFilter('type', ''); updateFilter('salonType', ''); updateFilter('businessType', ''); }}
                 className={`px-4 py-2 rounded-full font-medium text-sm transition-all ${
                   filters.type === '' && filters.salonType === '' && filters.businessType === ''
-                    ? 'bg-white text-gray-900 shadow-lg' 
+                    ? 'bg-white text-primary-900 shadow-lg' 
                     : 'bg-white/20 text-white hover:bg-white/30'
                 }`}
               >
@@ -234,7 +234,7 @@ function Salons() {
                 onClick={() => { updateFilter('type', 'salon'); updateFilter('salonType', 'coiffure'); updateFilter('businessType', ''); }}
                 className={`px-4 py-2 rounded-full font-medium text-sm transition-all ${
                   filters.salonType === 'coiffure' 
-                    ? 'bg-white text-gray-900 shadow-lg' 
+                    ? 'bg-white text-primary-900 shadow-lg' 
                     : 'bg-white/20 text-white hover:bg-white/30'
                 }`}
               >
@@ -244,7 +244,7 @@ function Salons() {
                 onClick={() => { updateFilter('type', 'salon'); updateFilter('salonType', 'beaute'); updateFilter('businessType', ''); }}
                 className={`px-4 py-2 rounded-full font-medium text-sm transition-all ${
                   filters.salonType === 'beaute' 
-                    ? 'bg-white text-gray-900 shadow-lg' 
+                    ? 'bg-white text-primary-900 shadow-lg' 
                     : 'bg-white/20 text-white hover:bg-white/30'
                 }`}
               >
@@ -254,7 +254,7 @@ function Salons() {
                 onClick={() => { updateFilter('type', 'salon'); updateFilter('salonType', 'mixte'); updateFilter('businessType', ''); }}
                 className={`px-4 py-2 rounded-full font-medium text-sm transition-all ${
                   filters.salonType === 'mixte' 
-                    ? 'bg-white text-gray-900 shadow-lg' 
+                    ? 'bg-white text-primary-900 shadow-lg' 
                     : 'bg-white/20 text-white hover:bg-white/30'
                 }`}
               >
@@ -264,7 +264,7 @@ function Salons() {
                 onClick={() => { updateFilter('type', 'barber'); updateFilter('salonType', ''); updateFilter('businessType', ''); }}
                 className={`px-4 py-2 rounded-full font-medium text-sm transition-all ${
                   filters.type === 'barber' 
-                    ? 'bg-white text-gray-900 shadow-lg' 
+                    ? 'bg-white text-primary-900 shadow-lg' 
                     : 'bg-white/20 text-white hover:bg-white/30'
                 }`}
               >
@@ -274,7 +274,7 @@ function Salons() {
                 onClick={() => { updateFilter('type', 'shooting'); updateFilter('salonType', ''); updateFilter('businessType', ''); }}
                 className={`flex items-center gap-1 px-4 py-2 rounded-full font-medium text-sm transition-all ${
                   filters.type === 'shooting' 
-                    ? 'bg-white text-gray-900 shadow-lg' 
+                    ? 'bg-white text-primary-900 shadow-lg' 
                     : 'bg-white/20 text-white hover:bg-white/30'
                 }`}
               >
@@ -285,7 +285,7 @@ function Salons() {
                 onClick={() => { updateFilter('type', ''); updateFilter('salonType', ''); updateFilter('businessType', 'BOUTIQUE'); }}
                 className={`flex items-center gap-1 px-4 py-2 rounded-full font-medium text-sm transition-all ${
                   filters.businessType === 'BOUTIQUE' 
-                    ? 'bg-amber-500 text-white shadow-lg' 
+                    ? 'bg-gold-500 text-white shadow-lg' 
                     : 'bg-white/20 text-white hover:bg-white/30'
                 }`}
               >
@@ -297,14 +297,14 @@ function Salons() {
             {/* Search bar */}
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1 relative">
-                <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-primary-400 w-5 h-5" />
                 <input
                   ref={searchInputRef}
                   type="text"
                   value={filters.search}
                   onChange={(e) => updateFilter('search', e.target.value)}
                   placeholder="Rechercher un salon, un service..."
-                  className="w-full pl-12 pr-4 py-3 rounded-xl bg-white/95 shadow-sm border border-white/30 focus:ring-2 focus:ring-amber-400 focus:border-transparent"
+                  className="w-full pl-12 pr-4 py-3 rounded-xl bg-white/95 shadow-sm border border-white/30 focus:ring-2 focus:ring-gold-400 focus:border-transparent"
                 />
               </div>
               <QuartierSelector
@@ -334,10 +334,10 @@ function Salons() {
                   <button
                     key={`${chip.key}-${chip.label}`}
                     onClick={() => updateFilter(chip.key, '')}
-                    className="inline-flex items-center gap-2 rounded-full bg-white/85 border border-white/40 px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm hover:bg-white"
+                    className="inline-flex items-center gap-2 rounded-full bg-white/85 border border-white/40 px-3 py-1.5 text-xs font-medium text-primary-700 shadow-sm hover:bg-white"
                   >
                     <span>{chip.label}</span>
-                    <FiX className="w-3.5 h-3.5 text-gray-400" />
+                    <FiX className="w-3.5 h-3.5 text-primary-400" />
                   </button>
                 ))}
               </div>
@@ -360,11 +360,11 @@ function Salons() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {/* Category */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Catégorie</label>
+                <label className="block text-sm font-medium text-primary-700 mb-2">Catégorie</label>
                 <select
                   value={filters.category}
                   onChange={(e) => updateFilter('category', e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-4 py-2 border border-primary-200 rounded-lg focus:ring-2 focus:ring-primary-500"
                 >
                   <option value="">Toutes</option>
                   {categories.map(c => (
@@ -375,11 +375,11 @@ function Salons() {
 
               {/* Price Range */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Budget</label>
+                <label className="block text-sm font-medium text-primary-700 mb-2">Budget</label>
                 <select
                   value={filters.priceRange}
                   onChange={(e) => updateFilter('priceRange', e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-4 py-2 border border-primary-200 rounded-lg focus:ring-2 focus:ring-primary-500"
                 >
                   <option value="">Tous</option>
                   <option value="low">≤ 5 000 F</option>
@@ -390,11 +390,11 @@ function Salons() {
 
               {/* Min Rating */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Note minimum</label>
+                <label className="block text-sm font-medium text-primary-700 mb-2">Note minimum</label>
                 <select
                   value={filters.minRating}
                   onChange={(e) => updateFilter('minRating', e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-4 py-2 border border-primary-200 rounded-lg focus:ring-2 focus:ring-primary-500"
                 >
                   <option value="">Toutes</option>
                   <option value="4.5">★ 4.5+</option>
@@ -405,11 +405,11 @@ function Salons() {
 
               {/* Sort */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Trier par</label>
+                <label className="block text-sm font-medium text-primary-700 mb-2">Trier par</label>
                 <select
                   value={filters.sortBy}
                   onChange={(e) => updateFilter('sortBy', e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-4 py-2 border border-primary-200 rounded-lg focus:ring-2 focus:ring-primary-500"
                 >
                   <option value="rating">Mieux notés</option>
                   <option value="reviews">Plus d’avis</option>
@@ -438,10 +438,10 @@ function Salons() {
         {loading ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl border border-gray-100 p-5 animate-pulse">
-                <div className="h-44 bg-gray-100 rounded-xl mb-4"></div>
-                <div className="h-4 bg-gray-100 rounded w-2/3 mb-2"></div>
-                <div className="h-3 bg-gray-100 rounded w-1/2"></div>
+              <div key={i} className="bg-white rounded-2xl border border-primary-100 p-5 animate-pulse">
+                <div className="h-44 bg-primary-100 rounded-xl mb-4"></div>
+                <div className="h-4 bg-primary-100 rounded w-2/3 mb-2"></div>
+                <div className="h-3 bg-primary-100 rounded w-1/2"></div>
               </div>
             ))}
           </div>
@@ -454,8 +454,8 @@ function Salons() {
             <div className="w-24 h-24 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <FiSearch className="w-12 h-12 text-primary-400" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Aucun salon trouvé</h3>
-            <p className="text-gray-500 mb-6">
+            <h3 className="text-xl font-semibold text-primary-900 mb-2">Aucun salon trouvé</h3>
+            <p className="text-primary-500 mb-6">
               Essayez de modifier vos critères de recherche
             </p>
             <button

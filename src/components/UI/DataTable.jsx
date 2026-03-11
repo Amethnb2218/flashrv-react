@@ -14,9 +14,9 @@ export default function DataTable({
 }) {
   // Pagination: {page, pageCount, onPrev, onNext}
   return (
-    <div className={`overflow-x-auto rounded-2xl border border-slate-200/70 shadow-sm bg-white ${className}`}>
+    <div className={`overflow-x-auto rounded-2xl border border-primary-200/70 shadow-sm bg-white ${className}`}>
       {toolbar && (
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 p-4 border-b border-slate-100 bg-slate-50">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 p-4 border-b border-primary-100 bg-primary-50">
           {toolbar}
           {onRefresh && (
             <button
@@ -29,8 +29,8 @@ export default function DataTable({
           )}
         </div>
       )}
-      <table className="w-full text-slate-700 font-inter text-base">
-        <thead className="bg-slate-50 text-xs font-bold uppercase text-slate-600 sticky top-0 z-10">
+      <table className="w-full text-primary-700 font-inter text-base">
+        <thead className="bg-primary-50 text-xs font-bold uppercase text-primary-600 sticky top-0 z-10">
           <tr>
             {columns.map(col => (
               <th
@@ -50,17 +50,17 @@ export default function DataTable({
                 <tr key={i} className="animate-pulse">
                   {columns.map(col => (
                     <td key={col.key} className="py-4 px-4 align-middle">
-                      <div className="h-4 bg-slate-100 rounded w-3/4 mx-auto" />
+                      <div className="h-4 bg-primary-100 rounded w-3/4 mx-auto" />
                     </td>
                   ))}
-                  {rowActions && <td className="py-4 px-4 align-middle min-w-[100px] sm:w-44"><div className="h-4 bg-slate-100 rounded w-8 mx-auto" /></td>}
+                  {rowActions && <td className="py-4 px-4 align-middle min-w-[100px] sm:w-44"><div className="h-4 bg-primary-100 rounded w-8 mx-auto" /></td>}
                 </tr>
               ))
             : data.length === 0 ? (
                 <tr>
-                  <td colSpan={columns.length + (rowActions ? 1 : 0)} className="py-12 text-center text-slate-400 font-medium">
+                  <td colSpan={columns.length + (rowActions ? 1 : 0)} className="py-12 text-center text-primary-400 font-medium">
                     <div className="flex flex-col items-center gap-2">
-                      <FiUsers className="w-10 h-10 mb-2 text-slate-200" />
+                      <FiUsers className="w-10 h-10 mb-2 text-primary-200" />
                       <div>{emptyLabel}</div>
                       {onRefresh && (
                         <button
@@ -76,7 +76,7 @@ export default function DataTable({
                 </tr>
               ) : (
                 data.map((row, i) => (
-                  <tr key={row.id || i} className="hover:bg-slate-50/70 border-b border-slate-100">
+                  <tr key={row.id || i} className="hover:bg-primary-50/70 border-b border-primary-100">
                     {columns.map(col => (
                       <td
                         key={col.key}
@@ -97,22 +97,22 @@ export default function DataTable({
         </tbody>
       </table>
       {pagination && (
-        <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100 bg-slate-50">
-          <span className="text-xs text-slate-500">
+        <div className="flex items-center justify-between px-4 py-3 border-t border-primary-100 bg-primary-50">
+          <span className="text-xs text-primary-500">
             Page {pagination.page} / {pagination.pageCount}
           </span>
           <div className="flex gap-2">
             <button
               onClick={pagination.onPrev}
               disabled={pagination.page <= 1}
-              className="px-3 py-1 rounded-lg bg-slate-100 text-slate-500 hover:bg-slate-200 disabled:opacity-50"
+              className="px-3 py-1 rounded-lg bg-primary-100 text-primary-500 hover:bg-primary-200 disabled:opacity-50"
             >
               <FiChevronLeft />
             </button>
             <button
               onClick={pagination.onNext}
               disabled={pagination.page >= pagination.pageCount}
-              className="px-3 py-1 rounded-lg bg-slate-100 text-slate-500 hover:bg-slate-200 disabled:opacity-50"
+              className="px-3 py-1 rounded-lg bg-primary-100 text-primary-500 hover:bg-primary-200 disabled:opacity-50"
             >
               <FiChevronRight />
             </button>

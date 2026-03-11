@@ -15,17 +15,17 @@ function StarRating({ rating, size = 'md', showValue = true }) {
     <div className="flex items-center space-x-1">
       <div className="flex">
         {[...Array(fullStars)].map((_, i) => (
-          <span key={`full-${i}`} className={`text-yellow-400 ${sizes[size]}`}>★</span>
+          <span key={`full-${i}`} className={`text-gold-400 ${sizes[size]}`}>★</span>
         ))}
         {hasHalfStar && (
-          <span className={`text-yellow-400 ${sizes[size]}`}>★</span>
+          <span className={`text-gold-400 ${sizes[size]}`}>★</span>
         )}
         {[...Array(emptyStars)].map((_, i) => (
-          <span key={`empty-${i}`} className={`text-gray-300 ${sizes[size]}`}>★</span>
+          <span key={`empty-${i}`} className={`text-primary-300 ${sizes[size]}`}>★</span>
         ))}
       </div>
       {showValue && (
-        <span className="text-sm font-medium text-gray-700 ml-1">{rating.toFixed(1)}</span>
+        <span className="text-sm font-medium text-primary-700 ml-1">{rating.toFixed(1)}</span>
       )}
     </div>
   )

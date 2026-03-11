@@ -10,7 +10,7 @@ export default function PrimaryButton({ children, className = "", ...props }) {
       {...props}
     >
       {/* Glow effect */}
-      <span className="absolute inset-0 z-0 rounded-2xl blur-lg opacity-40 pointer-events-none bg-gradient-to-br from-blue-400/40 via-fuchsia-400/20 to-amber-200/10 animate-pulse-slow" />
+      <span className="absolute inset-0 z-0 rounded-2xl blur-lg opacity-40 pointer-events-none bg-gradient-to-br from-blue-400/40 via-fuchsia-400/20 to-gold-200/10 animate-pulse-slow" />
       <span className="relative z-10">{children}</span>
     </button>
   );

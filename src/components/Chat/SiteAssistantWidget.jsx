@@ -209,7 +209,7 @@ function SiteAssistantWidget() {
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className={`fixed right-4 z-50 inline-flex items-center gap-1.5 rounded-full border border-slate-200/80 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 shadow-md transition hover:shadow-lg hover:bg-slate-50 sm:right-6 ${
+          className={`fixed right-4 z-50 inline-flex items-center gap-1.5 rounded-full border border-primary-200/80 bg-white px-4 py-2.5 text-xs font-semibold text-primary-700 shadow-md transition hover:shadow-lg hover:bg-primary-50 sm:right-6 ${
             isBookingPage
               ? 'bottom-[calc(env(safe-area-inset-bottom)+6rem)] sm:bottom-[calc(env(safe-area-inset-bottom)+1rem)]'
               : 'bottom-[calc(env(safe-area-inset-bottom)+5rem)] lg:bottom-[calc(env(safe-area-inset-bottom)+1rem)]'
@@ -222,7 +222,7 @@ function SiteAssistantWidget() {
 
       {isOpen ? (
         <div
-          className={`fixed right-4 z-[60] w-[min(92vw,390px)] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl sm:right-6 ${
+          className={`fixed right-4 z-[60] w-[min(92vw,390px)] overflow-hidden rounded-2xl border border-primary-200 bg-white shadow-2xl sm:right-6 ${
             isBookingPage
               ? 'bottom-[calc(env(safe-area-inset-bottom)+6rem)] sm:bottom-[calc(env(safe-area-inset-bottom)+1rem)]'
               : 'bottom-[calc(env(safe-area-inset-bottom)+5rem)] lg:bottom-[calc(env(safe-area-inset-bottom)+1rem)]'
@@ -237,12 +237,12 @@ function SiteAssistantWidget() {
             </button>
           </div>
 
-          <div ref={listRef} className="max-h-72 space-y-2 overflow-y-auto bg-slate-50 px-4 py-3">
+          <div ref={listRef} className="max-h-72 space-y-2 overflow-y-auto bg-primary-50 px-4 py-3">
             {messages.map((msg) => (
               <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div
                   className={`max-w-[86%] rounded-xl px-3 py-2 text-sm ${
-                    msg.role === 'user' ? 'bg-slate-900 text-white' : 'bg-white text-slate-900 border border-slate-200'
+                    msg.role === 'user' ? 'bg-primary-900 text-white' : 'bg-white text-primary-900 border border-primary-200'
                   }`}
                 >
                   <p>{msg.text}</p>
@@ -250,7 +250,7 @@ function SiteAssistantWidget() {
                     <button
                       type="button"
                       onClick={() => navigate(msg.cta.path)}
-                      className="mt-2 rounded-lg bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-200"
+                      className="mt-2 rounded-lg bg-primary-100 px-2 py-1 text-xs font-semibold text-primary-700 hover:bg-primary-200"
                     >
                       {msg.cta.label}
                     </button>
@@ -270,21 +270,21 @@ function SiteAssistantWidget() {
               </div>
             ))}
             {sending ? (
-              <div className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-500">
+              <div className="inline-flex items-center gap-2 rounded-xl border border-primary-200 bg-white px-3 py-2 text-xs text-primary-500">
                 <FiHeadphones className="h-3 w-3 animate-pulse" />
                 Réponse en cours...
               </div>
             ) : null}
           </div>
 
-          <div className="border-t border-slate-100 bg-white px-4 py-3">
+          <div className="border-t border-primary-100 bg-white px-4 py-3">
             <div className="mb-2 flex flex-wrap gap-2">
               {QUICK_PROMPTS.map((q) => (
                 <button
                   key={q}
                   type="button"
                   onClick={() => sendPrompt(q)}
-                  className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-700 hover:bg-slate-100"
+                  className="rounded-full border border-primary-200 bg-primary-50 px-3 py-1 text-xs text-primary-700 hover:bg-primary-100"
                 >
                   {q}
                 </button>
@@ -299,7 +299,7 @@ function SiteAssistantWidget() {
                   if (e.key === 'Enter') sendPrompt(input)
                 }}
                 placeholder={transcribing ? 'Transcription en cours...' : 'Posez votre question...'}
-                className="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                className="flex-1 rounded-xl border border-primary-200 px-3 py-2 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
                 disabled={transcribing}
               />
               {supportsAudioRecording ? (
@@ -308,7 +308,7 @@ function SiteAssistantWidget() {
                   onClick={recording ? stopRecording : startRecording}
                   disabled={transcribing}
                   className={`rounded-xl border px-3 py-2 ${
-                    recording ? 'border-red-300 text-red-600 hover:bg-red-50' : 'border-slate-200 text-slate-700 hover:bg-slate-50'
+                    recording ? 'border-red-300 text-red-600 hover:bg-red-50' : 'border-primary-200 text-primary-700 hover:bg-primary-50'
                   } disabled:opacity-50`}
                   title={recording ? 'Arrêter' : 'Parler'}
                 >
@@ -319,7 +319,7 @@ function SiteAssistantWidget() {
                 type="button"
                 onClick={() => sendPrompt(input)}
                 disabled={sending || transcribing}
-                className="rounded-xl bg-slate-900 px-3 py-2 text-white hover:bg-slate-800 disabled:opacity-50"
+                className="rounded-xl bg-primary-900 px-3 py-2 text-white hover:bg-primary-800 disabled:opacity-50"
               >
                 <FiSend className="h-4 w-4" />
               </button>

@@ -30,7 +30,7 @@ function BookingSummary({ salon }) {
       <h3 className="font-semibold text-lg mb-4">Récapitulatif</h3>
 
       {salon ? (
-        <div className="flex items-start gap-3 pb-4 border-b border-gray-100">
+        <div className="flex items-start gap-3 pb-4 border-b border-primary-100">
           {salonImage ? (
             <img src={salonImage} alt={salon.name} className="w-16 h-16 rounded-xl object-cover" />
           ) : (
@@ -39,8 +39,8 @@ function BookingSummary({ salon }) {
             </div>
           )}
           <div className="min-w-0">
-            <h4 className="font-medium text-gray-900 break-words">{salon.name}</h4>
-            <p className="text-sm text-gray-500 flex items-center mt-1">
+            <h4 className="font-medium text-primary-900 break-words">{salon.name}</h4>
+            <p className="text-sm text-primary-500 flex items-center mt-1">
               <FiMapPin className="w-3 h-3 mr-1 flex-shrink-0" />
               <span className="break-words">{salon.neighborhood || salon.address || salon.city || ''}</span>
             </p>
@@ -49,12 +49,12 @@ function BookingSummary({ salon }) {
       ) : null}
 
       {services.length > 0 ? (
-        <div className="py-4 border-b border-gray-100">
-          <h4 className="text-sm font-medium text-gray-500 mb-2">Services ({services.length})</h4>
+        <div className="py-4 border-b border-primary-100">
+          <h4 className="text-sm font-medium text-primary-500 mb-2">Services ({services.length})</h4>
           <ul className="space-y-2">
             {services.map((service) => (
               <li key={service.id} className="flex justify-between text-sm gap-2">
-                <span className="text-gray-700 break-words min-w-0 flex-1">{service.name}</span>
+                <span className="text-primary-700 break-words min-w-0 flex-1">{service.name}</span>
                 <span className="font-medium whitespace-nowrap flex-shrink-0">{formatPrice(service.price)}</span>
               </li>
             ))}
@@ -63,8 +63,8 @@ function BookingSummary({ salon }) {
       ) : null}
 
       {date ? (
-        <div className="py-4 border-b border-gray-100">
-          <div className="flex items-center text-sm text-gray-700">
+        <div className="py-4 border-b border-primary-100">
+          <div className="flex items-center text-sm text-primary-700">
             <FiCalendar className="w-4 h-4 mr-2 text-primary-600" />
             <span>{formatDate(date)}</span>
             {time ? (
@@ -79,8 +79,8 @@ function BookingSummary({ salon }) {
       ) : null}
 
       {services.length > 0 ? (
-        <div className="py-3 border-b border-gray-100">
-          <div className="flex items-center text-sm text-gray-500">
+        <div className="py-3 border-b border-primary-100">
+          <div className="flex items-center text-sm text-primary-500">
             <FiInfo className="w-4 h-4 mr-2 text-blue-500" />
             <span>Coiffeur(se) assigné(e) par le salon</span>
           </div>
@@ -89,33 +89,33 @@ function BookingSummary({ salon }) {
 
       <div className="pt-4 space-y-3">
         {totalDuration > 0 ? (
-          <div className="flex justify-between text-sm text-gray-500 gap-2">
+          <div className="flex justify-between text-sm text-primary-500 gap-2">
             <span className="min-w-0">Durée estimée</span>
             <span className="flex-shrink-0">{formatDuration(totalDuration)}</span>
           </div>
         ) : null}
 
-        <div className="flex justify-between text-sm text-gray-700 gap-2">
+        <div className="flex justify-between text-sm text-primary-700 gap-2">
           <span className="min-w-0">Total services</span>
           <span className="font-medium flex-shrink-0">{formatPrice(totalPrice)}</span>
         </div>
 
         {services.length > 0 ? (
           <>
-            <div className="h-px bg-gray-200" />
+            <div className="h-px bg-primary-200" />
             <div className="bg-primary-50 rounded-xl p-4">
               <div className="flex justify-between items-center mb-2 gap-2">
                 <span className="text-sm font-medium text-dark-900 min-w-0">Acompte à payer ({depositPercentage}%)</span>
                 <span className="text-base sm:text-lg font-bold text-primary-600 flex-shrink-0">{formatPrice(depositAmount)}</span>
               </div>
-              <div className="flex justify-between items-center text-sm text-gray-600 gap-2">
+              <div className="flex justify-between items-center text-sm text-primary-600 gap-2">
                 <span className="min-w-0">Reste à payer au salon</span>
                 <span className="flex-shrink-0">{formatPrice(remainingAmount)}</span>
               </div>
             </div>
             {salon?.cancellationPolicy ? (
-              <div className="flex items-start space-x-2 text-xs text-gray-500 mt-3">
-                <FiInfo className="w-4 h-4 flex-shrink-0 mt-0.5 text-amber-500" />
+              <div className="flex items-start space-x-2 text-xs text-primary-500 mt-3">
+                <FiInfo className="w-4 h-4 flex-shrink-0 mt-0.5 text-gold-500" />
                 <p>{salon.cancellationPolicy}</p>
               </div>
             ) : null}

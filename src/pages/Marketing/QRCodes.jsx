@@ -105,7 +105,7 @@ export default function QRCodes() {
   }
   
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="min-h-screen bg-primary-50 py-12">
       <div className="container mx-auto px-4">
         {/* Header */}
         <motion.div
@@ -116,10 +116,10 @@ export default function QRCodes() {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
             <HiOutlineQrcode className="w-8 h-8 text-blue-600" />
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <h1 className="text-3xl md:text-4xl font-bold text-primary-900 mb-4">
             Générateur de QR Codes
           </h1>
-          <p className="text-gray-600 max-w-2xl mx-auto">
+          <p className="text-primary-600 max-w-2xl mx-auto">
             Créez des QR codes personnalisés pour vos affiches, cartes de visite, 
             flyers et supports marketing. Scannez pour accéder directement à StyleFlow !
           </p>
@@ -133,13 +133,13 @@ export default function QRCodes() {
             transition={{ delay: 0.1 }}
             className="bg-white rounded-2xl shadow-lg p-6"
           >
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">
+            <h2 className="text-xl font-semibold text-primary-900 mb-6">
               Configuration
             </h2>
             
             {/* Presets */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-3">
+              <label className="block text-sm font-medium text-primary-700 mb-3">
                 Page de destination
               </label>
               <div className="grid grid-cols-2 gap-3">
@@ -153,17 +153,17 @@ export default function QRCodes() {
                     className={`p-3 rounded-lg border-2 text-left transition-all ${
                       selectedPreset.id === preset.id && !customPath
                         ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300'
+                        : 'border-primary-200 hover:border-primary-300'
                     }`}
                   >
                     <div
                       className="w-3 h-3 rounded-full mb-2"
                       style={{ backgroundColor: preset.color }}
                     />
-                    <p className="font-medium text-gray-900 text-sm">
+                    <p className="font-medium text-primary-900 text-sm">
                       {preset.name}
                     </p>
-                    <p className="text-xs text-gray-500">{preset.description}</p>
+                    <p className="text-xs text-primary-500">{preset.description}</p>
                   </button>
                 ))}
               </div>
@@ -171,7 +171,7 @@ export default function QRCodes() {
             
             {/* Custom URL */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-primary-700 mb-2">
                 Ou URL personnalisée
               </label>
               <input
@@ -179,19 +179,19 @@ export default function QRCodes() {
                 value={customPath}
                 onChange={(e) => setCustomPath(e.target.value)}
                 placeholder="/salons/mon-salon"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-primary-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
             
             {/* Size */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-primary-700 mb-2">
                 Taille du QR Code
               </label>
               <select
                 value={qrSize}
                 onChange={(e) => setQrSize(Number(e.target.value))}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-primary-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 {QR_SIZES.map((size) => (
                   <option key={size.value} value={size.value}>
@@ -204,7 +204,7 @@ export default function QRCodes() {
             {/* Colors */}
             <div className="grid grid-cols-2 gap-4 mb-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-primary-700 mb-2">
                   Couleur du QR
                 </label>
                 <div className="flex items-center gap-2">
@@ -217,7 +217,7 @@ export default function QRCodes() {
                   <select
                     value={qrColor}
                     onChange={(e) => setQrColor(e.target.value)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    className="flex-1 px-3 py-2 border border-primary-300 rounded-lg text-sm"
                   >
                     {QR_COLORS.map((color) => (
                       <option key={color.value} value={color.value}>
@@ -229,7 +229,7 @@ export default function QRCodes() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-primary-700 mb-2">
                   Couleur de fond
                 </label>
                 <div className="flex items-center gap-2">
@@ -243,7 +243,7 @@ export default function QRCodes() {
                     type="text"
                     value={bgColor}
                     onChange={(e) => setBgColor(e.target.value)}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    className="flex-1 px-3 py-2 border border-primary-300 rounded-lg text-sm"
                   />
                 </div>
               </div>
@@ -258,23 +258,23 @@ export default function QRCodes() {
                 onChange={(e) => setIncludeLogo(e.target.checked)}
                 className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
               />
-              <label htmlFor="include-logo" className="text-sm text-gray-700">
+              <label htmlFor="include-logo" className="text-sm text-primary-700">
                 Inclure le logo StyleFlow au centre
               </label>
             </div>
             
             {/* URL Preview */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+            <div className="bg-primary-50 rounded-lg p-4">
+              <label className="block text-sm font-medium text-primary-700 mb-2">
                 URL du QR Code
               </label>
               <div className="flex items-center gap-2">
-                <code className="flex-1 text-sm bg-white px-3 py-2 rounded border border-gray-200 overflow-x-auto">
+                <code className="flex-1 text-sm bg-white px-3 py-2 rounded border border-primary-200 overflow-x-auto">
                   {finalUrl}
                 </code>
                 <button
                   onClick={copyUrl}
-                  className="p-2 text-gray-600 hover:text-blue-600 transition-colors"
+                  className="p-2 text-primary-600 hover:text-blue-600 transition-colors"
                   title="Copier l'URL"
                 >
                   {copied ? (
@@ -294,7 +294,7 @@ export default function QRCodes() {
             transition={{ delay: 0.2 }}
             className="bg-white rounded-2xl shadow-lg p-6"
           >
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">
+            <h2 className="text-xl font-semibold text-primary-900 mb-6">
               Aperçu & Téléchargement
             </h2>
             
@@ -350,7 +350,7 @@ export default function QRCodes() {
               
               <button
                 onClick={downloadSVG}
-                className="flex items-center justify-center gap-2 px-4 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors"
+                className="flex items-center justify-center gap-2 px-4 py-3 bg-primary-800 text-white rounded-lg hover:bg-primary-900 transition-colors"
               >
                 <FiDownload className="w-5 h-5" />
                 <span>SVG (vectoriel)</span>
@@ -380,7 +380,7 @@ export default function QRCodes() {
           transition={{ delay: 0.3 }}
           className="mt-12 max-w-6xl mx-auto"
         >
-          <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+          <h2 className="text-2xl font-bold text-primary-900 mb-6 text-center">
             Idées d'utilisation
           </h2>
           
@@ -422,8 +422,8 @@ export default function QRCodes() {
                 className="bg-white rounded-xl p-6 shadow-md hover:shadow-lg transition-shadow"
               >
                 <div className="text-4xl mb-3">{item.icon}</div>
-                <h3 className="font-semibold text-gray-900 mb-2">{item.title}</h3>
-                <p className="text-sm text-gray-600">{item.description}</p>
+                <h3 className="font-semibold text-primary-900 mb-2">{item.title}</h3>
+                <p className="text-sm text-primary-600">{item.description}</p>
               </div>
             ))}
           </div>

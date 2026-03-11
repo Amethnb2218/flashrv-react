@@ -13,9 +13,9 @@ export default function SectionCard({
   className = "",
 }) {
   const variantClass = {
-    default: "bg-white shadow-sm border border-slate-200/70",
-    subtle: "bg-slate-50 border border-slate-100",
-    elevated: "bg-white shadow-lg border border-slate-200/70",
+    default: "bg-white shadow-sm border border-primary-200/70",
+    subtle: "bg-primary-50 border border-primary-100",
+    elevated: "bg-white shadow-lg border border-primary-200/70",
   }[variant];
 
   return (
@@ -28,17 +28,17 @@ export default function SectionCard({
             <div className="flex items-center gap-2">
               {icon && <span className="text-blue-600">{icon}</span>}
               {title && (
-                <h2 className="text-xl font-bold text-slate-900">{title}</h2>
+                <h2 className="text-xl font-bold text-primary-900">{title}</h2>
               )}
             </div>
             {subtitle && (
-              <div className="text-slate-500 text-sm mt-1">{subtitle}</div>
+              <div className="text-primary-500 text-sm mt-1">{subtitle}</div>
             )}
           </div>
           {right && <div>{right}</div>}
         </div>
       )}
-      {divider && <div className="border-b border-slate-100 mb-4" />}
+      {divider && <div className="border-b border-primary-100 mb-4" />}
       <div>{children}</div>
     </section>
   );
