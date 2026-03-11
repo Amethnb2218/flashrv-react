@@ -585,7 +585,7 @@ function ClientDashboard() {
       <button
         type="button"
         onClick={openFloatingChat}
-        className="fixed bottom-20 right-3 sm:right-6 z-40 inline-flex items-center justify-center w-12 h-12 sm:w-auto sm:h-auto rounded-full bg-gray-900 sm:px-5 sm:py-3 text-sm font-semibold text-white shadow-lg shadow-gray-900/25 transition hover:bg-gray-800"
+        className="fixed bottom-32 right-3 sm:bottom-20 sm:right-6 z-40 inline-flex items-center justify-center w-12 h-12 sm:w-auto sm:h-auto rounded-full bg-gray-900 sm:px-5 sm:py-3 text-sm font-semibold text-white shadow-lg shadow-gray-900/25 transition hover:bg-gray-800"
       >
         <FiMessageCircle className="h-5 w-5 sm:h-4 sm:w-4" />
         <span className="hidden sm:inline ml-2">Chat rapide</span>
