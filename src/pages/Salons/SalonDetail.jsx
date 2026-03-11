@@ -1397,7 +1397,7 @@ function SalonDetail() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: reduceMotion ? 0 : 0.2 }}
-            className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm p-0 md:p-4"
+            className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/60 p-0 md:p-4"
             onClick={closeProductDetail}
             onTouchMove={(e) => { if (e.target === e.currentTarget) e.preventDefault() }}
           >
@@ -1452,28 +1452,28 @@ function SalonDetail() {
                   animate={{ y: 0, opacity: 1 }}
                   exit={{ y: 40, opacity: 0 }}
                   transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 250, damping: 28 }}
-                  className="w-full md:max-w-2xl bg-white rounded-t-3xl md:rounded-3xl shadow-2xl overflow-hidden max-h-[70vh] md:max-h-[88vh] overflow-y-auto"
-                  style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain', touchAction: 'pan-y' }}
+                  className="w-full md:max-w-2xl bg-white rounded-t-3xl md:rounded-3xl shadow-2xl overflow-hidden max-h-[92vh] md:max-h-[88vh] overflow-y-auto"
+                  style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain', touchAction: 'pan-y', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
                   onClick={(e) => e.stopPropagation()}
                   onTouchMove={(e) => e.stopPropagation()}
                 >
                   <div className="sticky top-0 z-10 bg-white border-b border-primary-100 px-4 py-3 flex items-center justify-between">
-                    <h3 className="font-bold text-primary-900 truncate pr-3">{product.name}</h3>
+                    <h3 className="font-bold text-primary-900 truncate pr-3 text-sm uppercase tracking-wide">{product.name}</h3>
                     <button
                       onClick={closeProductDetail}
-                      className="w-9 h-9 rounded-full border border-primary-200 flex items-center justify-center hover:bg-primary-50"
+                      className="flex-shrink-0 w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center hover:bg-primary-200"
                     >
-                      <FiX className="w-5 h-5 text-primary-600" />
+                      <FiX className="w-4 h-4 text-primary-700" />
                     </button>
                   </div>
 
-                  <div className="relative bg-primary-50">
+                  <div className="relative bg-white">
                     {productImages.length > 0 ? (
                       <img
                         src={productImages[productImageIndex]}
                         alt={product.name}
                         draggable={false}
-                        className="w-full h-72 md:h-80 object-contain p-3 select-none"
+                        className="w-full h-64 sm:h-72 md:h-80 object-contain p-2 select-none"
                         style={{ touchAction: 'pan-y' }}
                       />
                     ) : (
@@ -1503,10 +1503,10 @@ function SalonDetail() {
                   <div className="p-4 md:p-6 space-y-4">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="text-2xl font-extrabold text-primary-900">{formatPrice(product.price)}</p>
-                        {product.category && <p className="text-xs text-primary-500 mt-1">{product.category}</p>}
+                        <p className="text-2xl font-extrabold text-primary-900 tracking-tight">{formatPrice(product.price)}</p>
+                        {product.category && <p className="text-sm text-primary-500 mt-0.5">{product.category}</p>}
                       </div>
-                      <span className={`text-xs font-medium px-2 py-1 rounded-full ${product.stock > 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                      <span className={`text-xs font-semibold px-3 py-1.5 rounded-full border ${product.stock > 0 ? 'bg-green-50 text-green-600 border-green-200' : 'bg-red-50 text-red-600 border-red-200'}`}>
                         {product.stock > 0 ? `${product.stock} en stock` : 'Rupture'}
                       </span>
                     </div>
@@ -1515,7 +1515,7 @@ function SalonDetail() {
                       <p className="text-sm text-primary-600">{product.description}</p>
                     )}
 
-                    <div className="rounded-xl border border-primary-100 bg-primary-50 px-3 py-2 text-xs text-primary-600">
+                    <div className="rounded-xl border border-primary-100 bg-primary-50 px-4 py-3 text-sm text-primary-600">
                       {deliveryMeta?.isDeliverable
                         ? `Livraison disponible${deliveryMeta?.deliveryFee > 0 ? ` a partir de ${formatPrice(deliveryMeta.deliveryFee)}` : ''}`
                         : 'Retrait boutique uniquement'}
@@ -1524,69 +1524,67 @@ function SalonDetail() {
                       ) : null}
                     </div>
 
-                    <div className="flex gap-2 items-end">
-                      <div className="flex-1 space-y-2">
-                        <div className="grid grid-cols-2 gap-2">
-                          <button
-                            type="button"
-                            onClick={() => toggleProductLike(product.id)}
-                            aria-label={isProductLiked(product.id) ? 'Retirer des favoris' : 'Ajouter aux favoris'}
-                            title={isProductLiked(product.id) ? 'Retirer des favoris' : 'Ajouter aux favoris'}
-                            className={`py-3 rounded-xl border transition flex items-center justify-center ${isProductLiked(product.id) ? 'bg-red-50 text-red-600 border-red-200' : 'bg-white text-primary-700 border-primary-200 hover:bg-primary-50'}`}
-                          >
-                            <FiHeart className="w-5 h-5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => shareProduct(product)}
-                            aria-label="Partager"
-                            title="Partager"
-                            className="py-3 rounded-xl border border-primary-200 bg-white text-primary-700 hover:bg-primary-50 flex items-center justify-center"
-                          >
-                            <FiShare2 className="w-5 h-5" />
-                          </button>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <button
-                            type="button"
-                            onClick={openProductReview}
-                            aria-label="Avis"
-                            title="Avis"
-                            className="py-3 rounded-xl border border-primary-200 bg-white text-primary-700 hover:bg-primary-50 flex items-center justify-center"
-                          >
-                            <FiMessageSquare className="w-5 h-5" />
-                          </button>
-                          <a
-                            href={salon?.phone ? `tel:${salon.phone}` : '#'}
-                            onClick={(e) => { if (!salon?.phone) e.preventDefault() }}
-                            aria-label="Appeler"
-                            title="Appeler"
-                            className="py-3 rounded-xl border border-primary-200 bg-white text-primary-700 hover:bg-primary-50 flex items-center justify-center text-center"
-                          >
-                            <FiPhone className="w-5 h-5" />
-                          </a>
-                        </div>
+                    <div className="relative">
+                      <div className="grid grid-cols-2 gap-2.5">
+                        <button
+                          type="button"
+                          onClick={() => toggleProductLike(product.id)}
+                          aria-label={isProductLiked(product.id) ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+                          title={isProductLiked(product.id) ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+                          className={`py-3.5 rounded-xl border transition flex items-center justify-center ${isProductLiked(product.id) ? 'bg-red-50 text-red-600 border-red-200' : 'bg-white text-primary-700 border-primary-200 hover:bg-primary-50'}`}
+                        >
+                          <FiHeart className="w-5 h-5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => shareProduct(product)}
+                          aria-label="Partager"
+                          title="Partager"
+                          className="py-3.5 rounded-xl border border-primary-200 bg-white text-primary-700 hover:bg-primary-50 flex items-center justify-center"
+                        >
+                          <FiShare2 className="w-5 h-5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={openProductReview}
+                          aria-label="Avis"
+                          title="Avis"
+                          className="py-3.5 rounded-xl border border-primary-200 bg-white text-primary-700 hover:bg-primary-50 flex items-center justify-center"
+                        >
+                          <FiMessageSquare className="w-5 h-5" />
+                        </button>
+                        <a
+                          href={salon?.phone ? `tel:${salon.phone}` : '#'}
+                          onClick={(e) => { if (!salon?.phone) e.preventDefault() }}
+                          aria-label="Appeler"
+                          title="Appeler"
+                          className="py-3.5 rounded-xl border border-primary-200 bg-white text-primary-700 hover:bg-primary-50 flex items-center justify-center text-center"
+                        >
+                          <FiPhone className="w-5 h-5" />
+                        </a>
+                      </div>
+                      <div className="flex items-center gap-2.5 mt-2.5">
                         <button
                           type="button"
                           onClick={() => buyNow(product, selSize, selColor)}
                           disabled={product.stock <= 0 || (needsVariant && !variantChosen)}
                           aria-label="Acheter"
                           title="Acheter"
-                          className="w-full py-3 rounded-xl border border-primary-900 bg-primary-900 text-white hover:bg-primary-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                          className="flex-1 py-3.5 rounded-xl bg-primary-800 text-white hover:bg-primary-900 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                         >
                           <FiShoppingCart className="w-5 h-5" />
                         </button>
+                        <button
+                          type="button"
+                          onClick={() => {/* Aide action */}}
+                          aria-label="Aide"
+                          title="Aide"
+                          className="flex-shrink-0 w-12 h-12 rounded-full border border-primary-200 bg-white text-primary-500 hover:bg-primary-50 shadow-sm flex items-center justify-center gap-0.5 flex-col"
+                        >
+                          <FiHelpCircle className="w-4 h-4" />
+                          <span className="text-[9px] font-medium leading-none">Aide</span>
+                        </button>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => {/* Aide action */}}
-                        aria-label="Aide"
-                        title="Aide"
-                        className="flex-shrink-0 mb-0.5 w-14 h-14 rounded-full border border-primary-200 bg-white text-primary-600 hover:bg-primary-50 shadow-md flex items-center justify-center gap-1 flex-col"
-                      >
-                        <FiHelpCircle className="w-5 h-5" />
-                        <span className="text-[10px] font-medium leading-none">Aide</span>
-                      </button>
                     </div>
 
                     {hasSizes && (
@@ -1605,7 +1603,7 @@ function SalonDetail() {
                                 key={sizeValue}
                                 onClick={() => setVariantSelections(prev => ({ ...prev, [product.id]: { ...prev[product.id], size: prev[product.id]?.size === sizeValue ? null : sizeValue } }))}
                                 disabled={!available}
-                                className={`px-3 py-2 rounded-lg text-sm font-medium border transition ${
+                                className={`px-4 py-2.5 rounded-xl text-sm font-semibold border transition ${
                                   !available
                                     ? 'bg-primary-100 text-primary-400 border-primary-200 cursor-not-allowed opacity-60'
                                     : selSize === sizeValue
