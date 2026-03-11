@@ -198,8 +198,11 @@ export default function QuartierSelector({
             className="absolute inset-0 bg-black/40"
             onClick={() => { setOpen(false); setSearch('') }}
           />
-          {/* Sheet */}
-          <div className="absolute bottom-0 left-0 right-0 max-h-[70vh] flex flex-col bg-white rounded-t-2xl shadow-2xl animate-slide-up">
+          {/* Sheet — max 65% of screen height */}
+          <div
+            className="absolute bottom-0 left-0 right-0 flex flex-col bg-white rounded-t-2xl shadow-2xl animate-slide-up"
+            style={{ maxHeight: '65vh' }}
+          >
             {/* Drag handle */}
             <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
               <div className="w-10 h-1 rounded-full bg-primary-300" />
@@ -246,7 +249,7 @@ export default function QuartierSelector({
             </div>
 
             {/* Scrollable list */}
-            <div className="flex-1 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
               {listContent}
               <div className="h-8" />
             </div>
