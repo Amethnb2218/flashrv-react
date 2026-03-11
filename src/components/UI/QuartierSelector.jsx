@@ -3,6 +3,18 @@ import { createPortal } from 'react-dom'
 import { FiSearch, FiMapPin, FiChevronDown, FiX, FiCheck } from 'react-icons/fi'
 import { zones } from '../../data/zones'
 
+/** Detect mobile vs desktop (below / at-or-above md breakpoint = 768px) */
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768)
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)')
+    const handler = (e) => setIsMobile(!e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+  return isMobile
+}
+
 /**
  * QuartierSelector — searchable dropdown for neighborhoods
  * On desktop: standard dropdown. On mobile: full-screen bottom sheet overlay.
@@ -18,6 +30,7 @@ export default function QuartierSelector({
   const [search, setSearch] = useState('')
   const containerRef = useRef(null)
   const inputRef = useRef(null)
+  const isMobile = useIsMobile()
 
   // Lock body scroll when open on mobile
   useEffect(() => {
@@ -190,18 +203,16 @@ export default function QuartierSelector({
         </span>
       </button>
 
-      {/* ========== MOBILE: Bottom sheet overlay ========== */}
-      {open && createPortal(
+      {/* ========== MOBILE: Bottom sheet ========== */}
+      {open && isMobile && createPortal(
         <>
-          {/* Backdrop — full screen dark overlay */}
+          {/* Backdrop */}
           <div
-            className="md:hidden"
-            style={{ position: 'fixed', inset: 0, zIndex: 9998, backgroundColor: 'rgba(0,0,0,0.45)' }}
             onClick={() => { setOpen(false); setSearch('') }}
+            style={{ position: 'fixed', inset: 0, zIndex: 9998, backgroundColor: 'rgba(0,0,0,0.45)' }}
           />
-          {/* Sheet — pinned to bottom, max 65% height */}
+          {/* Sheet */}
           <div
-            className="md:hidden"
             style={{
               position: 'fixed',
               bottom: 0,
@@ -273,25 +284,34 @@ export default function QuartierSelector({
       )}
 
       {/* ========== DESKTOP: Dropdown via portal ========== */}
-      {open && btnRect && createPortal(
+      {open && !isMobile && btnRect && createPortal(
         <div
           ref={dropdownRef}
-          className="hidden md:block fixed z-[9999] w-96 bg-white rounded-xl shadow-2xl border border-primary-200 overflow-hidden"
-          style={(() => {
-            const spaceBelow = window.innerHeight - btnRect.bottom - 12
-            const spaceAbove = btnRect.top - 12
-            const openAbove = spaceBelow < 280 && spaceAbove > spaceBelow
-            const maxH = openAbove ? Math.min(spaceAbove, window.innerHeight * 0.6) : Math.min(spaceBelow, window.innerHeight * 0.6)
-            return {
-              ...(openAbove
-                ? { bottom: window.innerHeight - btnRect.top + 6 }
-                : { top: btnRect.bottom + 6 }),
-              left: Math.min(btnRect.right - 384, window.innerWidth - 400),
-              maxHeight: maxH,
-              display: 'flex',
-              flexDirection: 'column',
-            }
-          })()}
+          style={{
+            position: 'fixed',
+            zIndex: 9999,
+            width: 384,
+            backgroundColor: '#fff',
+            borderRadius: 12,
+            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
+            border: '1px solid #e5e7eb',
+            overflow: 'hidden',
+            ...(() => {
+              const spaceBelow = window.innerHeight - btnRect.bottom - 12
+              const spaceAbove = btnRect.top - 12
+              const openAbove = spaceBelow < 280 && spaceAbove > spaceBelow
+              const maxH = openAbove ? Math.min(spaceAbove, window.innerHeight * 0.6) : Math.min(spaceBelow, window.innerHeight * 0.6)
+              return {
+                ...(openAbove
+                  ? { bottom: window.innerHeight - btnRect.top + 6 }
+                  : { top: btnRect.bottom + 6 }),
+                left: Math.min(btnRect.right - 384, window.innerWidth - 400),
+                maxHeight: maxH,
+                display: 'flex',
+                flexDirection: 'column',
+              }
+            })(),
+          }}
         >
           {/* Search input */}
           <div className="p-2.5 border-b border-primary-100 flex-shrink-0">
