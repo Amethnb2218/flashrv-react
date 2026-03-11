@@ -1525,42 +1525,42 @@ function SalonDetail() {
                     </div>
 
                     <div className="relative">
-                      <div className="grid grid-cols-2 gap-2.5">
+                      <div className="grid grid-cols-2 gap-2">
                         <button
                           type="button"
                           onClick={() => toggleProductLike(product.id)}
                           aria-label={isProductLiked(product.id) ? 'Retirer des favoris' : 'Ajouter aux favoris'}
                           title={isProductLiked(product.id) ? 'Retirer des favoris' : 'Ajouter aux favoris'}
-                          className={`py-3.5 rounded-xl border transition flex items-center justify-center ${isProductLiked(product.id) ? 'bg-red-50 text-red-600 border-red-200' : 'bg-white text-primary-700 border-primary-200 hover:bg-primary-50'}`}
+                          className={`py-2 rounded-xl border transition flex items-center justify-center ${isProductLiked(product.id) ? 'bg-red-50 text-red-600 border-red-200' : 'bg-white text-primary-700 border-primary-200 hover:bg-primary-50'}`}
                         >
-                          <FiHeart className="w-5 h-5" />
+                          <FiHeart className="w-4 h-4" />
                         </button>
                         <button
                           type="button"
                           onClick={() => shareProduct(product)}
                           aria-label="Partager"
                           title="Partager"
-                          className="py-3.5 rounded-xl border border-primary-200 bg-white text-primary-700 hover:bg-primary-50 flex items-center justify-center"
+                          className="py-2 rounded-xl border border-primary-200 bg-white text-primary-700 hover:bg-primary-50 flex items-center justify-center"
                         >
-                          <FiShare2 className="w-5 h-5" />
+                          <FiShare2 className="w-4 h-4" />
                         </button>
                         <button
                           type="button"
                           onClick={openProductReview}
                           aria-label="Avis"
                           title="Avis"
-                          className="py-3.5 rounded-xl border border-primary-200 bg-white text-primary-700 hover:bg-primary-50 flex items-center justify-center"
+                          className="py-2 rounded-xl border border-primary-200 bg-white text-primary-700 hover:bg-primary-50 flex items-center justify-center"
                         >
-                          <FiMessageSquare className="w-5 h-5" />
+                          <FiMessageSquare className="w-4 h-4" />
                         </button>
                         <a
                           href={salon?.phone ? `tel:${salon.phone}` : '#'}
                           onClick={(e) => { if (!salon?.phone) e.preventDefault() }}
                           aria-label="Appeler"
                           title="Appeler"
-                          className="py-3.5 rounded-xl border border-primary-200 bg-white text-primary-700 hover:bg-primary-50 flex items-center justify-center text-center"
+                          className="py-2 rounded-xl border border-primary-200 bg-white text-primary-700 hover:bg-primary-50 flex items-center justify-center text-center"
                         >
-                          <FiPhone className="w-5 h-5" />
+                          <FiPhone className="w-4 h-4" />
                         </a>
                       </div>
                       <div className="flex items-center gap-2.5 mt-2.5">
