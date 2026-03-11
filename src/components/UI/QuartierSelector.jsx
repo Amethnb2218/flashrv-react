@@ -41,15 +41,17 @@ export default function QuartierSelector({
   }, [open])
 
   const dropdownRef = useRef(null)
+  const mobileSheetRef = useRef(null)
   const [btnRect, setBtnRect] = useState(null)
 
-  // Close on outside click (desktop) — check both container and portal dropdown
+  // Close on outside click — check container, desktop dropdown, AND mobile sheet
   useEffect(() => {
     if (!open) return
     const handler = (e) => {
       const inContainer = containerRef.current && containerRef.current.contains(e.target)
       const inDropdown = dropdownRef.current && dropdownRef.current.contains(e.target)
-      if (!inContainer && !inDropdown) {
+      const inMobileSheet = mobileSheetRef.current && mobileSheetRef.current.contains(e.target)
+      if (!inContainer && !inDropdown && !inMobileSheet) {
         setOpen(false)
         setSearch('')
       }
@@ -213,6 +215,7 @@ export default function QuartierSelector({
           />
           {/* Sheet */}
           <div
+            ref={mobileSheetRef}
             style={{
               position: 'fixed',
               bottom: 0,
