@@ -28,6 +28,7 @@ function ClientDashboard() {
   const [ordersLoading, setOrdersLoading] = useState(true)
   const [cancellingOrderId, setCancellingOrderId] = useState(null)
   const [expandedBookingId, setExpandedBookingId] = useState(null)
+  const [expandedOrderId, setExpandedOrderId] = useState(null)
   const [visibleBookings, setVisibleBookings] = useState(8)
 
   const getSalonImage = (salon) => {
@@ -199,7 +200,7 @@ function ClientDashboard() {
       COMPLETED: 'Terminée',
     }
     return (
-      <span className={`px-3 py-1 rounded-full text-xs font-semibold ring-1 ring-inset ring-black/5 ${styles[key] || styles.CONFIRMED}`}>
+      <span className={`px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold ring-1 ring-inset ring-black/5 ${styles[key] || styles.CONFIRMED}`}>
         {labels[key] || status}
       </span>
     )
@@ -216,12 +217,12 @@ function ClientDashboard() {
         <button
           type="button"
           onClick={() => setExpandedBookingId(isExpanded ? null : booking.id)}
-          className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-gray-50 transition"
+          className="w-full text-left px-3 py-2 flex items-center gap-2.5 hover:bg-gray-50 transition"
         >
           {getSalonImage(booking.salon) ? (
-            <img src={getSalonImage(booking.salon)} alt={booking.salon?.name} className="w-10 h-10 rounded-lg object-cover shrink-0" />
+            <img src={getSalonImage(booking.salon)} alt={booking.salon?.name} className="w-8 h-8 rounded-lg object-cover shrink-0" />
           ) : (
-            <div className="w-10 h-10 rounded-lg bg-primary-100 flex items-center justify-center text-primary-700 font-bold text-sm shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-primary-100 flex items-center justify-center text-primary-700 font-bold text-xs shrink-0">
               {booking.salon?.name?.charAt(0) || 'S'}
             </div>
           )}
@@ -255,7 +256,7 @@ function ClientDashboard() {
               transition={{ duration: 0.2 }}
               className="overflow-hidden"
             >
-              <div className="px-4 pb-4 border-t border-gray-100 pt-3 space-y-3">
+              <div className="px-3 pb-3 border-t border-gray-100 pt-2.5 space-y-2">
                 {/* Location */}
                 {(booking.salon?.address || booking.salon?.city) && (
                   <p className="text-xs text-gray-500 flex items-center gap-1">
@@ -310,96 +311,87 @@ function ClientDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-amber-50/20 py-8 relative overflow-hidden">
-      {/* Background decorations */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-amber-100/30 rounded-full blur-3xl -translate-y-1/2"></div>
-      <div className="absolute bottom-0 left-0 w-80 h-80 bg-yellow-100/30 rounded-full blur-3xl translate-y-1/2"></div>
-      
-      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-amber-50/20 pt-4 sm:pt-8 pb-28 relative">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
+        <div className="flex items-center justify-between mb-4 sm:mb-8">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            <h1 className="text-lg sm:text-2xl font-bold text-gray-900">
               Bonjour, {user?.name?.split(' ')[0]} 👋
             </h1>
-            <p className="text-gray-600 mt-1">
-              {loading ? 'Chargement de vos réservations...' : 'Gérez vos réservations et votre compte'}
+            <p className="text-gray-500 mt-0.5 text-xs sm:text-sm hidden sm:block">
+              {loading ? 'Chargement...' : 'Gérez vos réservations et votre compte'}
             </p>
           </div>
           <Link
             to="/salons"
-            className="mt-4 sm:mt-0 inline-flex items-center px-6 py-3 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-xl transition-colors"
+            className="inline-flex items-center px-3 py-1.5 sm:px-5 sm:py-2.5 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-lg sm:rounded-xl transition-colors text-xs sm:text-sm"
           >
-            Nouvelle réservation
-            <FiChevronRight className="ml-2 w-5 h-5" />
+            <span className="hidden sm:inline">Nouvelle réservation</span>
+            <span className="sm:hidden">Réserver</span>
+            <FiChevronRight className="ml-1 w-4 h-4" />
           </Link>
         </div>
 
         {/* Quick stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-8">
-          <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between">
+        <div className="grid grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-8">
+          <div className="bg-white rounded-xl sm:rounded-2xl p-2 sm:p-5 shadow-sm border border-gray-100 text-center sm:text-left">
+            <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-1 sm:gap-0">
               <div>
-                <p className="text-gray-500 text-sm">Réservations à venir</p>
-                <p className="text-xl sm:text-3xl font-bold text-gray-900 mt-1">{loading ? '—' : upcomingBookings.length}</p>
+                <p className="text-gray-500 text-[10px] sm:text-sm leading-tight">À venir</p>
+                <p className="text-base sm:text-2xl font-bold text-gray-900">{loading ? '—' : upcomingBookings.length}</p>
               </div>
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary-100 rounded-xl flex items-center justify-center">
-                <FiCalendar className="w-5 h-5 sm:w-6 sm:h-6 text-primary-600" />
+              <div className="hidden sm:flex w-10 h-10 bg-primary-100 rounded-xl items-center justify-center">
+                <FiCalendar className="w-5 h-5 text-primary-600" />
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between">
+          <div className="bg-white rounded-xl sm:rounded-2xl p-2 sm:p-5 shadow-sm border border-gray-100 text-center sm:text-left">
+            <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-1 sm:gap-0">
               <div>
-                <p className="text-gray-500 text-sm">Réservations passées</p>
-                <p className="text-xl sm:text-3xl font-bold text-gray-900 mt-1">{loading ? '—' : pastBookings.length}</p>
+                <p className="text-gray-500 text-[10px] sm:text-sm leading-tight">Passées</p>
+                <p className="text-base sm:text-2xl font-bold text-gray-900">{loading ? '—' : pastBookings.length}</p>
               </div>
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                <FiClock className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
+              <div className="hidden sm:flex w-10 h-10 bg-green-100 rounded-xl items-center justify-center">
+                <FiClock className="w-5 h-5 text-green-600" />
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between">
+          <div className="bg-white rounded-xl sm:rounded-2xl p-2 sm:p-5 shadow-sm border border-gray-100 text-center sm:text-left">
+            <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-1 sm:gap-0">
               <div>
-                <p className="text-gray-500 text-sm">Salons favoris</p>
-                <p className="text-xl sm:text-3xl font-bold text-gray-900 mt-1">{loading ? '—' : favoriteSalonsCount}</p>
+                <p className="text-gray-500 text-[10px] sm:text-sm leading-tight">Favoris</p>
+                <p className="text-base sm:text-2xl font-bold text-gray-900">{loading ? '—' : favoriteSalonsCount}</p>
               </div>
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-pink-100 rounded-xl flex items-center justify-center">
-                <FiHeart className="w-5 h-5 sm:w-6 sm:h-6 text-accent-600" />
+              <div className="hidden sm:flex w-10 h-10 bg-pink-100 rounded-xl items-center justify-center">
+                <FiHeart className="w-5 h-5 text-accent-600" />
               </div>
             </div>
           </div>
           {/* Loyalty Card */}
-          <div className="bg-gradient-to-br from-primary-600 to-accent-600 rounded-2xl p-4 sm:p-6 shadow-sm text-white">
-            <div className="flex items-center justify-between mb-3">
-              <FiGift className="w-8 h-8" />
-              <span className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full">Programme fidélité</span>
+          <div className="bg-gradient-to-br from-primary-600 to-accent-600 rounded-xl sm:rounded-2xl p-2 sm:p-5 shadow-sm text-white text-center sm:text-left">
+            <FiGift className="w-5 h-5 sm:w-7 sm:h-7 mx-auto sm:mx-0" />
+            <div className="flex items-baseline gap-0.5 justify-center sm:justify-start mt-0.5">
+              <span className="text-base sm:text-2xl font-bold">{pastBookings.length}</span>
+              <span className="text-primary-200 text-[10px] sm:text-sm">/{loyaltyConfig.bookingsForReward}</span>
             </div>
-            <p className="text-primary-100 text-sm mb-1">Prochain service gratuit</p>
-            <div className="flex items-baseline gap-1">
-              <span className="text-2xl sm:text-4xl font-bold">{pastBookings.length}</span>
-              <span className="text-primary-200">/ {loyaltyConfig.bookingsForReward}</span>
-            </div>
-            <div className="mt-3 h-2 bg-white/20 rounded-full overflow-hidden">
+            <div className="mt-1 sm:mt-2 h-1 sm:h-2 bg-white/20 rounded-full overflow-hidden">
               <div 
                 className="h-full bg-white rounded-full transition-all duration-500"
                 style={{ width: `${Math.min((pastBookings.length / loyaltyConfig.bookingsForReward) * 100, 100)}%` }}
               />
             </div>
-            {pastBookings.length >= loyaltyConfig.bookingsForReward && (
-              <p className="mt-2 text-sm text-yellow-300 font-medium">🎉 Service gratuit disponible !</p>
-            )}
+            <p className="hidden sm:block text-primary-100 text-xs mt-1">Prochain service gratuit</p>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="border-b border-gray-100">
+        <div className="sm:bg-white sm:rounded-2xl sm:shadow-sm sm:border sm:border-gray-100">
+          <div className="sticky top-14 z-20 bg-white border-b border-gray-200">
             <div className="flex">
               <button
                 onClick={() => setActiveTab('upcoming')}
-                className={`flex-1 py-4 text-center font-medium transition-colors ${
+                className={`flex-1 py-2.5 sm:py-3 text-center text-xs sm:text-sm font-medium transition-colors ${
                   activeTab === 'upcoming'
                     ? 'text-primary-600 border-b-2 border-primary-600'
                     : 'text-gray-500 hover:text-gray-700'
@@ -409,7 +401,7 @@ function ClientDashboard() {
               </button>
               <button
                 onClick={() => setActiveTab('past')}
-                className={`flex-1 py-4 text-center font-medium transition-colors ${
+                className={`flex-1 py-2.5 sm:py-3 text-center text-xs sm:text-sm font-medium transition-colors ${
                   activeTab === 'past'
                     ? 'text-primary-600 border-b-2 border-primary-600'
                     : 'text-gray-500 hover:text-gray-700'
@@ -419,19 +411,19 @@ function ClientDashboard() {
               </button>
               <button
                 onClick={() => setActiveTab('orders')}
-                className={`flex-1 py-4 text-center font-medium transition-colors flex items-center justify-center gap-1 ${
+                className={`flex-1 py-2.5 sm:py-3 text-center text-xs sm:text-sm font-medium transition-colors flex items-center justify-center gap-1 ${
                   activeTab === 'orders'
                     ? 'text-primary-600 border-b-2 border-primary-600'
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
-                <FiShoppingBag className="w-4 h-4" />
+                <FiShoppingBag className="w-3.5 h-3.5" />
                 Commandes ({orders.length})
               </button>
             </div>
           </div>
 
-          <div className="p-6">
+          <div className="py-3 sm:p-5">
             {/* Orders Tab */}
             {activeTab === 'orders' ? (
               ordersLoading ? (
@@ -451,71 +443,75 @@ function ClientDashboard() {
                   </Link>
                 </div>
               ) : (
-                <div className="grid gap-4">
+                <div className="space-y-2">
                   {orders.map(order => {
                     const st = orderStatusLabels[order.status] || { label: order.status, className: 'bg-gray-100 text-gray-700' }
                     const canCancel = ['PENDING', 'CONFIRMED'].includes(order.status)
+                    const isOrderExpanded = expandedOrderId === order.id
                     return (
-                      <motion.div
-                        key={order.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="bg-white/90 backdrop-blur rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow"
-                      >
-                        <div className="h-1 w-full bg-gradient-to-r from-amber-400 via-yellow-400 to-orange-400" />
-                        <div className="p-5">
-                          <div className="flex items-start justify-between mb-3">
-                            <div>
-                              <h3 className="font-bold text-gray-900">{order.salon?.name || 'Boutique'}</h3>
-                              <p className="text-xs text-gray-500">
-                                {new Date(order.createdAt).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                              </p>
-                            </div>
-                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${st.className}`}>{st.label}</span>
+                      <div key={order.id} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                        <button
+                          type="button"
+                          onClick={() => setExpandedOrderId(isOrderExpanded ? null : order.id)}
+                          className="w-full text-left px-3 py-2.5 flex items-center gap-2.5 hover:bg-gray-50 transition"
+                        >
+                          <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center shrink-0">
+                            <FiShoppingBag className="w-4 h-4 text-amber-600" />
                           </div>
-
-                          <div className="space-y-1.5 mb-3">
-                            {(order.items || []).map((item, i) => (
-                              <div key={i} className="flex justify-between text-sm">
-                                <span className="text-gray-700">{item.product?.name || 'Article'} × {item.quantity}</span>
-                                <span className="font-medium text-gray-900">{(item.unitPrice * item.quantity).toLocaleString()} FCFA</span>
-                              </div>
-                            ))}
-                          </div>
-
-                          <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                            <div className="flex items-center gap-3 text-sm text-gray-500">
-                              <span className="flex items-center gap-1">
-                                <FiPackage className="w-4 h-4" />
-                                {order.deliveryMode === 'DELIVERY' ? 'Livraison' : 'Retrait'}
+                          <div className="flex-1 min-w-0">
+                            <span className="font-semibold text-gray-900 text-sm truncate block">{order.salon?.name || 'Boutique'}</span>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="text-xs text-gray-500">
+                                {new Date(order.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                               </span>
+                              <span className="font-bold text-amber-600 text-sm">{(order.totalPrice || 0).toLocaleString()} F</span>
                             </div>
-                            <p className="font-bold text-amber-600 text-lg">{(order.totalPrice || 0).toLocaleString()} FCFA</p>
                           </div>
-
-                          {/* Status Timeline */}
-                          <div className="mt-4 flex items-center gap-1">
-                            {['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'DELIVERED'].map((step, i) => {
-                              const steps = ['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'DELIVERED']
-                              const currentIdx = steps.indexOf(order.status)
-                              const isDone = i <= currentIdx && order.status !== 'CANCELLED'
-                              return (
-                                <div key={step} className={`flex-1 h-1.5 rounded-full ${isDone ? 'bg-green-500' : 'bg-gray-200'}`} />
-                              )
-                            })}
-                          </div>
-
-                          {canCancel && (
-                            <button
-                              onClick={() => handleCancelOrder(order.id)}
-                              disabled={cancellingOrderId === order.id}
-                              className="mt-4 w-full py-2.5 border border-red-300 text-red-600 rounded-xl hover:bg-red-50 transition-colors text-sm font-medium disabled:opacity-50"
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold shrink-0 ${st.className}`}>{st.label}</span>
+                          <FiChevronDown className={`w-4 h-4 text-gray-400 shrink-0 transition-transform ${isOrderExpanded ? 'rotate-180' : ''}`} />
+                        </button>
+                        <AnimatePresence>
+                          {isOrderExpanded && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.2 }}
+                              className="overflow-hidden"
                             >
-                              {cancellingOrderId === order.id ? 'Annulation...' : 'Annuler la commande'}
-                            </button>
+                              <div className="px-3 pb-3 border-t border-gray-100 pt-2.5 space-y-2">
+                                {(order.items || []).map((item, i) => (
+                                  <div key={i} className="flex justify-between text-sm">
+                                    <span className="text-gray-700">{item.product?.name || 'Article'} × {item.quantity}</span>
+                                    <span className="font-medium text-gray-900">{(item.unitPrice * item.quantity).toLocaleString()} F</span>
+                                  </div>
+                                ))}
+                                <div className="flex items-center gap-2 pt-2 border-t border-gray-100 text-xs text-gray-500">
+                                  <FiPackage className="w-3.5 h-3.5" />
+                                  {order.deliveryMode === 'DELIVERY' ? 'Livraison' : 'Retrait'}
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  {['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'DELIVERED'].map((step, i) => {
+                                    const steps = ['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'DELIVERED']
+                                    const currentIdx = steps.indexOf(order.status)
+                                    const isDone = i <= currentIdx && order.status !== 'CANCELLED'
+                                    return <div key={step} className={`flex-1 h-1 rounded-full ${isDone ? 'bg-green-500' : 'bg-gray-200'}`} />
+                                  })}
+                                </div>
+                                {canCancel && (
+                                  <button
+                                    onClick={() => handleCancelOrder(order.id)}
+                                    disabled={cancellingOrderId === order.id}
+                                    className="w-full py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-xs font-medium disabled:opacity-50"
+                                  >
+                                    {cancellingOrderId === order.id ? 'Annulation...' : 'Annuler'}
+                                  </button>
+                                )}
+                              </div>
+                            </motion.div>
                           )}
-                        </div>
-                      </motion.div>
+                        </AnimatePresence>
+                      </div>
                     )
                   })}
                 </div>
@@ -589,10 +585,10 @@ function ClientDashboard() {
       <button
         type="button"
         onClick={openFloatingChat}
-        className="fixed bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] right-4 sm:right-6 z-40 inline-flex items-center gap-2 rounded-full bg-gray-900 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-gray-900/25 transition hover:bg-gray-800"
+        className="fixed bottom-20 right-3 sm:right-6 z-40 inline-flex items-center justify-center w-12 h-12 sm:w-auto sm:h-auto rounded-full bg-gray-900 sm:px-5 sm:py-3 text-sm font-semibold text-white shadow-lg shadow-gray-900/25 transition hover:bg-gray-800"
       >
-        <FiMessageCircle className="h-4 w-4" />
-        Chat rapide
+        <FiMessageCircle className="h-5 w-5 sm:h-4 sm:w-4" />
+        <span className="hidden sm:inline ml-2">Chat rapide</span>
       </button>
 
       {/* Cancel Modal */}
