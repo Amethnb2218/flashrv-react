@@ -480,7 +480,6 @@ function ClientDashboard() {
                 </div>
               )
             ) :
-            {/* Orders Tab */}
             activeTab === 'orders' ? (
               ordersLoading ? (
                 <div className="text-center py-12">
