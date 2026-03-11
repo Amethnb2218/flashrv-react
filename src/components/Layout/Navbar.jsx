@@ -281,7 +281,7 @@ function Navbar() {
             {/* Right side */}
             <div className="hidden md:flex items-center space-x-2">
               <button
-                onClick={() => isAuthenticated ? navigate('/dashboard') : navigate('/login')}
+                onClick={() => isAuthenticated ? navigate('/dashboard?tab=favorites') : navigate('/login')}
                 className="p-2.5 text-primary-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2"
                 title="Mes favoris"
               >
@@ -611,7 +611,7 @@ function Navbar() {
                         <span>Panier{cartCount > 0 ? ` (${cartCount})` : ''}</span>
                       </button>
                       <Link
-                        to="/dashboard"
+                        to="/dashboard?tab=favorites"
                         onClick={closeDrawer}
                         className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-primary-700 hover:bg-primary-50 transition-colors"
                       >

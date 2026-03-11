@@ -1168,7 +1168,7 @@ function SalonDetail() {
                       </div>
                       <div className="flex items-center gap-2 bg-primary-50 rounded-lg p-2.5">
                         <FiBox className="w-4 h-4 text-gold-600 shrink-0" />
-                        <span className="text-xs text-primary-700">Retrait disponible</span>
+                        <span className="text-xs text-primary-700">{isBoutique ? 'Retrait disponible' : 'Réservation facile'}</span>
                       </div>
                       <div className="flex items-center gap-2 bg-primary-50 rounded-lg p-2.5">
                         <FiStar className="w-4 h-4 text-gold-500 shrink-0" />

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect, useMemo } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   FiCalendar, FiClock, FiMapPin, FiStar, FiMoreVertical, 
@@ -17,7 +17,9 @@ import { pushSiteNotification } from '../../utils/siteNotifications'
 
 function ClientDashboard() {
   const { user } = useAuth()
-  const [activeTab, setActiveTab] = useState('upcoming')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const initialTab = searchParams.get('tab') || 'upcoming'
+  const [activeTab, setActiveTab] = useState(initialTab)
   const [bookings, setBookings] = useState([])
   const [selectedBooking, setSelectedBooking] = useState(null)
   const [showCancelModal, setShowCancelModal] = useState(false)
@@ -144,6 +146,27 @@ function ClientDashboard() {
     return getBookingDateTime(b) < now || ['COMPLETED', 'CANCELLED', 'NO_SHOW'].includes(status)
   })
   const favoriteSalonsCount = new Set(bookings.map(b => b.salon?.id).filter(Boolean)).size
+
+  // Liked products from localStorage
+  const likedProductIds = useMemo(() => {
+    try {
+      const raw = localStorage.getItem('flashrv_liked_products')
+      const parsed = raw ? JSON.parse(raw) : []
+      return Array.isArray(parsed) ? parsed : []
+    } catch {
+      return []
+    }
+  }, [activeTab])
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab)
+    if (tab === 'favorites') {
+      setSearchParams({ tab: 'favorites' })
+    } else {
+      searchParams.delete('tab')
+      setSearchParams(searchParams)
+    }
+  }
 
   const handleCancelBooking = async () => {
     if (!selectedBooking) return
@@ -390,7 +413,7 @@ function ClientDashboard() {
           <div className="sticky top-14 z-20 bg-white border-b border-primary-200">
             <div className="flex">
               <button
-                onClick={() => setActiveTab('upcoming')}
+                onClick={() => handleTabChange('upcoming')}
                 className={`flex-1 py-2.5 sm:py-3 text-center text-xs sm:text-sm font-medium transition-colors ${
                   activeTab === 'upcoming'
                     ? 'text-primary-600 border-b-2 border-primary-600'
@@ -400,7 +423,7 @@ function ClientDashboard() {
                 À venir ({upcomingBookings.length})
               </button>
               <button
-                onClick={() => setActiveTab('past')}
+                onClick={() => handleTabChange('past')}
                 className={`flex-1 py-2.5 sm:py-3 text-center text-xs sm:text-sm font-medium transition-colors ${
                   activeTab === 'past'
                     ? 'text-primary-600 border-b-2 border-primary-600'
@@ -410,7 +433,7 @@ function ClientDashboard() {
                 Historique ({pastBookings.length})
               </button>
               <button
-                onClick={() => setActiveTab('orders')}
+                onClick={() => handleTabChange('orders')}
                 className={`flex-1 py-2.5 sm:py-3 text-center text-xs sm:text-sm font-medium transition-colors flex items-center justify-center gap-1 ${
                   activeTab === 'orders'
                     ? 'text-primary-600 border-b-2 border-primary-600'
@@ -420,12 +443,45 @@ function ClientDashboard() {
                 <FiShoppingBag className="w-3.5 h-3.5" />
                 Commandes ({orders.length})
               </button>
+              <button
+                onClick={() => handleTabChange('favorites')}
+                className={`flex-1 py-2.5 sm:py-3 text-center text-xs sm:text-sm font-medium transition-colors flex items-center justify-center gap-1 ${
+                  activeTab === 'favorites'
+                    ? 'text-red-600 border-b-2 border-red-500'
+                    : 'text-primary-500 hover:text-primary-700'
+                }`}
+              >
+                <FiHeart className="w-3.5 h-3.5" />
+                Favoris ({likedProductIds.length})
+              </button>
             </div>
           </div>
 
           <div className="py-3 sm:p-5">
+            {/* Favorites Tab */}
+            {activeTab === 'favorites' ? (
+              likedProductIds.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <FiHeart className="w-10 h-10 text-red-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-primary-900 mb-2">Aucun favori</h3>
+                  <p className="text-primary-500 mb-6">Likez des articles dans les boutiques pour les retrouver ici</p>
+                  <Link to="/salons?businessType=BOUTIQUE" className="inline-flex items-center px-6 py-3 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-colors">
+                    Explorer les boutiques
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-sm text-primary-500 mb-3">Vous avez {likedProductIds.length} article{likedProductIds.length > 1 ? 's' : ''} en favoris. Retrouvez-les dans les boutiques où vous les avez likés.</p>
+                  <Link to="/salons?businessType=BOUTIQUE" className="inline-flex items-center px-5 py-2.5 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-colors text-sm">
+                    Voir les boutiques
+                  </Link>
+                </div>
+              )
+            ) :
             {/* Orders Tab */}
-            {activeTab === 'orders' ? (
+            activeTab === 'orders' ? (
               ordersLoading ? (
                 <div className="text-center py-12">
                   <div className="w-10 h-10 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin mx-auto mb-4"></div>
