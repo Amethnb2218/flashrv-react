@@ -10,6 +10,7 @@ import {
 // import { salons, servicesBySalon, coiffeursBySalon, reviews } from '../../data/salons'
 import { formatPrice, formatDuration, formatPriceRange } from '../../utils/helpers'
 import { resolveMediaUrl } from '../../utils/media'
+import SEOHead from '../../components/SEO/SEOHead'
 import { useAuth } from '../../context/AuthContext'
 import { useBooking } from '../../context/BookingContext'
 import LoadingSpinner from '../../components/UI/LoadingSpinner'
@@ -619,6 +620,11 @@ function SalonDetail() {
 
   return (
     <div className="min-h-screen bg-primary-50 relative">
+      <SEOHead
+        title={`${salon.name} — ${salon.zone || 'Dakar'} | StyleFlow`}
+        description={`Réservez chez ${salon.name}${salon.zone ? ` à ${salon.zone}` : ''} sur StyleFlow. ${salon.businessType === 'BOUTIQUE' ? 'Boutique en ligne' : 'Salon de coiffure & beauté'} au Sénégal.`}
+        canonical={`https://styleflow.me/salon/${id}`}
+      />
       {/* Image Gallery — flush under navbar */}
       <div className="relative z-10 -mt-14 h-[276px] sm:h-[396px] md:h-[420px] lg:h-[420px] max-h-[60vh] bg-primary-900 overflow-hidden">
         {galleryImages.length > 0 ? (
