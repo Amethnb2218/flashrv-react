@@ -21,6 +21,15 @@ export default function Cart() {
   const salon = cart.salon
   const total = items.reduce((s, c) => s + (c.product?.price || 0) * c.quantity, 0)
 
+  const handleRemoveLine = (item) => {
+    removeItemFromCart({
+      productId: item.product.id,
+      selectedSize: item.selectedSize,
+      selectedColor: item.selectedColor,
+      quantity: item.quantity,
+    })
+  }
+
   const handleCheckout = () => {
     if (!isAuthenticated) {
       navigate('/login', { state: { from: { pathname: '/cart' } } })
@@ -85,7 +94,18 @@ export default function Cart() {
               <img src={c.product.images[0]} alt={c.product.name} className="w-16 h-16 rounded-xl object-cover" />
             )}
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-primary-900 truncate">{c.product.name}</p>
+              <div className="flex items-start justify-between gap-3">
+                <p className="font-semibold text-primary-900 truncate">{c.product.name}</p>
+                <button
+                  onClick={() => handleRemoveLine(c)}
+                  className="shrink-0 inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-red-600 hover:bg-red-50"
+                  aria-label={`Retirer ${c.product.name} du panier`}
+                  title="Retirer du panier"
+                >
+                  <FiTrash2 className="w-3.5 h-3.5" />
+                  Retirer
+                </button>
+              </div>
               <div className="flex gap-2 text-xs text-primary-500 mt-0.5">
                 {c.selectedSize && <span>Taille {c.selectedSize}</span>}
                 {c.selectedColor && <span>Couleur {c.selectedColor}</span>}
