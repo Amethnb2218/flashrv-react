@@ -15,6 +15,51 @@ import AppointmentChatModal from '../../components/Chat/AppointmentChatModal'
 import toast from 'react-hot-toast'
 import { pushSiteNotification } from '../../utils/siteNotifications'
 
+const CANCELLED_BOOKINGS_STORAGE_KEY = 'flashrv_cancelled_bookings'
+
+function getCancelledBookingsStorageKey(user) {
+  const scope = user?.id || user?.email || 'guest'
+  return `${CANCELLED_BOOKINGS_STORAGE_KEY}:${scope}`
+}
+
+function readCancelledBookings(user) {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = localStorage.getItem(getCancelledBookingsStorageKey(user))
+    const parsed = raw ? JSON.parse(raw) : []
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
+function writeCancelledBookings(user, bookings) {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem(getCancelledBookingsStorageKey(user), JSON.stringify(bookings))
+  } catch {
+    // Ignore storage write failures and keep the in-memory state.
+  }
+}
+
+function mergeBookingsWithCancelledCache(bookings, cachedCancelledBookings) {
+  const merged = new Map()
+
+  bookings.forEach((booking) => {
+    if (booking?.id) merged.set(String(booking.id), booking)
+  })
+
+  cachedCancelledBookings.forEach((booking) => {
+    if (!booking?.id) return
+    const key = String(booking.id)
+    if (!merged.has(key)) {
+      merged.set(key, booking)
+    }
+  })
+
+  return Array.from(merged.values())
+}
+
 function ClientDashboard() {
   const { user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -32,6 +77,16 @@ function ClientDashboard() {
   const [expandedBookingId, setExpandedBookingId] = useState(null)
   const [expandedOrderId, setExpandedOrderId] = useState(null)
   const [visibleBookings, setVisibleBookings] = useState(8)
+
+  const persistCancelledBooking = (booking) => {
+    if (!booking?.id) return
+    const cached = readCancelledBookings(user)
+    const next = [
+      booking,
+      ...cached.filter((entry) => String(entry?.id) !== String(booking.id)),
+    ]
+    writeCancelledBookings(user, next)
+  }
 
   const getSalonImage = (salon) => {
     if (!salon) return ''
@@ -64,9 +119,12 @@ function ClientDashboard() {
           salon: appt.salon,
           services: appt.service ? [appt.service] : [],
         }))
-        if (mounted) setBookings(mapped)
+        const cachedCancelledBookings = readCancelledBookings(user)
+        if (mounted) {
+          setBookings(mergeBookingsWithCancelledCache(mapped, cachedCancelledBookings))
+        }
       } catch (e) {
-        if (mounted) setBookings([])
+        if (mounted) setBookings(readCancelledBookings(user))
       } finally {
         if (mounted) setLoading(false)
       }
@@ -160,12 +218,13 @@ function ClientDashboard() {
 
   const handleTabChange = (tab) => {
     setActiveTab(tab)
-    if (tab === 'favorites') {
-      setSearchParams({ tab: 'favorites' })
+    const nextParams = new URLSearchParams(searchParams)
+    if (tab === 'upcoming') {
+      nextParams.delete('tab')
     } else {
-      searchParams.delete('tab')
-      setSearchParams(searchParams)
+      nextParams.set('tab', tab)
     }
+    setSearchParams(nextParams)
   }
 
   const handleCancelBooking = async () => {
@@ -175,11 +234,18 @@ function ClientDashboard() {
         method: 'PATCH',
         body: { status: 'CANCELLED' },
       })
+      const cancelledBooking = { ...selectedBooking, status: 'CANCELLED' }
       setBookings((prev) =>
-        prev.map((b) => (b.id === selectedBooking.id ? { ...b, status: 'CANCELLED' } : b))
+        prev.map((b) => (b.id === selectedBooking.id ? cancelledBooking : b))
       )
+      persistCancelledBooking(cancelledBooking)
+      setActiveTab('past')
+      const nextParams = new URLSearchParams(searchParams)
+      nextParams.set('tab', 'past')
+      setSearchParams(nextParams)
+      toast.success('Réservation annulée et conservée dans l’historique')
     } catch (e) {
-      // silent for now
+      toast.error(e.message || 'Erreur lors de l\'annulation de la réservation')
     } finally {
       setShowCancelModal(false)
       setSelectedBooking(null)
