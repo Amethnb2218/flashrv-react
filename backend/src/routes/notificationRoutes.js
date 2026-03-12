@@ -54,5 +54,19 @@ router.patch('/:id/read', authenticate, async (req, res, next) => {
   }
 });
 
-module.exports = router;
+router.delete('/:id', authenticate, async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const notification = await prisma.notification.findUnique({ where: { id } });
+    if (!notification || notification.userId !== req.user.id) {
+      return res.status(404).json({ status: 'error', message: 'Notification introuvable' });
+    }
 
+    await prisma.notification.delete({ where: { id } });
+    res.status(200).json({ status: 'success' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+module.exports = router;

@@ -1258,6 +1258,24 @@ const markAllNotificationsRead = async () => {
   }
 };
 
+const deleteNotification = async (notification) => {
+  const previousNotifications = notifications;
+  setNotifications((prev) => prev.filter((n) => n.id !== notification.id));
+  if (!notification.isRead) {
+    setUnreadNotifications((prev) => Math.max(0, prev - 1));
+  }
+
+  try {
+    await apiFetch(`/notifications/${notification.id}`, { method: "DELETE" });
+  } catch (e) {
+    setNotifications(previousNotifications);
+    if (!notification.isRead) {
+      setUnreadNotifications((prev) => prev + 1);
+    }
+    toast.error("Impossible de supprimer cette notification");
+  }
+};
+
 /* ----------------------------
 Media handling
 ----------------------------- */
@@ -2966,8 +2984,21 @@ active
     <div className="space-y-2">
       {notifications.slice(0, 4).map((n) => (
         <div key={n.id} className={`text-sm rounded-xl px-3 py-2 ${n.isRead ? "bg-white text-primary-600" : "bg-gold-50 text-primary-800 border border-gold-100"}`}>
-          <p>{n.message}</p>
-          <p className="text-xs text-primary-500 mt-1">{new Date(n.createdAt).toLocaleString("fr-FR")}</p>
+          <div className="flex items-start gap-3">
+            <div className="min-w-0 flex-1">
+              <p>{n.message}</p>
+              <p className="text-xs text-primary-500 mt-1">{new Date(n.createdAt).toLocaleString("fr-FR")}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => deleteNotification(n)}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full text-primary-400 transition hover:bg-red-50 hover:text-red-600"
+              aria-label="Supprimer la notification"
+              title="Supprimer"
+            >
+              <FiTrash2 className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       ))}
     </div>

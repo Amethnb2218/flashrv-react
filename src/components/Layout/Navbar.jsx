@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { FiMenu, FiX, FiUser, FiLogOut, FiCalendar, FiSettings, FiSearch, FiHeart, FiHome, FiScissors, FiShoppingBag, FiBell, FiShoppingCart } from 'react-icons/fi'
+import { FiMenu, FiX, FiUser, FiLogOut, FiCalendar, FiSettings, FiSearch, FiHeart, FiHome, FiScissors, FiShoppingBag, FiBell, FiShoppingCart, FiTrash2 } from 'react-icons/fi'
 import { motion, AnimatePresence } from 'framer-motion'
 import Logo from '../UI/Logo'
 import apiFetch from '../../api/client'
@@ -11,6 +11,7 @@ import {
   getSiteNotifications,
   markAllSiteNotificationsRead,
   markSiteNotificationRead,
+  removeSiteNotification,
   subscribeSiteNotifications,
 } from '../../utils/siteNotifications'
 import {
@@ -224,6 +225,24 @@ function Navbar() {
     }
   }
 
+  const deleteNotification = async (event, notification) => {
+    event.stopPropagation()
+
+    const previousNotifications = notifications
+    setNotifications((prev) => prev.filter((n) => n.id !== notification.id))
+
+    if (String(notification.id).startsWith('local-')) {
+      notificationUserKeys.forEach((key) => removeSiteNotification(notification.id, key))
+      return
+    }
+
+    try {
+      await apiFetch(`/notifications/${notification.id}`, { method: 'DELETE' })
+    } catch (_) {
+      setNotifications(previousNotifications)
+    }
+  }
+
   const isSalonPage = location.pathname === '/salons' && searchParams.get('businessType') !== 'BOUTIQUE'
 
   const navLinks = [
@@ -356,10 +375,23 @@ function Navbar() {
                                   !n.isRead ? 'bg-gold-50/50' : ''
                                 }`}
                               >
-                                <p className="text-sm text-primary-800">{n.message}</p>
-                                <p className="text-xs text-primary-400 mt-1">
-                                  {new Date(n.createdAt).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                                </p>
+                                <div className="flex items-start gap-3">
+                                  <div className="min-w-0 flex-1">
+                                    <p className="text-sm text-primary-800">{n.message}</p>
+                                    <p className="text-xs text-primary-400 mt-1">
+                                      {new Date(n.createdAt).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                    </p>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={(event) => deleteNotification(event, n)}
+                                    className="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-full text-primary-400 transition hover:bg-red-50 hover:text-red-600"
+                                    aria-label="Supprimer la notification"
+                                    title="Supprimer"
+                                  >
+                                    <FiTrash2 className="h-4 w-4" />
+                                  </button>
+                                </div>
                               </div>
                             ))
                           )}

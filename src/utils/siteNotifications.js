@@ -67,10 +67,18 @@ export const markAllSiteNotificationsRead = (userId) => {
   writeAll(next)
 }
 
+export const removeSiteNotification = (id, userId) => {
+  const key = getUserKey(userId)
+  const next = readAll().filter((n) => {
+    if (n.id !== id) return true
+    return String(n.userId || 'anonymous') !== key
+  })
+  writeAll(next)
+}
+
 export const subscribeSiteNotifications = (listener) => {
   if (typeof listener !== 'function') return () => {}
   const handler = () => listener()
   window.addEventListener(NOTIF_EVENT, handler)
   return () => window.removeEventListener(NOTIF_EVENT, handler)
 }
-
