@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { 
   FiUser, FiMail, FiPhone, FiMapPin, FiCamera, FiSave, 
@@ -7,14 +8,25 @@ import {
 import { useAuth } from '../../context/AuthContext'
 import toast from 'react-hot-toast'
 import apiFetch from '@/api/client'
+import Modal from '../../components/UI/Modal'
+import {
+  ACCOUNT_DELETION_GRACE_DAYS,
+  buildAccountDeletionRecord,
+  formatDeletionDeadline,
+  writeAccountDeletionRecord,
+} from '../../utils/accountDeletion'
 
 function Profile() {
-  const { user, updateUser } = useAuth()
+  const navigate = useNavigate()
+  const { user, updateUser, logout } = useAuth()
   const [activeTab, setActiveTab] = useState('profile')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [showPhotoMenu, setShowPhotoMenu] = useState(false)
+  const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false)
+  const [deleteAccountLoading, setDeleteAccountLoading] = useState(false)
+  const [deleteConfirmationText, setDeleteConfirmationText] = useState('')
   const fileInputRef = useRef(null)
   
   const [formData, setFormData] = useState({
@@ -170,6 +182,73 @@ function Profile() {
     { id: 'security', label: 'Sécurité', icon: FiLock },
     { id: 'notifications', label: 'Notifications', icon: FiBell },
   ]
+
+  const deletionPreview = buildAccountDeletionRecord(user, ACCOUNT_DELETION_GRACE_DAYS)
+  const deletionDeadlineLabel = formatDeletionDeadline(deletionPreview)
+  const deleteKeyword = 'SUPPRIMER'
+
+  const requestAccountDeletion = async () => {
+    const payload = {
+      gracePeriodDays: ACCOUNT_DELETION_GRACE_DAYS,
+      reason: 'USER_REQUEST',
+      requestedAt: deletionPreview.requestedAt,
+      scheduledDeletionAt: deletionPreview.scheduledDeletionAt,
+    }
+
+    const attempts = [
+      { path: '/users/delete-account', method: 'POST' },
+      { path: '/users/delete-account', method: 'DELETE' },
+      { path: '/users/request-account-deletion', method: 'POST' },
+      { path: '/users/account-deletion', method: 'POST' },
+      { path: '/auth/delete-account', method: 'POST' },
+    ]
+
+    let lastError = null
+
+    for (const attempt of attempts) {
+      try {
+        return await apiFetch(attempt.path, {
+          method: attempt.method,
+          body: attempt.method === 'DELETE' ? undefined : payload,
+        })
+      } catch (error) {
+        lastError = error
+        if (Number(error?.status) === 404) continue
+        throw error
+      }
+    }
+
+    if (Number(lastError?.status) === 404) {
+      return { localOnly: true }
+    }
+
+    throw lastError || new Error('La suppression du compte est indisponible pour le moment.')
+  }
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmationText.trim().toUpperCase() !== deleteKeyword) {
+      toast.error(`Tapez ${deleteKeyword} pour confirmer.`)
+      return
+    }
+
+    setDeleteAccountLoading(true)
+    try {
+      await requestAccountDeletion()
+      writeAccountDeletionRecord(user, deletionPreview)
+      setShowDeleteAccountModal(false)
+      toast.success(
+        deletionDeadlineLabel
+          ? `Votre compte est desactive temporairement. Vous pourrez le reactiver jusqu'au ${deletionDeadlineLabel}.`
+          : 'Votre compte est desactive temporairement pendant 30 jours.'
+      )
+      await logout()
+      navigate('/login', { replace: true })
+    } catch (error) {
+      toast.error(error.message || 'Impossible de supprimer votre compte pour le moment.')
+    } finally {
+      setDeleteAccountLoading(false)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-gold-50/20 py-8 relative overflow-hidden">
@@ -442,10 +521,14 @@ function Profile() {
                   <div className="mt-12 pt-8 border-t border-primary-200">
                     <h3 className="text-lg font-bold text-red-600 mb-4">Zone dangereuse</h3>
                     <p className="text-primary-600 mb-4">
-                      La suppression de votre compte est irréversible. Toutes vos données seront perdues.
+                      Votre compte sera d'abord desactive pendant 30 jours. Si vous vous reconnectez avant la date limite, la suppression sera annulee.
                     </p>
                     <button
                       type="button"
+                      onClick={() => {
+                        setDeleteConfirmationText('')
+                        setShowDeleteAccountModal(true)
+                      }}
                       className="px-6 py-3 border border-red-300 text-red-600 font-semibold rounded-xl hover:bg-red-50 transition-colors flex items-center"
                     >
                       <FiTrash2 className="w-5 h-5 mr-2" />
@@ -526,6 +609,61 @@ function Profile() {
           </div>
         </div>
       </div>
+
+      <Modal
+        isOpen={showDeleteAccountModal}
+        onClose={() => !deleteAccountLoading && setShowDeleteAccountModal(false)}
+        title="Supprimer mon compte"
+      >
+        <div className="p-6 space-y-5">
+          <div className="rounded-2xl border border-red-100 bg-red-50 p-4">
+            <p className="text-sm font-semibold text-red-700">Suppression temporaire sur 30 jours</p>
+            <p className="mt-2 text-sm text-red-600">
+              Votre compte sera desactive immediatement, puis supprime definitivement apres 30 jours.
+              Vous pourrez encore le recuperer en vous reconnectant avant le <strong>{deletionDeadlineLabel || 'delai de 30 jours'}</strong>.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-primary-100 bg-primary-50 p-4 text-sm text-primary-700">
+            <p>Avant de confirmer :</p>
+            <p className="mt-2">Votre session sera fermee juste apres la demande.</p>
+            <p className="mt-1">Vos donnees resteront recuperables pendant 30 jours.</p>
+            <p className="mt-1">Une simple reconnexion pendant ce delai reactivera votre compte.</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-primary-700 mb-2">
+              Tapez <span className="font-bold">{deleteKeyword}</span> pour confirmer
+            </label>
+            <input
+              type="text"
+              value={deleteConfirmationText}
+              onChange={(e) => setDeleteConfirmationText(e.target.value)}
+              placeholder={deleteKeyword}
+              className="w-full px-4 py-3 border border-red-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent"
+            />
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              type="button"
+              onClick={() => setShowDeleteAccountModal(false)}
+              disabled={deleteAccountLoading}
+              className="flex-1 px-5 py-3 rounded-xl border border-primary-200 text-primary-700 font-semibold hover:bg-primary-50 transition disabled:opacity-50"
+            >
+              Annuler
+            </button>
+            <button
+              type="button"
+              onClick={handleDeleteAccount}
+              disabled={deleteAccountLoading || deleteConfirmationText.trim().toUpperCase() !== deleteKeyword}
+              className="flex-1 px-5 py-3 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700 transition disabled:opacity-50"
+            >
+              {deleteAccountLoading ? 'Suppression...' : 'Confirmer la suppression'}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }

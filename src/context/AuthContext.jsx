@@ -1,6 +1,13 @@
 import { createContext, useContext, useReducer, useEffect } from 'react'
 import { disconnectRealtime } from '../utils/realtime'
 import { subscribeToPush, unsubscribeFromPush } from '../utils/pushNotifications'
+import toast from 'react-hot-toast'
+import {
+  clearAccountDeletionRecord,
+  formatDeletionDeadline,
+  isAccountDeletionPending,
+  readAccountDeletionRecord,
+} from '../utils/accountDeletion'
 
 const AuthContext = createContext()
 
@@ -58,6 +65,27 @@ export function AuthProvider({ children }) {
   const [state, dispatch] = useReducer(authReducer, initialState)
   const API_BASE = import.meta.env.VITE_API_URL || '/api'
 
+  const restorePendingDeletionIfNeeded = (user) => {
+    const normalizedUser = normalizeUserShape(user)
+    const pendingDeletion = readAccountDeletionRecord(normalizedUser)
+
+    if (!pendingDeletion) return normalizedUser
+
+    if (isAccountDeletionPending(pendingDeletion)) {
+      clearAccountDeletionRecord(normalizedUser)
+      const deadline = formatDeletionDeadline(pendingDeletion)
+      toast.success(
+        deadline
+          ? `Votre compte a ete reactive. La suppression prevue pour le ${deadline} a ete annulee.`
+          : 'Votre compte a ete reactive.'
+      )
+    } else {
+      clearAccountDeletionRecord(normalizedUser)
+    }
+
+    return normalizedUser
+  }
+
   // Check for saved auth on mount et synchronise le cookie "token"
   useEffect(() => {
     const savedUser = sessionStorage.getItem('flashrv_user')
@@ -68,7 +96,7 @@ export function AuthProvider({ children }) {
     }
     if (savedUser && savedToken) {
       try {
-        const user = JSON.parse(savedUser)
+        const user = restorePendingDeletionIfNeeded(JSON.parse(savedUser))
         dispatch({
           type: 'LOGIN',
           payload: { user, token: savedToken }
@@ -102,15 +130,16 @@ export function AuthProvider({ children }) {
       const user = data.data?.user;
       const token = data.data?.token || null;
       if (user && token) {
-        sessionStorage.setItem('flashrv_user', JSON.stringify(normalizeUserShape(user)));
+        const restoredUser = restorePendingDeletionIfNeeded(user);
+        sessionStorage.setItem('flashrv_user', JSON.stringify(normalizeUserShape(restoredUser)));
         sessionStorage.setItem('flashrv_token', token);
         document.cookie = `token=${token}; path=/`;
         dispatch({
           type: 'LOGIN',
-          payload: { user, token }
+          payload: { user: restoredUser, token }
         });
         subscribeToPush().catch(() => {});
-        return user;
+        return restoredUser;
       } else {
         throw new Error('Utilisateur ou token manquant');
       }
@@ -135,15 +164,16 @@ export function AuthProvider({ children }) {
       let user = data.data?.user;
       let token = data.data?.token || null;
       if (user && token) {
-        sessionStorage.setItem('flashrv_user', JSON.stringify(normalizeUserShape(user)));
+        const restoredUser = restorePendingDeletionIfNeeded(user);
+        sessionStorage.setItem('flashrv_user', JSON.stringify(normalizeUserShape(restoredUser)));
         sessionStorage.setItem('flashrv_token', token);
         document.cookie = `token=${token}; path=/; SameSite=Lax`;
         dispatch({
           type: 'LOGIN',
-          payload: { user, token }
+          payload: { user: restoredUser, token }
         });
         subscribeToPush().catch(() => {});
-        return user;
+        return restoredUser;
       } else {
         throw new Error('Utilisateur ou token Google manquant');
       }
@@ -167,16 +197,17 @@ export function AuthProvider({ children }) {
     const user = data.data?.user;
     const token = data.data?.token || null;
     if (user && token) {
-      sessionStorage.setItem('flashrv_user', JSON.stringify(normalizeUserShape(user)));
+      const restoredUser = restorePendingDeletionIfNeeded(user);
+      sessionStorage.setItem('flashrv_user', JSON.stringify(normalizeUserShape(restoredUser)));
       sessionStorage.setItem('flashrv_token', token);
       // Pose le cookie token sur le domaine courant, path /, SameSite=Lax
       document.cookie = `token=${token}; path=/; SameSite=Lax`;
       dispatch({
         type: 'LOGIN',
-        payload: { user, token }
+        payload: { user: restoredUser, token }
       });
       subscribeToPush().catch(() => {});
-      return user;
+      return restoredUser;
     } else {
       throw new Error('Utilisateur ou token manquant');
     }
@@ -219,15 +250,16 @@ export function AuthProvider({ children }) {
       if (!user || !token) {
         throw new Error('Utilisateur ou token Google manquant');
       }
-      sessionStorage.setItem('flashrv_user', JSON.stringify(normalizeUserShape(user)));
+      const restoredUser = restorePendingDeletionIfNeeded(user);
+      sessionStorage.setItem('flashrv_user', JSON.stringify(normalizeUserShape(restoredUser)));
       sessionStorage.setItem('flashrv_token', token);
       document.cookie = `token=${token}; path=/; SameSite=Lax`;
       dispatch({
         type: 'LOGIN',
-        payload: { user, token },
+        payload: { user: restoredUser, token },
       });
       subscribeToPush().catch(() => {});
-      return user;
+      return restoredUser;
     } catch (error) {
       console.error('Google login error:', error);
       throw error;
