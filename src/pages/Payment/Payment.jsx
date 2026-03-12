@@ -25,6 +25,66 @@ const PAYMENT_METHODS = [
   },
 ]
 
+const DUPLICATE_CONFLICT_PATTERNS = [
+  'already exists',
+  'record with this value already exists',
+  'unique constraint',
+  'duplicate',
+]
+
+const formatSlotLabel = (date, time) => {
+  if (!date && !time) return 'ce créneau'
+
+  const hasValidDate = date && !Number.isNaN(new Date(date).getTime())
+  const formattedDate = hasValidDate
+    ? new Date(date).toLocaleDateString('fr-FR', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+      })
+    : null
+
+  if (formattedDate && time) return `${formattedDate} à ${time}`
+  if (formattedDate) return formattedDate
+  return `à ${time}`
+}
+
+const isDuplicateConflictError = (error) => {
+  const normalizedMessage = String(error?.message || '').toLowerCase()
+  return Number(error?.status) === 409 || DUPLICATE_CONFLICT_PATTERNS.some((pattern) => normalizedMessage.includes(pattern))
+}
+
+const getFriendlyPaymentError = (error, { selectedMethod, bookingState, appointmentId }) => {
+  const requestUrl = String(error?.url || '').toLowerCase()
+  const slotLabel = formatSlotLabel(bookingState?.date, bookingState?.time)
+
+  if (isDuplicateConflictError(error) && requestUrl.includes('/payments/confirm-on-site')) {
+    return {
+      message: 'Cette réservation a déjà été prise en compte. Vous pouvez la retrouver dans "Mes réservations".',
+      type: 'existing_reservation',
+    }
+  }
+
+  if (isDuplicateConflictError(error) && (requestUrl.includes('/appointments') || !appointmentId)) {
+    return {
+      message: `Le créneau ${slotLabel} n'est plus disponible. Une réservation existe déjà à cette heure. Choisissez un autre horaire pour continuer.`,
+      type: 'slot_conflict',
+    }
+  }
+
+  if (selectedMethod === 'paydunya' && appointmentId) {
+    return {
+      message: 'Le serveur est temporairement indisponible. Reessayez dans un instant. Votre réservation a bien été conservée.',
+      type: 'pending_online_booking',
+    }
+  }
+
+  return {
+    message: error?.message || 'Une erreur est survenue. Veuillez reessayer.',
+    type: 'generic',
+  }
+}
+
 function Payment() {
   const navigate = useNavigate()
   const { state: bookingState, dispatch: bookingDispatch } = useBooking()
@@ -212,12 +272,15 @@ function Payment() {
       setPaymentStatus('pending_confirmation')
       window.location.href = payload.invoiceUrl
     } catch (err) {
-      const hasPendingOnlineBooking = selectedMethod === 'paydunya' && Boolean(appointmentId)
-      if (hasPendingOnlineBooking) {
-        setError('Le serveur est temporairement indisponible. Reessayez dans un instant. Votre reservation est conservee, reessayez dans un instant.')
-      } else {
-        setError(err.message || 'Une erreur est survenue. Veuillez reessayer.')
+      const friendlyError = getFriendlyPaymentError(err, {
+        selectedMethod,
+        bookingState,
+        appointmentId,
+      })
+      if (friendlyError.type === 'existing_reservation' || friendlyError.type === 'slot_conflict') {
+        bookingDispatch({ type: 'SET_BOOKING_ID', payload: null })
       }
+      setError(friendlyError.message)
       setPaymentStatus(null)
     } finally {
       setLoading(false)
