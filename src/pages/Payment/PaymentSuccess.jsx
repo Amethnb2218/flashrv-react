@@ -47,7 +47,24 @@ function PaymentSuccess() {
     return location.state?.appointmentId || searchParams.get('appointmentId')
   }, [location.search, location.state])
 
-  const isPaid = String(payment?.status || '').toUpperCase() === 'COMPLETED' || String(appointment?.status || '').toUpperCase() === 'PAID'
+  const appointmentStatus = String(appointment?.status || '').toUpperCase()
+  const isPaid = String(payment?.status || '').toUpperCase() === 'COMPLETED' || appointmentStatus === 'PAID'
+  const isConfirmedOnSite = ['CONFIRMED_ON_SITE', 'CONFIRMED'].includes(appointmentStatus)
+  const isReservationConfirmed = isPaid || isConfirmedOnSite
+  const statusToneClass = isReservationConfirmed ? 'text-green-600' : 'text-gold-700'
+  const heroToneClass = isReservationConfirmed
+    ? 'bg-gradient-to-r from-green-500 to-emerald-500'
+    : 'bg-gradient-to-r from-gold-500 to-orange-500'
+  const heroTitle = isPaid
+    ? 'Paiement confirme !'
+    : isConfirmedOnSite
+      ? 'Reservation confirmee !'
+      : 'Paiement en attente'
+  const heroMessage = isPaid
+    ? 'Votre reservation est payee et enregistree.'
+    : isConfirmedOnSite
+      ? 'Votre reservation est bien confirmee. Le paiement se fera directement au salon.'
+      : 'Votre reservation est creee, finalisez le paiement pour confirmer.'
 
   useEffect(() => {
     const loadData = async () => {
@@ -75,7 +92,14 @@ function PaymentSuccess() {
         const appt = appointmentRes?.data?.appointment || appointmentRes?.appointment || null
         setAppointment(appt)
 
-        if (appt && (String(appt.status || '').toUpperCase() === 'PAID' || String(verifiedPayment?.status || '').toUpperCase() === 'COMPLETED')) {
+        const normalizedStatus = String(appt?.status || '').toUpperCase()
+        if (
+          appt &&
+          (
+            ['PAID', 'CONFIRMED', 'CONFIRMED_ON_SITE'].includes(normalizedStatus) ||
+            String(verifiedPayment?.status || '').toUpperCase() === 'COMPLETED'
+          )
+        ) {
           confetti({ particleCount: 110, spread: 65, origin: { y: 0.6 } })
         }
       } catch (err) {
@@ -171,24 +195,24 @@ function PaymentSuccess() {
           transition={{ duration: 0.3 }}
           className="bg-white rounded-3xl shadow-xl overflow-hidden"
         >
-          <div className={`px-6 py-12 text-center ${isPaid ? 'bg-gradient-to-r from-green-500 to-emerald-500' : 'bg-gradient-to-r from-gold-500 to-orange-500'}`}>
+          <div className={`px-6 py-12 text-center ${heroToneClass}`}>
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
               className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6"
             >
-              {isPaid ? (
+              {isReservationConfirmed ? (
                 <FiCheck className="w-10 h-10 text-green-500" />
               ) : (
                 <FiAlertCircle className="w-10 h-10 text-gold-500" />
               )}
             </motion.div>
             <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-              {isPaid ? 'Paiement confirme !' : 'Paiement en attente'}
+              {heroTitle}
             </h1>
-            <p className={`${isPaid ? 'text-green-100' : 'text-gold-100'}`}>
-              {isPaid ? 'Votre reservation est payee et enregistree.' : 'Votre reservation est creee, finalisez le paiement pour confirmer.'}
+            <p className={`${isReservationConfirmed ? 'text-green-100' : 'text-gold-100'}`}>
+              {heroMessage}
             </p>
           </div>
 
@@ -248,12 +272,12 @@ function PaymentSuccess() {
                 </div>
 
                 <div className="flex items-start">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center mr-3 ${isPaid ? 'bg-green-100' : 'bg-gold-100'}`}>
-                    {isPaid ? <FiCheck className="w-5 h-5 text-green-600" /> : <FiAlertCircle className="w-5 h-5 text-gold-600" />}
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center mr-3 ${isReservationConfirmed ? 'bg-green-100' : 'bg-gold-100'}`}>
+                    {isReservationConfirmed ? <FiCheck className="w-5 h-5 text-green-600" /> : <FiAlertCircle className="w-5 h-5 text-gold-600" />}
                   </div>
                   <div>
                     <p className="text-sm text-primary-500">Statut</p>
-                    <p className={`font-semibold ${isPaid ? 'text-green-600' : 'text-gold-700'}`}>{statusLabel}</p>
+                    <p className={`font-semibold ${statusToneClass}`}>{statusLabel}</p>
                   </div>
                 </div>
               </div>
@@ -276,7 +300,7 @@ function PaymentSuccess() {
             </div>
 
             <div className="grid sm:grid-cols-2 gap-4">
-              {!isPaid && (
+              {!isReservationConfirmed && (
                 <Link
                   to={`/payment/cancel?appointmentId=${encodeURIComponent(booking.id)}`}
                   className="flex items-center justify-center px-6 py-3 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-colors"
