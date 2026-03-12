@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { FiChevronLeft, FiMapPin, FiPhone, FiUser, FiFileText, FiCheck, FiShoppingBag, FiTruck, FiHome } from 'react-icons/fi'
+import { FiChevronLeft, FiMapPin, FiPhone, FiUser, FiFileText, FiCheck, FiShoppingBag, FiTruck, FiHome, FiTrash2 } from 'react-icons/fi'
 import { useAuth } from '../../context/AuthContext'
 import { formatPrice } from '../../utils/helpers'
 import { resolveMediaUrl } from '../../utils/media'
 import apiFetch from '../../api/client'
 import { pushSiteNotification } from '../../utils/siteNotifications'
-import { clearCart, deriveDeliveryConfigFromItems, readCart } from '../../utils/cartStore'
+import { clearCart, deriveDeliveryConfigFromItems, readCart, removeItemFromCart } from '../../utils/cartStore'
 import { buildPaydunyaPaymentPayload } from '../../utils/payments'
 import { saveOrderPaymentSession } from '../../utils/orderPaymentSession'
 
@@ -25,7 +25,7 @@ function OrderCheckout() {
   const { user, isAuthenticated } = useAuth()
 
   const storageCart = readCart()
-  const orderData =
+  const orderSeed =
     location.state ||
     (Array.isArray(storageCart?.items) && storageCart.items.length > 0 && storageCart?.salon?.id
       ? {
@@ -38,27 +38,29 @@ function OrderCheckout() {
           notes: '',
         }
       : null)
-  const deliveryConfig = deriveDeliveryConfigFromItems(orderData?.cart || [])
-  const baseDeliveryFee = Number(orderData?.minDeliveryFee ?? deliveryConfig.minDeliveryFee ?? 0)
-  const forcePickup = Boolean(orderData?.forcePickup) || !deliveryConfig.canDeliverAll
+  const [cart, setCart] = useState(() => orderSeed?.cart || [])
+  const salon = orderSeed?.salon || null
+  const deliveryConfig = deriveDeliveryConfigFromItems(cart)
+  const baseDeliveryFee = Number(orderSeed?.minDeliveryFee ?? deliveryConfig.minDeliveryFee ?? 0)
+  const forcePickup = Boolean(orderSeed?.forcePickup) || !deliveryConfig.canDeliverAll
   const [currentStep, setCurrentStep] = useState(0)
   const [selectedPayment, setSelectedPayment] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
   const [form, setForm] = useState({
-    deliveryMode: forcePickup ? 'PICKUP' : (orderData?.deliveryMode || 'PICKUP'),
-    deliveryAddress: orderData?.deliveryAddress || '',
-    clientPhone: orderData?.clientPhone || user?.phoneNumber || user?.phone || '',
-    clientName: orderData?.clientName || user?.name || '',
-    notes: orderData?.notes || '',
+    deliveryMode: forcePickup ? 'PICKUP' : (orderSeed?.deliveryMode || 'PICKUP'),
+    deliveryAddress: orderSeed?.deliveryAddress || '',
+    clientPhone: orderSeed?.clientPhone || user?.phoneNumber || user?.phone || '',
+    clientName: orderSeed?.clientName || user?.name || '',
+    notes: orderSeed?.notes || '',
   })
 
   useEffect(() => {
-    if (!orderData?.cart || !orderData?.salon) {
+    if (!salon) {
       navigate('/salons')
     }
-  }, [orderData, navigate])
+  }, [salon, navigate])
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -66,12 +68,34 @@ function OrderCheckout() {
     }
   }, [isAuthenticated, navigate, location])
 
-  if (!orderData?.cart || !orderData?.salon) return null
+  useEffect(() => {
+    if (forcePickup && form.deliveryMode !== 'PICKUP') {
+      setForm((prev) => ({ ...prev, deliveryMode: 'PICKUP' }))
+    }
+  }, [forcePickup, form.deliveryMode])
 
-  const { cart, salon } = orderData
+  useEffect(() => {
+    if (cart.length === 0) {
+      navigate('/cart', { replace: true })
+    }
+  }, [cart.length, navigate])
+
+  if (!salon || cart.length === 0) return null
+
   const cartTotal = cart.reduce((sum, c) => sum + c.product.price * c.quantity, 0)
   const deliveryFee = form.deliveryMode === 'DELIVERY' ? baseDeliveryFee : 0
   const grandTotal = cartTotal + deliveryFee
+
+  const handleRemoveLine = (item) => {
+    const nextCart = removeItemFromCart({
+      productId: item.product.id,
+      selectedSize: item.selectedSize || null,
+      selectedColor: item.selectedColor || null,
+      quantity: item.quantity,
+    })
+
+    setCart(nextCart.items || [])
+  }
 
   const canProceed = () => {
     if (currentStep === 0) return cart.length > 0
@@ -288,7 +312,18 @@ ${variantNotes.join('\n')}` : '']
                         {c.selectedColor && <span className="text-xs text-primary-500">Couleur: {c.selectedColor}</span>}
                         <p className="text-sm text-primary-500">Qté: {c.quantity}</p>
                       </div>
-                      <p className="font-bold text-primary-900">{formatPrice(c.product.price * c.quantity)}</p>
+                      <div className="flex flex-col items-end gap-2">
+                        <p className="font-bold text-primary-900">{formatPrice(c.product.price * c.quantity)}</p>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveLine(c)}
+                          className="inline-flex items-center justify-center w-9 h-9 rounded-full border border-red-200 text-red-600 hover:bg-red-50 transition"
+                          aria-label={`Supprimer ${c.product.name} du panier`}
+                          title="Supprimer l'article"
+                        >
+                          <FiTrash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   )
                 })}
