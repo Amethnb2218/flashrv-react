@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import { FiUser, FiMail, FiPhone, FiLock, FiEye, FiEyeOff, FiArrowRight } from 'react-icons/fi'
 import toast from 'react-hot-toast'
 import { isValidEmail, isValidPhone } from '../../utils/helpers'
+import { getProRedirectPath, isProUser } from '../../utils/proOnboarding'
 
 function Register() {
   const [searchParams] = useSearchParams()
@@ -64,14 +65,8 @@ function Register() {
       // console.log('DEBUG inscription classique user.salonId:', user.salonId)
       // console.log('DEBUG inscription classique user.salon:', user.salon)
       toast.success('Compte créé avec succès !')
-      if (user.role === 'pro' || user.role === 'PRO') {
-        if (!user.salonId && !user.salon) {
-          navigate('/pro/onboarding')
-        } else if (user.status === 'PENDING') {
-          navigate('/pro/pending')
-        } else {
-          navigate('/pro/dashboard')
-        }
+      if (isProUser(user)) {
+        navigate(getProRedirectPath(user) || '/pro/onboarding')
       } else if (user.role === 'client' || user.role === 'CLIENT') {
         navigate('/')
       } else {
@@ -105,14 +100,8 @@ function Register() {
       toast.success(`Bienvenue, ${user.name || user.email} !`)
       // Redirection intelligente pour PRO Google : onboarding si pas de salon, sinon selon statut
       // ...existing code...
-      if (user.role === 'PRO') {
-        if (!user.salonId && !user.salon) {
-          navigate('/pro/onboarding')
-        } else if (user.status === 'PENDING') {
-          navigate('/pro/pending')
-        } else {
-          navigate('/pro/dashboard')
-        }
+      if (isProUser(user)) {
+        navigate(getProRedirectPath(user) || '/pro/onboarding')
       } else if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
         navigate('/admin')
       } else if (user.role === 'CLIENT' || user.role === 'client') {

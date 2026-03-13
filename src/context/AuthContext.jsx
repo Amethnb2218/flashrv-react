@@ -8,6 +8,7 @@ import {
   isAccountDeletionPending,
   readAccountDeletionRecord,
 } from '../utils/accountDeletion'
+import { clearProOnboardingDraft, isProUser } from '../utils/proOnboarding'
 
 const AuthContext = createContext()
 
@@ -65,6 +66,60 @@ export function AuthProvider({ children }) {
   const [state, dispatch] = useReducer(authReducer, initialState)
   const API_BASE = import.meta.env.VITE_API_URL || '/api'
 
+  const hydrateProAccountState = async (user, token) => {
+    const normalizedUser = normalizeUserShape(user)
+
+    if (!isProUser(normalizedUser) || !token) {
+      return normalizedUser
+    }
+
+    try {
+      const response = await fetch(`${API_BASE}/salons/me`, {
+        method: 'GET',
+        credentials: 'include',
+        cache: 'no-store',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (response.status === 404) {
+        return normalizeUserShape({
+          ...normalizedUser,
+          hasSalon: false,
+          salonId: null,
+          salon: null,
+        })
+      }
+
+      const data = await response.json().catch(() => null)
+      if (!response.ok) {
+        return normalizedUser
+      }
+
+      const salon = data?.data || null
+      if (!salon?.id) {
+        return normalizeUserShape({
+          ...normalizedUser,
+          hasSalon: false,
+          salonId: null,
+          salon: null,
+        })
+      }
+
+      clearProOnboardingDraft(normalizedUser)
+
+      return normalizeUserShape({
+        ...normalizedUser,
+        hasSalon: true,
+        salonId: salon.id,
+        salon,
+      })
+    } catch (_) {
+      return normalizedUser
+    }
+  }
+
   const restorePendingDeletionIfNeeded = (user) => {
     const normalizedUser = normalizeUserShape(user)
     const pendingDeletion = readAccountDeletionRecord(normalizedUser)
@@ -88,20 +143,28 @@ export function AuthProvider({ children }) {
 
   // Check for saved auth on mount et synchronise le cookie "token"
   useEffect(() => {
-    const savedUser = sessionStorage.getItem('flashrv_user')
-    const savedToken = sessionStorage.getItem('flashrv_token')
-    // Synchronise le token dans un cookie pour Express backend
-    if (savedToken) {
-      document.cookie = `token=${savedToken}; path=/`;
-    }
-    if (savedUser && savedToken) {
+    const restoreAuth = async () => {
+      const savedUser = sessionStorage.getItem('flashrv_user')
+      const savedToken = sessionStorage.getItem('flashrv_token')
+
+      if (savedToken) {
+        document.cookie = `token=${savedToken}; path=/`
+      }
+
+      if (!savedUser || !savedToken) {
+        dispatch({ type: 'SET_LOADING', payload: false })
+        return
+      }
+
       try {
-        const user = restorePendingDeletionIfNeeded(JSON.parse(savedUser))
+        const restoredUser = restorePendingDeletionIfNeeded(JSON.parse(savedUser))
+        const hydratedUser = await hydrateProAccountState(restoredUser, savedToken)
+
+        sessionStorage.setItem('flashrv_user', JSON.stringify(normalizeUserShape(hydratedUser)))
         dispatch({
           type: 'LOGIN',
-          payload: { user, token: savedToken }
+          payload: { user: hydratedUser, token: savedToken }
         })
-        // Subscribe to push notifications on restore
         subscribeToPush().catch(() => {})
       } catch (error) {
         console.error('Error parsing saved user:', error)
@@ -109,9 +172,9 @@ export function AuthProvider({ children }) {
         sessionStorage.removeItem('flashrv_token')
         dispatch({ type: 'SET_LOADING', payload: false })
       }
-    } else {
-      dispatch({ type: 'SET_LOADING', payload: false })
     }
+
+    restoreAuth()
   }, [])
 
   // Login via backend API (vrai login, pose le cookie httpOnly)
@@ -131,15 +194,16 @@ export function AuthProvider({ children }) {
       const token = data.data?.token || null;
       if (user && token) {
         const restoredUser = restorePendingDeletionIfNeeded(user);
-        sessionStorage.setItem('flashrv_user', JSON.stringify(normalizeUserShape(restoredUser)));
+        const hydratedUser = await hydrateProAccountState(restoredUser, token);
+        sessionStorage.setItem('flashrv_user', JSON.stringify(normalizeUserShape(hydratedUser)));
         sessionStorage.setItem('flashrv_token', token);
         document.cookie = `token=${token}; path=/`;
         dispatch({
           type: 'LOGIN',
-          payload: { user: restoredUser, token }
+          payload: { user: hydratedUser, token }
         });
         subscribeToPush().catch(() => {});
-        return restoredUser;
+        return hydratedUser;
       } else {
         throw new Error('Utilisateur ou token manquant');
       }
@@ -165,15 +229,16 @@ export function AuthProvider({ children }) {
       let token = data.data?.token || null;
       if (user && token) {
         const restoredUser = restorePendingDeletionIfNeeded(user);
-        sessionStorage.setItem('flashrv_user', JSON.stringify(normalizeUserShape(restoredUser)));
+        const hydratedUser = await hydrateProAccountState(restoredUser, token);
+        sessionStorage.setItem('flashrv_user', JSON.stringify(normalizeUserShape(hydratedUser)));
         sessionStorage.setItem('flashrv_token', token);
         document.cookie = `token=${token}; path=/; SameSite=Lax`;
         dispatch({
           type: 'LOGIN',
-          payload: { user: restoredUser, token }
+          payload: { user: hydratedUser, token }
         });
         subscribeToPush().catch(() => {});
-        return restoredUser;
+        return hydratedUser;
       } else {
         throw new Error('Utilisateur ou token Google manquant');
       }
@@ -198,16 +263,17 @@ export function AuthProvider({ children }) {
     const token = data.data?.token || null;
     if (user && token) {
       const restoredUser = restorePendingDeletionIfNeeded(user);
-      sessionStorage.setItem('flashrv_user', JSON.stringify(normalizeUserShape(restoredUser)));
+      const hydratedUser = await hydrateProAccountState(restoredUser, token);
+      sessionStorage.setItem('flashrv_user', JSON.stringify(normalizeUserShape(hydratedUser)));
       sessionStorage.setItem('flashrv_token', token);
       // Pose le cookie token sur le domaine courant, path /, SameSite=Lax
       document.cookie = `token=${token}; path=/; SameSite=Lax`;
       dispatch({
         type: 'LOGIN',
-        payload: { user: restoredUser, token }
+        payload: { user: hydratedUser, token }
       });
       subscribeToPush().catch(() => {});
-      return restoredUser;
+      return hydratedUser;
     } else {
       throw new Error('Utilisateur ou token manquant');
     }
@@ -251,15 +317,16 @@ export function AuthProvider({ children }) {
         throw new Error('Utilisateur ou token Google manquant');
       }
       const restoredUser = restorePendingDeletionIfNeeded(user);
-      sessionStorage.setItem('flashrv_user', JSON.stringify(normalizeUserShape(restoredUser)));
+      const hydratedUser = await hydrateProAccountState(restoredUser, token);
+      sessionStorage.setItem('flashrv_user', JSON.stringify(normalizeUserShape(hydratedUser)));
       sessionStorage.setItem('flashrv_token', token);
       document.cookie = `token=${token}; path=/; SameSite=Lax`;
       dispatch({
         type: 'LOGIN',
-        payload: { user: restoredUser, token },
+        payload: { user: hydratedUser, token },
       });
       subscribeToPush().catch(() => {});
-      return restoredUser;
+      return hydratedUser;
     } catch (error) {
       console.error('Google login error:', error);
       throw error;

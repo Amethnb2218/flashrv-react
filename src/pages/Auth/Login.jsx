@@ -5,6 +5,7 @@ import { GoogleLogin } from '@react-oauth/google'
 import { motion } from 'framer-motion'
 import { FiEye, FiEyeOff, FiArrowRight } from 'react-icons/fi'
 import toast from 'react-hot-toast'
+import { getProRedirectPath, isProUser } from '../../utils/proOnboarding'
 
 function Login() {
     // Ajout d'un état pour le type de compte Google
@@ -53,10 +54,8 @@ function Login() {
       const user = await login({ identifier: formData.identifier, password: formData.password })
       toast.success(`Bienvenue, ${user.name} !`)
       
-      if (user.role === 'PRO' && user.status === 'PENDING') {
-        navigate('/pro/pending')
-      } else if (user.role === 'PRO' || user.role === 'pro') {
-        navigate('/pro/dashboard')
+      if (isProUser(user)) {
+        navigate(getProRedirectPath(user) || '/pro/onboarding')
       } else if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
         navigate('/admin')
       } else {
@@ -77,10 +76,8 @@ function Login() {
       // Passe le type de compte sélectionné à loginWithGoogle
       const user = await loginWithGoogle(credentialResponse.credential, googleAccountType)
       toast.success(`Bienvenue, ${user.name || user.email} !`)
-      if (user.role === 'PRO' && user.status === 'PENDING') {
-        navigate('/pro/pending')
-      } else if (user.role === 'PRO') {
-        navigate('/pro/dashboard')
+      if (isProUser(user)) {
+        navigate(getProRedirectPath(user) || '/pro/onboarding')
       } else if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
         navigate('/admin')
       } else {

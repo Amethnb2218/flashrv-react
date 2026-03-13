@@ -20,6 +20,7 @@ import {
   readCart,
   subscribeCart,
 } from '../../utils/cartStore'
+import { getProRedirectPath, isProUser } from '../../utils/proOnboarding'
 
 const normalizeNotificationDateToken = (rawValue) => {
   const value = String(rawValue || '').trim()
@@ -120,9 +121,9 @@ function Navbar() {
   const getDashboardPath = useCallback(() => {
     if (!isAuthenticated) return '/login'
     if (user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') return '/admin'
-    if (user?.role === 'PRO') return '/pro/dashboard'
+    if (isProUser(user)) return getProRedirectPath(user) || '/pro/onboarding'
     return '/dashboard'
-  }, [isAuthenticated, user?.role])
+  }, [isAuthenticated, user])
 
   const openNotificationsPage = useCallback(() => {
     closeDrawer()
@@ -130,19 +131,24 @@ function Navbar() {
       navigate('/login')
       return
     }
-    if (user?.role === 'PRO') {
-      navigate('/pro/dashboard', {
-        state: {
-          dashboardTab: 'appointments',
-          focusNotifications: true,
-          source: 'mobile-notifications',
-          ts: Date.now(),
-        },
-      })
+    if (isProUser(user)) {
+      const proPath = getProRedirectPath(user) || '/pro/onboarding'
+      if (proPath === '/pro/dashboard') {
+        navigate('/pro/dashboard', {
+          state: {
+            dashboardTab: 'appointments',
+            focusNotifications: true,
+            source: 'mobile-notifications',
+            ts: Date.now(),
+          },
+        })
+        return
+      }
+      navigate(proPath)
       return
     }
     navigate(getDashboardPath())
-  }, [closeDrawer, getDashboardPath, isAuthenticated, navigate, user?.role])
+  }, [closeDrawer, getDashboardPath, isAuthenticated, navigate, user])
 
   const openCart = useCallback(() => {
     closeDrawer()
@@ -499,7 +505,7 @@ function Navbar() {
                         </div>
                         
                         <Link
-                          to={user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' ? '/admin' : user.role === 'PRO' ? '/pro/dashboard' : '/dashboard'}
+                          to={user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' ? '/admin' : isProUser(user) ? (getProRedirectPath(user) || '/pro/onboarding') : '/dashboard'}
                           onClick={() => setShowUserMenu(false)}
                           className="flex items-center space-x-2 px-4 py-2 text-primary-600 hover:bg-primary-50 hover:text-primary-900 transition-colors"
                         >
@@ -663,7 +669,7 @@ function Navbar() {
                       </div>
 
                       <Link
-                        to={user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' ? '/admin' : user.role === 'PRO' ? '/pro/dashboard' : '/dashboard'}
+                        to={user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' ? '/admin' : isProUser(user) ? (getProRedirectPath(user) || '/pro/onboarding') : '/dashboard'}
                         onClick={closeDrawer}
                         className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-primary-700 hover:bg-primary-50 transition-colors"
                       >

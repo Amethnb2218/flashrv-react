@@ -1,5 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { getProRedirectPath, hasProSalon } from '../../utils/proOnboarding'
 
 // Constantes pour les rôles et statuts
 const ROLES = {
@@ -54,12 +55,18 @@ function ProtectedRoute({
     return <Navigate to="/pro/pending" replace />
   }
 
+  const proRedirectPath = getProRedirectPath(user)
+
+  if (user?.role === ROLES.PRO && !hasProSalon(user) && location.pathname === '/pro/pending') {
+    return <Navigate to={proRedirectPath || '/pro/onboarding'} replace />
+  }
+
   // Vérifier si un PRO est en attente de validation
   if (user?.role === ROLES.PRO && user?.status === STATUS.PENDING) {
     // Autoriser seulement certaines pages pour les PRO en attente
     const allowedPaths = ['/pro/pending', '/pro/onboarding', '/profile', '/logout']
     if (!allowedPaths.some(path => location.pathname.startsWith(path))) {
-      return <Navigate to="/pro/pending" replace />
+      return <Navigate to={proRedirectPath || '/pro/pending'} replace />
     }
   }
 
@@ -79,7 +86,7 @@ function ProtectedRoute({
   // Vérifier si un PRO approuvé est requis
   if (requireApproved && user?.role === ROLES.PRO) {
     if (user?.status !== STATUS.APPROVED) {
-      return <Navigate to="/pro/pending" replace />
+      return <Navigate to={proRedirectPath || '/pro/pending'} replace />
     }
   }
 
