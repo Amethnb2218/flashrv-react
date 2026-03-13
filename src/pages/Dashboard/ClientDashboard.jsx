@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   FiCalendar, FiClock, FiMapPin, FiStar, FiMoreVertical, 
-  FiX, FiRefreshCw, FiHeart, FiSettings, FiChevronRight, FiChevronDown,
+  FiX, FiRefreshCw, FiHeart, FiSettings, FiChevronRight, FiChevronDown, FiTrash2,
   FiGift, FiAward, FiPercent, FiMessageCircle, FiShoppingBag, FiPackage
 } from 'react-icons/fi'
 import { useAuth } from '../../context/AuthContext'
@@ -16,6 +16,7 @@ import toast from 'react-hot-toast'
 import { pushSiteNotification } from '../../utils/siteNotifications'
 
 const CANCELLED_BOOKINGS_STORAGE_KEY = 'flashrv_cancelled_bookings'
+const HIDDEN_HISTORY_BOOKINGS_STORAGE_KEY = 'flashrv_hidden_history_bookings'
 
 function getCancelledBookingsStorageKey(user) {
   const scope = user?.id || user?.email || 'guest'
@@ -37,6 +38,34 @@ function writeCancelledBookings(user, bookings) {
   if (typeof window === 'undefined') return
   try {
     localStorage.setItem(getCancelledBookingsStorageKey(user), JSON.stringify(bookings))
+  } catch {
+    // Ignore storage write failures and keep the in-memory state.
+  }
+}
+
+function getHiddenHistoryBookingsStorageKey(user) {
+  const scope = user?.id || user?.email || 'guest'
+  return `${HIDDEN_HISTORY_BOOKINGS_STORAGE_KEY}:${scope}`
+}
+
+function readHiddenHistoryBookingIds(user) {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = localStorage.getItem(getHiddenHistoryBookingsStorageKey(user))
+    const parsed = raw ? JSON.parse(raw) : []
+    return Array.isArray(parsed) ? parsed.map((id) => String(id)) : []
+  } catch {
+    return []
+  }
+}
+
+function writeHiddenHistoryBookingIds(user, bookingIds) {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem(
+      getHiddenHistoryBookingsStorageKey(user),
+      JSON.stringify(Array.from(new Set((bookingIds || []).map((id) => String(id)))))
+    )
   } catch {
     // Ignore storage write failures and keep the in-memory state.
   }
@@ -88,6 +117,21 @@ function ClientDashboard() {
     writeCancelledBookings(user, next)
   }
 
+  const hideBookingFromHistory = (bookingId) => {
+    if (!bookingId) return
+    const hiddenIds = readHiddenHistoryBookingIds(user)
+    writeHiddenHistoryBookingIds(user, [...hiddenIds, bookingId])
+  }
+
+  const removeCancelledBookingFromCache = (bookingId) => {
+    if (!bookingId) return
+    const cached = readCancelledBookings(user)
+    writeCancelledBookings(
+      user,
+      cached.filter((entry) => String(entry?.id) !== String(bookingId))
+    )
+  }
+
   const getSalonImage = (salon) => {
     if (!salon) return ''
     if (salon.image) return resolveMediaUrl(salon.image)
@@ -120,11 +164,23 @@ function ClientDashboard() {
           services: appt.service ? [appt.service] : [],
         }))
         const cachedCancelledBookings = readCancelledBookings(user)
+        const hiddenHistoryBookingIds = new Set(readHiddenHistoryBookingIds(user))
         if (mounted) {
-          setBookings(mergeBookingsWithCancelledCache(mapped, cachedCancelledBookings))
+          setBookings(
+            mergeBookingsWithCancelledCache(mapped, cachedCancelledBookings).filter(
+              (booking) => !hiddenHistoryBookingIds.has(String(booking?.id))
+            )
+          )
         }
       } catch (e) {
-        if (mounted) setBookings(readCancelledBookings(user))
+        if (mounted) {
+          const hiddenHistoryBookingIds = new Set(readHiddenHistoryBookingIds(user))
+          setBookings(
+            readCancelledBookings(user).filter(
+              (booking) => !hiddenHistoryBookingIds.has(String(booking?.id))
+            )
+          )
+        }
       } finally {
         if (mounted) setLoading(false)
       }
@@ -252,6 +308,22 @@ function ClientDashboard() {
     }
   }
 
+  const handleDeleteHistoryBooking = (booking) => {
+    if (!booking?.id) return
+
+    hideBookingFromHistory(booking.id)
+    removeCancelledBookingFromCache(booking.id)
+    setBookings((prev) => prev.filter((entry) => entry.id !== booking.id))
+    setExpandedBookingId((prev) => (prev === booking.id ? null : prev))
+    if (selectedBooking?.id === booking.id) {
+      setSelectedBooking(null)
+    }
+    if (chatBooking?.id === booking.id) {
+      setChatBooking(null)
+    }
+    toast.success('Réservation retirée de votre historique')
+  }
+
   const openFloatingChat = () => {
     const preferred = upcomingBookings[0] || bookings[0] || pastBookings[0]
     if (!preferred) {
@@ -295,7 +367,7 @@ function ClientDashboard() {
     )
   }
 
-  const BookingCard = ({ booking }) => {
+  const BookingCard = ({ booking, isHistoryBooking = false }) => {
     const isExpanded = expandedBookingId === booking.id
     const canAct = ['PENDING', 'PENDING_PAYMENT', 'PENDING_ASSIGNMENT', 'CONFIRMED', 'CONFIRMED_ON_SITE', 'PAID'].includes(String(booking.status || '').toUpperCase()) && new Date(booking.date) >= new Date()
     const isCompleted = String(booking.status || '').toUpperCase() === 'COMPLETED'
@@ -388,6 +460,14 @@ function ClientDashboard() {
                   {isCompleted && (
                     <button className="px-3 py-1.5 bg-yellow-50 text-yellow-700 rounded-lg hover:bg-gold-100 transition-colors text-xs font-medium">
                       <FiStar className="inline w-3 h-3 mr-1" /> Avis
+                    </button>
+                  )}
+                  {isHistoryBooking && (
+                    <button
+                      onClick={() => handleDeleteHistoryBooking(booking)}
+                      className="px-3 py-1.5 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-xs font-medium"
+                    >
+                      <FiTrash2 className="inline w-3 h-3 mr-1" /> Supprimer
                     </button>
                   )}
                 </div>
@@ -677,7 +757,7 @@ function ClientDashboard() {
               pastBookings.length > 0 ? (
                 <div className="space-y-2">
                   {pastBookings.slice(0, visibleBookings).map(booking => (
-                    <BookingCard key={booking.id} booking={booking} />
+                    <BookingCard key={booking.id} booking={booking} isHistoryBooking />
                   ))}
                   {pastBookings.length > visibleBookings && (
                     <button type="button" onClick={() => setVisibleBookings(v => v + 10)} className="w-full mt-3 py-2.5 rounded-xl border border-primary-200 text-sm font-medium text-primary-600 hover:bg-primary-50 transition">
