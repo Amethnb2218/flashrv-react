@@ -5,6 +5,7 @@ const { createPaydunyaInvoice, confirmPaydunyaInvoice } = require('../services/p
 // const { initiateWavePayment, checkWavePaymentStatus } = require('../services/paymentService'); // TODO: enable when Wave API key is available
 const { pushNotification } = require('../realtime/hub');
 const { sendBookingConfirmationEmail, sendOrderConfirmationEmail } = require('../services/emailService');
+const { createBookingNotification } = require('../services/bookingNotificationService');
 
 const router = express.Router();
 
@@ -706,12 +707,12 @@ router.post('/confirm-on-site', authenticate, async (req, res, next) => {
 
       if (appointment?.clientId === req.user.id) {
         try {
-          const notification = await prisma.notification.create({
-            data: {
-              userId: req.user.id,
-              type: 'booking',
-              message: `Reservation confirmee chez ${appointment.salon?.name || 'le salon'} le ${new Date(appointment.date).toLocaleDateString('fr-FR')} a ${appointment.startTime}. Paiement au salon.`,
-            },
+          const notification = await createBookingNotification({
+            userId: req.user.id,
+            salonName: appointment.salon?.name || 'le salon',
+            date: appointment.date,
+            startTime: appointment.startTime,
+            message: `Reservation confirmee chez ${appointment.salon?.name || 'le salon'} le ${new Date(appointment.date).toLocaleDateString('fr-FR')} a ${appointment.startTime}. Paiement au salon.`,
           });
           pushNotification(notification.userId, notification);
         } catch (error) {

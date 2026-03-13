@@ -5,6 +5,7 @@ const { authenticate, authorize } = require('../middleware/auth');
 const { pushNotification, pushChatMessage } = require('../realtime/hub');
 const { sendBookingConfirmationEmail } = require('../services/emailService');
 const { sendPushToUser } = require('../services/pushService');
+const { createBookingNotification } = require('../services/bookingNotificationService');
 const { uploadVoice } = require('../config/cloudinary');
 
 const canAccessAppointment = (appointment, user) => {
@@ -314,14 +315,14 @@ router.post('/', authenticate, async (req, res, next) => {
     // Store client confirmation notification for in-app bell
     if (shouldCreateClientBookingNotification) {
       try {
-        const notification = await prisma.notification.create({
-          data: {
-            userId: appointment.clientId,
-            type: 'booking',
-            message: isPaydunyaFlow
-              ? `Reservation creee chez ${appointment.salon?.name || 'le salon'} le ${new Date(appointmentDate).toLocaleDateString('fr-FR')} a ${startTime}. Paiement en attente.`
-              : `Reservation enregistree chez ${appointment.salon?.name || 'le salon'} le ${new Date(appointmentDate).toLocaleDateString('fr-FR')} a ${startTime}.`,
-          },
+        const notification = await createBookingNotification({
+          userId: appointment.clientId,
+          salonName: appointment.salon?.name || 'le salon',
+          date: appointmentDate,
+          startTime,
+          message: isPaydunyaFlow
+            ? `Reservation creee chez ${appointment.salon?.name || 'le salon'} le ${new Date(appointmentDate).toLocaleDateString('fr-FR')} a ${startTime}. Paiement en attente.`
+            : `Reservation enregistree chez ${appointment.salon?.name || 'le salon'} le ${new Date(appointmentDate).toLocaleDateString('fr-FR')} a ${startTime}.`,
         });
         pushNotification(notification.userId, notification);
       } catch (e) {
