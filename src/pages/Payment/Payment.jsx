@@ -8,6 +8,7 @@ import LoadingSpinner from '../../components/UI/LoadingSpinner'
 import apiFetch from '../../api/client'
 import { resolveMediaUrl } from '../../utils/media'
 import { buildPaydunyaPaymentPayload } from '../../utils/payments'
+import { calculateBookingDeposit } from '../../utils/bookingDeposit'
 
 const PAYMENT_METHODS = [
   {
@@ -104,17 +105,26 @@ function Payment() {
     return null
   }
 
-  const { depositPercentage, depositAmount, remainingAmount } = useMemo(() => {
-    const pct = Number(bookingState.salon?.depositPercentage || 25)
-    const total = Number(bookingState.totalPrice || 0)
-    const deposit = Math.round((total * pct) / 100)
+  const { depositAmount, remainingAmount, uniformPercentage, usesMixedPercentages } = useMemo(
+    () =>
+      calculateBookingDeposit({
+        services: bookingState.services,
+        salon: bookingState.salon,
+        totalPrice: bookingState.totalPrice,
+      }),
+    [bookingState.services, bookingState.salon, bookingState.totalPrice]
+  )
+  const hasDeposit = depositAmount > 0
+  const availablePaymentMethods = useMemo(
+    () => PAYMENT_METHODS.filter((method) => hasDeposit || method.id !== 'paydunya'),
+    [hasDeposit]
+  )
 
-    return {
-      depositPercentage: pct,
-      depositAmount: deposit,
-      remainingAmount: Math.max(total - deposit, 0),
+  useEffect(() => {
+    if (!hasDeposit && selectedMethod === 'paydunya') {
+      setSelectedMethod('pay_on_site')
     }
-  }, [bookingState.salon?.depositPercentage, bookingState.totalPrice])
+  }, [hasDeposit, selectedMethod])
 
   const buildAppointmentNotes = () => {
     const baseNotes = bookingState.notes?.trim()
@@ -342,7 +352,7 @@ function Payment() {
               <h2 className="text-xl font-bold text-primary-900 mb-6">Mode de paiement</h2>
 
               <div className="space-y-3">
-                {PAYMENT_METHODS.map((method) => (
+                {availablePaymentMethods.map((method) => (
                   <motion.button
                     key={method.id}
                     whileHover={{ scale: 1.02 }}
@@ -453,11 +463,13 @@ function Payment() {
                       <span className="font-semibold text-primary-900">{bookingState.totalPrice.toLocaleString()} FCFA</span>
                     </div>
 
-                    {selectedMethod && selectedMethod !== 'pay_on_site' ? (
+                    {hasDeposit && selectedMethod && selectedMethod !== 'pay_on_site' ? (
                       <div className="rounded-2xl bg-gradient-to-br from-gold-50 to-orange-50 border border-gold-100 p-4">
                         <div className="flex justify-between items-start gap-3 mb-3">
                           <div>
-                            <p className="text-sm font-semibold text-primary-900">Acompte a payer ({depositPercentage}%)</p>
+                            <p className="text-sm font-semibold text-primary-900">
+                              {`Acompte a payer${uniformPercentage !== null ? ` (${uniformPercentage}%)` : usesMixedPercentages ? ' (selon services)' : ''}`}
+                            </p>
                             <p className="text-xs text-primary-500 mt-1">Paiement en ligne pour confirmer votre reservation</p>
                           </div>
                           <span className="text-2xl font-black text-gold-700 whitespace-nowrap">
@@ -470,9 +482,19 @@ function Payment() {
                         </div>
                       </div>
                     ) : (
-                      <div className="rounded-2xl bg-primary-50 border border-primary-100 p-4 flex justify-between items-center gap-4">
-                        <span className="text-lg font-bold text-primary-900">Total</span>
-                        <span className="text-2xl font-black text-primary-900">{bookingState.totalPrice.toLocaleString()} FCFA</span>
+                      <div className="rounded-2xl bg-primary-50 border border-primary-100 p-4 space-y-3">
+                        <div className="flex justify-between items-center gap-4">
+                          <span className="text-lg font-bold text-primary-900">{hasDeposit ? 'Total' : 'Aucun acompte requis'}</span>
+                          <span className="text-2xl font-black text-primary-900">
+                            {(hasDeposit ? bookingState.totalPrice : remainingAmount).toLocaleString()} FCFA
+                          </span>
+                        </div>
+                        {!hasDeposit && (
+                          <div className="flex justify-between items-center text-sm text-primary-600 pt-3 border-t border-primary-100">
+                            <span>Total a payer au salon</span>
+                            <span className="font-semibold text-primary-900">{remainingAmount.toLocaleString()} FCFA</span>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

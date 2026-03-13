@@ -2,6 +2,7 @@ import { useBooking } from '../../context/BookingContext'
 import { formatPrice, formatDuration, formatDate } from '../../utils/helpers'
 import { FiCalendar, FiClock, FiInfo, FiMapPin } from 'react-icons/fi'
 import { resolveMediaUrl } from '../../utils/media'
+import { calculateBookingDeposit } from '../../utils/bookingDeposit'
 
 function BookingSummary({ salon }) {
   const { state } = useBooking()
@@ -21,9 +22,11 @@ function BookingSummary({ salon }) {
   }
   const salonImage = resolveSalonImage()
 
-  const depositPercentage = salon?.depositPercentage || 25
-  const depositAmount = Math.round(totalPrice * depositPercentage / 100)
-  const remainingAmount = totalPrice - depositAmount
+  const { depositAmount, remainingAmount, uniformPercentage, usesMixedPercentages } = calculateBookingDeposit({
+    services,
+    salon,
+    totalPrice,
+  })
 
   return (
     <div className="box-border w-full min-w-0 max-w-full overflow-hidden bg-white rounded-2xl shadow-lg p-3 sm:p-6 lg:sticky lg:top-24">
@@ -105,11 +108,15 @@ function BookingSummary({ salon }) {
             <div className="h-px bg-primary-200" />
             <div className="bg-primary-50 rounded-xl p-4">
               <div className="flex justify-between items-center mb-2 gap-2">
-                <span className="text-sm font-medium text-dark-900 min-w-0">Acompte à payer ({depositPercentage}%)</span>
+                <span className="text-sm font-medium text-dark-900 min-w-0">
+                  {depositAmount > 0
+                    ? `Acompte a payer${uniformPercentage !== null ? ` (${uniformPercentage}%)` : usesMixedPercentages ? ' (selon services)' : ''}`
+                    : 'Aucun acompte requis'}
+                </span>
                 <span className="text-base sm:text-lg font-bold text-primary-600 flex-shrink-0">{formatPrice(depositAmount)}</span>
               </div>
               <div className="flex justify-between items-center text-sm text-primary-600 gap-2">
-                <span className="min-w-0">Reste à payer au salon</span>
+                <span className="min-w-0">{depositAmount > 0 ? 'Reste a payer au salon' : 'Total a payer au salon'}</span>
                 <span className="flex-shrink-0">{formatPrice(remainingAmount)}</span>
               </div>
             </div>

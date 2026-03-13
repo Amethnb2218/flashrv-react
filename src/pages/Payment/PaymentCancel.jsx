@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { FiAlertCircle, FiRefreshCw } from 'react-icons/fi'
 import apiFetch, { isRetryableHttpError } from '../../api/client'
 import { buildPaydunyaPaymentPayload } from '../../utils/payments'
+import { calculateBookingDeposit } from '../../utils/bookingDeposit'
 
 function PaymentCancel() {
   const location = useLocation()
@@ -16,6 +17,15 @@ function PaymentCancel() {
     return params.get('appointmentId')
   }, [location.search])
   const errorReason = String(location.state?.reason || '').trim()
+  const { depositAmount, hasDeposit } = useMemo(
+    () =>
+      calculateBookingDeposit({
+        services: appointment?.service ? [appointment.service] : [],
+        salon: appointment?.salon || null,
+        totalPrice: appointment?.totalPrice || appointment?.service?.price || 0,
+      }),
+    [appointment]
+  )
 
   const wait = (delayMs) => new Promise((resolve) => setTimeout(resolve, delayMs))
 
@@ -73,9 +83,9 @@ function PaymentCancel() {
     setError('')
 
     try {
-      const depositPct = Number(appointment?.salon?.depositPercentage || 25)
-      const total = Number(appointment?.totalPrice || appointment?.service?.price || 0)
-      const depositAmount = Math.max(1, Math.round((total * depositPct) / 100))
+      if (!hasDeposit) {
+        throw new Error("Aucun acompte n'est requis pour cette reservation.")
+      }
       const customerName =
         appointment?.client?.name ||
         [appointment?.clientFirstName, appointment?.clientLastName].filter(Boolean).join(' ') ||
@@ -144,6 +154,9 @@ function PaymentCancel() {
             <p className="text-primary-600 mt-1">
               Montant: {Number(appointment.totalPrice || appointment.service?.price || 0).toLocaleString('fr-FR')} FCFA
             </p>
+            <p className="text-primary-600 mt-1">
+              Acompte: {depositAmount.toLocaleString('fr-FR')} FCFA
+            </p>
           </div>
         )}
 
@@ -162,11 +175,11 @@ function PaymentCancel() {
         <div className="grid sm:grid-cols-2 gap-3">
           <button
             onClick={handleRetry}
-            disabled={loading || !appointment}
+            disabled={loading || !appointment || !hasDeposit}
             className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary-600 text-white font-semibold hover:bg-primary-700 transition disabled:opacity-60"
           >
             <FiRefreshCw className="w-4 h-4" />
-            {loading ? 'Redirection...' : 'Reessayer paiement'}
+            {loading ? 'Redirection...' : hasDeposit ? 'Reessayer paiement' : 'Aucun paiement requis'}
           </button>
           <Link
             to="/dashboard"
