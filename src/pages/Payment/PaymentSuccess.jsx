@@ -5,8 +5,6 @@ import { FiAlertCircle, FiCalendar, FiCheck, FiClock, FiMapPin, FiRefreshCw, FiU
 import confetti from 'canvas-confetti'
 import apiFetch from '../../api/client'
 import { resolveMediaUrl } from '../../utils/media'
-import { pushSiteNotification } from '../../utils/siteNotifications'
-import { useAuth } from '../../context/AuthContext'
 
 const APPOINTMENT_STATUS_LABELS = {
   PENDING_PAYMENT: 'En attente de paiement',
@@ -35,7 +33,6 @@ const formatDate = (dateString) => {
 
 function PaymentSuccess() {
   const location = useLocation()
-  const { user } = useAuth()
 
   const [appointment, setAppointment] = useState(null)
   const [payment, setPayment] = useState(null)
@@ -111,21 +108,6 @@ function PaymentSuccess() {
 
     loadData()
   }, [appointmentId])
-
-  useEffect(() => {
-    if (!appointmentId || !isPaid) return
-
-    const notifKey = `flashrv_paid_notif_${appointmentId}`
-    if (sessionStorage.getItem(notifKey) === '1') return
-
-    pushSiteNotification({
-      userId: user?.id || user?.email,
-      type: 'payment_success',
-      message: `Paiement confirme pour la reservation ${appointmentId}.`,
-      meta: { appointmentId },
-    })
-    sessionStorage.setItem(notifKey, '1')
-  }, [appointmentId, isPaid, user?.email, user?.id])
 
   if (isLoading) {
     return (

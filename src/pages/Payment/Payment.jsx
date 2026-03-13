@@ -6,7 +6,6 @@ import { useBooking } from '../../context/BookingContext'
 import { useAuth } from '../../context/AuthContext'
 import LoadingSpinner from '../../components/UI/LoadingSpinner'
 import apiFetch from '../../api/client'
-import { pushSiteNotification } from '../../utils/siteNotifications'
 import { resolveMediaUrl } from '../../utils/media'
 import { buildPaydunyaPaymentPayload } from '../../utils/payments'
 
@@ -194,13 +193,6 @@ function Payment() {
 
   const handlePaymentSuccess = (paymentData, appointmentIdOverride) => {
     const appointmentId = appointmentIdOverride || bookingState.bookingId
-
-    pushSiteNotification({
-      userId: user?.id || user?.email,
-      type: 'booking_confirmation',
-      message: `Reservation confirmee chez ${bookingState.salon?.name || 'votre salon'} le ${bookingState.date || ''} a ${bookingState.time || ''}.`,
-      meta: { appointmentId, salonId: bookingState.salon?.id },
-    })
 
     bookingDispatch({ type: 'RESET' })
     sessionStorage.removeItem('flashrv_booking')

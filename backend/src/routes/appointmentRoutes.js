@@ -306,8 +306,13 @@ router.post('/', authenticate, async (req, res, next) => {
       }
     }
 
+    const shouldCreateClientBookingNotification =
+      !shouldSkipNotifications &&
+      appointment?.clientId &&
+      normalizedPaymentMethod !== 'PAY_ON_SITE';
+
     // Store client confirmation notification for in-app bell
-    if (!shouldSkipNotifications && appointment?.clientId) {
+    if (shouldCreateClientBookingNotification) {
       try {
         const notification = await prisma.notification.create({
           data: {

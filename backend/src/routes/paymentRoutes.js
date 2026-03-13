@@ -673,6 +673,14 @@ router.post('/confirm-on-site', authenticate, async (req, res, next) => {
   try {
     const { bookingId, amount } = req.body;
     const reference = generateReference();
+    const appointment = bookingId
+      ? await prisma.appointment.findUnique({
+          where: { id: bookingId },
+          include: {
+            salon: { select: { name: true } },
+          },
+        })
+      : null;
 
     const payment = await prisma.payment.create({
       data: {
@@ -695,6 +703,21 @@ router.post('/confirm-on-site', authenticate, async (req, res, next) => {
         where: { id: bookingId },
         data: { status: 'CONFIRMED_ON_SITE' },
       }).catch(() => {});
+
+      if (appointment?.clientId === req.user.id) {
+        try {
+          const notification = await prisma.notification.create({
+            data: {
+              userId: req.user.id,
+              type: 'booking',
+              message: `Reservation confirmee chez ${appointment.salon?.name || 'le salon'} le ${new Date(appointment.date).toLocaleDateString('fr-FR')} a ${appointment.startTime}. Paiement au salon.`,
+            },
+          });
+          pushNotification(notification.userId, notification);
+        } catch (error) {
+          console.error('On-site booking notification error:', error.message);
+        }
+      }
     }
 
     res.status(200).json({
