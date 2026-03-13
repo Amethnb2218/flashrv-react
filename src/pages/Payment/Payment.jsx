@@ -176,6 +176,10 @@ function Payment() {
       payload.sendConfirmation = false
     }
 
+    if (paymentMethod === 'pay_on_site') {
+      payload.paymentMethod = 'PAY_ON_SITE'
+    }
+
     if (bookingState.coiffeur?.id) {
       payload.coiffeurId = bookingState.coiffeur.id
     }

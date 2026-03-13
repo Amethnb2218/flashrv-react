@@ -21,6 +21,42 @@ import {
   subscribeCart,
 } from '../../utils/cartStore'
 
+const normalizeNotificationDateToken = (rawValue) => {
+  const value = String(rawValue || '').trim()
+  if (!value) return ''
+
+  const isoMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  if (isoMatch) return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`
+
+  const frMatch = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
+  if (frMatch) return `${frMatch[3]}-${frMatch[2]}-${frMatch[1]}`
+
+  return value.toLowerCase()
+}
+
+const getNotificationSemanticKey = (notification) => {
+  const message = String(notification?.message || '')
+  const normalized = message.toLowerCase()
+  const bookingMatch = normalized.match(/reservation\s+(?:confirmee|enregistree)\s+chez\s+(.+?)\s+le\s+(.+?)\s+a\s+(\d{2}:\d{2})/)
+
+  if (bookingMatch) {
+    const salon = bookingMatch[1].trim()
+    const date = normalizeNotificationDateToken(bookingMatch[2])
+    const time = bookingMatch[3]
+    return `booking:${salon}:${date}:${time}`
+  }
+
+  return `raw:${normalized}`
+}
+
+const getNotificationPriority = (notification) => {
+  const message = String(notification?.message || '').toLowerCase()
+  if (message.includes('paiement au salon')) return 3
+  if (message.includes('reservation confirmee')) return 2
+  if (message.includes('reservation enregistree')) return 1
+  return 0
+}
+
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
@@ -162,7 +198,27 @@ function Navbar() {
       const dedup = new Map()
       merged.forEach((n) => {
         const id = String(n.id || `${n.message}-${n.createdAt}`)
-        if (!dedup.has(id)) dedup.set(id, { ...n, id })
+        const normalizedNotification = { ...n, id }
+        const semanticKey = getNotificationSemanticKey(normalizedNotification)
+        const current = dedup.get(semanticKey)
+        if (!current) {
+          dedup.set(semanticKey, normalizedNotification)
+          return
+        }
+
+        const currentPriority = getNotificationPriority(current)
+        const nextPriority = getNotificationPriority(normalizedNotification)
+        const shouldReplace =
+          nextPriority > currentPriority ||
+          (
+            nextPriority === currentPriority &&
+            String(current.id).startsWith('local-') &&
+            !String(normalizedNotification.id).startsWith('local-')
+          )
+
+        if (shouldReplace) {
+          dedup.set(semanticKey, normalizedNotification)
+        }
       })
       setNotifications(
         Array.from(dedup.values())
