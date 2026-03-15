@@ -2251,6 +2251,7 @@ const filteredAppointments = useMemo(() => {
 const orderStatusOptions = [
   { value: "PENDING", label: "En attente", tone: "amber" },
   { value: "PENDING_PAYMENT", label: "Paiement en attente", tone: "blue" },
+  { value: "DISPUTED", label: "Litige paiement", tone: "red" },
   { value: "CONFIRMED", label: "Confirmee", tone: "blue" },
   { value: "PREPARING", label: "En preparation", tone: "purple" },
   { value: "READY", label: "Prete", tone: "green" },
@@ -2607,7 +2608,7 @@ active
                 </div>
               </div>
               <Badge tone={statusOpt.tone}>{statusOpt.label}</Badge>
-              {statusKey !== "DELIVERED" && statusKey !== "CANCELLED" && nextAction && (
+              {statusKey !== "DELIVERED" && statusKey !== "CANCELLED" && statusKey !== "DISPUTED" && nextAction && (
                 <Button variant="primary" className="!px-2.5 !py-1.5 !text-xs hidden sm:flex" onClick={(e) => { e.stopPropagation(); handleOrderStatus(order.id, nextAction.next); }}>
                   <FiCheck className="mr-1 w-3 h-3" /> {nextAction.label}
                 </Button>
@@ -2740,7 +2741,7 @@ active
                     )}
 
                     {/* Actions */}
-                    {statusKey !== "DELIVERED" && statusKey !== "CANCELLED" && (
+                    {statusKey !== "DELIVERED" && statusKey !== "CANCELLED" && statusKey !== "DISPUTED" && (
                       <div className="flex flex-wrap gap-2 pt-1">
                         {nextAction && (
                           <Button variant="primary" className="px-3 py-1.5 text-sm" onClick={() => handleOrderStatus(order.id, nextAction.next)}>

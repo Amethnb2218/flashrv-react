@@ -3,8 +3,17 @@ const express = require('express');
 const prisma = require('../lib/prisma');
 const { authenticate, requireAdmin, requireSuperAdmin, ROLES, STATUS } = require('../middleware/auth');
 const { sendProApprovedEmail, sendAdminPromotionEmail } = require('../services/emailService');
+const { pushNotification } = require('../realtime/hub');
 
 const router = express.Router();
+const DIRECT_MOBILE_METHODS = new Set(['ORANGE_MONEY', 'WAVE', 'FREE_MONEY']);
+
+const cleanString = (value, max = 240) => {
+  if (value == null) return null;
+  const normalized = String(value).trim();
+  if (!normalized) return null;
+  return normalized.slice(0, max);
+};
 
 // ============================================
 // SUPER_ADMIN ROUTES - Restriction PRO/ADMIN
@@ -220,6 +229,237 @@ router.get('/feedback', authenticate, requireAdmin, async (req, res) => {
     res.status(500).json({
       status: 'error',
       message: 'Failed to fetch feedback',
+    });
+  }
+});
+
+/**
+ * GET /admin/disputes
+ * List payment disputes for direct mobile payments (manual review mode)
+ * Query: scope=open|resolved|all (default: open)
+ * Access: ADMIN, SUPER_ADMIN
+ */
+router.get('/disputes', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const scope = String(req.query?.scope || 'open').toLowerCase();
+    const take = Math.min(parseInt(req.query?.limit || '100', 10) || 100, 300);
+
+    const orders = await prisma.order.findMany({
+      where: { payment: { isNot: null } },
+      include: {
+        salon: { select: { id: true, name: true, ownerId: true } },
+        client: { select: { id: true, name: true, email: true, phoneNumber: true } },
+        items: { include: { product: { select: { id: true, name: true } } } },
+        payment: true,
+      },
+      orderBy: { updatedAt: 'desc' },
+      take,
+    });
+
+    const directMobileOrders = orders.filter((order) => {
+      const methodKey = String(
+        order.payment?.manualMethod || order.payment?.method || order.paymentMethod || ''
+      ).toUpperCase();
+      return DIRECT_MOBILE_METHODS.has(methodKey);
+    });
+
+    const openDisputes = directMobileOrders.filter((order) => {
+      const orderStatus = String(order.status || '').toUpperCase();
+      const proofStatus = String(order.payment?.proofStatus || '').toUpperCase();
+      return orderStatus === 'DISPUTED' || (proofStatus === 'REJECTED' && ['PENDING_PAYMENT', 'DISPUTED'].includes(orderStatus));
+    });
+
+    const resolvedDisputes = directMobileOrders.filter((order) => {
+      const orderStatus = String(order.status || '').toUpperCase();
+      const proofStatus = String(order.payment?.proofStatus || '').toUpperCase();
+      return ['CONFIRMED', 'CANCELLED', 'DELIVERED'].includes(orderStatus) && ['APPROVED', 'REJECTED'].includes(proofStatus);
+    });
+
+    const disputes =
+      scope === 'resolved'
+        ? resolvedDisputes
+        : scope === 'all'
+          ? directMobileOrders
+          : openDisputes;
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        disputes,
+        count: disputes.length,
+        counts: {
+          open: openDisputes.length,
+          resolved: resolvedDisputes.length,
+          total: directMobileOrders.length,
+        },
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching disputes:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Impossible de recuperer les litiges.',
+    });
+  }
+});
+
+/**
+ * PATCH /admin/disputes/:id/resolve
+ * Admin final decision for a disputed direct payment
+ * Body: { decision: APPROVE|REJECT, reason?: string }
+ * Access: ADMIN, SUPER_ADMIN
+ */
+router.patch('/disputes/:id/resolve', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const decision = String(cleanString(req.body?.decision || req.body?.action || req.body?.status, 20) || '').toUpperCase();
+    const reason = cleanString(req.body?.reason || req.body?.rejectionReason, 260);
+
+    if (!['APPROVE', 'REJECT'].includes(decision)) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Decision invalide. Utilisez APPROVE ou REJECT.',
+      });
+    }
+    if (decision === 'REJECT' && !reason) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Le motif de rejet est obligatoire.',
+      });
+    }
+
+    const order = await prisma.order.findUnique({
+      where: { id },
+      include: {
+        payment: true,
+        salon: { select: { id: true, name: true, ownerId: true } },
+        client: { select: { id: true, name: true, email: true } },
+        items: { include: { product: { select: { id: true, name: true } } } },
+      },
+    });
+    if (!order) {
+      return res.status(404).json({ status: 'error', message: 'Commande introuvable.' });
+    }
+    if (!order.payment) {
+      return res.status(400).json({ status: 'error', message: 'Aucune donnee paiement pour cette commande.' });
+    }
+
+    const paymentMethodKey = String(
+      order.payment?.manualMethod || order.payment?.method || order.paymentMethod || ''
+    ).toUpperCase();
+    if (!DIRECT_MOBILE_METHODS.has(paymentMethodKey)) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Cette commande n utilise pas un paiement direct mobile.',
+      });
+    }
+
+    const now = new Date();
+    const currentOrderStatus = String(order.status || '').toUpperCase();
+    const approve = decision === 'APPROVE';
+    let updatedOrder = null;
+    let updatedPayment = null;
+
+    await prisma.$transaction(async (tx) => {
+      updatedPayment = await tx.payment.update({
+        where: { id: order.payment.id },
+        data: approve
+          ? {
+              status: 'COMPLETED',
+              proofStatus: 'APPROVED',
+              proofReviewedAt: now,
+              proofReviewedBy: req.user.id,
+              proofRejectionReason: null,
+              completedAt: now,
+            }
+          : {
+              status: 'FAILED',
+              proofStatus: 'REJECTED',
+              proofReviewedAt: now,
+              proofReviewedBy: req.user.id,
+              proofRejectionReason: reason,
+              completedAt: null,
+            },
+      });
+
+      if (approve) {
+        const nextStatus = ['PENDING', 'PENDING_PAYMENT', 'DISPUTED'].includes(currentOrderStatus)
+          ? 'CONFIRMED'
+          : order.status;
+        updatedOrder = await tx.order.update({
+          where: { id },
+          data: { status: nextStatus },
+        });
+        return;
+      }
+
+      const shouldCancelOrder = !['CANCELLED', 'DELIVERED'].includes(currentOrderStatus);
+      if (shouldCancelOrder) {
+        const orderItems = await tx.orderItem.findMany({
+          where: { orderId: id },
+          select: { productId: true, quantity: true },
+        });
+        for (const item of orderItems) {
+          await tx.product.update({
+            where: { id: item.productId },
+            data: { stock: { increment: item.quantity } },
+          });
+        }
+      }
+
+      updatedOrder = await tx.order.update({
+        where: { id },
+        data: { status: shouldCancelOrder ? 'CANCELLED' : order.status },
+      });
+    });
+
+    if (order.clientId) {
+      try {
+        const clientNotif = await prisma.notification.create({
+          data: {
+            userId: order.clientId,
+            type: 'order',
+            message: approve
+              ? `Litige resolu: paiement valide pour votre commande chez ${order.salon?.name || 'la boutique'}.`
+              : `Litige resolu: commande annulee (${reason}).`,
+          },
+        });
+        pushNotification(clientNotif.userId, clientNotif);
+      } catch (e) {
+        console.error('Dispute notify client error:', e.message);
+      }
+    }
+
+    if (order.salon?.ownerId) {
+      try {
+        const ownerNotif = await prisma.notification.create({
+          data: {
+            userId: order.salon.ownerId,
+            type: 'order',
+            message: approve
+              ? `Litige resolu par admin: paiement confirme pour la commande ${id.slice(-8).toUpperCase()}.`
+              : `Litige resolu par admin: commande ${id.slice(-8).toUpperCase()} annulee.`,
+          },
+        });
+        pushNotification(ownerNotif.userId, ownerNotif);
+      } catch (e) {
+        console.error('Dispute notify owner error:', e.message);
+      }
+    }
+
+    return res.status(200).json({
+      status: 'success',
+      message: approve ? 'Litige valide: paiement confirme.' : 'Litige rejete: commande annulee.',
+      data: {
+        order: updatedOrder,
+        payment: updatedPayment,
+      },
+    });
+  } catch (error) {
+    console.error('Error resolving dispute:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Impossible de resoudre le litige.',
     });
   }
 });

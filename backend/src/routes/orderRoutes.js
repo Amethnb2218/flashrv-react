@@ -601,11 +601,13 @@ router.patch('/:id/payment-proof/review', authenticate, async (req, res, next) =
       },
     });
 
-    const shouldMoveToConfirmed = approve && ['PENDING', 'PENDING_PAYMENT'].includes(String(order.status || '').toUpperCase());
+    const currentOrderStatus = String(order.status || '').toUpperCase();
+    const shouldMoveToConfirmed = approve && ['PENDING', 'PENDING_PAYMENT', 'DISPUTED'].includes(currentOrderStatus);
+    const shouldMoveToDisputed = !approve && ['PENDING', 'PENDING_PAYMENT', 'DISPUTED'].includes(currentOrderStatus);
     const updatedOrder = await prisma.order.update({
       where: { id },
       data: {
-        status: shouldMoveToConfirmed ? 'CONFIRMED' : order.status,
+        status: shouldMoveToConfirmed ? 'CONFIRMED' : (shouldMoveToDisputed ? 'DISPUTED' : order.status),
       },
     });
 
@@ -617,12 +619,37 @@ router.patch('/:id/payment-proof/review', authenticate, async (req, res, next) =
             type: 'order',
             message: approve
               ? `Paiement valide pour votre commande chez ${order.salon?.name || 'la boutique'}.`
-              : `Preuve de paiement rejetee pour votre commande chez ${order.salon?.name || 'la boutique'}.`,
+              : `Paiement conteste par ${order.salon?.name || 'la boutique'}. Litige en cours de verification.`,
           },
         });
         pushNotification(notification.userId, notification);
       } catch (e) {
         console.error('Order payment review notify client error:', e.message);
+      }
+    }
+
+    if (!approve) {
+      try {
+        const admins = await prisma.user.findMany({
+          where: { role: { in: ['ADMIN', 'SUPER_ADMIN'] } },
+          select: { id: true },
+        });
+        if (admins.length > 0) {
+          const notifications = await prisma.$transaction(
+            admins.map((admin) =>
+              prisma.notification.create({
+                data: {
+                  userId: admin.id,
+                  type: 'order',
+                  message: `Litige paiement: commande ${id.slice(-8).toUpperCase()} a verifier (${order.salon?.name || 'Boutique'}).`,
+                },
+              })
+            )
+          );
+          notifications.forEach((notif) => pushNotification(notif.userId, notif));
+        }
+      } catch (e) {
+        console.error('Order payment dispute notify admins error:', e.message);
       }
     }
 
@@ -639,7 +666,7 @@ router.patch('/:id/payment-proof/review', authenticate, async (req, res, next) =
 
     return res.status(200).json({
       status: 'success',
-      message: approve ? 'Paiement valide.' : 'Preuve rejetee.',
+      message: approve ? 'Paiement valide.' : 'Paiement conteste. Litige ouvert.',
       data: {
         order: updatedOrder,
         payment: updatedPayment,
@@ -659,7 +686,7 @@ router.patch('/:id/status', authenticate, async (req, res, next) => {
     const { id } = req.params;
     const { status } = req.body;
 
-    const validStatuses = ['PENDING', 'PENDING_PAYMENT', 'CONFIRMED', 'PREPARING', 'READY', 'DELIVERED', 'CANCELLED'];
+    const validStatuses = ['PENDING', 'PENDING_PAYMENT', 'DISPUTED', 'CONFIRMED', 'PREPARING', 'READY', 'DELIVERED', 'CANCELLED'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ status: 'error', message: 'Statut invalide' });
     }
@@ -676,7 +703,7 @@ router.patch('/:id/status', authenticate, async (req, res, next) => {
     const clientCanCancel =
       isClient &&
       status === 'CANCELLED' &&
-      ['PENDING', 'PENDING_PAYMENT', 'CONFIRMED'].includes(String(order.status || '').toUpperCase());
+      ['PENDING', 'PENDING_PAYMENT', 'DISPUTED', 'CONFIRMED'].includes(String(order.status || '').toUpperCase());
 
     // Only boutique owner/admin can change status, except restricted client cancellation
     const isOwner = order.salon?.ownerId === req.user.id;
@@ -712,6 +739,7 @@ router.patch('/:id/status', authenticate, async (req, res, next) => {
     if (updated.clientId) {
       const statusLabels = {
         CONFIRMED: 'confirmée',
+        DISPUTED: 'en litige',
         PREPARING: 'en préparation',
         READY: 'prête',
         DELIVERED: 'livrée',

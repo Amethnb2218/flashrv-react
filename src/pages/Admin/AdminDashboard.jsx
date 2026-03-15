@@ -44,6 +44,10 @@ export default function AdminDashboard() {
   const [clientSearch, setClientSearch] = useState('')
   const [feedbacks, setFeedbacks] = useState([])
   const [feedbackLoading, setFeedbackLoading] = useState(false)
+  const [disputes, setDisputes] = useState([])
+  const [disputesLoading, setDisputesLoading] = useState(false)
+  const [disputeScope, setDisputeScope] = useState('open')
+  const [disputeCounts, setDisputeCounts] = useState({ open: 0, resolved: 0, total: 0 })
 
   // Notification bell state
   const [notifOpen, setNotifOpen] = useState(false)
@@ -263,6 +267,62 @@ export default function AdminDashboard() {
     setFeedbackLoading(false)
   }
 
+  useEffect(() => {
+    if (activeTab === 'disputes') {
+      fetchDisputes(disputeScope)
+    }
+  }, [activeTab, disputeScope])
+
+  const fetchDisputes = async (scope = 'open') => {
+    setDisputesLoading(true)
+    try {
+      const res = await fetch(`${API_URL}/admin/disputes?scope=${encodeURIComponent(scope)}`, authFetchOpts())
+      if (res.ok) {
+        const data = await res.json()
+        setDisputes(data?.data?.disputes || [])
+        setDisputeCounts(data?.data?.counts || { open: 0, resolved: 0, total: 0 })
+      } else {
+        setDisputes([])
+      }
+    } catch (e) {
+      setDisputes([])
+    }
+    setDisputesLoading(false)
+  }
+
+  const resolveDispute = async (orderId, decision) => {
+    if (!orderId || !decision) return
+    const upper = String(decision).toUpperCase()
+    let reason = ''
+    if (upper === 'REJECT') {
+      reason = window.prompt("Motif du rejet (obligatoire):", "") || ""
+      if (!String(reason || '').trim()) {
+        alert('Le motif du rejet est obligatoire.')
+        return
+      }
+      const confirmed = window.confirm('Confirmer le rejet du litige et l annulation de la commande ?')
+      if (!confirmed) return
+    }
+    try {
+      const res = await fetch(`${API_URL}/admin/disputes/${orderId}/resolve`, authFetchOpts({
+        method: 'PATCH',
+        body: JSON.stringify({
+          decision: upper,
+          ...(reason.trim() ? { reason: reason.trim() } : {}),
+        }),
+      }))
+      const payload = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        alert(payload?.message || 'Erreur lors de la resolution du litige')
+        return
+      }
+      fetchDisputes(disputeScope)
+      alert(upper === 'APPROVE' ? 'Litige valide: paiement confirme.' : 'Litige rejete: commande annulee.')
+    } catch (e) {
+      alert('Erreur reseau lors de la resolution du litige')
+    }
+  }
+
   // Filtrer les PROs
   const filteredPros = pros.filter(pro => {
     const matchesSearch = pro.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -275,6 +335,7 @@ export default function AdminDashboard() {
     { id: 'pending', label: 'En attente', icon: FiClock, count: stats?.pros?.pending || 0 },
     { id: 'all', label: 'Tous les PROs', icon: FiUsers, count: stats?.pros?.total || 0 },
     { id: 'clients', label: 'Clients', icon: FiUserCheck, count: stats?.clients || 0 },
+    { id: 'disputes', label: 'Litiges paiements', icon: FiMessageSquare, count: disputeCounts?.open || 0 },
     { id: 'feedback', label: 'Feedback', icon: FiMessageSquare, count: feedbacks.length },
     { id: 'stats', label: 'Statistiques', icon: FiBarChart2 },
   ]
@@ -559,6 +620,108 @@ export default function AdminDashboard() {
                             </div>
                           ))}
                       </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'disputes' && (
+          <div className="bg-white rounded-xl shadow border border-primary-200 p-6">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+              <div>
+                <h2 className="text-xl font-bold text-primary-900">Litiges paiements</h2>
+                <p className="text-sm text-primary-500">Validation manuelle des paiements contestes.</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <select
+                  value={disputeScope}
+                  onChange={(e) => setDisputeScope(e.target.value)}
+                  className="px-3 py-2 rounded-lg border border-primary-200 text-sm font-medium text-primary-700"
+                >
+                  <option value="open">Ouverts</option>
+                  <option value="resolved">Resolus</option>
+                  <option value="all">Tous</option>
+                </select>
+                <button
+                  onClick={() => fetchDisputes(disputeScope)}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-primary-200 text-sm font-semibold text-primary-700 hover:bg-primary-50"
+                >
+                  <FiRefreshCw className="w-4 h-4" />
+                  Actualiser
+                </button>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2 mb-4 text-xs">
+              <span className="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 font-semibold">Ouverts: {disputeCounts.open || 0}</span>
+              <span className="px-2.5 py-1 rounded-full bg-green-100 text-green-800 font-semibold">Resolus: {disputeCounts.resolved || 0}</span>
+              <span className="px-2.5 py-1 rounded-full bg-primary-100 text-primary-700 font-semibold">Total: {disputeCounts.total || 0}</span>
+            </div>
+
+            {disputesLoading ? (
+              <div className="text-sm text-primary-500">Chargement…</div>
+            ) : disputes.length === 0 ? (
+              <div className="text-sm text-primary-500">Aucun litige pour ce filtre.</div>
+            ) : (
+              <div className="space-y-4">
+                {disputes.map((order) => {
+                  const payment = order?.payment || {}
+                  const methodLabel = String(payment.manualMethod || payment.method || order.paymentMethod || '')
+                    .replaceAll('_', ' ')
+                    .trim() || 'Paiement direct'
+                  const statusKey = String(order.status || '').toUpperCase()
+                  const isOpen = statusKey === 'DISPUTED' || (String(payment.proofStatus || '').toUpperCase() === 'REJECTED' && statusKey === 'PENDING_PAYMENT')
+                  return (
+                    <div key={order.id} className="border border-primary-100 rounded-2xl p-4 shadow-sm">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                          <p className="text-xs text-primary-500">Commande #{String(order.id || '').slice(-8).toUpperCase()}</p>
+                          <p className="text-sm font-semibold text-primary-900 mt-0.5">
+                            {order?.salon?.name || 'Boutique'} · {order?.clientName || order?.client?.name || 'Client'}
+                          </p>
+                          <p className="text-xs text-primary-600 mt-0.5">
+                            {methodLabel} · {(order.totalPrice || 0).toLocaleString()} FCFA
+                          </p>
+                        </div>
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${isOpen ? 'bg-amber-100 text-amber-800' : 'bg-green-100 text-green-800'}`}>
+                          {isOpen ? 'Litige ouvert' : 'Litige resolu'}
+                        </span>
+                      </div>
+
+                      <div className="grid md:grid-cols-2 gap-3 mt-3 text-sm">
+                        <div className="bg-primary-50 rounded-xl p-3">
+                          <p className="text-xs text-primary-500">Reference transaction</p>
+                          <p className="font-semibold text-primary-800">{payment.proofReference || '—'}</p>
+                          <p className="text-xs text-primary-500 mt-2">Montant envoye</p>
+                          <p className="font-semibold text-primary-800">{Number(payment.amount || 0).toLocaleString()} FCFA</p>
+                        </div>
+                        <div className="bg-primary-50 rounded-xl p-3">
+                          <p className="text-xs text-primary-500">Numero envoyeur</p>
+                          <p className="font-semibold text-primary-800">{payment.phoneNumber || '—'}</p>
+                          <p className="text-xs text-primary-500 mt-2">Motif du pro</p>
+                          <p className="font-semibold text-primary-800 break-words">{payment.proofRejectionReason || 'Non specifie'}</p>
+                        </div>
+                      </div>
+
+                      {isOpen && (
+                        <div className="flex flex-wrap gap-2 mt-4">
+                          <button
+                            onClick={() => resolveDispute(order.id, 'APPROVE')}
+                            className="px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition"
+                          >
+                            Valider paiement
+                          </button>
+                          <button
+                            onClick={() => resolveDispute(order.id, 'REJECT')}
+                            className="px-4 py-2 rounded-lg border border-red-300 text-red-700 text-sm font-semibold hover:bg-red-50 transition"
+                          >
+                            Rejeter et annuler
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )
                 })}

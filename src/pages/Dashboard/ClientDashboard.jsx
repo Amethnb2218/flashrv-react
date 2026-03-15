@@ -232,6 +232,8 @@ function ClientDashboard() {
 
   const orderStatusLabels = {
     PENDING: { label: 'En attente', className: 'bg-gold-100 text-yellow-700' },
+    PENDING_PAYMENT: { label: 'Validation paiement', className: 'bg-blue-100 text-blue-700' },
+    DISPUTED: { label: 'Litige ouvert', className: 'bg-amber-100 text-amber-800' },
     CONFIRMED: { label: 'Confirmée', className: 'bg-blue-100 text-blue-700' },
     PREPARING: { label: 'En préparation', className: 'bg-purple-100 text-purple-700' },
     READY: { label: 'Prête', className: 'bg-green-100 text-green-700' },
@@ -647,7 +649,7 @@ function ClientDashboard() {
                 <div className="space-y-2">
                   {orders.map(order => {
                     const st = orderStatusLabels[order.status] || { label: order.status, className: 'bg-primary-100 text-primary-700' }
-                    const canCancel = ['PENDING', 'CONFIRMED'].includes(order.status)
+                    const canCancel = ['PENDING', 'PENDING_PAYMENT', 'DISPUTED', 'CONFIRMED'].includes(String(order.status || '').toUpperCase())
                     const isOrderExpanded = expandedOrderId === order.id
                     return (
                       <div key={order.id} className="bg-white rounded-xl border border-primary-100 shadow-sm overflow-hidden">

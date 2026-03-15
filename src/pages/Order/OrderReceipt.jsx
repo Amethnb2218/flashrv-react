@@ -42,7 +42,8 @@ function OrderReceipt() {
   const paymentKey = String(paymentMethod || order?.paymentMethod || '').toUpperCase()
   const pm = paymentLabels[paymentKey] || paymentLabels.CASH_ON_DELIVERY
   const isPendingPayment = String(orderStatus || '').toUpperCase() === 'PENDING_PAYMENT'
-  const canCancel = order?.id && ['PENDING', 'PENDING_PAYMENT', 'CONFIRMED'].includes(String(orderStatus || '').toUpperCase())
+  const isDisputed = String(orderStatus || '').toUpperCase() === 'DISPUTED'
+  const canCancel = order?.id && ['PENDING', 'PENDING_PAYMENT', 'DISPUTED', 'CONFIRMED'].includes(String(orderStatus || '').toUpperCase())
 
   const handleCopyRef = () => {
     navigator.clipboard.writeText(orderRef)
@@ -80,10 +81,12 @@ function OrderReceipt() {
             <FiCheck className="w-10 h-10 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-primary-900">
-            {isPendingPayment ? 'Commande en attente de validation' : 'Commande confirmee !'}
+            {isDisputed ? 'Commande en litige de paiement' : (isPendingPayment ? 'Commande en attente de validation' : 'Commande confirmee !')}
           </h1>
           <p className="text-primary-500 mt-1">
-            {isPendingPayment ? 'Votre paiement sera verifie par la boutique.' : 'Merci pour votre achat'}
+            {isDisputed
+              ? 'Le paiement est en cours de verification administrative.'
+              : (isPendingPayment ? 'Votre paiement sera verifie par la boutique.' : 'Merci pour votre achat')}
           </p>
         </motion.div>
 
@@ -195,7 +198,9 @@ function OrderReceipt() {
                 </p>
               ) : ['ORANGE_MONEY', 'WAVE', 'FREE_MONEY'].includes(paymentKey) ? (
                 <p className="text-xs text-blue-700 font-medium mt-2 bg-blue-50 px-3 py-1.5 rounded-lg">
-                  Preuve de paiement envoyee. Validation en cours par la boutique.
+                  {isDisputed
+                    ? 'Paiement conteste par la boutique. Verification admin en cours.'
+                    : 'Preuve de paiement envoyee. Validation en cours par la boutique.'}
                 </p>
               ) : (
                 <p className="text-xs text-blue-600 font-medium mt-2 bg-blue-50 px-3 py-1.5 rounded-lg">
