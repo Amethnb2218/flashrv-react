@@ -8,11 +8,12 @@ import { AuthProvider } from './context/AuthContext'
 import { BookingProvider } from './context/BookingContext'
 import { Toaster } from 'react-hot-toast'
 import './index.css'
+import { ThemeProvider } from './context/ThemeContext'
 
 // Register PWA service worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
+    navigator.serviceWorker.register('/sw.js').catch(() => { });
   });
 }
 
@@ -23,48 +24,50 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
       <BrowserRouter>
         <ErrorBoundary>
-        <AuthProvider>
-          <BookingProvider>
-            <App />
-            <Toaster
-              position="top-right"
-              toastOptions={{
-                duration: 3500,
-                style: {
-                  background: '#ffffff',
-                  color: '#0f172a',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '12px',
-                  padding: '12px 14px',
-                  boxShadow: '0 12px 30px rgba(15, 23, 42, 0.08)',
-                  fontWeight: 600,
-                },
-                success: {
-                  iconTheme: {
-                    primary: '#16a34a',
-                    secondary: '#ecfdf3',
-                  },
-                  style: {
-                    borderColor: '#bbf7d0',
-                    background: '#f0fdf4',
-                    color: '#14532d',
-                  },
-                },
-                error: {
-                  iconTheme: {
-                    primary: '#dc2626',
-                    secondary: '#fef2f2',
-                  },
-                  style: {
-                    borderColor: '#fecaca',
-                    background: '#fef2f2',
-                    color: '#7f1d1d',
-                  },
-                },
-              }}
-            />
-          </BookingProvider>
-        </AuthProvider>
+          <ThemeProvider>
+            <AuthProvider>
+              <BookingProvider>
+                <App />
+                <Toaster
+                  position="top-right"
+                  toastOptions={{
+                    duration: 3500,
+                    style: {
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '12px',
+                      padding: '12px 14px',
+                      boxShadow: '0 12px 30px rgba(15, 23, 42, 0.08)',
+                      fontWeight: 600,
+                    },
+                    success: {
+                      iconTheme: {
+                        primary: '#16a34a',
+                        secondary: '#ecfdf3',
+                      },
+                      style: {
+                        borderColor: '#bbf7d0',
+                        background: '#f0fdf4',
+                        color: '#14532d',
+                      },
+                    },
+                    error: {
+                      iconTheme: {
+                        primary: '#dc2626',
+                        secondary: '#fef2f2',
+                      },
+                      style: {
+                        borderColor: '#fecaca',
+                        background: '#fef2f2',
+                        color: '#7f1d1d',
+                      },
+                    },
+                  }}
+                />
+              </BookingProvider>
+            </AuthProvider>
+          </ThemeProvider>
         </ErrorBoundary>
       </BrowserRouter>
     </GoogleOAuthProvider>

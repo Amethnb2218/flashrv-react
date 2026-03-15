@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class',
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
@@ -10,7 +11,7 @@ export default {
         // ═══════════════════════════════════════════════════════════
         // FLASHRV' DESIGN SYSTEM - Palette Black & Gold Luxe 2026
         // ═══════════════════════════════════════════════════════════
-        
+
         // Couleur Principale - Noir Élégant
         primary: {
           50: '#fafafa',
@@ -36,7 +37,7 @@ export default {
           800: '#27272a',
           900: '#18181b',
         },
-        
+
         // Couleur Accent - Or Doré
         gold: {
           50: '#fefce8',
@@ -50,7 +51,7 @@ export default {
           800: '#854d0e',
           900: '#713f12',
         },
-        
+
         // Couleur Tertiaire - Rose Doux
         rose: {
           50: '#fff1f2',

@@ -190,12 +190,12 @@ function Home() {
   }
 
   return (
-    <div className="overflow-hidden bg-white">
+    <div className="overflow-hidden bg-white dark:bg-gray-900">
       {/* Hero */}
-      <section className="relative bg-mesh">
+      <section className="relative bg-mesh dark:bg-gray-900">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-12 right-12 w-72 h-72 bg-gold-100/50 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-10 left-8 w-80 h-80 bg-gold-100/40 rounded-full blur-3xl"></div>
+          <div className="absolute -top-12 right-12 w-72 h-72 bg-gold-100/50 dark:bg-gold-900/20 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-10 left-8 w-80 h-80 bg-gold-100/40 dark:bg-gold-900/10 rounded-full blur-3xl"></div>
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 pb-4">
           <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 items-start">
@@ -207,18 +207,18 @@ function Home() {
               <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gold-100 text-gold-700">
                 Gratuit · Sans engagement
               </span>
-              <h1 className="mt-2 text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-primary-900 leading-tight">
+              <h1 className="mt-2 text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-primary-900 dark:text-white leading-tight">
                 Réservez votre{' '}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold-500 to-gold-600">
                   salon de beauté
                 </span>{' '}
                 en 30 secondes
               </h1>
-              <p className="mt-2 text-base md:text-lg text-primary-600 max-w-xl leading-relaxed">
+              <p className="mt-2 text-base md:text-lg text-primary-600 dark:text-gray-300 max-w-xl leading-relaxed">
                 Trouvez un salon vérifié près de chez vous, comparez les services et tarifs, et réservez en ligne — sans appel ni attente.
               </p>
 
-              <form onSubmit={handleSearch} className="mt-4 bg-white/95 rounded-xl p-2.5 shadow-[0_28px_70px_-40px_rgba(15,23,42,0.6)] border border-white/70 backdrop-blur">
+              <form onSubmit={handleSearch} className="mt-4 bg-white/95 dark:bg-gray-800/95 rounded-xl p-2.5 shadow-[0_28px_70px_-40px_rgba(15,23,42,0.6)] border border-white/70 backdrop-blur">
                 <div className="flex flex-col md:flex-row gap-3">
                   <div className="flex-1 relative">
                     <FiMapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gold-500 w-5 h-5" />
@@ -233,7 +233,7 @@ function Home() {
                       aria-expanded={showSuggestions && suggestions.length > 0}
                       aria-controls="home-suggestions"
                       placeholder="Quartier, ville, salon..."
-                      className="w-full pl-12 pr-4 py-3 md:py-4 bg-primary-50 rounded-xl focus:ring-2 focus:ring-gold-400 focus:bg-white transition-all outline-none text-primary-800 placeholder-primary-400"
+                      className="w-full pl-12 pr-4 py-3 md:py-4 bg-primary-50 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 rounded-xl focus:ring-2 focus:ring-gold-400 focus:bg-white dark:focus:bg-gray-600 transition-all outline-none text-primary-800 placeholder-primary-400"
                     />
                     <AnimatePresence>
                       {showSuggestions && suggestions.length > 0 && (
@@ -242,7 +242,7 @@ function Home() {
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: 8 }}
                           transition={{ duration: reduceMotion ? 0 : 0.2 }}
-                          className="absolute z-20 mt-2 w-full rounded-2xl border border-primary-100 bg-white shadow-2xl p-2"
+                          className="absolute z-20 mt-2 w-full rounded-2xl border border-primary-100 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-2xl p-2"
                           role="listbox"
                           id="home-suggestions"
                         >
@@ -251,12 +251,12 @@ function Home() {
                               key={salon.id}
                               type="button"
                               onMouseDown={() => navigate(`/salon/${salon.id}`)}
-                              className="w-full text-left px-3 py-2 rounded-xl hover:bg-gold-50 transition-colors"
+                              className="w-full text-left px-3 py-2 rounded-xl hover:bg-gold-50 dark:hover:bg-gray-700 transition-colors"
                             >
                               <div className="flex items-center justify-between">
                                 <div>
-                                  <p className="text-sm font-semibold text-primary-900">{salon.name}</p>
-                                  <p className="text-xs text-primary-500">{salon.city || salon.address}</p>
+                                  <p className="text-sm font-semibold text-primary-900 dark:text-white">{salon.name}</p>
+                                  <p className="text-xs text-primary-500 dark:text-gray-400">{salon.city || salon.address}</p>
                                 </div>
                                 <span className="text-xs font-semibold text-primary-600">
                                   {salon.reviewCount ? `${Number(salon.rating || 0).toFixed(1)}?` : 'Nouveau'}
@@ -318,10 +318,10 @@ function Home() {
                   alt="Salon premium"
                   className="rounded-2xl shadow-2xl w-full object-cover aspect-[4/3]"
                 />
-                <div className="absolute -bottom-3 -left-3 bg-white rounded-xl shadow-lg p-3 border border-primary-100">
+                <div className="absolute -bottom-3 -left-3 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-3 border border-primary-100 dark:border-gray-700">
                   <div className="flex items-center gap-1.5">
                     <FiStar className="w-4 h-4 text-gold-400 fill-current" />
-                    <span className="font-semibold text-primary-900 text-sm">4.9</span>
+                    <span className="font-semibold text-primary-900 dark:text-white text-sm">4.9</span>
                     <span className="text-xs text-primary-500">+{totalReviews} avis</span>
                   </div>
                 </div>
@@ -332,14 +332,14 @@ function Home() {
       </section>
 
       {/* Featured Salons */}
-      <section className="py-3 bg-primary-50">
+      <section className="py-3 bg-primary-50 dark:bg-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between mb-3">
             <div>
-              <h2 className="text-lg md:text-xl font-bold text-primary-900">
+              <h2 className="text-lg md:text-xl font-bold text-primary-900 dark:text-white">
                 Salons en vedette
               </h2>
-              <p className="text-sm text-primary-500 mt-0.5">Les meilleurs salons pour démarrer votre expérience.</p>
+              <p className="text-sm text-primary-500 dark:text-gray-400 mt-0.5">Les meilleurs salons pour démarrer votre expérience.</p>
             </div>
             <Link
               to="/salons"
@@ -353,10 +353,10 @@ function Home() {
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
             {loadingSalons ? (
               [1, 2, 3].map((i) => (
-                <div key={i} className="bg-white rounded-xl border border-primary-100 p-3 animate-pulse">
-                  <div className="h-32 bg-primary-100 rounded-lg mb-3"></div>
-                  <div className="h-3 bg-primary-100 rounded w-2/3 mb-2"></div>
-                  <div className="h-2.5 bg-primary-100 rounded w-1/2"></div>
+                <div key={i} className="bg-white dark:bg-gray-700 rounded-xl border border-primary-100 dark:border-gray-600 p-3 animate-pulse">
+                  <div className="h-32 bg-primary-100 dark:bg-gray-600 rounded-lg mb-3"></div>
+                  <div className="h-3 bg-primary-100 dark:bg-gray-600 rounded w-2/3 mb-2"></div>
+                  <div className="h-2.5 bg-primary-100 dark:bg-gray-600 rounded w-1/2"></div>
                 </div>
               ))
             ) : (
@@ -370,14 +370,14 @@ function Home() {
 
       {/* Featured Boutiques */}
       {(loadingSalons || featuredBoutiques.length > 0) && (
-      <section className="py-4 bg-white">
+      <section className="py-4 bg-white dark:bg-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between mb-3">
             <div>
-              <h2 className="text-lg md:text-xl font-bold text-primary-900">
+              <h2 className="text-lg md:text-xl font-bold text-primary-900 dark:text-white">
                 <FiShoppingBag className="mr-1.5 inline-block text-gold-500" /> Boutiques
               </h2>
-              <p className="text-sm text-primary-500 mt-0.5">Commandez en ligne auprès de nos partenaires.</p>
+              <p className="text-sm text-primary-500 dark:text-gray-400 mt-0.5">Commandez en ligne auprès de nos partenaires.</p>
             </div>
             <Link
               to="/salons?businessType=BOUTIQUE"
@@ -391,10 +391,10 @@ function Home() {
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
             {loadingSalons ? (
               [1, 2, 3].map((i) => (
-                <div key={i} className="bg-white rounded-xl border border-primary-100 p-3 animate-pulse">
-                  <div className="h-32 bg-primary-100 rounded-lg mb-3"></div>
-                  <div className="h-3 bg-primary-100 rounded w-2/3 mb-2"></div>
-                  <div className="h-2.5 bg-primary-100 rounded w-1/2"></div>
+                <div key={i} className="bg-white dark:bg-gray-700 rounded-xl border border-primary-100 dark:border-gray-600 p-3 animate-pulse">
+                  <div className="h-32 bg-primary-100 dark:bg-gray-600 rounded-lg mb-3"></div>
+                  <div className="h-3 bg-primary-100 dark:bg-gray-600 rounded w-2/3 mb-2"></div>
+                  <div className="h-2.5 bg-primary-100 dark:bg-gray-600 rounded w-1/2"></div>
                 </div>
               ))
             ) : (
@@ -408,12 +408,12 @@ function Home() {
       )}
 
       {/* Categories */}
-      <section className="py-4 bg-gradient-to-b from-white to-gold-50/20">
+      <section className="py-4 bg-gradient-to-b from-white dark:from-gray-900 to-gold-50/20 dark:to-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between mb-3">
             <div>
-              <h2 className="text-lg md:text-xl font-bold text-primary-900">Catégories</h2>
-              <p className="text-sm text-primary-500 mt-0.5">Trouvez votre service en un clic.</p>
+              <h2 className="text-lg md:text-xl font-bold text-primary-900 dark:text-white">Catégories</h2>
+              <p className="text-sm text-primary-500 dark:text-gray-400 mt-0.5">Trouvez votre service en un clic.</p>
             </div>
             <Link
               to="/salons"
@@ -428,12 +428,12 @@ function Home() {
               <Link
                 key={cat.id}
                 to={`/salons?category=${cat.id}`}
-                className="group flex flex-col items-center gap-1 rounded-lg bg-white p-2.5 border border-primary-100 shadow-sm hover:border-gold-200 hover:bg-gold-50 transition-all"
+                className="group flex flex-col items-center gap-1 rounded-lg bg-white dark:bg-gray-800 p-2.5 border border-primary-100 dark:border-gray-700 shadow-sm hover:border-gold-200 hover:bg-gold-50 dark:hover:bg-gray-700 transition-all"
               >
                 {cat.icon && (
                   <span className="text-xl">{cat.icon}</span>
                 )}
-                <span className="text-xs sm:text-sm font-medium text-primary-700 group-hover:text-gold-700 text-center leading-tight">
+                <span className="text-xs sm:text-sm font-medium text-primary-700 dark:text-gray-300 group-hover:text-gold-700 text-center leading-tight">
                   {cat.name}
                 </span>
               </Link>
@@ -450,7 +450,7 @@ function Home() {
       </section>
 
       {/* How it works */}
-      <section className="py-4 bg-primary-50">
+      <section className="py-4 bg-primary-50 dark:bg-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-lg md:text-xl font-bold text-primary-900 mb-3 text-center">
             Comment ça marche ?
@@ -460,13 +460,13 @@ function Home() {
               <Link
                 key={i}
                 to={step.link}
-                className="relative bg-white border border-primary-100 rounded-xl p-2.5 md:p-5 text-center shadow-sm hover:border-gold-200 hover:shadow-md transition-all cursor-pointer"
+                className="relative bg-white dark:bg-gray-800 border border-primary-100 dark:border-gray-700 rounded-xl p-2.5 md:p-5 text-center shadow-sm hover:border-gold-200 hover:shadow-md transition-all cursor-pointer"
               >
                 <div className="w-8 h-8 md:w-11 md:h-11 bg-primary-900 text-white rounded-lg flex items-center justify-center mx-auto mb-1.5 md:mb-3">
                   {step.icon}
                 </div>
-                <h3 className="text-[11px] sm:text-sm md:text-base font-bold text-primary-900 mb-0.5 md:mb-1">{step.title}</h3>
-                <p className="text-[10px] md:text-sm text-primary-500 leading-snug hidden sm:block">{step.description}</p>
+                <h3 className="text-[11px] sm:text-sm md:text-base font-bold text-primary-900 dark:text-white mb-0.5 md:mb-1">{step.title}</h3>
+                <p className="text-[10px] md:text-sm text-primary-500 dark:text-gray-400 leading-snug hidden sm:block">{step.description}</p>
               </Link>
             ))}
           </div>
@@ -506,11 +506,11 @@ function Home() {
       </section>
 
       {/* Feedback */}
-      <section className="py-4 bg-primary-50">
+      <section className="py-4 bg-primary-50 dark:bg-gray-800">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-xl border border-primary-100 shadow-sm p-4 text-center">
-            <h3 className="text-base md:text-lg font-bold text-primary-900 mb-0.5">Votre avis compte</h3>
-            <p className="text-sm text-primary-500 mb-2">
+          <div className="bg-white dark:bg-gray-800 rounded-xl border border-primary-100 dark:border-gray-700 shadow-sm p-4 text-center">
+            <h3 className="text-base md:text-lg font-bold text-primary-900 dark:text-white mb-0.5">Votre avis compte</h3>
+            <p className="text-sm text-primary-500 dark:text-gray-400 mb-2">
               Bug, suggestion, amélioration — nous lisons tout.
             </p>
             <div className="flex items-center justify-center gap-2">
@@ -848,4 +848,3 @@ function FeedbackWidget({ onClose, defaultType = 'suggestion' }) {
 }
 
 export default Home
-

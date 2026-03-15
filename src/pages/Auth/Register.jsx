@@ -13,18 +13,11 @@ function Register() {
   const defaultRole = searchParams.get('role') || 'client'
 
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    password: '',
-    confirmPassword: '',
-    role: defaultRole
+    name: '', email: '', phone: '', password: '', confirmPassword: '', role: defaultRole
   })
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState({})
-
-  // Google profile completion state
   const [googleCredential, setGoogleCredential] = useState(null)
 
   const { register, loginWithGoogle } = useAuth()
@@ -32,23 +25,15 @@ function Register() {
 
   const validate = () => {
     const newErrors = {}
-    
     if (!formData.name.trim()) newErrors.name = 'Le nom est requis'
     else if (formData.name.trim().length < 2) newErrors.name = 'Le nom doit avoir au moins 2 caractères'
-    
-    if (!formData.email) newErrors.email = 'L\'email est requis'
+    if (!formData.email) newErrors.email = "L'email est requis"
     else if (!isValidEmail(formData.email)) newErrors.email = 'Email invalide'
-    
     if (!formData.phone) newErrors.phone = 'Le téléphone est requis'
     else if (!isValidPhone(formData.phone)) newErrors.phone = 'Numéro de téléphone invalide'
-    
     if (!formData.password) newErrors.password = 'Le mot de passe est requis'
     else if (formData.password.length < 8) newErrors.password = 'Le mot de passe doit avoir au moins 8 caractères'
-    
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Les mots de passe ne correspondent pas'
-    }
-
+    if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Les mots de passe ne correspondent pas'
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -56,24 +41,15 @@ function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!validate()) return
-
     setIsLoading(true)
     try {
       const user = await register(formData)
-      // Suppression des logs sensibles après debug
-      // console.log('DEBUG inscription classique user:', user)
-      // console.log('DEBUG inscription classique user.salonId:', user.salonId)
-      // console.log('DEBUG inscription classique user.salon:', user.salon)
       toast.success('Compte créé avec succès !')
-      if (isProUser(user)) {
-        navigate(getProRedirectPath(user) || '/pro/onboarding')
-      } else if (user.role === 'client' || user.role === 'CLIENT') {
-        navigate('/')
-      } else {
-        navigate('/salons')
-      }
+      if (isProUser(user)) navigate(getProRedirectPath(user) || '/pro/onboarding')
+      else if (user.role === 'client' || user.role === 'CLIENT') navigate('/')
+      else navigate('/salons')
     } catch (error) {
-      toast.error(error.message || 'Erreur lors de l\'inscription')
+      toast.error(error.message || "Erreur lors de l'inscription")
     } finally {
       setIsLoading(false)
     }
@@ -81,100 +57,62 @@ function Register() {
 
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }))
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: null }))
-    }
+    if (errors[field]) setErrors(prev => ({ ...prev, [field]: null }))
   }
 
-  // Handle Google Login Success - Direct registration with Google data
   const handleGoogleSuccess = async (credentialResponse) => {
     setIsLoading(true)
     try {
-      // Convertir le rôle frontend en format backend
       const accountType = formData.role === 'pro' ? 'PRO' : 'CLIENT'
-      // ...existing code...
       const user = await loginWithGoogle(credentialResponse.credential, accountType)
-      // console.log('DEBUG inscription Google user:', user)
-      // console.log('DEBUG inscription Google user.salonId:', user.salonId)
-      // console.log('DEBUG inscription Google user.salon:', user.salon)
       toast.success(`Bienvenue, ${user.name || user.email} !`)
-      // Redirection intelligente pour PRO Google : onboarding si pas de salon, sinon selon statut
-      // ...existing code...
-      if (isProUser(user)) {
-        navigate(getProRedirectPath(user) || '/pro/onboarding')
-      } else if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
-        navigate('/admin')
-      } else if (user.role === 'CLIENT' || user.role === 'client') {
-        navigate('/')
-      } else {
-        navigate('/salons')
-      }
+      if (isProUser(user)) navigate(getProRedirectPath(user) || '/pro/onboarding')
+      else if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') navigate('/admin')
+      else if (user.role === 'CLIENT' || user.role === 'client') navigate('/')
+      else navigate('/salons')
     } catch (error) {
-      console.error('Erreur Google Register:', error)
-      toast.error(error.message || 'Erreur lors de l\'inscription avec Google')
+      toast.error(error.message || "Erreur lors de l'inscription avec Google")
     } finally {
       setIsLoading(false)
     }
   }
 
-  // Handle Google Login Error
   const handleGoogleError = () => {
-    console.error('❌ Google Register Failed')
-    toast.error('Échec de l\'inscription avec Google')
+    toast.error("Échec de l'inscription avec Google")
   }
 
   return (
-      <div className="min-h-screen flex">
-        {/* Left side - Image */}
-        <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
-          <img
-            src="https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=1000"
-            alt="Salon"
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-br from-primary-900/80 via-primary-800/70 to-gold-900/60" />
-          {/* Decorative blobs */}
-          <div className="absolute top-20 left-20 w-64 h-64 bg-gold-400/20 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-20 right-20 w-80 h-80 bg-gold-300/15 rounded-full blur-3xl"></div>
-          <div className="absolute inset-0 flex items-center justify-center p-12">
-            <div className="text-center text-white">
-              <h2 className="text-4xl font-bold mb-4">Rejoignez Style • Flow</h2>
-              <p className="text-xl text-primary-100 mb-8">
-              {formData.role === 'pro' 
+    <div className="min-h-screen flex">
+      {/* Left side - Image */}
+      <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
+        <img
+          src="https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=1000"
+          alt="Salon"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-900/80 via-primary-800/70 to-gold-900/60" />
+        <div className="absolute top-20 left-20 w-64 h-64 bg-gold-400/20 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 right-20 w-80 h-80 bg-gold-300/15 rounded-full blur-3xl"></div>
+        <div className="absolute inset-0 flex items-center justify-center p-12">
+          <div className="text-center text-white">
+            <h2 className="text-4xl font-bold mb-4">Rejoignez Style • Flow</h2>
+            <p className="text-xl text-primary-100 mb-8">
+              {formData.role === 'pro'
                 ? 'Développez votre activité et gagnez en visibilité'
-                : 'Réservez facilement vos rendez-vous beauté'
-              }
+                : 'Réservez facilement vos rendez-vous beauté'}
             </p>
             <ul className="text-left text-primary-100 space-y-3 max-w-sm mx-auto">
               {formData.role === 'pro' ? (
                 <>
-                  <li className="flex items-center space-x-2">
-                    <span className="text-green-400">✓</span>
-                    <span>Gérez vos rendez-vous en ligne</span>
-                  </li>
-                  <li className="flex items-center space-x-2">
-                    <span className="text-green-400">✓</span>
-                    <span>Recevez des paiements sécurisés</span>
-                  </li>
-                  <li className="flex items-center space-x-2">
-                    <span className="text-green-400">✓</span>
-                    <span>Fidélisez votre clientèle</span>
-                  </li>
+                  <li className="flex items-center space-x-2"><span className="text-green-400">✓</span><span>Gérez vos rendez-vous en ligne</span></li>
+                  <li className="flex items-center space-x-2"><span className="text-green-400">✓</span><span>Recevez des paiements sécurisés</span></li>
+                  <li className="flex items-center space-x-2"><span className="text-green-400">✓</span><span>Fidélisez votre clientèle</span></li>
                 </>
               ) : (
                 <>
-                  <li className="flex items-center space-x-2">
-                    <span className="text-green-400">✓</span>
-                    <span>Trouvez les meilleurs salons</span>
-                  </li>
-                  <li className="flex items-center space-x-2">
-                    <span className="text-green-400">✓</span>
-                    <span>Réservez en quelques clics</span>
-                  </li>
-                  <li className="flex items-center space-x-2">
-                    <span className="text-green-400">✓</span>
-                    <span>Payez en toute sécurité</span>
-                  </li>
+                  <li className="flex items-center space-x-2"><span className="text-green-400">✓</span><span>Trouvez les meilleurs salons</span></li>
+                  <li className="flex items-center space-x-2"><span className="text-green-400">✓</span><span>Réservez en quelques clics</span></li>
+                  <li className="flex items-center space-x-2"><span className="text-green-400">✓</span><span>Payez en toute sécurité</span></li>
                 </>
               )}
             </ul>
@@ -184,12 +122,11 @@ function Register() {
 
       {/* Right side - Form */}
       <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-8 relative overflow-hidden">
-        {/* Background decorations */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary-50 via-white to-gold-50/30"></div>
-        <div className="absolute top-0 left-0 w-80 h-80 bg-gold-100/40 rounded-full blur-3xl -translate-y-1/2 -translate-x-1/2"></div>
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-gold-100/50 rounded-full blur-3xl translate-y-1/2 translate-x-1/2"></div>
-        <div className="absolute top-1/3 right-1/4 w-48 h-48 bg-orange-50/40 rounded-full blur-2xl"></div>
-        
+        {/* Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-50 via-white to-gold-50/30 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800"></div>
+        <div className="absolute top-0 left-0 w-80 h-80 bg-gold-100/40 dark:bg-gold-900/10 rounded-full blur-3xl -translate-y-1/2 -translate-x-1/2"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-gold-100/50 dark:bg-gold-900/10 rounded-full blur-3xl translate-y-1/2 translate-x-1/2"></div>
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -201,21 +138,21 @@ function Register() {
                 <span className="text-white font-bold text-2xl">F</span>
               </div>
             </Link>
-            <h1 className="text-3xl font-bold text-primary-900">Créer un compte</h1>
-            <p className="mt-2 text-primary-600">
+            <h1 className="text-3xl font-bold text-primary-900 dark:text-white">Créer un compte</h1>
+            <p className="mt-2 text-primary-600 dark:text-gray-400">
               Rejoignez la communauté Style • Flow
             </p>
           </div>
 
           {/* Role Toggle */}
-          <div className="flex bg-primary-100 rounded-xl p-1 mb-8">
+          <div className="flex bg-primary-100 dark:bg-gray-700 rounded-xl p-1 mb-8">
             <button
               type="button"
               onClick={() => handleChange('role', 'client')}
               className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${
                 formData.role === 'client'
-                  ? 'bg-white shadow text-primary-600'
-                  : 'text-primary-600 hover:text-primary-900'
+                  ? 'bg-white dark:bg-gray-800 shadow text-primary-600 dark:text-white'
+                  : 'text-primary-600 dark:text-gray-400 hover:text-primary-900 dark:hover:text-white'
               }`}
             >
               Je suis client
@@ -225,8 +162,8 @@ function Register() {
               onClick={() => handleChange('role', 'pro')}
               className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${
                 formData.role === 'pro'
-                  ? 'bg-white shadow text-primary-600'
-                  : 'text-primary-600 hover:text-primary-900'
+                  ? 'bg-white dark:bg-gray-800 shadow text-primary-600 dark:text-white'
+                  : 'text-primary-600 dark:text-gray-400 hover:text-primary-900 dark:hover:text-white'
               }`}
             >
               Je suis pro
@@ -236,14 +173,12 @@ function Register() {
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Name */}
             <div>
-              <label className="block text-sm font-medium text-primary-700 mb-2">
-                Nom complet
-              </label>
+              <label className="block text-sm font-medium text-primary-700 dark:text-gray-300 mb-2">Nom complet</label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => handleChange('name', e.target.value)}
-                className={`input-field ${errors.name ? 'border-red-500' : ''}`}
+                className={`input-field dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-500 ${errors.name ? 'border-red-500' : ''}`}
                 placeholder="Votre nom complet"
                 autoComplete="off"
               />
@@ -252,14 +187,12 @@ function Register() {
 
             {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-primary-700 mb-2">
-                Email
-              </label>
+              <label className="block text-sm font-medium text-primary-700 dark:text-gray-300 mb-2">Email</label>
               <input
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleChange('email', e.target.value)}
-                className={`input-field ${errors.email ? 'border-red-500' : ''}`}
+                className={`input-field dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-500 ${errors.email ? 'border-red-500' : ''}`}
                 placeholder="votre@email.com"
                 autoComplete="off"
               />
@@ -268,14 +201,12 @@ function Register() {
 
             {/* Phone */}
             <div>
-              <label className="block text-sm font-medium text-primary-700 mb-2">
-                Téléphone
-              </label>
+              <label className="block text-sm font-medium text-primary-700 dark:text-gray-300 mb-2">Téléphone</label>
               <input
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => handleChange('phone', e.target.value)}
-                className={`input-field ${errors.phone ? 'border-red-500' : ''}`}
+                className={`input-field dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-500 ${errors.phone ? 'border-red-500' : ''}`}
                 placeholder="77 123 45 67"
                 autoComplete="off"
               />
@@ -284,22 +215,20 @@ function Register() {
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-primary-700 mb-2">
-                Mot de passe
-              </label>
+              <label className="block text-sm font-medium text-primary-700 dark:text-gray-300 mb-2">Mot de passe</label>
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={formData.password}
                   onChange={(e) => handleChange('password', e.target.value)}
-                  className={`input-field pr-12 ${errors.password ? 'border-red-500' : ''}`}
+                  className={`input-field pr-12 dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-500 ${errors.password ? 'border-red-500' : ''}`}
                   placeholder="Minimum 8 caractères"
                   autoComplete="off"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-primary-400 hover:text-primary-600"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-primary-400 dark:text-gray-500 hover:text-primary-600 dark:hover:text-gray-300"
                 >
                   {showPassword ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
                 </button>
@@ -309,14 +238,12 @@ function Register() {
 
             {/* Confirm Password */}
             <div>
-              <label className="block text-sm font-medium text-primary-700 mb-2">
-                Confirmer le mot de passe
-              </label>
+              <label className="block text-sm font-medium text-primary-700 dark:text-gray-300 mb-2">Confirmer le mot de passe</label>
               <input
                 type={showPassword ? 'text' : 'password'}
                 value={formData.confirmPassword}
                 onChange={(e) => handleChange('confirmPassword', e.target.value)}
-                className={`input-field ${errors.confirmPassword ? 'border-red-500' : ''}`}
+                className={`input-field dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-500 ${errors.confirmPassword ? 'border-red-500' : ''}`}
                 placeholder="Confirmez votre mot de passe"
                 autoComplete="off"
               />
@@ -328,13 +255,13 @@ function Register() {
               <input
                 type="checkbox"
                 required
-                className="mt-1 rounded border-primary-300 text-primary-600 focus:ring-primary-500"
+                className="mt-1 rounded border-primary-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500"
               />
-              <span className="ml-2 text-sm text-primary-600">
+              <span className="ml-2 text-sm text-primary-600 dark:text-gray-400">
                 J'accepte les{' '}
-                <a href="#" className="text-primary-600 hover:text-primary-700">conditions d'utilisation</a>
+                <a href="#" className="text-primary-600 dark:text-gold-400 hover:text-primary-700 dark:hover:text-gold-300">conditions d'utilisation</a>
                 {' '}et la{' '}
-                <a href="#" className="text-primary-600 hover:text-primary-700">politique de confidentialité</a>
+                <a href="#" className="text-primary-600 dark:text-gold-400 hover:text-primary-700 dark:hover:text-gold-300">politique de confidentialité</a>
               </span>
             </div>
 
@@ -357,14 +284,14 @@ function Register() {
             {/* Divider */}
             <div className="relative my-4">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-primary-300"></div>
+                <div className="w-full border-t border-primary-300 dark:border-gray-700"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white text-primary-500">Ou s'inscrire avec</span>
+                <span className="px-4 bg-white dark:bg-gray-900 text-primary-500 dark:text-gray-400">Ou s'inscrire avec</span>
               </div>
             </div>
 
-            {/* Google Login Button */}
+            {/* Google */}
             <div className="flex justify-center">
               <GoogleLogin
                 onSuccess={handleGoogleSuccess}
@@ -378,10 +305,9 @@ function Register() {
             </div>
           </form>
 
-          {/* Login link */}
-          <p className="mt-8 text-center text-primary-600">
+          <p className="mt-8 text-center text-primary-600 dark:text-gray-400">
             Déjà un compte ?{' '}
-            <Link to="/login" className="text-primary-600 font-medium hover:text-primary-700">
+            <Link to="/login" className="text-primary-600 dark:text-gold-400 font-medium hover:text-primary-700 dark:hover:text-gold-300">
               Se connecter
             </Link>
           </p>
@@ -392,4 +318,3 @@ function Register() {
 }
 
 export default Register
-
