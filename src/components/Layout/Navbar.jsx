@@ -266,6 +266,8 @@ function Navbar() {
   }, [isAuthenticated, fetchNotifications])
 
   const unreadCount = notifications.filter(n => !n.isRead).length
+  const visibleCartCount = isAuthenticated ? cartCount : 0
+  const showCartBadge = isAuthenticated ? visibleCartCount > 0 : true
 
   const markNotificationRead = async (id) => {
     if (String(id).startsWith('local-')) {
@@ -375,9 +377,9 @@ function Navbar() {
                 title="Panier"
               >
                 <FiShoppingCart className="w-5 h-5" />
-                {cartCount > 0 && (
+                {showCartBadge && (
                   <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-gold-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow">
-                    {cartCount > 9 ? '9+' : cartCount}
+                    {visibleCartCount > 9 ? '9+' : visibleCartCount}
                   </span>
                 )}
               </button>
@@ -709,13 +711,13 @@ function Navbar() {
                       >
                         <div className="relative">
                           <FiShoppingCart className="w-5 h-5" />
-                          {cartCount > 0 && (
+                          {showCartBadge && (
                             <span className="absolute -top-1 -right-1 w-4 h-4 bg-gold-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
-                              {cartCount > 9 ? '9+' : cartCount}
+                              {visibleCartCount > 9 ? '9+' : visibleCartCount}
                             </span>
                           )}
                         </div>
-                        <span>Panier{cartCount > 0 ? ` (${cartCount})` : ''}</span>
+                        <span>Panier ({visibleCartCount})</span>
                       </button>
                       <Link
                         to="/dashboard?tab=favorites"
