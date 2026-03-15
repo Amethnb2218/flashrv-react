@@ -545,6 +545,12 @@ router.patch('/:id/payment-proof/review', authenticate, async (req, res, next) =
         message: 'Decision invalide. Utilisez APPROVE ou REJECT.',
       });
     }
+    if (decision === 'REJECT' && !rejectionReason) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Le motif du rejet est obligatoire pour ouvrir un litige.',
+      });
+    }
 
     const order = await prisma.order.findUnique({
       where: { id },
@@ -590,7 +596,7 @@ router.patch('/:id/payment-proof/review', authenticate, async (req, res, next) =
         proofStatus: approve ? 'APPROVED' : 'REJECTED',
         proofReviewedAt: now,
         proofReviewedBy: req.user.id,
-        proofRejectionReason: approve ? null : (rejectionReason || 'Paiement non recu ou non verifiable.'),
+        proofRejectionReason: approve ? null : rejectionReason,
         completedAt: approve ? now : null,
       },
     });
@@ -670,7 +676,7 @@ router.patch('/:id/status', authenticate, async (req, res, next) => {
     const clientCanCancel =
       isClient &&
       status === 'CANCELLED' &&
-      ['PENDING', 'CONFIRMED'].includes(String(order.status || '').toUpperCase());
+      ['PENDING', 'PENDING_PAYMENT', 'CONFIRMED'].includes(String(order.status || '').toUpperCase());
 
     // Only boutique owner/admin can change status, except restricted client cancellation
     const isOwner = order.salon?.ownerId === req.user.id;

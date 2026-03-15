@@ -2166,7 +2166,11 @@ const reviewOrderPaymentProof = async (orderId, decision) => {
   const upperDecision = String(decision).toUpperCase();
   let reason = "";
   if (upperDecision === "REJECT") {
-    reason = window.prompt("Motif du rejet (optionnel):", "") || "";
+    reason = window.prompt("Motif du rejet (obligatoire):", "") || "";
+    if (!String(reason || "").trim()) {
+      toast.error("Le motif du rejet est obligatoire.");
+      return;
+    }
   }
   try {
     const res = await apiFetch(`/orders/${orderId}/payment-proof/review`, {
