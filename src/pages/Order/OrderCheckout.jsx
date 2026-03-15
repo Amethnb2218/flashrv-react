@@ -78,6 +78,8 @@ function OrderCheckout() {
   )
   const [loadingPaymentMethods, setLoadingPaymentMethods] = useState(false)
   const [paymentProofReference, setPaymentProofReference] = useState('')
+  const [paymentProofAmount, setPaymentProofAmount] = useState('')
+  const [paymentProofSenderPhone, setPaymentProofSenderPhone] = useState('')
 
   const [form, setForm] = useState({
     deliveryMode: forcePickup ? 'PICKUP' : (orderSeed?.deliveryMode || 'PICKUP'),
@@ -183,8 +185,16 @@ function OrderCheckout() {
   useEffect(() => {
     if (!requiresDirectProof) {
       setPaymentProofReference('')
+      setPaymentProofAmount('')
+      setPaymentProofSenderPhone('')
     }
   }, [requiresDirectProof])
+
+  useEffect(() => {
+    if (requiresDirectProof && !paymentProofSenderPhone && form.clientPhone) {
+      setPaymentProofSenderPhone(form.clientPhone)
+    }
+  }, [requiresDirectProof, paymentProofSenderPhone, form.clientPhone])
 
   if (!salon || cart.length === 0) return null
 
@@ -208,6 +218,12 @@ function OrderCheckout() {
     }
     if (currentStep === 2) {
       if (selectedPayment == null) return false
+      if (requiresDirectProof) {
+        if (!paymentProofReference.trim()) return false
+        if (!paymentProofSenderPhone.trim()) return false
+        const normalizedAmount = Number(paymentProofAmount)
+        if (!Number.isFinite(normalizedAmount) || normalizedAmount <= 0) return false
+      }
       return true
     }
     return false
@@ -331,10 +347,21 @@ ${variantNotes.join('\n')}` : '']
       }
 
       if (requiresDirectProof) {
+        const normalizedAmount = Number(paymentProofAmount)
+        if (!paymentProofReference.trim()) {
+          throw new Error('La reference transaction est obligatoire.')
+        }
+        if (!paymentProofSenderPhone.trim()) {
+          throw new Error('Le numero de l envoyeur est obligatoire.')
+        }
+        if (!Number.isFinite(normalizedAmount) || normalizedAmount <= 0) {
+          throw new Error('Le montant envoye est invalide.')
+        }
         const proofForm = new FormData()
         proofForm.append('paymentMethod', selectedPayment)
-        if (paymentProofReference.trim()) proofForm.append('proofReference', paymentProofReference.trim())
-        if (form.clientPhone.trim()) proofForm.append('payerPhone', form.clientPhone.trim())
+        proofForm.append('proofReference', paymentProofReference.trim())
+        proofForm.append('payerPhone', paymentProofSenderPhone.trim())
+        proofForm.append('proofAmount', String(normalizedAmount))
 
         const proofRes = await apiFetch(`/orders/${order.id}/payment-proof`, {
           method: 'POST',
@@ -344,7 +371,7 @@ ${variantNotes.join('\n')}` : '']
         receiptPayload.paymentProof = {
           status: proofPayload?.payment?.proofStatus || 'PENDING',
           method: selectedPayment,
-          proofReference: paymentProofReference.trim() || null,
+          proofReference: paymentProofReference.trim(),
         }
       }
 
@@ -655,13 +682,37 @@ ${variantNotes.join('\n')}` : '']
                     </div>
                   ) : null}
                   <div>
-                    <label className="block text-xs font-semibold text-primary-700 mb-1">Reference transaction (optionnel)</label>
+                    <label className="block text-xs font-semibold text-primary-700 mb-1">Reference transaction *</label>
                     <input
                       value={paymentProofReference}
                       onChange={(e) => setPaymentProofReference(e.target.value)}
                       className="w-full px-3 py-2 border border-primary-200 rounded-lg focus:ring-2 focus:ring-gold-500 outline-none text-sm"
                       placeholder="Ex: OM-12345"
                     />
+                  </div>
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-primary-700 mb-1">Montant envoye (FCFA) *</label>
+                      <input
+                        type="number"
+                        min="1"
+                        step="1"
+                        inputMode="numeric"
+                        value={paymentProofAmount}
+                        onChange={(e) => setPaymentProofAmount(e.target.value)}
+                        className="w-full px-3 py-2 border border-primary-200 rounded-lg focus:ring-2 focus:ring-gold-500 outline-none text-sm"
+                        placeholder={`Ex: ${Math.round(grandTotal)}`}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-primary-700 mb-1">Numero de l envoyeur *</label>
+                      <input
+                        value={paymentProofSenderPhone}
+                        onChange={(e) => setPaymentProofSenderPhone(e.target.value)}
+                        className="w-full px-3 py-2 border border-primary-200 rounded-lg focus:ring-2 focus:ring-gold-500 outline-none text-sm"
+                        placeholder="Ex: 77 123 45 67"
+                      />
+                    </div>
                   </div>
                 </div>
               )}

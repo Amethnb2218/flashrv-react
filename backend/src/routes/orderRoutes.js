@@ -324,11 +324,31 @@ router.post('/:id/payment-proof', authenticate, uploadPaymentProof.single('proof
     const payerPhone = cleanString(req.body?.payerPhone, 40);
     const proofReference = cleanString(req.body?.proofReference, 120);
     const proofNote = cleanString(req.body?.proofNote, 400);
+    const proofAmountRaw = req.body?.proofAmount;
+    const proofAmount = Number(proofAmountRaw);
 
     if (!normalizedMethod || !DIRECT_MOBILE_METHODS.has(normalizedMethod)) {
       return res.status(400).json({
         status: 'error',
         message: 'Choisissez un moyen de paiement mobile valide (Orange Money, Wave, Free Money).',
+      });
+    }
+    if (!proofReference) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'La reference transaction est obligatoire.',
+      });
+    }
+    if (!payerPhone) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Le numero de l envoyeur est obligatoire.',
+      });
+    }
+    if (!Number.isFinite(proofAmount) || proofAmount <= 0) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Le montant envoye est invalide.',
       });
     }
 
@@ -398,9 +418,9 @@ router.post('/:id/payment-proof', authenticate, uploadPaymentProof.single('proof
 
     const now = new Date();
     const reference = order.payment?.reference || buildPaymentReference('PMAN');
-    const transactionId = proofReference || order.payment?.transactionId || null;
+    const transactionId = proofReference;
     const nextProofImageUrl = proofUrl || order.payment?.proofImageUrl || null;
-    const nextProofReference = proofReference || order.payment?.proofReference || null;
+    const nextProofReference = proofReference;
     const nextProofNote = proofNote || order.payment?.proofNote || null;
 
     const { payment: savedPayment } = await prisma.$transaction(async (tx) => {
@@ -410,10 +430,10 @@ router.post('/:id/payment-proof', authenticate, uploadPaymentProof.single('proof
           method: normalizedMethod,
           manualMethod: normalizedMethod,
           manualRecipient: activeMethod.phoneNumber || activeMethod.displayName || null,
-          phoneNumber: payerPhone || order.clientPhone || null,
-          amount: order.totalPrice,
+          phoneNumber: payerPhone,
+          amount: proofAmount,
           fees: 0,
-          totalAmount: order.totalPrice,
+          totalAmount: proofAmount,
           currency: 'XOF',
           status: 'PENDING',
           transactionId,
@@ -434,10 +454,10 @@ router.post('/:id/payment-proof', authenticate, uploadPaymentProof.single('proof
           method: normalizedMethod,
           manualMethod: normalizedMethod,
           manualRecipient: activeMethod.phoneNumber || activeMethod.displayName || null,
-          phoneNumber: payerPhone || order.clientPhone || null,
-          amount: order.totalPrice,
+          phoneNumber: payerPhone,
+          amount: proofAmount,
           fees: 0,
-          totalAmount: order.totalPrice,
+          totalAmount: proofAmount,
           currency: 'XOF',
           status: 'PENDING',
           transactionId,

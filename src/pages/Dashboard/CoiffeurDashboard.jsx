@@ -2668,6 +2668,14 @@ active
                             <span className="text-[11px] text-blue-700">Ref: {order.payment.proofReference}</span>
                           ) : null}
                         </div>
+                        <div className="grid sm:grid-cols-2 gap-2 text-xs text-blue-800">
+                          <div className="bg-white/70 border border-blue-100 rounded-md px-2 py-1.5">
+                            Montant envoye: <span className="font-semibold">{formatMoney(order.payment?.amount || 0)}</span>
+                          </div>
+                          <div className="bg-white/70 border border-blue-100 rounded-md px-2 py-1.5">
+                            Numero envoye: <span className="font-semibold">{order.payment?.phoneNumber || "—"}</span>
+                          </div>
+                        </div>
                         <div className="flex items-start gap-3">
                           {hasProof ? (
                             <a
