@@ -700,9 +700,6 @@ ${variantNotes.join('\n')}` : '']
                       className="w-full px-3 py-2 border border-primary-200 rounded-lg focus:ring-2 focus:ring-gold-500 outline-none text-sm"
                       placeholder={selectedPayment === 'ORANGE_MONEY' ? 'Ex: MP260313.2207.C03995' : 'Ex: REF-12345'}
                     />
-                    {selectedPayment === 'ORANGE_MONEY' && (
-                      <p className="text-[11px] text-primary-500 mt-1">Format Orange Money: MP######.####.C##### (20 caracteres)</p>
-                    )}
                   </div>
                   <div className="grid sm:grid-cols-2 gap-3">
                     <div>
