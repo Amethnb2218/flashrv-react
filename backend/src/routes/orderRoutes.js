@@ -7,6 +7,7 @@ const { sendOrderConfirmationEmail } = require('../services/emailService');
 const { uploadPaymentProof } = require('../config/cloudinary');
 
 const DIRECT_MOBILE_METHODS = new Set(['ORANGE_MONEY', 'WAVE', 'FREE_MONEY']);
+const ORANGE_MONEY_REFERENCE_REGEX = /^MP\d{6}\.\d{4}\.C\d{5}$/i;
 const ALLOWED_PAYMENT_METHODS = new Set([
   'PAYDUNYA',
   'PAY_ON_PICKUP',
@@ -339,6 +340,15 @@ router.post('/:id/payment-proof', authenticate, uploadPaymentProof.single('proof
         message: 'La reference transaction est obligatoire.',
       });
     }
+    if (normalizedMethod === 'ORANGE_MONEY') {
+      const normalizedOmReference = String(proofReference).toUpperCase();
+      if (!ORANGE_MONEY_REFERENCE_REGEX.test(normalizedOmReference)) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'Reference Orange Money invalide. Format attendu: MP260313.2207.C03995 (20 caracteres).',
+        });
+      }
+    }
     if (!payerPhone) {
       return res.status(400).json({
         status: 'error',
@@ -418,9 +428,12 @@ router.post('/:id/payment-proof', authenticate, uploadPaymentProof.single('proof
 
     const now = new Date();
     const reference = order.payment?.reference || buildPaymentReference('PMAN');
-    const transactionId = proofReference;
+    const normalizedProofReference = normalizedMethod === 'ORANGE_MONEY'
+      ? String(proofReference).toUpperCase()
+      : proofReference;
+    const transactionId = normalizedProofReference;
     const nextProofImageUrl = proofUrl || order.payment?.proofImageUrl || null;
-    const nextProofReference = proofReference;
+    const nextProofReference = normalizedProofReference;
     const nextProofNote = proofNote || order.payment?.proofNote || null;
 
     const { payment: savedPayment } = await prisma.$transaction(async (tx) => {

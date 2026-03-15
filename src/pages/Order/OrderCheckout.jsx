@@ -12,6 +12,7 @@ import { buildPaydunyaPaymentPayload } from '../../utils/payments'
 import { saveOrderPaymentSession } from '../../utils/orderPaymentSession'
 
 const DIRECT_MOBILE_METHODS = new Set(['ORANGE_MONEY', 'WAVE', 'FREE_MONEY'])
+const ORANGE_MONEY_REFERENCE_REGEX = /^MP\d{6}\.\d{4}\.C\d{5}$/i
 
 const PAYMENT_METHOD_LABELS = {
   PAYDUNYA: 'PayDunya',
@@ -223,6 +224,10 @@ function OrderCheckout() {
         if (!paymentProofSenderPhone.trim()) return false
         const normalizedAmount = Number(paymentProofAmount)
         if (!Number.isFinite(normalizedAmount) || normalizedAmount <= 0) return false
+        if (selectedPayment === 'ORANGE_MONEY') {
+          const normalizedRef = paymentProofReference.trim().toUpperCase()
+          if (!ORANGE_MONEY_REFERENCE_REGEX.test(normalizedRef)) return false
+        }
       }
       return true
     }
@@ -350,6 +355,12 @@ ${variantNotes.join('\n')}` : '']
         const normalizedAmount = Number(paymentProofAmount)
         if (!paymentProofReference.trim()) {
           throw new Error('La reference transaction est obligatoire.')
+        }
+        if (selectedPayment === 'ORANGE_MONEY') {
+          const normalizedRef = paymentProofReference.trim().toUpperCase()
+          if (!ORANGE_MONEY_REFERENCE_REGEX.test(normalizedRef)) {
+            throw new Error('Reference Orange Money invalide. Format attendu: MP260313.2207.C03995 (20 caracteres).')
+          }
         }
         if (!paymentProofSenderPhone.trim()) {
           throw new Error('Le numero de l envoyeur est obligatoire.')
@@ -687,8 +698,11 @@ ${variantNotes.join('\n')}` : '']
                       value={paymentProofReference}
                       onChange={(e) => setPaymentProofReference(e.target.value)}
                       className="w-full px-3 py-2 border border-primary-200 rounded-lg focus:ring-2 focus:ring-gold-500 outline-none text-sm"
-                      placeholder="Ex: OM-12345"
+                      placeholder={selectedPayment === 'ORANGE_MONEY' ? 'Ex: MP260313.2207.C03995' : 'Ex: REF-12345'}
                     />
+                    {selectedPayment === 'ORANGE_MONEY' && (
+                      <p className="text-[11px] text-primary-500 mt-1">Format Orange Money: MP######.####.C##### (20 caracteres)</p>
+                    )}
                   </div>
                   <div className="grid sm:grid-cols-2 gap-3">
                     <div>
