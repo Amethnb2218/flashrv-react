@@ -64,6 +64,11 @@ model SalonPaymentMethod {
   salon     Salon    @relation(fields: [salonId], references: [id], onDelete: Cascade)
   method    String   // WAVE, ORANGE_MONEY, FREE_MONEY, CASH, CARD
   enabled   Boolean  @default(false)
+  displayName String?
+  phoneNumber String?
+  qrCodeUrl String?
+  instructions String?
+  requiresProof Boolean @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -434,6 +439,16 @@ model Payment {
   method        String?   // WAVE, ORANGE_MONEY, FREE_MONEY, CARD, CASH
   reference     String?   @unique // Référence interne unique
   phoneNumber   String?   // Numéro de téléphone pour paiements mobiles
+  manualMethod  String?   // ORANGE_MONEY, WAVE, FREE_MONEY (paiement direct)
+  manualRecipient String? // Numero/identifiant marchand du pro
+  proofImageUrl String?   // Capture du paiement fournie par le client
+  proofReference String?  // Reference transaction client (optionnelle)
+  proofNote     String?   // Note liee a la preuve
+  proofStatus   String    @default("NONE") // NONE, PENDING, APPROVED, REJECTED
+  proofSubmittedAt DateTime?
+  proofReviewedAt DateTime?
+  proofReviewedBy String?
+  proofRejectionReason String?
   completedAt   DateTime? // Date de confirmation du paiement
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -600,6 +615,7 @@ model ProductImage {
 model Order {
   id            String   @id @default(uuid())
   status        String   @default("PENDING") // PENDING, CONFIRMED, PREPARING, READY, DELIVERED, CANCELLED
+  paymentMethod String?
   totalPrice    Float
   notes         String?
   deliveryMode  String   @default("PICKUP") // PICKUP, DELIVERY

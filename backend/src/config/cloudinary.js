@@ -66,10 +66,32 @@ const voiceStorage = new CloudinaryStorage({
   },
 });
 
+// Salon payment method QR codes
+const paymentQrStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'styleflow/payment-methods/qr',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+    transformation: [{ width: 900, height: 900, crop: 'limit', quality: 'auto' }],
+  },
+});
+
+// Customer payment proof screenshots
+const paymentProofStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'styleflow/payments/proofs',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+    transformation: [{ width: 1400, height: 1400, crop: 'limit', quality: 'auto' }],
+  },
+});
+
 const uploadGallery = multer({ storage: galleryStorage, fileFilter: imageFileFilter, limits: { fileSize: 5 * 1024 * 1024 } });
 const uploadSalonImage = multer({ storage: salonImageStorage, fileFilter: imageFileFilter, limits: { fileSize: 5 * 1024 * 1024 } });
 const uploadServiceImages = multer({ storage: serviceImageStorage, fileFilter: imageFileFilter, limits: { fileSize: 5 * 1024 * 1024 } });
 const uploadProductImages = multer({ storage: productImageStorage, fileFilter: imageFileFilter, limits: { fileSize: 5 * 1024 * 1024 } });
+const uploadPaymentQr = multer({ storage: paymentQrStorage, fileFilter: imageFileFilter, limits: { fileSize: 5 * 1024 * 1024 } });
+const uploadPaymentProof = multer({ storage: paymentProofStorage, fileFilter: imageFileFilter, limits: { fileSize: 8 * 1024 * 1024 } });
 const uploadVoice = multer({
   storage: voiceStorage,
   limits: { fileSize: 12 * 1024 * 1024 },
@@ -85,5 +107,7 @@ module.exports = {
   uploadSalonImage,
   uploadServiceImages,
   uploadProductImages,
+  uploadPaymentQr,
+  uploadPaymentProof,
   uploadVoice,
 };
