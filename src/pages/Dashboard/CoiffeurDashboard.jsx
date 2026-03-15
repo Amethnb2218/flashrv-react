@@ -2570,9 +2570,11 @@ active
                     : paymentMethodKey === "CASH"
                       ? "Espèces"
                       : "Non précisé";
+        const isDirectMobileOrder = MOBILE_MONEY_PAYMENT_METHODS.has(paymentMethodKey);
         const proofStatusKey = String(order.payment?.proofStatus || "").toUpperCase();
         const hasProof = !!order.payment?.proofImageUrl;
-        const canReviewProof = hasProof && proofStatusKey === "PENDING";
+        const hasReviewablePayment = isDirectMobileOrder && !!order.payment;
+        const canReviewProof = hasReviewablePayment && (!proofStatusKey || proofStatusKey === "PENDING");
         const isExpanded = expandedOrderId === order.id;
 
         return (
@@ -2656,34 +2658,42 @@ active
                       <span className="font-bold text-gold-600">{formatMoney(order.totalPrice)}</span>
                     </div>
 
-                    {hasProof && (
+                    {hasReviewablePayment && (
                       <div className="rounded-lg border border-blue-100 bg-blue-50 p-3 space-y-2">
                         <div className="flex items-center justify-between">
                           <p className="text-xs font-semibold text-blue-800">
-                            Preuve paiement: {proofStatusKey || "PENDING"}
+                            Paiement direct: {proofStatusKey || "PENDING"}
                           </p>
                           {order.payment?.proofReference ? (
                             <span className="text-[11px] text-blue-700">Ref: {order.payment.proofReference}</span>
                           ) : null}
                         </div>
                         <div className="flex items-start gap-3">
-                          <a
-                            href={resolveMediaUrl(order.payment?.proofImageUrl)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex"
-                          >
-                            <img
-                              src={resolveMediaUrl(order.payment?.proofImageUrl)}
-                              alt="Preuve paiement"
-                              className="w-20 h-20 rounded-lg object-cover border border-blue-200 bg-white"
-                            />
-                          </a>
+                          {hasProof ? (
+                            <a
+                              href={resolveMediaUrl(order.payment?.proofImageUrl)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex"
+                            >
+                              <img
+                                src={resolveMediaUrl(order.payment?.proofImageUrl)}
+                                alt="Preuve paiement"
+                                className="w-20 h-20 rounded-lg object-cover border border-blue-200 bg-white"
+                              />
+                            </a>
+                          ) : (
+                            <div className="w-20 h-20 rounded-lg border border-dashed border-blue-300 bg-white/70 flex items-center justify-center text-[10px] text-blue-700 text-center px-1">
+                              Pas de capture
+                            </div>
+                          )}
                           <div className="min-w-0">
                             {order.payment?.proofNote ? (
                               <p className="text-xs text-blue-700 break-words">{order.payment.proofNote}</p>
                             ) : (
-                              <p className="text-xs text-blue-700">Aucune note client.</p>
+                              <p className="text-xs text-blue-700">
+                                {hasProof ? "Aucune note client." : "Aucune capture fournie par le client."}
+                              </p>
                             )}
                             {order.payment?.proofRejectionReason ? (
                               <p className="text-xs text-red-600 mt-1">
@@ -2706,7 +2716,7 @@ active
                               className="px-3 py-1.5 text-sm text-red-600"
                               onClick={() => reviewOrderPaymentProof(order.id, "REJECT")}
                             >
-                              <FiX className="mr-1" /> Rejeter preuve
+                              <FiX className="mr-1" /> Rejeter / bloquer
                             </Button>
                           </div>
                         )}
@@ -4458,7 +4468,7 @@ label="Instructions client (optionnel)"
 rows={3}
 value={newPaymentMethod.instructions}
 onChange={(e) => setNewPaymentMethod((p) => ({ ...p, instructions: e.target.value }))}
-placeholder="Ex: Envoyez le paiement puis uploadez la capture avec la reference."
+placeholder="Ex: Envoyez le paiement puis partagez la reference de transaction (optionnel)."
 />
 {MOBILE_MONEY_PAYMENT_METHODS.has(String(newPaymentMethod.method || "").toUpperCase()) ? (
 <div className="flex items-center gap-2">

@@ -331,9 +331,6 @@ router.post('/:id/payment-proof', authenticate, uploadPaymentProof.single('proof
         message: 'Choisissez un moyen de paiement mobile valide (Orange Money, Wave, Free Money).',
       });
     }
-    if (!req.file) {
-      return res.status(400).json({ status: 'error', message: 'La capture de paiement est obligatoire.' });
-    }
 
     const order = await prisma.order.findUnique({
       where: { id },
@@ -393,14 +390,18 @@ router.post('/:id/payment-proof', authenticate, uploadPaymentProof.single('proof
       });
     }
 
-    const proofUrl = req.file.path || req.file.secure_url || req.file.url || null;
-    if (!proofUrl) {
+    const hasUploadedProof = !!req.file;
+    const proofUrl = hasUploadedProof ? (req.file.path || req.file.secure_url || req.file.url || null) : null;
+    if (hasUploadedProof && !proofUrl) {
       return res.status(500).json({ status: 'error', message: 'Impossible de lire la capture envoyee.' });
     }
 
     const now = new Date();
     const reference = order.payment?.reference || buildPaymentReference('PMAN');
     const transactionId = proofReference || order.payment?.transactionId || null;
+    const nextProofImageUrl = proofUrl || order.payment?.proofImageUrl || null;
+    const nextProofReference = proofReference || order.payment?.proofReference || null;
+    const nextProofNote = proofNote || order.payment?.proofNote || null;
 
     const { payment: savedPayment } = await prisma.$transaction(async (tx) => {
       const payment = await tx.payment.upsert({
@@ -416,9 +417,9 @@ router.post('/:id/payment-proof', authenticate, uploadPaymentProof.single('proof
           currency: 'XOF',
           status: 'PENDING',
           transactionId,
-          proofImageUrl: proofUrl,
-          proofReference,
-          proofNote,
+          proofImageUrl: nextProofImageUrl,
+          proofReference: nextProofReference,
+          proofNote: nextProofNote,
           proofStatus: 'PENDING',
           proofSubmittedAt: now,
           proofReviewedAt: null,
@@ -441,9 +442,9 @@ router.post('/:id/payment-proof', authenticate, uploadPaymentProof.single('proof
           status: 'PENDING',
           transactionId,
           reference,
-          proofImageUrl: proofUrl,
-          proofReference,
-          proofNote,
+          proofImageUrl: nextProofImageUrl,
+          proofReference: nextProofReference,
+          proofNote: nextProofNote,
           proofStatus: 'PENDING',
           proofSubmittedAt: now,
           userId: order.clientId,
@@ -467,7 +468,9 @@ router.post('/:id/payment-proof', authenticate, uploadPaymentProof.single('proof
           data: {
             userId: order.salon.ownerId,
             type: 'order',
-            message: `Preuve de paiement recue pour la commande ${id.slice(-8).toUpperCase()} (${toFriendlyPaymentMethodLabel(normalizedMethod)}).`,
+            message: proofUrl
+              ? `Preuve de paiement recue pour la commande ${id.slice(-8).toUpperCase()} (${toFriendlyPaymentMethodLabel(normalizedMethod)}).`
+              : `Paiement a verifier pour la commande ${id.slice(-8).toUpperCase()} (${toFriendlyPaymentMethodLabel(normalizedMethod)}).`,
           },
         });
         pushNotification(notification.userId, notification);
@@ -481,7 +484,9 @@ router.post('/:id/payment-proof', authenticate, uploadPaymentProof.single('proof
         data: {
           userId: order.clientId,
           type: 'order',
-          message: `Preuve de paiement envoyee. La boutique ${order.salon?.name || ''} va verifier votre paiement.`,
+          message: proofUrl
+            ? `Preuve de paiement envoyee. La boutique ${order.salon?.name || ''} va verifier votre paiement.`
+            : `Demande de verification envoyee. La boutique ${order.salon?.name || ''} va verifier votre paiement.`,
         },
       });
       pushNotification(notification.userId, notification);
@@ -491,7 +496,9 @@ router.post('/:id/payment-proof', authenticate, uploadPaymentProof.single('proof
 
     return res.status(200).json({
       status: 'success',
-      message: 'Preuve de paiement envoyee avec succes.',
+      message: proofUrl
+        ? 'Preuve de paiement envoyee avec succes.'
+        : 'Demande de verification de paiement envoyee avec succes.',
       data: {
         orderId: id,
         payment: savedPayment,
@@ -538,10 +545,19 @@ router.patch('/:id/payment-proof/review', authenticate, async (req, res, next) =
       return res.status(403).json({ status: 'error', message: 'Acces interdit' });
     }
 
-    if (!order.payment || !order.payment.proofImageUrl) {
+    if (!order.payment) {
       return res.status(400).json({
         status: 'error',
-        message: 'Aucune preuve de paiement a verifier pour cette commande.',
+        message: 'Aucune information de paiement a verifier pour cette commande.',
+      });
+    }
+    const reviewPaymentMethod = normalizeOrderPaymentMethod(
+      order.payment?.manualMethod || order.payment?.method || order.paymentMethod
+    );
+    if (!reviewPaymentMethod || !DIRECT_MOBILE_METHODS.has(reviewPaymentMethod)) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Cette commande n utilise pas un paiement mobile direct a verifier.',
       });
     }
 
@@ -554,7 +570,7 @@ router.patch('/:id/payment-proof/review', authenticate, async (req, res, next) =
         proofStatus: approve ? 'APPROVED' : 'REJECTED',
         proofReviewedAt: now,
         proofReviewedBy: req.user.id,
-        proofRejectionReason: approve ? null : (rejectionReason || 'Preuve non conforme.'),
+        proofRejectionReason: approve ? null : (rejectionReason || 'Paiement non recu ou non verifiable.'),
         completedAt: approve ? now : null,
       },
     });

@@ -77,9 +77,7 @@ function OrderCheckout() {
     Array.isArray(orderSeed?.salon?.paymentMethods) ? orderSeed.salon.paymentMethods : []
   )
   const [loadingPaymentMethods, setLoadingPaymentMethods] = useState(false)
-  const [paymentProofFile, setPaymentProofFile] = useState(null)
   const [paymentProofReference, setPaymentProofReference] = useState('')
-  const [paymentProofNote, setPaymentProofNote] = useState('')
 
   const [form, setForm] = useState({
     deliveryMode: forcePickup ? 'PICKUP' : (orderSeed?.deliveryMode || 'PICKUP'),
@@ -184,9 +182,7 @@ function OrderCheckout() {
 
   useEffect(() => {
     if (!requiresDirectProof) {
-      setPaymentProofFile(null)
       setPaymentProofReference('')
-      setPaymentProofNote('')
     }
   }, [requiresDirectProof])
 
@@ -212,7 +208,6 @@ function OrderCheckout() {
     }
     if (currentStep === 2) {
       if (selectedPayment == null) return false
-      if (requiresDirectProof && !paymentProofFile) return false
       return true
     }
     return false
@@ -336,14 +331,9 @@ ${variantNotes.join('\n')}` : '']
       }
 
       if (requiresDirectProof) {
-        if (!paymentProofFile) {
-          throw new Error('Ajoutez la capture de paiement avant de confirmer.')
-        }
         const proofForm = new FormData()
         proofForm.append('paymentMethod', selectedPayment)
-        proofForm.append('proof', paymentProofFile)
         if (paymentProofReference.trim()) proofForm.append('proofReference', paymentProofReference.trim())
-        if (paymentProofNote.trim()) proofForm.append('proofNote', paymentProofNote.trim())
         if (form.clientPhone.trim()) proofForm.append('payerPhone', form.clientPhone.trim())
 
         const proofRes = await apiFetch(`/orders/${order.id}/payment-proof`, {
@@ -362,7 +352,7 @@ ${variantNotes.join('\n')}` : '']
         userId: user?.id || user?.email,
         type: requiresDirectProof ? 'order_pending_payment_review' : 'order_confirmation',
         message: requiresDirectProof
-          ? `Preuve de paiement envoyee chez ${salon.name}. Ref: ${order?.id || 'N/A'}`
+          ? `Demande de verification de paiement envoyee chez ${salon.name}. Ref: ${order?.id || 'N/A'}`
           : `Commande confirmee chez ${salon.name}. Ref: ${order?.id || 'N/A'}`,
         meta: { orderId: order?.id, salonId: salon.id },
       })
@@ -661,37 +651,16 @@ ${variantNotes.join('\n')}` : '']
                         alt={`QR ${selectedDirectMethod.name}`}
                         className="w-24 h-24 rounded-lg border border-primary-200 object-cover bg-white"
                       />
-                      <p className="text-xs text-primary-600">Scannez le QR, payez, puis uploadez la preuve.</p>
+                      <p className="text-xs text-primary-600">Scannez le QR et payez directement au marchand.</p>
                     </div>
                   ) : null}
-                  <div className="grid sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-semibold text-primary-700 mb-1">Capture de paiement *</label>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => setPaymentProofFile(e.target.files?.[0] || null)}
-                        className="block w-full text-xs text-primary-600 file:mr-3 file:rounded-lg file:border-0 file:bg-primary-100 file:px-3 file:py-2 file:text-primary-700"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-primary-700 mb-1">Reference transaction (optionnel)</label>
-                      <input
-                        value={paymentProofReference}
-                        onChange={(e) => setPaymentProofReference(e.target.value)}
-                        className="w-full px-3 py-2 border border-primary-200 rounded-lg focus:ring-2 focus:ring-gold-500 outline-none text-sm"
-                        placeholder="Ex: OM-12345"
-                      />
-                    </div>
-                  </div>
                   <div>
-                    <label className="block text-xs font-semibold text-primary-700 mb-1">Note (optionnel)</label>
-                    <textarea
-                      rows={2}
-                      value={paymentProofNote}
-                      onChange={(e) => setPaymentProofNote(e.target.value)}
+                    <label className="block text-xs font-semibold text-primary-700 mb-1">Reference transaction (optionnel)</label>
+                    <input
+                      value={paymentProofReference}
+                      onChange={(e) => setPaymentProofReference(e.target.value)}
                       className="w-full px-3 py-2 border border-primary-200 rounded-lg focus:ring-2 focus:ring-gold-500 outline-none text-sm"
-                      placeholder="Nom du payeur, details utiles..."
+                      placeholder="Ex: OM-12345"
                     />
                   </div>
                 </div>
