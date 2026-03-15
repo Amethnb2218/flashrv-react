@@ -451,7 +451,14 @@ router.get('/:id', optionalAuth, async (req, res, next) => {
         },
         paymentMethods: {
           where: { enabled: true },
-          select: { method: true },
+          select: {
+            method: true,
+            displayName: true,
+            phoneNumber: true,
+            qrCodeUrl: true,
+            instructions: true,
+            requiresProof: true,
+          },
         },
         salonSettings: true,
       },
@@ -807,7 +814,6 @@ router.post('/:id/reviews', authenticate, async (req, res, next) => {
 });
 
 module.exports = router;
-
 
 
 

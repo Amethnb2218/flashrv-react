@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { FiChevronLeft, FiMapPin, FiPhone, FiUser, FiFileText, FiCheck, FiShoppingBag, FiTruck, FiHome, FiTrash2 } from 'react-icons/fi'
@@ -11,11 +11,37 @@ import { clearCart, deriveDeliveryConfigFromItems, readCart, removeItemFromCart 
 import { buildPaydunyaPaymentPayload } from '../../utils/payments'
 import { saveOrderPaymentSession } from '../../utils/orderPaymentSession'
 
-const PAYMENT_METHODS = [
-  { id: 'paydunya', name: 'PayDunya', icon: 'PD', color: 'amber', description: 'Paiement en ligne securise (Orange, Free, Carte bancaire)' },
-  { id: 'pay_on_pickup', name: 'Paiement au retrait', icon: 'PICK', color: 'gray', description: 'Reglez en boutique au moment du retrait' },
-  { id: 'cash_on_delivery', name: 'Paiement a la livraison', icon: 'COD', color: 'gray', description: 'Payez en especes a la reception' },
-]
+const DIRECT_MOBILE_METHODS = new Set(['ORANGE_MONEY', 'WAVE', 'FREE_MONEY'])
+
+const PAYMENT_METHOD_LABELS = {
+  PAYDUNYA: 'PayDunya',
+  ORANGE_MONEY: 'Orange Money',
+  WAVE: 'Wave',
+  FREE_MONEY: 'Free Money',
+  PAY_ON_PICKUP: 'Paiement au retrait',
+  CASH_ON_DELIVERY: 'Paiement a la livraison',
+  CASH: 'Especes / Cash',
+}
+
+const PAYMENT_METHOD_DESCRIPTIONS = {
+  PAYDUNYA: 'Paiement en ligne securise (Orange, Free, Carte bancaire)',
+  ORANGE_MONEY: 'Paiement direct au numero Orange Money du marchand',
+  WAVE: 'Paiement direct au numero Wave du marchand',
+  FREE_MONEY: 'Paiement direct au numero Free Money du marchand',
+  PAY_ON_PICKUP: 'Reglez en boutique au moment du retrait',
+  CASH_ON_DELIVERY: 'Payez en especes a la reception',
+  CASH: 'Paiement en especes',
+}
+
+const PAYMENT_METHOD_ICONS = {
+  PAYDUNYA: 'PD',
+  ORANGE_MONEY: 'OM',
+  WAVE: 'WV',
+  FREE_MONEY: 'FM',
+  PAY_ON_PICKUP: 'PICK',
+  CASH_ON_DELIVERY: 'COD',
+  CASH: 'CASH',
+}
 
 const STEPS = ['Récapitulatif', 'Livraison', 'Paiement']
 
@@ -47,6 +73,13 @@ function OrderCheckout() {
   const [selectedPayment, setSelectedPayment] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [salonPaymentMethods, setSalonPaymentMethods] = useState(() =>
+    Array.isArray(orderSeed?.salon?.paymentMethods) ? orderSeed.salon.paymentMethods : []
+  )
+  const [loadingPaymentMethods, setLoadingPaymentMethods] = useState(false)
+  const [paymentProofFile, setPaymentProofFile] = useState(null)
+  const [paymentProofReference, setPaymentProofReference] = useState('')
+  const [paymentProofNote, setPaymentProofNote] = useState('')
 
   const [form, setForm] = useState({
     deliveryMode: forcePickup ? 'PICKUP' : (orderSeed?.deliveryMode || 'PICKUP'),
@@ -80,11 +113,84 @@ function OrderCheckout() {
     }
   }, [cart.length, navigate])
 
-  if (!salon || cart.length === 0) return null
+  useEffect(() => {
+    let mounted = true
+    const fetchSalonMethods = async () => {
+      if (!salon?.id) return
+      setLoadingPaymentMethods(true)
+      try {
+        const res = await apiFetch(`/salons/${salon.id}`)
+        const data = res?.data ?? res
+        const payloadSalon = data?.salon ?? data
+        if (!mounted) return
+        setSalonPaymentMethods(Array.isArray(payloadSalon?.paymentMethods) ? payloadSalon.paymentMethods : [])
+      } catch (_) {
+        if (!mounted) return
+        setSalonPaymentMethods(Array.isArray(salon?.paymentMethods) ? salon.paymentMethods : [])
+      } finally {
+        if (mounted) setLoadingPaymentMethods(false)
+      }
+    }
+    fetchSalonMethods()
+    return () => {
+      mounted = false
+    }
+  }, [salon?.id])
 
   const cartTotal = cart.reduce((sum, c) => sum + c.product.price * c.quantity, 0)
   const deliveryFee = form.deliveryMode === 'DELIVERY' ? baseDeliveryFee : 0
   const grandTotal = cartTotal + deliveryFee
+  const directPaymentMethods = useMemo(() => {
+    return (Array.isArray(salonPaymentMethods) ? salonPaymentMethods : [])
+      .filter((pm) => pm?.enabled !== false)
+      .filter((pm) => DIRECT_MOBILE_METHODS.has(String(pm?.method || '').toUpperCase()))
+      .map((pm) => {
+        const methodKey = String(pm.method || '').toUpperCase()
+        return {
+          id: methodKey,
+          name: PAYMENT_METHOD_LABELS[methodKey] || methodKey,
+          icon: PAYMENT_METHOD_ICONS[methodKey] || 'PAY',
+          description: PAYMENT_METHOD_DESCRIPTIONS[methodKey] || 'Paiement direct',
+          details: pm,
+        }
+      })
+  }, [salonPaymentMethods])
+  const paymentMethods = useMemo(() => {
+    const methods = [
+      {
+        id: 'PAYDUNYA',
+        name: PAYMENT_METHOD_LABELS.PAYDUNYA,
+        icon: PAYMENT_METHOD_ICONS.PAYDUNYA,
+        description: PAYMENT_METHOD_DESCRIPTIONS.PAYDUNYA,
+      },
+      ...directPaymentMethods,
+      {
+        id: 'PAY_ON_PICKUP',
+        name: PAYMENT_METHOD_LABELS.PAY_ON_PICKUP,
+        icon: PAYMENT_METHOD_ICONS.PAY_ON_PICKUP,
+        description: PAYMENT_METHOD_DESCRIPTIONS.PAY_ON_PICKUP,
+      },
+      {
+        id: 'CASH_ON_DELIVERY',
+        name: PAYMENT_METHOD_LABELS.CASH_ON_DELIVERY,
+        icon: PAYMENT_METHOD_ICONS.CASH_ON_DELIVERY,
+        description: PAYMENT_METHOD_DESCRIPTIONS.CASH_ON_DELIVERY,
+      },
+    ]
+    return methods
+  }, [directPaymentMethods])
+  const selectedDirectMethod = directPaymentMethods.find((m) => m.id === selectedPayment) || null
+  const requiresDirectProof = DIRECT_MOBILE_METHODS.has(String(selectedPayment || '').toUpperCase())
+
+  useEffect(() => {
+    if (!requiresDirectProof) {
+      setPaymentProofFile(null)
+      setPaymentProofReference('')
+      setPaymentProofNote('')
+    }
+  }, [requiresDirectProof])
+
+  if (!salon || cart.length === 0) return null
 
   const handleRemoveLine = (item) => {
     const nextCart = removeItemFromCart({
@@ -104,7 +210,11 @@ function OrderCheckout() {
       if (form.deliveryMode === 'DELIVERY' && !form.deliveryAddress.trim()) return false
       return true
     }
-    if (currentStep === 2) return selectedPayment !== null
+    if (currentStep === 2) {
+      if (selectedPayment == null) return false
+      if (requiresDirectProof && !paymentProofFile) return false
+      return true
+    }
     return false
   }
 
@@ -177,7 +287,7 @@ ${variantNotes.join('\n')}` : '']
         deliveryFee,
       }
 
-      if (selectedPayment === 'paydunya') {
+      if (selectedPayment === 'PAYDUNYA') {
         saveOrderPaymentSession(receiptPayload)
         pushSiteNotification({
           userId: user?.id || user?.email,
@@ -225,10 +335,35 @@ ${variantNotes.join('\n')}` : '']
         return
       }
 
+      if (requiresDirectProof) {
+        if (!paymentProofFile) {
+          throw new Error('Ajoutez la capture de paiement avant de confirmer.')
+        }
+        const proofForm = new FormData()
+        proofForm.append('paymentMethod', selectedPayment)
+        proofForm.append('proof', paymentProofFile)
+        if (paymentProofReference.trim()) proofForm.append('proofReference', paymentProofReference.trim())
+        if (paymentProofNote.trim()) proofForm.append('proofNote', paymentProofNote.trim())
+        if (form.clientPhone.trim()) proofForm.append('payerPhone', form.clientPhone.trim())
+
+        const proofRes = await apiFetch(`/orders/${order.id}/payment-proof`, {
+          method: 'POST',
+          body: proofForm,
+        })
+        const proofPayload = proofRes?.data ?? proofRes
+        receiptPayload.paymentProof = {
+          status: proofPayload?.payment?.proofStatus || 'PENDING',
+          method: selectedPayment,
+          proofReference: paymentProofReference.trim() || null,
+        }
+      }
+
       pushSiteNotification({
         userId: user?.id || user?.email,
-        type: 'order_confirmation',
-        message: `Commande confirmee chez ${salon.name}. Ref: ${order?.id || 'N/A'}`,
+        type: requiresDirectProof ? 'order_pending_payment_review' : 'order_confirmation',
+        message: requiresDirectProof
+          ? `Preuve de paiement envoyee chez ${salon.name}. Ref: ${order?.id || 'N/A'}`
+          : `Commande confirmee chez ${salon.name}. Ref: ${order?.id || 'N/A'}`,
         meta: { orderId: order?.id, salonId: salon.id },
       })
 
@@ -238,9 +373,17 @@ ${variantNotes.join('\n')}` : '']
       })
       clearCart()
     } catch (e) {
-      if (selectedPayment === 'paydunya' && createdOrder?.id && receiptPayload) {
+      if (selectedPayment === 'PAYDUNYA' && createdOrder?.id && receiptPayload) {
         saveOrderPaymentSession(receiptPayload)
         navigate(`/order/payment/cancel?orderId=${encodeURIComponent(createdOrder.id)}`, { replace: true })
+        return
+      }
+      if (requiresDirectProof && createdOrder?.id && receiptPayload) {
+        navigate('/order/receipt', {
+          state: receiptPayload,
+          replace: true,
+        })
+        clearCart()
         return
       }
       setError(e.message || 'Erreur lors de la commande')
@@ -463,14 +606,14 @@ ${variantNotes.join('\n')}` : '']
               <h2 className="text-lg font-bold text-primary-900">Choisissez votre méthode de paiement</h2>
 
               <div className="space-y-3">
-                {PAYMENT_METHODS.map(method => (
+                {paymentMethods.map((method) => (
                   <button
                     key={method.id}
                     onClick={() => {
-                      if (method.id === 'pay_on_pickup' && form.deliveryMode === 'DELIVERY') return
+                      if (method.id === 'PAY_ON_PICKUP' && form.deliveryMode === 'DELIVERY') return
                       setSelectedPayment(method.id)
                     }}
-                    disabled={method.id === 'pay_on_pickup' && form.deliveryMode === 'DELIVERY'}
+                    disabled={method.id === 'PAY_ON_PICKUP' && form.deliveryMode === 'DELIVERY'}
                     className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 text-left transition-all ${
                       selectedPayment === method.id
                         ? 'border-primary-900 bg-primary-50 shadow-sm'
@@ -480,8 +623,8 @@ ${variantNotes.join('\n')}` : '']
                     <span className="text-xs font-semibold text-primary-700 bg-primary-100 rounded-full px-2.5 py-1">{method.icon}</span>
                     <div className="flex-1">
                       <p className="font-semibold text-primary-900">{method.name}</p>
-                      <p className={`text-sm ${method.id === 'pay_on_pickup' && form.deliveryMode === 'DELIVERY' ? 'text-primary-400' : 'text-primary-500'}`}>
-                        {method.id === 'pay_on_pickup' && form.deliveryMode === 'DELIVERY'
+                      <p className={`text-sm ${method.id === 'PAY_ON_PICKUP' && form.deliveryMode === 'DELIVERY' ? 'text-primary-400' : 'text-primary-500'}`}>
+                        {method.id === 'PAY_ON_PICKUP' && form.deliveryMode === 'DELIVERY'
                           ? 'Indisponible pour les commandes en livraison'
                           : method.description}
                       </p>
@@ -495,7 +638,64 @@ ${variantNotes.join('\n')}` : '']
                 ))}
               </div>
 
-              
+              {loadingPaymentMethods && (
+                <p className="text-xs text-primary-500">Chargement des moyens de paiement du salon...</p>
+              )}
+
+              {selectedDirectMethod && (
+                <div className="rounded-xl border border-primary-200 bg-primary-50 p-4 space-y-3">
+                  <p className="text-sm font-semibold text-primary-900">Paiement direct via {selectedDirectMethod.name}</p>
+                  {selectedDirectMethod.details?.displayName ? (
+                    <p className="text-xs text-primary-600">Compte: {selectedDirectMethod.details.displayName}</p>
+                  ) : null}
+                  {selectedDirectMethod.details?.phoneNumber ? (
+                    <p className="text-sm text-primary-800 font-semibold">Numero marchand: {selectedDirectMethod.details.phoneNumber}</p>
+                  ) : null}
+                  {selectedDirectMethod.details?.instructions ? (
+                    <p className="text-xs text-primary-600">{selectedDirectMethod.details.instructions}</p>
+                  ) : null}
+                  {selectedDirectMethod.details?.qrCodeUrl ? (
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={resolveMediaUrl(selectedDirectMethod.details.qrCodeUrl)}
+                        alt={`QR ${selectedDirectMethod.name}`}
+                        className="w-24 h-24 rounded-lg border border-primary-200 object-cover bg-white"
+                      />
+                      <p className="text-xs text-primary-600">Scannez le QR, payez, puis uploadez la preuve.</p>
+                    </div>
+                  ) : null}
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-primary-700 mb-1">Capture de paiement *</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setPaymentProofFile(e.target.files?.[0] || null)}
+                        className="block w-full text-xs text-primary-600 file:mr-3 file:rounded-lg file:border-0 file:bg-primary-100 file:px-3 file:py-2 file:text-primary-700"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-primary-700 mb-1">Reference transaction (optionnel)</label>
+                      <input
+                        value={paymentProofReference}
+                        onChange={(e) => setPaymentProofReference(e.target.value)}
+                        className="w-full px-3 py-2 border border-primary-200 rounded-lg focus:ring-2 focus:ring-gold-500 outline-none text-sm"
+                        placeholder="Ex: OM-12345"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-primary-700 mb-1">Note (optionnel)</label>
+                    <textarea
+                      rows={2}
+                      value={paymentProofNote}
+                      onChange={(e) => setPaymentProofNote(e.target.value)}
+                      className="w-full px-3 py-2 border border-primary-200 rounded-lg focus:ring-2 focus:ring-gold-500 outline-none text-sm"
+                      placeholder="Nom du payeur, details utiles..."
+                    />
+                  </div>
+                </div>
+              )}
 
               {/* Order Summary */}
               <div className="p-4 bg-primary-50 rounded-xl space-y-2">

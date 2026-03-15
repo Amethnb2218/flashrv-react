@@ -9,9 +9,13 @@ import toast from 'react-hot-toast'
 import { readOrderPaymentSession } from '../../utils/orderPaymentSession'
 
 const paymentLabels = {
-  paydunya: { name: 'PayDunya', icon: 'PD' },
-  pay_on_pickup: { name: 'Paiement au retrait', icon: 'PICK' },
-  cash_on_delivery: { name: 'Paiement a la livraison', icon: 'COD' },
+  PAYDUNYA: { name: 'PayDunya', icon: 'PD' },
+  ORANGE_MONEY: { name: 'Orange Money', icon: 'OM' },
+  WAVE: { name: 'Wave', icon: 'WV' },
+  FREE_MONEY: { name: 'Free Money', icon: 'FM' },
+  PAY_ON_PICKUP: { name: 'Paiement au retrait', icon: 'PICK' },
+  CASH_ON_DELIVERY: { name: 'Paiement a la livraison', icon: 'COD' },
+  CASH: { name: 'Especes / Cash', icon: 'CASH' },
 }
 
 function OrderReceipt() {
@@ -35,8 +39,10 @@ function OrderReceipt() {
     ? `SF-${String(order.id).slice(-8).toUpperCase()}`
     : `SF-${Date.now().toString(36).toUpperCase()}`
   const orderDate = order?.createdAt ? new Date(order.createdAt) : new Date()
-  const pm = paymentLabels[paymentMethod] || paymentLabels.cash_on_delivery
-  const canCancel = order?.id && ['PENDING', 'CONFIRMED'].includes(String(orderStatus || '').toUpperCase())
+  const paymentKey = String(paymentMethod || order?.paymentMethod || '').toUpperCase()
+  const pm = paymentLabels[paymentKey] || paymentLabels.CASH_ON_DELIVERY
+  const isPendingPayment = String(orderStatus || '').toUpperCase() === 'PENDING_PAYMENT'
+  const canCancel = order?.id && ['PENDING', 'PENDING_PAYMENT', 'CONFIRMED'].includes(String(orderStatus || '').toUpperCase())
 
   const handleCopyRef = () => {
     navigator.clipboard.writeText(orderRef)
@@ -73,8 +79,12 @@ function OrderReceipt() {
           <div className="w-20 h-20 rounded-full bg-green-500 flex items-center justify-center shadow-lg shadow-green-500/30 mb-4">
             <FiCheck className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-primary-900">Commande confirmee !</h1>
-          <p className="text-primary-500 mt-1">Merci pour votre achat</p>
+          <h1 className="text-2xl font-bold text-primary-900">
+            {isPendingPayment ? 'Commande en attente de validation' : 'Commande confirmee !'}
+          </h1>
+          <p className="text-primary-500 mt-1">
+            {isPendingPayment ? 'Votre paiement sera verifie par la boutique.' : 'Merci pour votre achat'}
+          </p>
         </motion.div>
 
         <motion.div
@@ -175,13 +185,17 @@ function OrderReceipt() {
                 <span className="text-xs font-semibold text-primary-700 bg-primary-100 rounded-full px-2.5 py-1">{pm.icon}</span>
                 <span>{pm.name}</span>
               </div>
-              {paymentMethod === 'cash_on_delivery' ? (
+              {paymentKey === 'CASH_ON_DELIVERY' ? (
                 <p className="text-xs text-gold-600 font-medium mt-2 bg-gold-50 px-3 py-1.5 rounded-lg">
                   Preparez le montant exact si possible
                 </p>
-              ) : paymentMethod === 'paydunya' ? (
+              ) : paymentKey === 'PAYDUNYA' ? (
                 <p className="text-xs text-emerald-700 font-medium mt-2 bg-emerald-50 px-3 py-1.5 rounded-lg">
                   Paiement PayDunya initialise pour cette commande
+                </p>
+              ) : ['ORANGE_MONEY', 'WAVE', 'FREE_MONEY'].includes(paymentKey) ? (
+                <p className="text-xs text-blue-700 font-medium mt-2 bg-blue-50 px-3 py-1.5 rounded-lg">
+                  Preuve de paiement envoyee. Validation en cours par la boutique.
                 </p>
               ) : (
                 <p className="text-xs text-blue-600 font-medium mt-2 bg-blue-50 px-3 py-1.5 rounded-lg">

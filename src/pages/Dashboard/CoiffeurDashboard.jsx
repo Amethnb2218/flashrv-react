@@ -580,9 +580,17 @@ const [loadingPaymentMethods, setLoadingPaymentMethods] = useState(false);
 const [showPaymentMethodModal, setShowPaymentMethodModal] = useState(false);
 const [confirmPaymentMethod, setConfirmPaymentMethod] = useState(null);
 const [deletingPaymentMethod, setDeletingPaymentMethod] = useState(false);
+const [savingPaymentMethod, setSavingPaymentMethod] = useState(false);
+const [uploadingPaymentQr, setUploadingPaymentQr] = useState(false);
+const [editingPaymentMethodId, setEditingPaymentMethodId] = useState(null);
 const [newPaymentMethod, setNewPaymentMethod] = useState({
-method: "PAYDUNYA",
-enabled: true,
+  method: "ORANGE_MONEY",
+  enabled: true,
+  displayName: "",
+  phoneNumber: "",
+  qrCodeUrl: "",
+  instructions: "",
+  requiresProof: true,
 });
 
 // Team management
@@ -1037,42 +1045,131 @@ const openingHoursToApi = (openingHours) =>
 Payment methods (API)
 ----------------------------- */
 const paymentMethodChoices = [
+  { value: "ORANGE_MONEY", label: "Orange Money" },
+  { value: "WAVE", label: "Wave" },
+  { value: "FREE_MONEY", label: "Free Money" },
   { value: "PAYDUNYA", label: "PayDunya" },
-  { value: "CARD", label: "Carte bancaire" },
+  { value: "PAY_ON_PICKUP", label: "Paiement au retrait" },
+  { value: "CASH_ON_DELIVERY", label: "Paiement a la livraison" },
   { value: "CASH", label: "Especes / Cash" },
-  { value: "PAY_ON_SITE", label: "Paiement sur place" },
 ];
+const MOBILE_MONEY_PAYMENT_METHODS = new Set(["ORANGE_MONEY", "WAVE", "FREE_MONEY"]);
+const paymentMethodMeta = {
+  ORANGE_MONEY: { hint: "Ajoutez le numero Orange Money et/ou le QR marchand." },
+  WAVE: { hint: "Ajoutez le numero Wave et/ou le QR marchand." },
+  FREE_MONEY: { hint: "Ajoutez le numero Free Money et/ou le QR marchand." },
+  PAYDUNYA: { hint: "Paiement en ligne via PayDunya." },
+  PAY_ON_PICKUP: { hint: "Paiement au retrait en boutique." },
+  CASH_ON_DELIVERY: { hint: "Paiement a la livraison." },
+  CASH: { hint: "Paiement en especes." },
+};
+const buildDefaultPaymentMethodForm = (method = "ORANGE_MONEY") => ({
+  method,
+  enabled: true,
+  displayName: "",
+  phoneNumber: "",
+  qrCodeUrl: "",
+  instructions: "",
+  requiresProof: MOBILE_MONEY_PAYMENT_METHODS.has(method),
+});
+const mapPaymentMethodToForm = (method) => {
+  const normalizedMethod = String(method?.method || "ORANGE_MONEY").toUpperCase();
+  return {
+    method: normalizedMethod,
+    enabled: !!method?.enabled,
+    displayName: method?.displayName || "",
+    phoneNumber: method?.phoneNumber || "",
+    qrCodeUrl: method?.qrCodeUrl || "",
+    instructions: method?.instructions || "",
+    requiresProof: method?.requiresProof ?? MOBILE_MONEY_PAYMENT_METHODS.has(normalizedMethod),
+  };
+};
 const formatPaymentMethodLabel = (method) => {
   const key = String(method || "").toUpperCase();
-  if (key === "PAYDUNYA") return "PayDunya (Wave, Orange, Free, Carte)";
-  if (key === "CARD") return "Carte bancaire";
+  if (key === "ORANGE_MONEY") return "Orange Money";
+  if (key === "WAVE") return "Wave";
+  if (key === "FREE_MONEY") return "Free Money";
+  if (key === "PAYDUNYA") return "PayDunya";
+  if (key === "PAY_ON_PICKUP") return "Paiement au retrait";
+  if (key === "CASH_ON_DELIVERY") return "Paiement a la livraison";
   if (key === "CASH") return "Especes / Cash";
-  if (key === "PAY_ON_SITE") return "Paiement sur place";
   return method || "Non defini";
 };
-const openPaymentMethodModal = () => {
-setNewPaymentMethod({ method: "PAYDUNYA", enabled: true });
-setShowPaymentMethodModal(true);
+const openPaymentMethodModal = (method = null) => {
+  if (method?.id) {
+    setEditingPaymentMethodId(method.id);
+    setNewPaymentMethod(mapPaymentMethodToForm(method));
+  } else {
+    setEditingPaymentMethodId(null);
+    setNewPaymentMethod(buildDefaultPaymentMethodForm());
+  }
+  setShowPaymentMethodModal(true);
 };
-const handleAddPaymentMethod = async () => {
-const normalizedMethod = String(newPaymentMethod.method || "").trim().toUpperCase();
-if (!normalizedMethod) {
-toast.error("Le moyen de paiement est requis.");
-return;
-}
-try {
-const res = await apiFetch("/salon/payment-methods", {
-method: "POST",
-body: { ...newPaymentMethod, method: normalizedMethod },
-});
-const createdPaymentMethod = res?.data ?? res;
-setPaymentMethods((prev) => [createdPaymentMethod, ...prev]);
-setShowPaymentMethodModal(false);
-setNewPaymentMethod({ method: "PAYDUNYA", enabled: true });
-toast.success("Moyen de paiement ajoute !");
-} catch (e) {
-toast.error(e.message || "Erreur lors de l'ajout");
-}
+const closePaymentMethodModal = () => {
+  setShowPaymentMethodModal(false);
+  setEditingPaymentMethodId(null);
+  setNewPaymentMethod(buildDefaultPaymentMethodForm());
+};
+const uploadPaymentMethodQr = async (file) => {
+  if (!file) return;
+  const formData = new FormData();
+  formData.append("image", file);
+  try {
+    setUploadingPaymentQr(true);
+    const res = await apiFetch("/salon/payment-methods/upload-qr", {
+      method: "POST",
+      body: formData,
+    });
+    const qrUrl = res?.url || res?.data?.url || "";
+    if (!qrUrl) throw new Error("Upload QR invalide.");
+    setNewPaymentMethod((prev) => ({ ...prev, qrCodeUrl: qrUrl }));
+    toast.success("QR marchand ajoute.");
+  } catch (e) {
+    toast.error(e.message || "Erreur upload QR");
+  } finally {
+    setUploadingPaymentQr(false);
+  }
+};
+const handleSavePaymentMethod = async () => {
+  if (savingPaymentMethod) return;
+  const normalizedMethod = String(newPaymentMethod.method || "").trim().toUpperCase();
+  if (!normalizedMethod) {
+    toast.error("Le moyen de paiement est requis.");
+    return;
+  }
+  const isMobile = MOBILE_MONEY_PAYMENT_METHODS.has(normalizedMethod);
+  if (isMobile && !String(newPaymentMethod.phoneNumber || "").trim() && !String(newPaymentMethod.qrCodeUrl || "").trim()) {
+    toast.error("Ajoutez un numero marchand ou un QR pour ce moyen.");
+    return;
+  }
+  const payload = {
+    ...newPaymentMethod,
+    method: normalizedMethod,
+    displayName: String(newPaymentMethod.displayName || "").trim(),
+    phoneNumber: String(newPaymentMethod.phoneNumber || "").trim(),
+    qrCodeUrl: String(newPaymentMethod.qrCodeUrl || "").trim(),
+    instructions: String(newPaymentMethod.instructions || "").trim(),
+    enabled: !!newPaymentMethod.enabled,
+    requiresProof: isMobile ? !!newPaymentMethod.requiresProof : false,
+  };
+  try {
+    setSavingPaymentMethod(true);
+    const isEdit = !!editingPaymentMethodId;
+    const endpoint = isEdit ? `/salon/payment-methods/${editingPaymentMethodId}` : "/salon/payment-methods";
+    const method = isEdit ? "PATCH" : "POST";
+    const res = await apiFetch(endpoint, { method, body: payload });
+    const savedPaymentMethod = res?.data ?? res;
+    setPaymentMethods((prev) => {
+      if (!isEdit) return [savedPaymentMethod, ...prev];
+      return prev.map((pm) => (pm.id === savedPaymentMethod.id ? savedPaymentMethod : pm));
+    });
+    closePaymentMethodModal();
+    toast.success(isEdit ? "Moyen de paiement mis a jour." : "Moyen de paiement ajoute.");
+  } catch (e) {
+    toast.error(e.message || "Erreur lors de la sauvegarde");
+  } finally {
+    setSavingPaymentMethod(false);
+  }
 };
 
 const handleDeletePaymentMethod = async (id) => {
@@ -2064,6 +2161,41 @@ const handleOrderStatus = async (orderId, newStatus) => {
   }
 };
 
+const reviewOrderPaymentProof = async (orderId, decision) => {
+  if (!orderId || !decision) return;
+  const upperDecision = String(decision).toUpperCase();
+  let reason = "";
+  if (upperDecision === "REJECT") {
+    reason = window.prompt("Motif du rejet (optionnel):", "") || "";
+  }
+  try {
+    const res = await apiFetch(`/orders/${orderId}/payment-proof/review`, {
+      method: "PATCH",
+      body: {
+        decision: upperDecision,
+        ...(reason.trim() ? { reason: reason.trim() } : {}),
+      },
+    });
+    const payload = res?.data ?? res;
+    const updatedOrder = payload?.order || {};
+    const updatedPayment = payload?.payment || null;
+    setOrders((prev) =>
+      prev.map((o) =>
+        o.id === orderId
+          ? {
+              ...o,
+              ...updatedOrder,
+              payment: updatedPayment || o.payment,
+            }
+          : o
+      )
+    );
+    toast.success(upperDecision === "APPROVE" ? "Paiement validé." : "Preuve rejetée.");
+  } catch (e) {
+    toast.error(e.message || "Erreur de validation paiement");
+  }
+};
+
 const filteredProducts = useMemo(() => {
   let list = products;
   if (productQuery) {
@@ -2114,6 +2246,7 @@ const filteredAppointments = useMemo(() => {
 
 const orderStatusOptions = [
   { value: "PENDING", label: "En attente", tone: "amber" },
+  { value: "PENDING_PAYMENT", label: "Paiement en attente", tone: "blue" },
   { value: "CONFIRMED", label: "Confirmee", tone: "blue" },
   { value: "PREPARING", label: "En preparation", tone: "purple" },
   { value: "READY", label: "Prete", tone: "green" },
@@ -2428,7 +2561,18 @@ active
             ? "Au retrait"
             : paymentMethodKey === "PAYDUNYA"
               ? "PayDunya"
-              : "Non précisé";
+              : paymentMethodKey === "ORANGE_MONEY"
+                ? "Orange Money"
+                : paymentMethodKey === "WAVE"
+                  ? "Wave"
+                  : paymentMethodKey === "FREE_MONEY"
+                    ? "Free Money"
+                    : paymentMethodKey === "CASH"
+                      ? "Espèces"
+                      : "Non précisé";
+        const proofStatusKey = String(order.payment?.proofStatus || "").toUpperCase();
+        const hasProof = !!order.payment?.proofImageUrl;
+        const canReviewProof = hasProof && proofStatusKey === "PENDING";
         const isExpanded = expandedOrderId === order.id;
 
         return (
@@ -2511,6 +2655,63 @@ active
                       <span className="text-primary-500">Paiement : <span className="font-semibold text-primary-700">{paymentLabel}</span></span>
                       <span className="font-bold text-gold-600">{formatMoney(order.totalPrice)}</span>
                     </div>
+
+                    {hasProof && (
+                      <div className="rounded-lg border border-blue-100 bg-blue-50 p-3 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs font-semibold text-blue-800">
+                            Preuve paiement: {proofStatusKey || "PENDING"}
+                          </p>
+                          {order.payment?.proofReference ? (
+                            <span className="text-[11px] text-blue-700">Ref: {order.payment.proofReference}</span>
+                          ) : null}
+                        </div>
+                        <div className="flex items-start gap-3">
+                          <a
+                            href={resolveMediaUrl(order.payment?.proofImageUrl)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex"
+                          >
+                            <img
+                              src={resolveMediaUrl(order.payment?.proofImageUrl)}
+                              alt="Preuve paiement"
+                              className="w-20 h-20 rounded-lg object-cover border border-blue-200 bg-white"
+                            />
+                          </a>
+                          <div className="min-w-0">
+                            {order.payment?.proofNote ? (
+                              <p className="text-xs text-blue-700 break-words">{order.payment.proofNote}</p>
+                            ) : (
+                              <p className="text-xs text-blue-700">Aucune note client.</p>
+                            )}
+                            {order.payment?.proofRejectionReason ? (
+                              <p className="text-xs text-red-600 mt-1">
+                                Rejet: {order.payment.proofRejectionReason}
+                              </p>
+                            ) : null}
+                          </div>
+                        </div>
+                        {canReviewProof && (
+                          <div className="flex flex-wrap gap-2 pt-1">
+                            <Button
+                              variant="primary"
+                              className="px-3 py-1.5 text-sm"
+                              onClick={() => reviewOrderPaymentProof(order.id, "APPROVE")}
+                            >
+                              <FiCheck className="mr-1" /> Valider paiement
+                            </Button>
+                            <Button
+                              variant="secondary"
+                              className="px-3 py-1.5 text-sm text-red-600"
+                              onClick={() => reviewOrderPaymentProof(order.id, "REJECT")}
+                            >
+                              <FiX className="mr-1" /> Rejeter preuve
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     {note && (
                       <p className="text-xs text-primary-600 italic bg-gold-50 px-3 py-2 rounded-lg">Note : {note}</p>
@@ -4130,18 +4331,37 @@ action={
 {paymentMethods.map((pm) => (
 <div
 key={pm.id}
-className="bg-white border border-primary-100 rounded-3xl p-5 shadow-sm flex items-center gap-4"
+className="bg-white border border-primary-100 rounded-3xl p-5 shadow-sm space-y-3"
 >
-<FiCreditCard className="w-8 h-8 text-gold-500" />
-<div className="flex-1">
+<div className="flex items-start gap-3">
+<FiCreditCard className="w-7 h-7 text-gold-500 mt-0.5" />
+<div className="flex-1 min-w-0">
 <div className="font-bold text-primary-900 text-base">{formatPaymentMethodLabel(pm.method)}</div>
-<div className="text-xs text-primary-500">{pm.enabled ? "Activé" : "Désactivé"}</div>
+<div className="text-xs text-primary-500">{pm.enabled ? "Active" : "Desactive"}</div>
+{pm.displayName ? <div className="text-xs text-primary-600 mt-1">{pm.displayName}</div> : null}
+{pm.phoneNumber ? <div className="text-xs text-primary-600 mt-0.5">Numero: {pm.phoneNumber}</div> : null}
+{pm.instructions ? <div className="text-xs text-primary-500 mt-1 line-clamp-2">{pm.instructions}</div> : null}
 </div>
+</div>
+{pm.qrCodeUrl ? (
+<div className="rounded-xl border border-primary-100 bg-primary-50 p-2 flex items-center gap-2">
+<img src={resolveMediaUrl(pm.qrCodeUrl)} alt="QR marchand" className="w-14 h-14 rounded-lg object-cover bg-white" />
+<span className="text-xs text-primary-600">QR marchand</span>
+</div>
+) : null}
+<div className="flex items-center justify-between gap-2">
 <div className="flex items-center gap-2">
 <Badge tone={pm.enabled ? "green" : "gray"}>{pm.enabled ? "OK" : "OFF"}</Badge>
+{pm.requiresProof ? <Badge tone="blue">Preuve requise</Badge> : null}
+</div>
+<div className="flex items-center gap-2">
+<IconButton title="Modifier" onClick={() => openPaymentMethodModal(pm)}>
+<FiEdit2 />
+</IconButton>
 <IconButton title="Supprimer" onClick={() => setConfirmPaymentMethod(pm)}>
 <FiTrash2 />
 </IconButton>
+</div>
 </div>
 </div>
 ))}
@@ -4153,15 +4373,16 @@ className="bg-white border border-primary-100 rounded-3xl p-5 shadow-sm flex ite
 
 <Modal
 open={showPaymentMethodModal}
-title="Ajouter un moyen de paiement"
-onClose={() => setShowPaymentMethodModal(false)}
+title={editingPaymentMethodId ? "Modifier un moyen de paiement" : "Ajouter un moyen de paiement"}
+onClose={closePaymentMethodModal}
 footer={
 <div className="flex gap-3 justify-end">
-<Button variant="secondary" onClick={() => setShowPaymentMethodModal(false)}>
+<Button variant="secondary" onClick={closePaymentMethodModal} disabled={savingPaymentMethod}>
 Annuler
 </Button>
-<Button onClick={handleAddPaymentMethod}>
-<FiPlus className="mr-2" /> Ajouter
+<Button onClick={handleSavePaymentMethod} disabled={savingPaymentMethod || uploadingPaymentQr}>
+{editingPaymentMethodId ? <FiSave className="mr-2" /> : <FiPlus className="mr-2" />}
+{editingPaymentMethodId ? "Enregistrer" : "Ajouter"}
 </Button>
 </div>
 }
@@ -4170,19 +4391,95 @@ Annuler
 <Select
 label="Moyen de paiement"
 value={newPaymentMethod.method}
-onChange={(e) => setNewPaymentMethod((p) => ({ ...p, method: e.target.value }))}
+onChange={(e) =>
+setNewPaymentMethod((p) => {
+const nextMethod = String(e.target.value || "").toUpperCase();
+const isMobile = MOBILE_MONEY_PAYMENT_METHODS.has(nextMethod);
+return {
+...p,
+method: nextMethod,
+requiresProof: isMobile ? true : false,
+};
+})
+}
 >
 {paymentMethodChoices.map((opt) => (
 <option key={opt.value} value={opt.value}>{opt.label}</option>
 ))}
 </Select>
+<Input
+label="Nom affiche (optionnel)"
+value={newPaymentMethod.displayName}
+onChange={(e) => setNewPaymentMethod((p) => ({ ...p, displayName: e.target.value }))}
+placeholder="Ex: Compte marchand principal"
+/>
+<Input
+label="Numero marchand (optionnel)"
+value={newPaymentMethod.phoneNumber}
+onChange={(e) => setNewPaymentMethod((p) => ({ ...p, phoneNumber: e.target.value }))}
+placeholder="Ex: 77 123 45 67"
+hint={paymentMethodMeta[newPaymentMethod.method]?.hint || "Ajoutez vos infos de paiement."}
+/>
+<Input
+label="URL QR marchand (optionnel)"
+value={newPaymentMethod.qrCodeUrl}
+onChange={(e) => setNewPaymentMethod((p) => ({ ...p, qrCodeUrl: e.target.value }))}
+placeholder="https://..."
+/>
+<div>
+<label className="block text-sm font-semibold text-primary-700 mb-2">Ou uploader le QR</label>
+<input
+type="file"
+accept="image/*"
+disabled={uploadingPaymentQr}
+onChange={async (e) => {
+const file = e.target.files?.[0];
+if (!file) return;
+await uploadPaymentMethodQr(file);
+e.target.value = "";
+}}
+className="block w-full text-sm text-primary-600 file:mr-3 file:rounded-xl file:border-0 file:bg-primary-100 file:px-3 file:py-2 file:text-primary-700"
+/>
+{newPaymentMethod.qrCodeUrl ? (
+<div className="mt-2 flex items-center gap-2">
+<img src={resolveMediaUrl(newPaymentMethod.qrCodeUrl)} alt="QR preview" className="w-12 h-12 rounded-lg object-cover border border-primary-100" />
+<button
+type="button"
+className="text-xs text-red-600 hover:text-red-700 font-semibold"
+onClick={() => setNewPaymentMethod((p) => ({ ...p, qrCodeUrl: "" }))}
+>
+Supprimer le QR
+</button>
+</div>
+) : null}
+</div>
+<Textarea
+label="Instructions client (optionnel)"
+rows={3}
+value={newPaymentMethod.instructions}
+onChange={(e) => setNewPaymentMethod((p) => ({ ...p, instructions: e.target.value }))}
+placeholder="Ex: Envoyez le paiement puis uploadez la capture avec la reference."
+/>
+{MOBILE_MONEY_PAYMENT_METHODS.has(String(newPaymentMethod.method || "").toUpperCase()) ? (
+<div className="flex items-center gap-2">
+<input
+id="requires-proof"
+type="checkbox"
+checked={!!newPaymentMethod.requiresProof}
+onChange={(e) => setNewPaymentMethod((p) => ({ ...p, requiresProof: e.target.checked }))}
+/>
+<label htmlFor="requires-proof" className="text-sm text-primary-700 font-semibold">
+Demander une preuve de paiement client
+</label>
+</div>
+) : null}
 <Select
 label="Statut"
 value={newPaymentMethod.enabled ? "1" : "0"}
 onChange={(e) => setNewPaymentMethod((p) => ({ ...p, enabled: e.target.value === "1" }))}
 >
-<option value="1">Activé</option>
-<option value="0">Désactivé</option>
+<option value="1">Active</option>
+<option value="0">Desactive</option>
 </Select>
 </div>
 </Modal>
@@ -4213,7 +4510,7 @@ Supprimer
 <p className="font-semibold text-primary-900">Cette action est définitive.</p>
 <p className="text-sm text-primary-500">
 Voulez-vous vraiment supprimer le moyen de paiement{" "}
-<span className="font-semibold text-primary-700">{confirmPaymentMethod?.method}</span> ?
+<span className="font-semibold text-primary-700">{formatPaymentMethodLabel(confirmPaymentMethod?.method)}</span> ?
 </p>
 </div>
 </div>

@@ -4,6 +4,50 @@ const prisma = require('../lib/prisma');
 const { authenticate } = require('../middleware/auth');
 const { pushNotification } = require('../realtime/hub');
 const { sendOrderConfirmationEmail } = require('../services/emailService');
+const { uploadPaymentProof } = require('../config/cloudinary');
+
+const DIRECT_MOBILE_METHODS = new Set(['ORANGE_MONEY', 'WAVE', 'FREE_MONEY']);
+const ALLOWED_PAYMENT_METHODS = new Set([
+  'PAYDUNYA',
+  'PAY_ON_PICKUP',
+  'CASH_ON_DELIVERY',
+  'PAY_ON_SITE',
+  'CASH',
+  ...DIRECT_MOBILE_METHODS,
+]);
+
+const cleanString = (value, max = 220) => {
+  if (value == null) return null;
+  const normalized = String(value).trim();
+  if (!normalized) return null;
+  return normalized.slice(0, max);
+};
+
+const normalizeOrderPaymentMethod = (value) => {
+  const raw = cleanString(value, 40);
+  if (!raw) return null;
+  const upper = raw.toUpperCase();
+  if (upper === 'PAY_ON_PICKUP' || upper === 'PAYONPICKUP') return 'PAY_ON_PICKUP';
+  if (upper === 'CASH_ON_DELIVERY' || upper === 'CASHONDELIVERY') return 'CASH_ON_DELIVERY';
+  if (upper === 'PAY_ON_SITE' || upper === 'PAYONSITE') return 'PAY_ON_SITE';
+  return upper;
+};
+
+const buildPaymentReference = (prefix = 'ORDPAY') =>
+  `${prefix}-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+
+const toFriendlyPaymentMethodLabel = (method) => {
+  const key = String(method || '').toUpperCase();
+  if (key === 'PAYDUNYA') return 'PayDunya';
+  if (key === 'ORANGE_MONEY') return 'Orange Money';
+  if (key === 'WAVE') return 'Wave';
+  if (key === 'FREE_MONEY') return 'Free Money';
+  if (key === 'PAY_ON_PICKUP') return 'Paiement au retrait';
+  if (key === 'CASH_ON_DELIVERY') return 'Paiement a la livraison';
+  if (key === 'PAY_ON_SITE') return 'Paiement au salon';
+  if (key === 'CASH') return 'Especes';
+  return key || 'Paiement';
+};
 
 /**
  * POST /api/orders
@@ -30,7 +74,20 @@ router.post('/', authenticate, async (req, res, next) => {
     }
 
     // Verify boutique exists
-    const salon = await prisma.salon.findUnique({ where: { id: salonId } });
+    const salon = await prisma.salon.findUnique({
+      where: { id: salonId },
+      include: {
+        paymentMethods: {
+          where: { enabled: true },
+          select: {
+            method: true,
+            phoneNumber: true,
+            qrCodeUrl: true,
+            requiresProof: true,
+          },
+        },
+      },
+    });
     if (!salon || salon.businessType !== 'BOUTIQUE') {
       return res.status(400).json({
         status: 'error',
@@ -55,8 +112,29 @@ router.post('/', authenticate, async (req, res, next) => {
     const normalizedDeliveryMode = String(deliveryMode || 'PICKUP').toUpperCase() === 'DELIVERY'
       ? 'DELIVERY'
       : 'PICKUP';
-    const normalizedPaymentMethod = String(paymentMethod || '').toUpperCase();
+    const normalizedPaymentMethod = normalizeOrderPaymentMethod(paymentMethod);
+    if (normalizedPaymentMethod && !ALLOWED_PAYMENT_METHODS.has(normalizedPaymentMethod)) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Methode de paiement invalide.',
+      });
+    }
     const isPaydunyaFlow = normalizedPaymentMethod === 'PAYDUNYA';
+    const isDirectMobilePayment = DIRECT_MOBILE_METHODS.has(normalizedPaymentMethod);
+    const requiresClientPayment = isPaydunyaFlow || isDirectMobilePayment;
+
+    if (isDirectMobilePayment) {
+      const enabledMethods = Array.isArray(salon?.paymentMethods) ? salon.paymentMethods : [];
+      const targetMethod = enabledMethods.find(
+        (item) => String(item.method || '').toUpperCase() === normalizedPaymentMethod
+      );
+      if (!targetMethod) {
+        return res.status(400).json({
+          status: 'error',
+          message: `La boutique n a pas active ${toFriendlyPaymentMethodLabel(normalizedPaymentMethod)}.`,
+        });
+      }
+    }
     if (normalizedDeliveryMode === 'DELIVERY' && !String(deliveryAddress || '').trim()) {
       return res.status(400).json({
         status: 'error',
@@ -105,7 +183,8 @@ router.post('/', authenticate, async (req, res, next) => {
           deliveryAddress: normalizedDeliveryMode === 'DELIVERY' ? (deliveryAddress || null) : null,
           clientPhone: clientPhone || null,
           clientName: clientName || req.user.name || null,
-          status: isPaydunyaFlow ? 'PENDING_PAYMENT' : 'PENDING',
+          paymentMethod: normalizedPaymentMethod || null,
+          status: requiresClientPayment ? 'PENDING_PAYMENT' : 'PENDING',
           items: {
             create: orderItems,
           },
@@ -135,7 +214,7 @@ router.post('/', authenticate, async (req, res, next) => {
           data: {
             userId: order.salon.ownerId,
             type: 'order',
-            message: isPaydunyaFlow
+            message: requiresClientPayment
               ? `Nouvelle commande de ${order.clientName || 'un client'} en attente de paiement - ${totalPrice} FCFA`
               : `Nouvelle commande de ${order.clientName || 'un client'} - ${totalPrice} FCFA`,
           },
@@ -153,7 +232,7 @@ router.post('/', authenticate, async (req, res, next) => {
           data: {
             userId: order.clientId,
             type: 'order',
-            message: isPaydunyaFlow
+            message: requiresClientPayment
               ? `Votre commande chez ${order.salon?.name || 'la boutique'} est en attente de paiement.`
               : `Votre commande chez ${order.salon?.name || 'la boutique'} est confirmee.`,
           },
@@ -165,7 +244,7 @@ router.post('/', authenticate, async (req, res, next) => {
     }
 
     // Send confirmation email to client
-    if (!isPaydunyaFlow && order.client?.email) {
+    if (!requiresClientPayment && order.client?.email) {
       sendOrderConfirmationEmail({
         to: order.client.email,
         clientName: order.clientName || order.client.name || 'Client',
@@ -178,7 +257,7 @@ router.post('/', authenticate, async (req, res, next) => {
 
     res.status(201).json({
       status: 'success',
-      message: isPaydunyaFlow
+      message: requiresClientPayment
         ? 'Commande creee. Paiement requis pour confirmation.'
         : 'Commande creee avec succes',
       data: { order },
@@ -231,6 +310,301 @@ router.get('/', authenticate, async (req, res, next) => {
     res.status(200).json({ data: orders });
   } catch (error) {
     next(error);
+  }
+});
+
+/**
+ * POST /api/orders/:id/payment-proof
+ * Client submits direct mobile payment proof (Orange/Wave/Free)
+ */
+router.post('/:id/payment-proof', authenticate, uploadPaymentProof.single('proof'), async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const normalizedMethod = normalizeOrderPaymentMethod(req.body?.paymentMethod);
+    const payerPhone = cleanString(req.body?.payerPhone, 40);
+    const proofReference = cleanString(req.body?.proofReference, 120);
+    const proofNote = cleanString(req.body?.proofNote, 400);
+
+    if (!normalizedMethod || !DIRECT_MOBILE_METHODS.has(normalizedMethod)) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Choisissez un moyen de paiement mobile valide (Orange Money, Wave, Free Money).',
+      });
+    }
+    if (!req.file) {
+      return res.status(400).json({ status: 'error', message: 'La capture de paiement est obligatoire.' });
+    }
+
+    const order = await prisma.order.findUnique({
+      where: { id },
+      include: {
+        payment: true,
+        salon: {
+          select: {
+            id: true,
+            name: true,
+            ownerId: true,
+            paymentMethods: {
+              where: { enabled: true },
+              select: {
+                method: true,
+                phoneNumber: true,
+                displayName: true,
+                requiresProof: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!order) {
+      return res.status(404).json({ status: 'error', message: 'Commande introuvable' });
+    }
+    if (order.clientId !== req.user.id) {
+      return res.status(403).json({ status: 'error', message: 'Acces interdit' });
+    }
+
+    const orderStatus = String(order.status || '').toUpperCase();
+    if (['CANCELLED', 'DELIVERED'].includes(orderStatus)) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Cette commande ne peut plus recevoir de preuve de paiement.',
+      });
+    }
+
+    const activeMethod = (order.salon?.paymentMethods || []).find(
+      (item) => String(item.method || '').toUpperCase() === normalizedMethod
+    );
+    if (!activeMethod) {
+      return res.status(400).json({
+        status: 'error',
+        message: `Ce moyen de paiement n est pas actif chez ${order.salon?.name || 'la boutique'}.`,
+      });
+    }
+
+    if (
+      String(order.payment?.status || '').toUpperCase() === 'COMPLETED' &&
+      String(order.payment?.proofStatus || '').toUpperCase() === 'APPROVED'
+    ) {
+      return res.status(409).json({
+        status: 'error',
+        message: 'Le paiement est deja valide pour cette commande.',
+      });
+    }
+
+    const proofUrl = req.file.path || req.file.secure_url || req.file.url || null;
+    if (!proofUrl) {
+      return res.status(500).json({ status: 'error', message: 'Impossible de lire la capture envoyee.' });
+    }
+
+    const now = new Date();
+    const reference = order.payment?.reference || buildPaymentReference('PMAN');
+    const transactionId = proofReference || order.payment?.transactionId || null;
+
+    const { payment: savedPayment } = await prisma.$transaction(async (tx) => {
+      const payment = await tx.payment.upsert({
+        where: { orderId: id },
+        update: {
+          method: normalizedMethod,
+          manualMethod: normalizedMethod,
+          manualRecipient: activeMethod.phoneNumber || activeMethod.displayName || null,
+          phoneNumber: payerPhone || order.clientPhone || null,
+          amount: order.totalPrice,
+          fees: 0,
+          totalAmount: order.totalPrice,
+          currency: 'XOF',
+          status: 'PENDING',
+          transactionId,
+          proofImageUrl: proofUrl,
+          proofReference,
+          proofNote,
+          proofStatus: 'PENDING',
+          proofSubmittedAt: now,
+          proofReviewedAt: null,
+          proofReviewedBy: null,
+          proofRejectionReason: null,
+          completedAt: null,
+          reference,
+          userId: order.clientId,
+        },
+        create: {
+          orderId: id,
+          method: normalizedMethod,
+          manualMethod: normalizedMethod,
+          manualRecipient: activeMethod.phoneNumber || activeMethod.displayName || null,
+          phoneNumber: payerPhone || order.clientPhone || null,
+          amount: order.totalPrice,
+          fees: 0,
+          totalAmount: order.totalPrice,
+          currency: 'XOF',
+          status: 'PENDING',
+          transactionId,
+          reference,
+          proofImageUrl: proofUrl,
+          proofReference,
+          proofNote,
+          proofStatus: 'PENDING',
+          proofSubmittedAt: now,
+          userId: order.clientId,
+        },
+      });
+
+      await tx.order.update({
+        where: { id },
+        data: {
+          status: 'PENDING_PAYMENT',
+          paymentMethod: normalizedMethod,
+        },
+      });
+
+      return { payment };
+    });
+
+    if (order.salon?.ownerId) {
+      try {
+        const notification = await prisma.notification.create({
+          data: {
+            userId: order.salon.ownerId,
+            type: 'order',
+            message: `Preuve de paiement recue pour la commande ${id.slice(-8).toUpperCase()} (${toFriendlyPaymentMethodLabel(normalizedMethod)}).`,
+          },
+        });
+        pushNotification(notification.userId, notification);
+      } catch (e) {
+        console.error('Order payment proof notify owner error:', e.message);
+      }
+    }
+
+    try {
+      const notification = await prisma.notification.create({
+        data: {
+          userId: order.clientId,
+          type: 'order',
+          message: `Preuve de paiement envoyee. La boutique ${order.salon?.name || ''} va verifier votre paiement.`,
+        },
+      });
+      pushNotification(notification.userId, notification);
+    } catch (e) {
+      console.error('Order payment proof notify client error:', e.message);
+    }
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'Preuve de paiement envoyee avec succes.',
+      data: {
+        orderId: id,
+        payment: savedPayment,
+      },
+    });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+/**
+ * PATCH /api/orders/:id/payment-proof/review
+ * Boutique owner reviews direct mobile payment proof
+ */
+router.patch('/:id/payment-proof/review', authenticate, async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const decisionRaw = cleanString(req.body?.decision || req.body?.action || req.body?.status, 20);
+    const decision = String(decisionRaw || '').toUpperCase();
+    const rejectionReason = cleanString(req.body?.reason || req.body?.rejectionReason, 260);
+    if (!['APPROVE', 'REJECT'].includes(decision)) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Decision invalide. Utilisez APPROVE ou REJECT.',
+      });
+    }
+
+    const order = await prisma.order.findUnique({
+      where: { id },
+      include: {
+        payment: true,
+        salon: { select: { id: true, ownerId: true, name: true } },
+        client: { select: { id: true, name: true, email: true } },
+        items: { include: { product: { select: { id: true, name: true, price: true } } } },
+      },
+    });
+    if (!order) {
+      return res.status(404).json({ status: 'error', message: 'Commande introuvable' });
+    }
+
+    const isOwner = order.salon?.ownerId === req.user.id;
+    const isAdmin = req.user.role === 'ADMIN' || req.user.role === 'SUPER_ADMIN';
+    if (!isOwner && !isAdmin) {
+      return res.status(403).json({ status: 'error', message: 'Acces interdit' });
+    }
+
+    if (!order.payment || !order.payment.proofImageUrl) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Aucune preuve de paiement a verifier pour cette commande.',
+      });
+    }
+
+    const now = new Date();
+    const approve = decision === 'APPROVE';
+    const updatedPayment = await prisma.payment.update({
+      where: { id: order.payment.id },
+      data: {
+        status: approve ? 'COMPLETED' : 'FAILED',
+        proofStatus: approve ? 'APPROVED' : 'REJECTED',
+        proofReviewedAt: now,
+        proofReviewedBy: req.user.id,
+        proofRejectionReason: approve ? null : (rejectionReason || 'Preuve non conforme.'),
+        completedAt: approve ? now : null,
+      },
+    });
+
+    const shouldMoveToConfirmed = approve && ['PENDING', 'PENDING_PAYMENT'].includes(String(order.status || '').toUpperCase());
+    const updatedOrder = await prisma.order.update({
+      where: { id },
+      data: {
+        status: shouldMoveToConfirmed ? 'CONFIRMED' : order.status,
+      },
+    });
+
+    if (order.clientId) {
+      try {
+        const notification = await prisma.notification.create({
+          data: {
+            userId: order.clientId,
+            type: 'order',
+            message: approve
+              ? `Paiement valide pour votre commande chez ${order.salon?.name || 'la boutique'}.`
+              : `Preuve de paiement rejetee pour votre commande chez ${order.salon?.name || 'la boutique'}.`,
+          },
+        });
+        pushNotification(notification.userId, notification);
+      } catch (e) {
+        console.error('Order payment review notify client error:', e.message);
+      }
+    }
+
+    if (approve && order.client?.email) {
+      sendOrderConfirmationEmail({
+        to: order.client.email,
+        clientName: order.clientName || order.client.name || 'Client',
+        boutiqueName: order.salon?.name || 'la boutique',
+        items: order.items || [],
+        totalPrice: order.totalPrice || 0,
+        deliveryMode: order.deliveryMode,
+      }).catch(() => {});
+    }
+
+    return res.status(200).json({
+      status: 'success',
+      message: approve ? 'Paiement valide.' : 'Preuve rejetee.',
+      data: {
+        order: updatedOrder,
+        payment: updatedPayment,
+      },
+    });
+  } catch (error) {
+    return next(error);
   }
 });
 
