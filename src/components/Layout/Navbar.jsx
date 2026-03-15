@@ -315,11 +315,11 @@ function Navbar() {
   ]
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50">
+    <nav className="fixed top-0 left-0 right-0 z-50 dark:bg-slate-950">
       {/* Main navbar */}
       <div className={`transition-all duration-300 ${isScrolled
-        ? 'bg-white/95 dark:bg-slate-950/92 backdrop-blur-xl shadow-lg dark:shadow-black/35 dark:border-b dark:border-slate-800/85'
-        : 'bg-white dark:bg-slate-950 shadow-sm dark:border-b dark:border-slate-800/85'
+        ? 'bg-white/95 backdrop-blur-xl shadow-lg border-b border-primary-100/70 dark:!bg-slate-950 dark:border-slate-800/90 dark:shadow-black/40'
+        : 'bg-white shadow-sm border-b border-primary-100/70 dark:!bg-slate-950 dark:border-slate-800/90'
         }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14">
