@@ -86,7 +86,7 @@ function Logo({ variant = 'default', size = 'md', showTagline = true }) {
             className={
               isLight
                 ? 'text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.25)]'
-                : 'text-primary-900 drop-shadow-[0_1px_4px_rgba(0,0,0,0.10)]'
+                : 'text-primary-900 dark:text-slate-100 drop-shadow-[0_1px_4px_rgba(0,0,0,0.24)]'
             }
           >
             Style
@@ -94,14 +94,14 @@ function Logo({ variant = 'default', size = 'md', showTagline = true }) {
           <span className="bg-gradient-to-r from-gold-400 via-gold-300 to-gold-400 bg-clip-text text-transparent drop-shadow-[0_0_8px_#fde047]">
             •
           </span>
-          <span className="text-gold-400 drop-shadow-[0_0_6px_#fde047]">Flow</span>
+          <span className="text-gold-500 dark:text-gold-300 drop-shadow-[0_0_6px_#fde047]">Flow</span>
         </span>
         {showTagline && (
           <span
             className={`${s.tagline} font-semibold tracking-[0.22em] uppercase font-inter transition-all duration-300
-              ${isLight ? 'text-gold-100/90 drop-shadow-[0_0_8px_#facc15] animate-pulse' : 'text-yellow-700/80 drop-shadow-[0_0_8px_#fde047]'}
+              ${isLight ? 'text-gold-100/90 drop-shadow-[0_0_8px_#facc15] animate-pulse' : 'text-yellow-700/80 dark:text-gold-300/90 drop-shadow-[0_0_8px_#fde047]'}
             `}
-            style={{ letterSpacing: '0.22em', textShadow: '0 0 8px #fde047, 0 1px 2px #0002' }}
+            style={{ letterSpacing: '0.22em', textShadow: '0 0 8px #fde047, 0 1px 2px rgba(0,0,0,0.35)' }}
           >
             Réservez. Brillez.
           </span>

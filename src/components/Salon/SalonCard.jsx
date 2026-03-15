@@ -87,7 +87,7 @@ function SalonCard({ salon, index = 0, variant = 'featured' }) {
   const isList = variant === 'list'
   const ctaLabel = isBoutique ? 'Voir les articles' : isList ? 'Voir disponibilités' : 'Réserver'
   const imageHeight = isList ? 'h-32 md:h-36' : 'h-36 sm:h-40'
-  const cardClass = 'bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-primary-100 group hover:-translate-y-0.5'
+  const cardClass = 'bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-md dark:shadow-black/30 hover:shadow-xl transition-all duration-300 border border-primary-100 dark:border-slate-700 group hover:-translate-y-0.5'
 
   return (
     <motion.div
@@ -142,7 +142,7 @@ function SalonCard({ salon, index = 0, variant = 'featured' }) {
           
           {/* Rating */}
           <div className={`absolute bottom-2 right-2 flex items-center space-x-0.5 px-2 py-0.5 rounded-full shadow text-xs ${
-            hasRating ? 'bg-white' : 'bg-gold-500 text-white'
+            hasRating ? 'bg-white/95 text-primary-900' : 'bg-gold-500 text-white'
           }`}>
             <FiStar className={`w-3 h-3 ${hasRating ? 'text-gold-400 fill-current' : 'text-white'}`} />
             <span className="font-bold">{ratingLabel}</span>
@@ -154,27 +154,27 @@ function SalonCard({ salon, index = 0, variant = 'featured' }) {
 
         {/* Content */}
         <div className="p-3">
-          <h3 className="font-semibold text-sm sm:text-base text-primary-900 group-hover:text-gold-600 transition-colors mb-1 truncate">
+          <h3 className="font-semibold text-sm sm:text-base text-primary-900 dark:text-slate-100 group-hover:text-gold-600 dark:group-hover:text-gold-300 transition-colors mb-1 truncate">
             {salon.name}
           </h3>
 
-          <div className="flex items-center text-primary-500 text-xs sm:text-sm mb-1">
-            <FiMapPin className="w-3 h-3 mr-1 text-primary-400 flex-shrink-0" />
+          <div className="flex items-center text-primary-500 dark:text-slate-300 text-xs sm:text-sm mb-1">
+            <FiMapPin className="w-3 h-3 mr-1 text-primary-400 dark:text-slate-400 flex-shrink-0" />
             <span className="truncate">{neighborhood}{salon.city ? `, ${salon.city}` : ''}</span>
           </div>
 
           <div className="flex items-center text-xs sm:text-sm mb-2">
-            <FiClock className="w-3 h-3 mr-1 text-primary-400 flex-shrink-0" />
+            <FiClock className="w-3 h-3 mr-1 text-primary-400 dark:text-slate-400 flex-shrink-0" />
             {todayHours ? (
               isOpen ? (
-                <span className="text-green-600 font-medium">
+                <span className="text-green-600 dark:text-emerald-300 font-medium">
                   Ouvert · {todayHours.openTime} - {todayHours.closeTime}
                 </span>
               ) : (
-                <span className="text-primary-400">Fermé aujourd'hui</span>
+                <span className="text-primary-400 dark:text-slate-400">Fermé aujourd'hui</span>
               )
             ) : (
-              <span className="text-primary-400">Horaires non renseignés</span>
+              <span className="text-primary-400 dark:text-slate-400">Horaires non renseignés</span>
             )}
           </div>
 
@@ -184,7 +184,7 @@ function SalonCard({ salon, index = 0, variant = 'featured' }) {
               {specialties.slice(0, 2).map((specialty, i) => (
                 <span
                   key={i}
-                  className="text-[10px] bg-primary-100 text-primary-600 px-2 py-0.5 rounded-full"
+                  className="text-[10px] bg-primary-100 dark:bg-slate-800 text-primary-600 dark:text-slate-300 px-2 py-0.5 rounded-full"
                 >
                   {specialty}
                 </span>
@@ -193,16 +193,16 @@ function SalonCard({ salon, index = 0, variant = 'featured' }) {
           )}
 
           {/* Price */}
-          <div className="pt-2 border-t border-primary-100 flex items-center justify-between">
+          <div className="pt-2 border-t border-primary-100 dark:border-slate-700 flex items-center justify-between">
             <div>
-              <span className="text-xs sm:text-sm text-primary-500">
-                Dès <span className="font-bold text-primary-900">{minPriceLabel}</span>
+              <span className="text-xs sm:text-sm text-primary-500 dark:text-slate-300">
+                Dès <span className="font-bold text-primary-900 dark:text-slate-100">{minPriceLabel}</span>
               </span>
               {Array.isArray(salon.services) && salon.services.length > 0 && !isBoutique && (
-                <span className="block text-[10px] text-primary-400">{salon.services.length} service{salon.services.length > 1 ? 's' : ''}</span>
+                <span className="block text-[10px] text-primary-400 dark:text-slate-400">{salon.services.length} service{salon.services.length > 1 ? 's' : ''}</span>
               )}
             </div>
-            <span className="inline-flex items-center gap-1 text-[11px] sm:text-xs font-semibold px-2.5 py-1 rounded-full bg-primary-900 text-white shadow-sm group-hover:translate-x-0.5 transition-transform">
+            <span className="inline-flex items-center gap-1 text-[11px] sm:text-xs font-semibold px-2.5 py-1 rounded-full bg-primary-900 dark:bg-gold-500 text-white dark:text-primary-900 shadow-sm group-hover:translate-x-0.5 transition-transform">
               {ctaLabel} →
             </span>
           </div>

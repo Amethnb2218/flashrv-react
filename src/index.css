@@ -398,44 +398,67 @@ h6 {
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .dark body {
-  background: #111827;
-  color: #f9fafb;
+  background: #020617;
+  color: #e2e8f0;
 }
 
 .dark .input-field {
-  background: #1f2937;
-  border-color: #374151;
-  color: #f9fafb;
+  background: #0f172a;
+  border-color: #334155;
+  color: #f8fafc;
 }
 
 .dark .input-field::placeholder {
-  color: #6b7280;
+  color: #94a3b8;
 }
 
 .dark .input-field:focus {
-  border-color: #eab308;
-  box-shadow: 0 0 0 4px rgba(234, 179, 8, 0.15);
+  border-color: #facc15;
+  box-shadow: 0 0 0 4px rgba(250, 204, 21, 0.18);
 }
 
 .dark .card {
-  background: linear-gradient(145deg, #1f2937 0%, #111827 100%);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(145deg, #0f172a 0%, #111827 100%);
+  border: 1px solid rgba(51, 65, 85, 0.7);
+  box-shadow: 0 14px 34px rgba(2, 6, 23, 0.55);
+}
+
+.dark .card:hover {
+  border-color: rgba(250, 204, 21, 0.35);
+  box-shadow: 0 20px 38px rgba(2, 6, 23, 0.64);
 }
 
 .dark .bg-mesh {
-  background-color: #111827;
+  background-color: #020617;
   background-image:
-    radial-gradient(at 40% 20%, rgba(234, 179, 8, 0.08) 0px, transparent 50%),
-    radial-gradient(at 80% 0%, rgba(250, 204, 21, 0.06) 0px, transparent 50%),
-    radial-gradient(at 0% 50%, rgba(244, 114, 182, 0.04) 0px, transparent 50%);
+    radial-gradient(at 40% 20%, rgba(250, 204, 21, 0.11) 0px, transparent 52%),
+    radial-gradient(at 80% 0%, rgba(250, 204, 21, 0.08) 0px, transparent 52%),
+    radial-gradient(at 0% 50%, rgba(248, 113, 113, 0.04) 0px, transparent 50%);
 }
 
 .dark .glass {
-  background: rgba(17, 24, 39, 0.97);
-  border-color: rgba(234, 179, 8, 0.12);
+  background: rgba(15, 23, 42, 0.86);
+  border-color: rgba(71, 85, 105, 0.6);
+}
+
+.dark .btn-primary {
+  background: linear-gradient(135deg, #facc15 0%, #eab308 100%);
+  color: #111827;
+  box-shadow: 0 8px 24px rgba(250, 204, 21, 0.25);
+}
+
+.dark .btn-primary:hover {
+  background: linear-gradient(135deg, #fde047 0%, #facc15 100%);
 }
 
 .dark .btn-secondary {
-  background: rgba(31, 41, 55, 0.98);
-  color: #f9fafb;
+  background: #0f172a;
+  border-color: rgba(71, 85, 105, 0.7);
+  color: #e2e8f0;
+}
+
+.dark .btn-secondary:hover {
+  background: #1e293b;
+  border-color: rgba(250, 204, 21, 0.35);
+  color: #f8fafc;
 }

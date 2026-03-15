@@ -70,6 +70,17 @@ function Home() {
     return list.slice(0, 3)
   }, [onlyBoutiques])
 
+  const getFeaturedGridClass = (count, loading) => {
+    if (loading || count >= 3) return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+    if (count === 2) return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-2'
+    return 'grid-cols-1'
+  }
+
+  const featuredSalonGridClass = getFeaturedGridClass(featuredSalons.length, loadingSalons)
+  const featuredBoutiqueGridClass = getFeaturedGridClass(featuredBoutiques.length, loadingSalons)
+  const centerSalonsGrid = !loadingSalons && featuredSalons.length === 1
+  const centerBoutiquesGrid = !loadingSalons && featuredBoutiques.length === 1
+
   const totalReviews = salons.reduce((sum, s) => sum + (s.reviewCount || 0), 0)
   const avgRating = salons.length
     ? (totalReviews > 0
@@ -190,35 +201,35 @@ function Home() {
   }
 
   return (
-    <div className="overflow-hidden bg-white dark:bg-gray-900">
+    <div className="overflow-hidden bg-white dark:bg-slate-950">
       {/* Hero */}
-      <section className="relative bg-mesh dark:bg-gray-900">
+      <section className="relative bg-mesh dark:bg-[linear-gradient(180deg,#020617_0%,#0b1220_55%,#111d31_100%)]">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-12 right-12 w-72 h-72 bg-gold-100/50 dark:bg-gold-900/20 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-10 left-8 w-80 h-80 bg-gold-100/40 dark:bg-gold-900/10 rounded-full blur-3xl"></div>
+          <div className="absolute -top-12 right-12 w-72 h-72 bg-gold-100/50 dark:bg-gold-500/12 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-10 left-8 w-80 h-80 bg-gold-100/40 dark:bg-gold-500/10 rounded-full blur-3xl"></div>
         </div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-3 pb-4">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-5 pb-6">
           <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 items-start">
             <motion.div
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: reduceMotion ? 0 : 0.6 }}
             >
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gold-100 text-gold-700">
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gold-100 text-gold-700 dark:bg-gold-500/12 dark:text-gold-300 border border-gold-100/70 dark:border-gold-500/30">
                 Gratuit · Sans engagement
               </span>
-              <h1 className="mt-2 text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-primary-900 dark:text-white leading-tight">
+              <h1 className="mt-2 text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-primary-900 dark:text-slate-100 leading-tight">
                 Réservez votre{' '}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold-500 to-gold-600">
                   salon de beauté
                 </span>{' '}
                 en 30 secondes
               </h1>
-              <p className="mt-2 text-base md:text-lg text-primary-600 dark:text-gray-300 max-w-xl leading-relaxed">
+              <p className="mt-2 text-base md:text-lg text-primary-600 dark:text-slate-300 max-w-xl leading-relaxed">
                 Trouvez un salon vérifié près de chez vous, comparez les services et tarifs, et réservez en ligne — sans appel ni attente.
               </p>
 
-              <form onSubmit={handleSearch} className="mt-4 bg-white/95 dark:bg-gray-800/95 rounded-xl p-2.5 shadow-[0_28px_70px_-40px_rgba(15,23,42,0.6)] border border-white/70 backdrop-blur">
+              <form onSubmit={handleSearch} className="mt-4 bg-white/95 dark:bg-slate-900/88 rounded-xl p-2.5 shadow-[0_28px_70px_-40px_rgba(15,23,42,0.6)] border border-white/70 dark:border-slate-700 backdrop-blur">
                 <div className="flex flex-col md:flex-row gap-3">
                   <div className="flex-1 relative">
                     <FiMapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gold-500 w-5 h-5" />
@@ -233,7 +244,7 @@ function Home() {
                       aria-expanded={showSuggestions && suggestions.length > 0}
                       aria-controls="home-suggestions"
                       placeholder="Quartier, ville, salon..."
-                      className="w-full pl-12 pr-4 py-3 md:py-4 bg-primary-50 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 rounded-xl focus:ring-2 focus:ring-gold-400 focus:bg-white dark:focus:bg-gray-600 transition-all outline-none text-primary-800 placeholder-primary-400"
+                      className="w-full pl-12 pr-4 py-3 md:py-4 bg-primary-50 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-400 rounded-xl focus:ring-2 focus:ring-gold-400 focus:bg-white dark:focus:bg-slate-700 transition-all outline-none text-primary-800 placeholder-primary-400"
                     />
                     <AnimatePresence>
                       {showSuggestions && suggestions.length > 0 && (
@@ -242,7 +253,7 @@ function Home() {
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: 8 }}
                           transition={{ duration: reduceMotion ? 0 : 0.2 }}
-                          className="absolute z-20 mt-2 w-full rounded-2xl border border-primary-100 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-2xl p-2"
+                          className="absolute z-20 mt-2 w-full rounded-2xl border border-primary-100 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xl p-2"
                           role="listbox"
                           id="home-suggestions"
                         >
@@ -251,12 +262,12 @@ function Home() {
                               key={salon.id}
                               type="button"
                               onMouseDown={() => navigate(`/salon/${salon.id}`)}
-                              className="w-full text-left px-3 py-2 rounded-xl hover:bg-gold-50 dark:hover:bg-gray-700 transition-colors"
+                              className="w-full text-left px-3 py-2 rounded-xl hover:bg-gold-50 dark:hover:bg-slate-800 transition-colors"
                             >
                               <div className="flex items-center justify-between">
                                 <div>
-                                  <p className="text-sm font-semibold text-primary-900 dark:text-white">{salon.name}</p>
-                                  <p className="text-xs text-primary-500 dark:text-gray-400">{salon.city || salon.address}</p>
+                                  <p className="text-sm font-semibold text-primary-900 dark:text-slate-100">{salon.name}</p>
+                                  <p className="text-xs text-primary-500 dark:text-slate-400">{salon.city || salon.address}</p>
                                 </div>
                                 <span className="text-xs font-semibold text-primary-600">
                                   {salon.reviewCount ? `${Number(salon.rating || 0).toFixed(1)}?` : 'Nouveau'}
@@ -270,7 +281,7 @@ function Home() {
                   </div>
                   <button
                     type="submit"
-                    className="flex items-center justify-center gap-2 bg-primary-900 hover:bg-primary-800 text-white font-semibold py-3 px-6 rounded-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2"
+                    className="flex items-center justify-center gap-2 bg-primary-900 hover:bg-primary-800 dark:bg-gold-500 dark:hover:bg-gold-400 text-white dark:text-primary-900 font-semibold py-3 px-6 rounded-xl transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
                   >
                     <FiSearch className="w-5 h-5" />
                     <span>Rechercher</span>
@@ -282,7 +293,7 @@ function Home() {
                     type="button"
                     onClick={handleGeolocation}
                     disabled={isLocating}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-primary-100 hover:bg-primary-200 text-primary-700 rounded-full text-sm transition-all disabled:opacity-50"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-primary-100 dark:bg-slate-800 hover:bg-primary-200 dark:hover:bg-slate-700 text-primary-700 dark:text-slate-200 rounded-full text-sm transition-all disabled:opacity-50"
                   >
                     {isLocating ? (
                       <div className="w-3.5 h-3.5 border-2 border-gold-500 border-t-transparent rounded-full animate-spin" />
@@ -296,7 +307,7 @@ function Home() {
                         key={chip.label}
                         type="button"
                         onClick={() => handleQuickFilter(chip.params)}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-sm font-medium bg-white text-primary-600 border border-primary-200 hover:border-gold-200 hover:text-gold-700 hover:bg-gold-50 transition-all"
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-sm font-medium bg-white dark:bg-slate-800 text-primary-600 dark:text-slate-300 border border-primary-200 dark:border-slate-700 hover:border-gold-200 dark:hover:border-gold-400/40 hover:text-gold-700 dark:hover:text-gold-300 hover:bg-gold-50 dark:hover:bg-gold-500/10 transition-all"
                       >
                         <span className="text-gold-500">{chip.icon}</span>
                         {chip.label}
@@ -318,11 +329,11 @@ function Home() {
                   alt="Salon premium"
                   className="rounded-2xl shadow-2xl w-full object-cover aspect-[4/3]"
                 />
-                <div className="absolute -bottom-3 -left-3 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-3 border border-primary-100 dark:border-gray-700">
+                <div className="absolute -bottom-3 -left-3 bg-white dark:bg-slate-900 rounded-xl shadow-lg p-3 border border-primary-100 dark:border-slate-700">
                   <div className="flex items-center gap-1.5">
                     <FiStar className="w-4 h-4 text-gold-400 fill-current" />
-                    <span className="font-semibold text-primary-900 dark:text-white text-sm">4.9</span>
-                    <span className="text-xs text-primary-500">+{totalReviews} avis</span>
+                    <span className="font-semibold text-primary-900 dark:text-slate-100 text-sm">4.9</span>
+                    <span className="text-xs text-primary-500 dark:text-slate-400">+{totalReviews} avis</span>
                   </div>
                 </div>
               </div>
@@ -332,31 +343,31 @@ function Home() {
       </section>
 
       {/* Featured Salons */}
-      <section className="py-3 bg-primary-50 dark:bg-gray-800">
+      <section className="py-6 bg-primary-50 dark:bg-slate-900/80 dark:border-y dark:border-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between mb-3">
             <div>
-              <h2 className="text-lg md:text-xl font-bold text-primary-900 dark:text-white">
+              <h2 className="text-lg md:text-xl font-bold text-primary-900 dark:text-slate-100">
                 Salons en vedette
               </h2>
-              <p className="text-sm text-primary-500 dark:text-gray-400 mt-0.5">Les meilleurs salons pour démarrer votre expérience.</p>
+              <p className="text-sm text-primary-500 dark:text-slate-400 mt-0.5">Les meilleurs salons pour démarrer votre expérience.</p>
             </div>
             <Link
               to="/salons"
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-gold-700 hover:text-gold-800 transition-colors group"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-gold-700 dark:text-gold-300 hover:text-gold-800 dark:hover:text-gold-200 transition-colors group"
             >
               <span>Voir tout</span>
               <FiArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
+          <div className={`grid ${featuredSalonGridClass} gap-3 ${centerSalonsGrid ? 'mx-auto max-w-md' : ''}`}>
             {loadingSalons ? (
               [1, 2, 3].map((i) => (
-                <div key={i} className="bg-white dark:bg-gray-700 rounded-xl border border-primary-100 dark:border-gray-600 p-3 animate-pulse">
-                  <div className="h-32 bg-primary-100 dark:bg-gray-600 rounded-lg mb-3"></div>
-                  <div className="h-3 bg-primary-100 dark:bg-gray-600 rounded w-2/3 mb-2"></div>
-                  <div className="h-2.5 bg-primary-100 dark:bg-gray-600 rounded w-1/2"></div>
+                <div key={i} className="bg-white dark:bg-slate-900 rounded-xl border border-primary-100 dark:border-slate-700 p-3 animate-pulse">
+                  <div className="h-32 bg-primary-100 dark:bg-slate-800 rounded-lg mb-3"></div>
+                  <div className="h-3 bg-primary-100 dark:bg-slate-800 rounded w-2/3 mb-2"></div>
+                  <div className="h-2.5 bg-primary-100 dark:bg-slate-800 rounded w-1/2"></div>
                 </div>
               ))
             ) : (
@@ -370,31 +381,31 @@ function Home() {
 
       {/* Featured Boutiques */}
       {(loadingSalons || featuredBoutiques.length > 0) && (
-      <section className="py-4 bg-white dark:bg-gray-900">
+      <section className="py-6 bg-white dark:bg-slate-950">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between mb-3">
             <div>
-              <h2 className="text-lg md:text-xl font-bold text-primary-900 dark:text-white">
+              <h2 className="text-lg md:text-xl font-bold text-primary-900 dark:text-slate-100">
                 <FiShoppingBag className="mr-1.5 inline-block text-gold-500" /> Boutiques
               </h2>
-              <p className="text-sm text-primary-500 dark:text-gray-400 mt-0.5">Commandez en ligne auprès de nos partenaires.</p>
+              <p className="text-sm text-primary-500 dark:text-slate-400 mt-0.5">Commandez en ligne auprès de nos partenaires.</p>
             </div>
             <Link
               to="/salons?businessType=BOUTIQUE"
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-gold-700 hover:text-gold-800 transition-colors group"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-gold-700 dark:text-gold-300 hover:text-gold-800 dark:hover:text-gold-200 transition-colors group"
             >
               <span>Voir tout</span>
               <FiArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
+          <div className={`grid ${featuredBoutiqueGridClass} gap-3 ${centerBoutiquesGrid ? 'mx-auto max-w-md' : ''}`}>
             {loadingSalons ? (
               [1, 2, 3].map((i) => (
-                <div key={i} className="bg-white dark:bg-gray-700 rounded-xl border border-primary-100 dark:border-gray-600 p-3 animate-pulse">
-                  <div className="h-32 bg-primary-100 dark:bg-gray-600 rounded-lg mb-3"></div>
-                  <div className="h-3 bg-primary-100 dark:bg-gray-600 rounded w-2/3 mb-2"></div>
-                  <div className="h-2.5 bg-primary-100 dark:bg-gray-600 rounded w-1/2"></div>
+                <div key={i} className="bg-white dark:bg-slate-900 rounded-xl border border-primary-100 dark:border-slate-700 p-3 animate-pulse">
+                  <div className="h-32 bg-primary-100 dark:bg-slate-800 rounded-lg mb-3"></div>
+                  <div className="h-3 bg-primary-100 dark:bg-slate-800 rounded w-2/3 mb-2"></div>
+                  <div className="h-2.5 bg-primary-100 dark:bg-slate-800 rounded w-1/2"></div>
                 </div>
               ))
             ) : (
@@ -408,16 +419,16 @@ function Home() {
       )}
 
       {/* Categories */}
-      <section className="py-4 bg-gradient-to-b from-white dark:from-gray-900 to-gold-50/20 dark:to-gray-800">
+      <section className="py-6 bg-gradient-to-b from-white dark:from-slate-950 to-gold-50/20 dark:to-slate-900/80">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between mb-3">
             <div>
-              <h2 className="text-lg md:text-xl font-bold text-primary-900 dark:text-white">Catégories</h2>
-              <p className="text-sm text-primary-500 dark:text-gray-400 mt-0.5">Trouvez votre service en un clic.</p>
+              <h2 className="text-lg md:text-xl font-bold text-primary-900 dark:text-slate-100">Catégories</h2>
+              <p className="text-sm text-primary-500 dark:text-slate-400 mt-0.5">Trouvez votre service en un clic.</p>
             </div>
             <Link
               to="/salons"
-              className="text-sm font-semibold text-gold-700 hover:text-gold-800 inline-flex items-center gap-1.5 group"
+              className="text-sm font-semibold text-gold-700 dark:text-gold-300 hover:text-gold-800 dark:hover:text-gold-200 inline-flex items-center gap-1.5 group"
             >
               Voir tout
               <FiArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -428,31 +439,31 @@ function Home() {
               <Link
                 key={cat.id}
                 to={`/salons?category=${cat.id}`}
-                className="group flex flex-col items-center gap-1 rounded-lg bg-white dark:bg-gray-800 p-2.5 border border-primary-100 dark:border-gray-700 shadow-sm hover:border-gold-200 hover:bg-gold-50 dark:hover:bg-gray-700 transition-all"
+                className="group flex flex-col items-center gap-1 rounded-lg bg-white dark:bg-slate-900 p-2.5 border border-primary-100 dark:border-slate-700 shadow-sm hover:border-gold-200 hover:bg-gold-50 dark:hover:bg-slate-800 transition-all"
               >
                 {cat.icon && (
                   <span className="text-xl">{cat.icon}</span>
                 )}
-                <span className="text-xs sm:text-sm font-medium text-primary-700 dark:text-gray-300 group-hover:text-gold-700 text-center leading-tight">
+                <span className="text-xs sm:text-sm font-medium text-primary-700 dark:text-slate-300 group-hover:text-gold-700 dark:group-hover:text-gold-300 text-center leading-tight">
                   {cat.name}
                 </span>
               </Link>
             ))}
             <Link
               to="/salons"
-              className="group flex flex-col items-center justify-center gap-1 rounded-lg bg-gold-50 p-2.5 border border-gold-100 hover:bg-gold-100 transition-all"
+              className="group flex flex-col items-center justify-center gap-1 rounded-lg bg-gold-50 dark:bg-gold-500/10 p-2.5 border border-gold-100 dark:border-gold-500/30 hover:bg-gold-100 dark:hover:bg-gold-500/20 transition-all"
             >
-              <span className="text-sm text-gold-600">+{categories.length - 3}</span>
-              <span className="text-xs sm:text-sm font-medium text-gold-700 text-center">Voir plus</span>
+              <span className="text-sm text-gold-600 dark:text-gold-300">+{categories.length - 3}</span>
+              <span className="text-xs sm:text-sm font-medium text-gold-700 dark:text-gold-300 text-center">Voir plus</span>
             </Link>
           </div>
         </div>
       </section>
 
       {/* How it works */}
-      <section className="py-4 bg-primary-50 dark:bg-gray-800">
+      <section className="py-6 bg-primary-50 dark:bg-slate-900/80 dark:border-y dark:border-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-lg md:text-xl font-bold text-primary-900 mb-3 text-center">
+          <h2 className="text-lg md:text-xl font-bold text-primary-900 dark:text-slate-100 mb-3 text-center">
             Comment ça marche ?
           </h2>
           <div className="grid grid-cols-3 gap-2">
@@ -460,13 +471,13 @@ function Home() {
               <Link
                 key={i}
                 to={step.link}
-                className="relative bg-white dark:bg-gray-800 border border-primary-100 dark:border-gray-700 rounded-xl p-2.5 md:p-5 text-center shadow-sm hover:border-gold-200 hover:shadow-md transition-all cursor-pointer"
+                className="relative bg-white dark:bg-slate-900 border border-primary-100 dark:border-slate-700 rounded-xl p-2.5 md:p-5 text-center shadow-sm hover:border-gold-200 dark:hover:border-gold-400/40 hover:shadow-md transition-all cursor-pointer"
               >
                 <div className="w-8 h-8 md:w-11 md:h-11 bg-primary-900 text-white rounded-lg flex items-center justify-center mx-auto mb-1.5 md:mb-3">
                   {step.icon}
                 </div>
-                <h3 className="text-[11px] sm:text-sm md:text-base font-bold text-primary-900 dark:text-white mb-0.5 md:mb-1">{step.title}</h3>
-                <p className="text-[10px] md:text-sm text-primary-500 dark:text-gray-400 leading-snug hidden sm:block">{step.description}</p>
+                <h3 className="text-[11px] sm:text-sm md:text-base font-bold text-primary-900 dark:text-slate-100 mb-0.5 md:mb-1">{step.title}</h3>
+                <p className="text-[10px] md:text-sm text-primary-500 dark:text-slate-400 leading-snug hidden sm:block">{step.description}</p>
               </Link>
             ))}
           </div>
@@ -506,11 +517,11 @@ function Home() {
       </section>
 
       {/* Feedback */}
-      <section className="py-4 bg-primary-50 dark:bg-gray-800">
+      <section className="py-6 bg-primary-50 dark:bg-slate-900/80">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-primary-100 dark:border-gray-700 shadow-sm p-4 text-center">
-            <h3 className="text-base md:text-lg font-bold text-primary-900 dark:text-white mb-0.5">Votre avis compte</h3>
-            <p className="text-sm text-primary-500 dark:text-gray-400 mb-2">
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-primary-100 dark:border-slate-700 shadow-sm p-4 text-center">
+            <h3 className="text-base md:text-lg font-bold text-primary-900 dark:text-slate-100 mb-0.5">Votre avis compte</h3>
+            <p className="text-sm text-primary-500 dark:text-slate-400 mb-2">
               Bug, suggestion, amélioration — nous lisons tout.
             </p>
             <div className="flex items-center justify-center gap-2">

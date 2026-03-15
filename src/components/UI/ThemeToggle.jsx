@@ -7,10 +7,11 @@ export default function ThemeToggle() {
     return (
         <button
             onClick={toggleTheme}
-            className="p-2 rounded-full bg-gray-200 dark:bg-gray-700 
-                 text-gray-800 dark:text-yellow-400 transition-all"
+            className="group relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-primary-200 bg-white text-primary-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:text-gold-300 dark:hover:bg-slate-700"
+            aria-label={isDark ? 'Activer le mode clair' : 'Activer le mode sombre'}
+            title={isDark ? 'Mode clair' : 'Mode sombre'}
         >
-            {isDark ? <Sun size={18} /> : <Moon size={18} />}
+            {isDark ? <Sun size={18} className="transition-transform duration-200 group-hover:rotate-12" /> : <Moon size={18} className="transition-transform duration-200 group-hover:-rotate-12" />}
         </button>
     )
 }
