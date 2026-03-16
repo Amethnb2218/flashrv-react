@@ -93,7 +93,7 @@ function Register() {
         <div className="absolute inset-0 bg-gradient-to-br from-primary-900/80 via-primary-800/70 to-gold-900/60" />
         <div className="absolute top-20 left-20 w-64 h-64 bg-gold-400/20 rounded-full blur-3xl"></div>
         <div className="absolute bottom-20 right-20 w-80 h-80 bg-gold-300/15 rounded-full blur-3xl"></div>
-        <div className="absolute inset-0 flex items-center justify-center p-12">
+        <div className="absolute inset-0 flex items-start justify-center p-12 pt-20 xl:pt-24">
           <div className="text-center text-white">
             <h2 className="text-4xl font-bold mb-4">Rejoignez Style • Flow</h2>
             <p className="text-xl text-primary-100 mb-8">
