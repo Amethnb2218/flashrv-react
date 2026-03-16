@@ -696,9 +696,9 @@ router.patch('/pro/:id/reactivate', authenticate, requireAdmin, async (req, res)
 /**
  * DELETE /admin/pro/:id
  * Delete a PRO account and its salon
- * Access: ADMIN, SUPER_ADMIN
+ * Access: SUPER_ADMIN only
  */
-router.delete('/pro/:id', authenticate, requireAdmin, async (req, res) => {
+router.delete('/pro/:id', authenticate, requireSuperAdmin, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -710,7 +710,7 @@ router.delete('/pro/:id', authenticate, requireAdmin, async (req, res) => {
     if (!user) {
       return res.status(404).json({ status: 'error', message: 'User not found' });
     }
-    if (user.role !== ROLES.PRO && user.role !== ROLES.SALON_OWNER) {
+    if (user.role !== ROLES.PRO) {
       return res.status(400).json({ status: 'error', message: 'User is not a PRO account' });
     }
 
@@ -776,12 +776,12 @@ router.delete('/pro/:id', authenticate, requireAdmin, async (req, res) => {
 });
 
 // ============================================
-// ADMIN ROUTES - CLIENT Management (Read-only)
+// ADMIN ROUTES - CLIENT Management
 // ============================================
 
 /**
  * GET /admin/clients
- * Get all CLIENT accounts (read-only)
+ * Get all CLIENT accounts
  * Access: ADMIN, SUPER_ADMIN
  */
 router.get('/clients', authenticate, requireAdmin, async (req, res) => {
@@ -812,6 +812,65 @@ router.get('/clients', authenticate, requireAdmin, async (req, res) => {
       status: 'error',
       message: 'Failed to fetch client accounts',
     });
+  }
+});
+
+/**
+ * DELETE /admin/clients/:id
+ * Delete a CLIENT account
+ * Access: SUPER_ADMIN only
+ */
+router.delete('/clients/:id', authenticate, requireSuperAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ status: 'error', message: 'Client id is required' });
+    }
+
+    if (req.user.id === id) {
+      return res.status(400).json({ status: 'error', message: 'Cannot delete your own account' });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: { id: true, role: true, email: true },
+    });
+
+    if (!user) {
+      return res.status(404).json({ status: 'error', message: 'Client not found' });
+    }
+    if (user.role !== ROLES.CLIENT) {
+      return res.status(400).json({ status: 'error', message: 'User is not a client account' });
+    }
+
+    await prisma.$transaction(async (tx) => {
+      const appointmentIds = await tx.appointment.findMany({
+        where: { clientId: id },
+        select: { id: true },
+      });
+      const apptIdList = appointmentIds.map((item) => item.id);
+
+      if (apptIdList.length) {
+        await tx.payment.deleteMany({ where: { appointmentId: { in: apptIdList } } });
+      }
+
+      await tx.appointment.deleteMany({ where: { clientId: id } });
+      await tx.order.deleteMany({ where: { clientId: id } });
+      await tx.payment.deleteMany({ where: { userId: id } });
+      await tx.review.deleteMany({ where: { userId: id } });
+      await tx.loyalty.deleteMany({ where: { clientId: id } });
+      await tx.user.delete({ where: { id } });
+    });
+
+    console.log(`🗑️ CLIENT deleted: ${user.email} by ${req.user.email}`);
+    res.status(200).json({
+      status: 'success',
+      message: 'Client deleted successfully',
+    });
+  } catch (error) {
+    console.error('Error deleting client:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to delete client account' });
   }
 });
 

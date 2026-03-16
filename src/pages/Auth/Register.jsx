@@ -87,7 +87,7 @@ function Register() {
       <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
         <img
           src="https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=1000"
-          alt="Salon"
+          alt="Beauté et boutique"
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-br from-primary-900/80 via-primary-800/70 to-gold-900/60" />
@@ -98,15 +98,15 @@ function Register() {
             <h2 className="text-4xl font-bold mb-4">Rejoignez Style • Flow</h2>
             <p className="text-xl text-primary-100 mb-8">
               {formData.role === 'pro'
-                ? 'Développez votre activité et gagnez en visibilité'
+                ? 'Développez votre activité salon ou boutique'
                 : 'Réservez facilement vos rendez-vous beauté'}
             </p>
             <ul className="text-left text-primary-100 space-y-3 max-w-sm mx-auto">
               {formData.role === 'pro' ? (
                 <>
-                  <li className="flex items-center space-x-2"><span className="text-green-400">✓</span><span>Gérez vos rendez-vous en ligne</span></li>
-                  <li className="flex items-center space-x-2"><span className="text-green-400">✓</span><span>Recevez des paiements sécurisés</span></li>
-                  <li className="flex items-center space-x-2"><span className="text-green-400">✓</span><span>Fidélisez votre clientèle</span></li>
+                  <li className="flex items-center space-x-2"><span className="text-green-400">✓</span><span>Gérez vos services et vos produits</span></li>
+                  <li className="flex items-center space-x-2"><span className="text-green-400">✓</span><span>Suivez commandes, réservations et paiements</span></li>
+                  <li className="flex items-center space-x-2"><span className="text-green-400">✓</span><span>Fidélisez vos clients et boostez votre visibilité</span></li>
                 </>
               ) : (
                 <>

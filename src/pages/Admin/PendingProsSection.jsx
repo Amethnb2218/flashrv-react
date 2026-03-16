@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import SectionCard from "../../components/UI/SectionCard.jsx";
 import DataTable from "../../components/UI/DataTable.jsx";
 import StatusBadge from "../../components/UI/StatusBadge.jsx";
-import { FiUserCheck, FiSearch, FiRefreshCw, FiUsers, FiMapPin, FiPhone, FiCalendar, FiMail } from "react-icons/fi";
+import { FiUserCheck, FiSearch, FiRefreshCw, FiUsers, FiMapPin, FiPhone, FiCalendar, FiMail, FiTrash2 } from "react-icons/fi";
 
-export default function PendingProsSection({ pros, loading, onRefresh, onApprove, onReject, onRestrict }) {
+export default function PendingProsSection({ pros, loading, onRefresh, onApprove, onReject, onRestrict, onDelete }) {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
   const [selectedUser, setSelectedUser] = useState(null);
@@ -43,6 +43,16 @@ export default function PendingProsSection({ pros, loading, onRefresh, onApprove
         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M12 20a8 8 0 100-16 8 8 0 000 16z" /></svg>
         Restreindre
       </button>
+      {onDelete && (
+        <button
+          onClick={() => onDelete(row)}
+          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-600 text-white font-semibold text-xs hover:bg-red-700 active:scale-95 transition"
+          title="Supprimer définitivement"
+        >
+          <FiTrash2 className="w-3.5 h-3.5" />
+          Supprimer
+        </button>
+      )}
     </div>
   );
 

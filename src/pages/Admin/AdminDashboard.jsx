@@ -195,6 +195,52 @@ export default function AdminDashboard() {
     }
   }
 
+  const handleDeletePro = async (pro) => {
+    if (!pro?.id) return
+    const label = pro?.salon?.name || pro?.name || pro?.email || 'ce professionnel'
+    const confirmed = window.confirm(`Supprimer définitivement ${label} ? Cette action est irréversible.`)
+    if (!confirmed) return
+
+    setActionLoading(true)
+    try {
+      const res = await fetch(`${API_URL}/admin/pro/${pro.id}`, authFetchOpts({ method: 'DELETE' }))
+      const payload = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        alert(payload?.message || 'Suppression impossible pour ce compte PRO.')
+        return
+      }
+      fetchData()
+      alert('Compte PRO supprimé avec succès.')
+    } catch (e) {
+      alert('Erreur réseau lors de la suppression du compte PRO.')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const handleDeleteClient = async (client) => {
+    if (!client?.id) return
+    const label = client?.name || client?.email || 'ce client'
+    const confirmed = window.confirm(`Supprimer définitivement ${label} ? Cette action est irréversible.`)
+    if (!confirmed) return
+
+    setActionLoading(true)
+    try {
+      const res = await fetch(`${API_URL}/admin/clients/${client.id}`, authFetchOpts({ method: 'DELETE' }))
+      const payload = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        alert(payload?.message || 'Suppression impossible pour ce compte client.')
+        return
+      }
+      fetchClients()
+      alert('Compte client supprimé avec succès.')
+    } catch (e) {
+      alert('Erreur réseau lors de la suppression du compte client.')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
   // Gestion des admins (onglet superadmin)
   const [admins, setAdmins] = useState([])
   useEffect(() => {
@@ -524,6 +570,7 @@ export default function AdminDashboard() {
             onApprove={user => handleAction(user.id, 'approve')}
             onReject={user => handleAction(user.id, 'reject')}
             onRestrict={user => handleRestrict(user.id, { canCreateService: false, canBook: false, isPublic: false })}
+            onDelete={isSuperAdmin ? handleDeletePro : undefined}
           />
         )}
         {activeTab === 'all' && (
@@ -534,6 +581,7 @@ export default function AdminDashboard() {
             onApprove={user => handleAction(user.id, 'approve')}
             onReject={user => handleAction(user.id, 'reject')}
             onRestrict={user => handleRestrict(user.id, { canCreateService: false, canBook: false, isPublic: false })}
+            onDelete={isSuperAdmin ? handleDeletePro : undefined}
           />
         )}
         {activeTab === 'clients' && (
@@ -541,6 +589,7 @@ export default function AdminDashboard() {
             clients={clients}
             loading={clientsLoading}
             onRefresh={fetchClients}
+            onDelete={isSuperAdmin ? handleDeleteClient : undefined}
           />
         )}
 

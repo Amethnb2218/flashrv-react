@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import SectionCard from "../../components/UI/SectionCard.jsx";
 import DataTable from "../../components/UI/DataTable.jsx";
-import { FiUsers, FiSearch, FiRefreshCw, FiMail, FiPhone, FiCalendar } from "react-icons/fi";
+import { FiUsers, FiSearch, FiRefreshCw, FiMail, FiPhone, FiCalendar, FiTrash2 } from "react-icons/fi";
 
 
-export default function ClientsSection({ clients, loading, onRefresh }) {
+export default function ClientsSection({ clients, loading, onRefresh, onDelete }) {
   const [search, setSearch] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
   const filtered = clients.filter(
@@ -59,6 +59,17 @@ export default function ClientsSection({ clients, loading, onRefresh }) {
         <span className="flex items-center gap-1"><FiPhone className="w-3 h-3 text-primary-400" /> {row.phoneNumber || "-"}</span>
         <span className="flex items-center gap-1"><FiCalendar className="w-3 h-3 text-primary-400" /> {row.createdAt ? new Date(row.createdAt).toLocaleDateString("fr-FR") : "-"}</span>
       </div>
+      {onDelete && (
+        <div className="px-4 pb-3">
+          <button
+            onClick={() => onDelete(row)}
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-600 text-white font-semibold text-xs hover:bg-red-700 active:scale-95 transition"
+          >
+            <FiTrash2 className="w-3.5 h-3.5" />
+            Supprimer
+          </button>
+        </div>
+      )}
     </div>
   );
 
@@ -148,6 +159,15 @@ export default function ClientsSection({ clients, loading, onRefresh }) {
             ]}
             data={filtered}
             toolbar={<Toolbar />}
+            rowActions={onDelete ? (row => (
+              <button
+                onClick={() => onDelete(row)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600 text-white font-semibold text-xs hover:bg-red-700 active:scale-95 transition"
+              >
+                <FiTrash2 className="w-3.5 h-3.5" />
+                Supprimer
+              </button>
+            )) : undefined}
             onRefresh={onRefresh}
             emptyLabel="Aucun client trouvé"
             pagination={null}
@@ -183,6 +203,17 @@ export default function ClientsSection({ clients, loading, onRefresh }) {
                   <span className="text-primary-600">{selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}</span>
                 </div>
               </div>
+              {onDelete && (
+                <div className="w-full mt-5 pt-4 border-t border-primary-100">
+                  <button
+                    onClick={() => onDelete(selectedUser)}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 text-white font-semibold text-sm hover:bg-red-700 active:scale-95 transition"
+                  >
+                    <FiTrash2 className="w-4 h-4" />
+                    Supprimer ce client
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
