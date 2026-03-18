@@ -1315,10 +1315,7 @@ useEffect(() => {
   };
   loadNotifications();
 
-  const token = sessionStorage.getItem("flashrv_token");
-  if (token) {
-    connectRealtime(token);
-  }
+  connectRealtime();
   const unsubscribe = subscribeRealtime((event) => {
     if (event?.type === "notification:new" && event?.payload) {
       const incoming = event.payload;

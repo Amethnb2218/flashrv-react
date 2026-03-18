@@ -1,8 +1,26 @@
 const express = require('express');
 const multer = require('multer');
+const rateLimit = require('express-rate-limit');
+const { authenticate } = require('../middleware/auth');
 
 const router = express.Router();
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 15 * 1024 * 1024 } });
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 6 * 1024 * 1024 } });
+
+const assistantChatLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { status: 'error', message: 'Trop de messages assistant. Reessayez dans quelques minutes.' },
+});
+
+const assistantHeavyLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { status: 'error', message: 'Trop de requetes audio assistant. Reessayez plus tard.' },
+});
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY || '';
 const OPENAI_BASE_URL = process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1';
@@ -115,7 +133,7 @@ async function callOpenAIResponses({ message, history = [] }) {
   return answer || fallbackAssistantReply(message);
 }
 
-router.post('/chat', async (req, res, next) => {
+router.post('/chat', assistantChatLimiter, async (req, res, next) => {
   try {
     const { message, history } = req.body || {};
     const clean = String(message || '').trim();
@@ -142,7 +160,7 @@ router.post('/chat', async (req, res, next) => {
   }
 });
 
-router.post('/transcribe', upload.single('audio'), async (req, res, next) => {
+router.post('/transcribe', authenticate, assistantHeavyLimiter, upload.single('audio'), async (req, res, next) => {
   try {
     if (!req.file) {
       return res.status(400).json({ status: 'error', message: 'audio file is required' });
@@ -181,7 +199,7 @@ router.post('/transcribe', upload.single('audio'), async (req, res, next) => {
   }
 });
 
-router.post('/speak', async (req, res, next) => {
+router.post('/speak', authenticate, assistantHeavyLimiter, async (req, res, next) => {
   try {
     const text = String(req.body?.text || '').trim();
     const voice = String(req.body?.voice || 'alloy').trim();

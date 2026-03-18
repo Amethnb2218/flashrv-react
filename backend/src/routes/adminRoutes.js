@@ -917,10 +917,9 @@ router.get('/stats', authenticate, requireAdmin, async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching stats:', error);
-    console.log('[PRO PENDING] count:', pendingPros.length);
-    res.status(200).json({
-      status: 'success',
-      data: { pros: pendingPros, count: pendingPros.length },
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to fetch stats',
     });
   }
 });
@@ -953,10 +952,9 @@ router.get('/admins', authenticate, requireSuperAdmin, async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching admins:', error);
-    console.log('[PRO ALL] count:', pros.length);
-    res.status(200).json({
-      status: 'success',
-      data: { pros, count: pros.length },
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to fetch admins',
     });
   }
 });
@@ -1079,10 +1077,9 @@ router.post('/admins/create', authenticate, requireSuperAdmin, async (req, res) 
     });
   } catch (error) {
     console.error('Error creating admin:', error);
-    console.log('[CLIENTS] count:', clients.length);
-    res.status(200).json({
-      status: 'success',
-      data: { clients, count: clients.length },
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to create admin',
     });
   }
 });
@@ -1134,10 +1131,9 @@ router.delete('/admins/:id', authenticate, requireSuperAdmin, async (req, res) =
     });
   } catch (error) {
     console.error('Error removing admin:', error);
-    console.log('[ADMINS] count:', admins.length);
-    res.status(200).json({
-      status: 'success',
-      data: { admins, count: admins.length },
+    res.status(500).json({
+      status: 'error',
+      message: 'Failed to remove admin',
     });
   }
 });

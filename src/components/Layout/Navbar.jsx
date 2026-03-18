@@ -23,6 +23,7 @@ import {
   subscribeCart,
 } from '../../utils/cartStore'
 import { getProRedirectPath, isProUser } from '../../utils/proOnboarding'
+import { ADMIN_PATH } from '../../utils/adminPath'
 
 const normalizeNotificationDateToken = (rawValue) => {
   const value = String(rawValue || '').trim()
@@ -122,7 +123,7 @@ function Navbar() {
   const closeDrawer = useCallback(() => setIsOpen(false), [])
   const getDashboardPath = useCallback(() => {
     if (!isAuthenticated) return '/login'
-    if (user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') return '/admin'
+    if (user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') return ADMIN_PATH
     if (isProUser(user)) return getProRedirectPath(user) || '/pro/onboarding'
     return '/dashboard'
   }, [isAuthenticated, user])
@@ -244,8 +245,7 @@ function Navbar() {
     const interval = setInterval(fetchNotifications, 30000)
     const unsubscribeLocal = subscribeSiteNotifications(fetchNotifications)
 
-    const token = sessionStorage.getItem('flashrv_token')
-    if (token) connectRealtime(token)
+    connectRealtime()
     const unsubscribeRealtime = subscribeRealtime((event) => {
       const type = String(event?.type || '').toLowerCase()
       if (
@@ -317,11 +317,11 @@ function Navbar() {
   ]
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 dark:bg-slate-950">
+    <nav className="fixed top-0 left-0 right-0 z-50 dark:bg-[#15110d]">
       {/* Main navbar */}
       <div className={`transition-all duration-300 ${isScrolled
-        ? 'bg-white/95 backdrop-blur-xl shadow-lg border-b border-primary-100/70 dark:!bg-slate-950 dark:border-slate-800/90 dark:shadow-black/40'
-        : 'bg-white shadow-sm border-b border-primary-100/70 dark:!bg-slate-950 dark:border-slate-800/90'
+        ? 'bg-white/95 backdrop-blur-xl shadow-lg border-b border-primary-100/70 dark:!bg-[#15110d] dark:border-[#382c22] dark:shadow-black/40'
+        : 'bg-white shadow-sm border-b border-primary-100/70 dark:!bg-[#15110d] dark:border-[#382c22]'
         }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14">
@@ -340,8 +340,8 @@ function Navbar() {
                     className={`
                     px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2
                     ${active
-                        ? 'text-primary-900 dark:text-slate-100 bg-primary-100 dark:bg-slate-800 dark:border dark:border-slate-700'
-                        : 'text-primary-600 dark:text-slate-300 hover:text-primary-900 dark:hover:text-slate-100 hover:bg-primary-50 dark:hover:bg-slate-800/80'
+                        ? 'text-primary-900 dark:text-[#f3e8d9] bg-primary-100 dark:bg-[#251d16] dark:border dark:border-[#46382a]'
+                        : 'text-primary-600 dark:text-[#cfbca4] hover:text-primary-900 dark:hover:text-[#f3e8d9] hover:bg-primary-50 dark:hover:bg-[#292018]'
                       }
                   `}
                   >
@@ -353,8 +353,8 @@ function Navbar() {
               <Link
                 to="/salons?businessType=BOUTIQUE"
                 className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 ${isBoutiquePage
-                  ? 'text-primary-900 dark:text-slate-100 bg-primary-100 dark:bg-slate-800 dark:border dark:border-slate-700'
-  : 'text-primary-600 dark:text-slate-300 hover:text-primary-900 dark:hover:text-slate-100 hover:bg-primary-50 dark:hover:bg-slate-800/80'
+                  ? 'text-primary-900 dark:text-[#f3e8d9] bg-primary-100 dark:bg-[#251d16] dark:border dark:border-[#46382a]'
+  : 'text-primary-600 dark:text-[#cfbca4] hover:text-primary-900 dark:hover:text-[#f3e8d9] hover:bg-primary-50 dark:hover:bg-[#292018]'
                   }`}
               >
                 Boutiques
@@ -365,7 +365,7 @@ function Navbar() {
             <div className="hidden md:flex items-center space-x-2">
               <button
                 onClick={() => isAuthenticated ? navigate('/dashboard?tab=favorites') : navigate('/login')}
-                className="p-2.5 text-primary-500 dark:text-slate-300 hover:text-red-500 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950"
+                className="p-2.5 text-primary-500 dark:text-[#cfbca4] hover:text-red-500 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-[#15110d]"
                 title="Mes favoris"
               >
                 <FiHeart className="w-5 h-5" />
@@ -373,7 +373,7 @@ function Navbar() {
 
               <button
                 onClick={openCart}
-                className="p-2.5 text-primary-500 dark:text-slate-300 hover:text-gold-600 dark:hover:text-gold-300 hover:bg-gold-50 dark:hover:bg-gold-500/10 rounded-lg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950 relative"
+                className="p-2.5 text-primary-500 dark:text-[#cfbca4] hover:text-gold-600 dark:hover:text-gold-300 hover:bg-gold-50 dark:hover:bg-gold-500/10 rounded-lg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-[#15110d] relative"
                 title="Panier"
               >
                 <FiShoppingCart className="w-5 h-5" />
@@ -389,7 +389,7 @@ function Navbar() {
                 <div className="relative">
                   <button
                     onClick={() => { setShowNotifications(!showNotifications); setShowUserMenu(false) }}
-                    className="p-2.5 text-primary-500 dark:text-slate-300 hover:text-gold-600 dark:hover:text-gold-300 hover:bg-gold-50 dark:hover:bg-gold-500/10 rounded-lg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950 relative"
+                    className="p-2.5 text-primary-500 dark:text-[#cfbca4] hover:text-gold-600 dark:hover:text-gold-300 hover:bg-gold-50 dark:hover:bg-gold-500/10 rounded-lg transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-[#15110d] relative"
                     title="Notifications"
                   >
                     <FiBell className="w-5 h-5" />
@@ -406,10 +406,10 @@ function Navbar() {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 10 }}
-                        className="absolute right-0 mt-2 w-80 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-primary-100 dark:border-slate-700 overflow-hidden z-50"
+                        className="absolute right-0 mt-2 w-80 bg-white dark:bg-[#1d1712] rounded-xl shadow-xl border border-primary-100 dark:border-[#46382a] overflow-hidden z-50"
                       >
-                        <div className="px-4 py-3 border-b border-primary-100 dark:border-slate-700 flex items-center justify-between">
-                          <h3 className="font-bold text-primary-900 dark:text-slate-100">Notifications</h3>
+                        <div className="px-4 py-3 border-b border-primary-100 dark:border-[#46382a] flex items-center justify-between">
+                          <h3 className="font-bold text-primary-900 dark:text-[#f3e8d9]">Notifications</h3>
                           <div className="flex items-center gap-2">
                             {unreadCount > 0 && (
                               <span className="text-xs bg-gold-100 dark:bg-gold-500/15 text-gold-700 dark:text-gold-300 px-2 py-0.5 rounded-full font-medium">{unreadCount} nouvelles</span>
@@ -418,7 +418,7 @@ function Navbar() {
                               <button
                                 type="button"
                                 onClick={markAllRead}
-                                className="text-xs text-primary-500 dark:text-slate-300 hover:text-primary-800 dark:hover:text-slate-100 underline"
+                                className="text-xs text-primary-500 dark:text-[#cfbca4] hover:text-primary-800 dark:hover:text-[#f3e8d9] underline"
                               >
                                 Tout marquer lu
                               </button>
@@ -427,7 +427,7 @@ function Navbar() {
                         </div>
                         <div className="max-h-72 overflow-y-auto">
                           {notifications.length === 0 ? (
-                            <div className="p-6 text-center text-primary-400 dark:text-slate-400 text-sm">
+                            <div className="p-6 text-center text-primary-400 dark:text-[#ab967c] text-sm">
                               Aucune notification
                             </div>
                           ) : (
@@ -435,20 +435,20 @@ function Navbar() {
                               <div
                                 key={n.id}
                                 onClick={() => markNotificationRead(n.id)}
-                                className={`px-4 py-3 border-b border-primary-50 dark:border-slate-700 cursor-pointer hover:bg-primary-50 dark:hover:bg-slate-800 transition ${!n.isRead ? 'bg-gold-50/50 dark:bg-gold-500/10' : ''
+                                className={`px-4 py-3 border-b border-primary-50 dark:border-[#46382a] cursor-pointer hover:bg-primary-50 dark:hover:bg-[#292018] transition ${!n.isRead ? 'bg-gold-50/50 dark:bg-gold-500/10' : ''
                                   }`}
                               >
                                 <div className="flex items-start gap-3">
                                   <div className="min-w-0 flex-1">
-                                    <p className="text-sm text-primary-800 dark:text-slate-200">{n.message}</p>
-                                    <p className="text-xs text-primary-400 dark:text-slate-400 mt-1">
+                                    <p className="text-sm text-primary-800 dark:text-[#e5d6c2]">{n.message}</p>
+                                    <p className="text-xs text-primary-400 dark:text-[#ab967c] mt-1">
                                       {new Date(n.createdAt).toLocaleString('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                                     </p>
                                   </div>
                                   <button
                                     type="button"
                                     onClick={(event) => deleteNotification(event, n)}
-                                    className="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-full text-primary-400 dark:text-slate-400 transition hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-300"
+                                    className="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-full text-primary-400 dark:text-[#ab967c] transition hover:bg-red-50 dark:hover:bg-red-500/10 hover:text-red-600 dark:hover:text-red-300"
                                     aria-label="Supprimer la notification"
                                     title="Supprimer"
                                   >
@@ -468,13 +468,13 @@ function Navbar() {
               <ThemeToggle />
 
 
-              <div className="h-6 w-px bg-primary-200 dark:bg-slate-700"></div>
+              <div className="h-6 w-px bg-primary-200 dark:bg-[#46382a]"></div>
 
               {isAuthenticated ? (
                 <div className="relative">
                   <button
                     onClick={() => { setShowUserMenu(!showUserMenu); setShowNotifications(false) }}
-                    className="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-primary-100 dark:bg-slate-800 hover:bg-primary-200 dark:hover:bg-slate-700 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950"
+                    className="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-primary-100 dark:bg-[#251d16] hover:bg-primary-200 dark:hover:bg-[#31261d] transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-[#15110d]"
                   >
                     {(user.avatar || user.picture) ? (
                       <img
@@ -487,10 +487,10 @@ function Navbar() {
                         {user.name?.charAt(0)?.toUpperCase() || 'U'}
                       </div>
                     )}
-                    <span className="font-medium text-primary-700 dark:text-slate-100 text-sm">
+                    <span className="font-medium text-primary-700 dark:text-[#f3e8d9] text-sm">
                       {user.name?.split(' ')[0]}
                     </span>
-                    <svg className="w-4 h-4 text-primary-500 dark:text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-primary-500 dark:text-[#cfbca4]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
@@ -501,17 +501,17 @@ function Navbar() {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 10 }}
-                        className="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 rounded-xl shadow-xl py-2 border border-primary-100 dark:border-slate-700"
+                        className="absolute right-0 mt-2 w-56 bg-white dark:bg-[#1d1712] rounded-xl shadow-xl py-2 border border-primary-100 dark:border-[#46382a]"
                       >
-                        <div className="px-4 py-3 border-b border-primary-100 dark:border-slate-700">
-                          <p className="font-medium text-primary-800 dark:text-slate-100">{user.name}</p>
-                          <p className="text-sm text-primary-500 dark:text-slate-400">{user.email}</p>
+                        <div className="px-4 py-3 border-b border-primary-100 dark:border-[#46382a]">
+                          <p className="font-medium text-primary-800 dark:text-[#f3e8d9]">{user.name}</p>
+                          <p className="text-sm text-primary-500 dark:text-[#ab967c]">{user.email}</p>
                         </div>
 
                         <Link
-                          to={user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' ? '/admin' : isProUser(user) ? (getProRedirectPath(user) || '/pro/onboarding') : '/dashboard'}
+                          to={user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' ? ADMIN_PATH : isProUser(user) ? (getProRedirectPath(user) || '/pro/onboarding') : '/dashboard'}
                           onClick={() => setShowUserMenu(false)}
-                          className="flex items-center space-x-2 px-4 py-2 text-primary-600 dark:text-slate-300 hover:bg-primary-50 dark:hover:bg-slate-800 hover:text-primary-900 dark:hover:text-slate-100 transition-colors"
+                          className="flex items-center space-x-2 px-4 py-2 text-primary-600 dark:text-[#cfbca4] hover:bg-primary-50 dark:hover:bg-[#292018] hover:text-primary-900 dark:hover:text-[#f3e8d9] transition-colors"
                         >
                           <FiCalendar className="w-4 h-4" />
                           <span>{user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' ? 'Dashboard admin' : user.role === 'PRO' ? 'Mon dashboard' : 'Mes réservations'}</span>
@@ -520,7 +520,7 @@ function Navbar() {
                         <Link
                           to="/profile"
                           onClick={() => setShowUserMenu(false)}
-                          className="flex items-center space-x-2 px-4 py-2 text-primary-600 dark:text-slate-300 hover:bg-primary-50 dark:hover:bg-slate-800 hover:text-primary-900 dark:hover:text-slate-100 transition-colors"
+                          className="flex items-center space-x-2 px-4 py-2 text-primary-600 dark:text-[#cfbca4] hover:bg-primary-50 dark:hover:bg-[#292018] hover:text-primary-900 dark:hover:text-[#f3e8d9] transition-colors"
                         >
                           <FiSettings className="w-4 h-4" />
                           <span>Paramètres</span>
@@ -541,13 +541,13 @@ function Navbar() {
                 <div className="flex items-center space-x-2">
                   <Link
                     to="/login"
-                   className="px-4 py-2 font-medium text-primary-700 dark:text-slate-200 hover:text-primary-900 dark:hover:text-white transition-colors rounded-lg hover:bg-primary-100 dark:hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950"
+                   className="px-4 py-2 font-medium text-primary-700 dark:text-[#e5d6c2] hover:text-primary-900 dark:hover:text-white transition-colors rounded-lg hover:bg-primary-100 dark:hover:bg-[#292018] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-[#15110d]"
                   >
                     Connexion
                   </Link>
                   <Link
                     to="/register"
-                    className="px-5 py-2.5 bg-gradient-to-r from-primary-900 via-primary-800 to-primary-900 dark:from-gold-500 dark:via-gold-400 dark:to-gold-500 text-white dark:text-primary-900 font-semibold rounded-xl hover:shadow-lg transition-all shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950"
+                    className="px-5 py-2.5 bg-gradient-to-r from-primary-900 via-primary-800 to-primary-900 dark:from-gold-500 dark:via-gold-400 dark:to-gold-500 text-white dark:text-primary-900 font-semibold rounded-xl hover:shadow-lg transition-all shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-[#15110d]"
                   >
                     S'inscrire gratuitement
                   </Link>
@@ -558,7 +558,7 @@ function Navbar() {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="md:hidden p-2 rounded-lg text-primary-700 dark:text-slate-100 hover:bg-primary-100 dark:hover:bg-slate-800 transition-colors"
+              className="md:hidden p-2 rounded-lg text-primary-700 dark:text-[#f3e8d9] hover:bg-primary-100 dark:hover:bg-[#292018] transition-colors"
               aria-label="Ouvrir le menu"
             >
               {isOpen ? <FiX className="w-6 h-6" /> : <FiMenu className="w-6 h-6" />}
@@ -588,14 +588,14 @@ function Navbar() {
                 animate={{ x: 0 }}
                 exit={{ x: '100%' }}
                 transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-                className="fixed top-0 right-0 bottom-0 z-[9999] w-[80%] max-w-xs bg-white dark:bg-slate-950 shadow-2xl md:hidden flex flex-col border-l border-primary-100 dark:border-slate-800"
+                className="fixed top-0 right-0 bottom-0 z-[9999] w-[80%] max-w-xs bg-white dark:bg-[#15110d] shadow-2xl md:hidden flex flex-col border-l border-primary-100 dark:border-[#382c22]"
               >
                 {/* Drawer header */}
-                <div className="flex items-center justify-between px-5 py-4 border-b border-primary-100 dark:border-slate-800">
+                <div className="flex items-center justify-between px-5 py-4 border-b border-primary-100 dark:border-[#382c22]">
                   <Logo variant="default" size="sm" />
                   <button
                     onClick={closeDrawer}
-                    className="p-2 rounded-xl text-primary-500 dark:text-slate-300 hover:bg-primary-100 dark:hover:bg-slate-800 transition-colors"
+                    className="p-2 rounded-xl text-primary-500 dark:text-[#cfbca4] hover:bg-primary-100 dark:hover:bg-[#292018] transition-colors"
                     aria-label="Fermer le menu"
                   >
                     <FiX className="w-5 h-5" />
@@ -613,7 +613,7 @@ function Navbar() {
                       className={({ isActive }) =>
                         `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${isActive
                           ? 'bg-gold-50 dark:bg-gold-500/15 text-gold-700 dark:text-gold-300'
-                          : 'text-primary-700 dark:text-slate-200 hover:bg-primary-50 dark:hover:bg-slate-800'
+                          : 'text-primary-700 dark:text-[#e5d6c2] hover:bg-primary-50 dark:hover:bg-[#292018]'
                         }`
                       }
                     >
@@ -625,7 +625,7 @@ function Navbar() {
                       onClick={closeDrawer}
                       className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${isSalonPage && !isBoutiquePage
                         ? 'bg-gold-50 dark:bg-gold-500/15 text-gold-700 dark:text-gold-300'
-                        : 'text-primary-700 dark:text-slate-200 hover:bg-primary-50 dark:hover:bg-slate-800'
+                        : 'text-primary-700 dark:text-[#e5d6c2] hover:bg-primary-50 dark:hover:bg-[#292018]'
                         }`}
                     >
                       <FiScissors className="w-5 h-5" />
@@ -636,7 +636,7 @@ function Navbar() {
                       onClick={closeDrawer}
                       className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${isBoutiquePage
                         ? 'bg-gold-50 dark:bg-gold-500/15 text-gold-700 dark:text-gold-300'
-                        : 'text-primary-700 dark:text-slate-200 hover:bg-primary-50 dark:hover:bg-slate-800'
+                        : 'text-primary-700 dark:text-[#e5d6c2] hover:bg-primary-50 dark:hover:bg-[#292018]'
                         }`}
                     >
                       <FiShoppingBag className="w-5 h-5" />
@@ -645,10 +645,10 @@ function Navbar() {
                   </div>
 
                   {/* Divider */}
-                  <div className="my-4 border-t border-primary-100 dark:border-slate-800" />
+                  <div className="my-4 border-t border-primary-100 dark:border-[#382c22]" />
                   {/* Theme Toggle - Mobile */}
                   <div className="flex items-center justify-between px-4 py-3">
-                    <span className="text-sm font-medium text-primary-700 dark:text-slate-200">Apparence</span>
+                    <span className="text-sm font-medium text-primary-700 dark:text-[#e5d6c2]">Apparence</span>
                     <ThemeToggle />
                   </div>
 
@@ -669,22 +669,22 @@ function Navbar() {
                           </div>
                         )}
                         <div className="min-w-0">
-                          <p className="font-semibold text-primary-900 dark:text-slate-100 text-sm truncate">{user.name}</p>
-                          <p className="text-xs text-primary-500 dark:text-slate-400 truncate">{user.email}</p>
+                          <p className="font-semibold text-primary-900 dark:text-[#f3e8d9] text-sm truncate">{user.name}</p>
+                          <p className="text-xs text-primary-500 dark:text-[#ab967c] truncate">{user.email}</p>
                         </div>
                       </div>
 
                       <Link
-                        to={user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' ? '/admin' : isProUser(user) ? (getProRedirectPath(user) || '/pro/onboarding') : '/dashboard'}
+                        to={user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' ? ADMIN_PATH : isProUser(user) ? (getProRedirectPath(user) || '/pro/onboarding') : '/dashboard'}
                         onClick={closeDrawer}
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-primary-700 dark:text-slate-200 hover:bg-primary-50 dark:hover:bg-slate-800 transition-colors"
+                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-primary-700 dark:text-[#e5d6c2] hover:bg-primary-50 dark:hover:bg-[#292018] transition-colors"
                       >
                         <FiCalendar className="w-5 h-5" />
                         <span>{user.role === 'SUPER_ADMIN' || user.role === 'ADMIN' ? 'Dashboard admin' : user.role === 'PRO' ? 'Mon dashboard' : 'Mes réservations'}</span>
                       </Link>
                       <button
                         onClick={openNotificationsPage}
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-primary-700 dark:text-slate-200 hover:bg-primary-50 dark:hover:bg-slate-800 transition-colors w-full"
+                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-primary-700 dark:text-[#e5d6c2] hover:bg-primary-50 dark:hover:bg-[#292018] transition-colors w-full"
                       >
                         <div className="relative">
                           <FiBell className="w-5 h-5" />
@@ -700,14 +700,14 @@ function Navbar() {
                         <button
                           type="button"
                           onClick={markAllRead}
-                          className="ml-4 inline-flex rounded-lg px-3 py-2 text-xs font-medium text-primary-500 dark:text-slate-300 transition-colors hover:bg-primary-50 dark:hover:bg-slate-800 hover:text-primary-800 dark:hover:text-slate-100"
+                          className="ml-4 inline-flex rounded-lg px-3 py-2 text-xs font-medium text-primary-500 dark:text-[#cfbca4] transition-colors hover:bg-primary-50 dark:hover:bg-[#292018] hover:text-primary-800 dark:hover:text-[#f3e8d9]"
                         >
                           Tout marquer lu
                         </button>
                       )}
                       <button
                         onClick={openCart}
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-primary-700 dark:text-slate-200 hover:bg-primary-50 dark:hover:bg-slate-800 transition-colors w-full"
+                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-primary-700 dark:text-[#e5d6c2] hover:bg-primary-50 dark:hover:bg-[#292018] transition-colors w-full"
                       >
                         <div className="relative">
                           <FiShoppingCart className="w-5 h-5" />
@@ -722,7 +722,7 @@ function Navbar() {
                       <Link
                         to="/dashboard?tab=favorites"
                         onClick={closeDrawer}
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-primary-700 dark:text-slate-200 hover:bg-primary-50 dark:hover:bg-slate-800 transition-colors"
+                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-primary-700 dark:text-[#e5d6c2] hover:bg-primary-50 dark:hover:bg-[#292018] transition-colors"
                       >
                         <FiHeart className="w-5 h-5 text-red-400" />
                         <span>Mes favoris</span>
@@ -730,7 +730,7 @@ function Navbar() {
                       <Link
                         to="/profile"
                         onClick={closeDrawer}
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-primary-700 dark:text-slate-200 hover:bg-primary-50 dark:hover:bg-slate-800 transition-colors"
+                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-primary-700 dark:text-[#e5d6c2] hover:bg-primary-50 dark:hover:bg-[#292018] transition-colors"
                       >
                         <FiSettings className="w-5 h-5" />
                         <span>Paramètres</span>
@@ -741,7 +741,7 @@ function Navbar() {
                       <Link
                         to="/login"
                         onClick={closeDrawer}
-                        className="block py-2.5 px-4 text-center text-sm font-semibold text-primary-700 dark:text-slate-100 hover:bg-primary-50 dark:hover:bg-slate-800 rounded-xl transition-colors border border-primary-200 dark:border-slate-700"
+                        className="block py-2.5 px-4 text-center text-sm font-semibold text-primary-700 dark:text-[#f3e8d9] hover:bg-primary-50 dark:hover:bg-[#292018] rounded-xl transition-colors border border-primary-200 dark:border-[#46382a]"
                       >
                         Connexion
                       </Link>
@@ -758,7 +758,7 @@ function Navbar() {
 
                 {/* Drawer footer - logout */}
                 {isAuthenticated && (
-                  <div className="border-t border-primary-100 dark:border-slate-800 px-4 py-4">
+                  <div className="border-t border-primary-100 dark:border-[#382c22] px-4 py-4">
                     <button
                       onClick={handleLogout}
                       className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium text-red-600 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"

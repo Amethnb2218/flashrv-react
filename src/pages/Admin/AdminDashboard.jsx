@@ -18,12 +18,10 @@ const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 /** Helper: returns fetch options with auth headers (token + cookie) */
 function authFetchOpts(extra = {}) {
-  const token = sessionStorage.getItem('flashrv_token');
   return {
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(extra.headers || {}),
     },
     ...extra,

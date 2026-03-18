@@ -39,8 +39,6 @@ function buildCspDirectives() {
     frameAncestors: ["'none'"],
     scriptSrc: [
       "'self'",
-      "'unsafe-inline'",
-      "'unsafe-eval'",
       'https://accounts.google.com',
       'https://apis.google.com',
       'https://www.google.com',
@@ -205,13 +203,18 @@ app.get('/health', async (req, res) => {
     process.env.PAYDUNYA_TOKEN
   );
 
+  const isProd = process.env.NODE_ENV === 'production';
   res.status(200).json({
     status: 'success',
     message: 'FlashRV Backend is running',
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development',
     db: { connected: dbOk, responseMs: dbMs },
-    paydunya: { configured: paydunyaConfigured, mode: process.env.PAYDUNYA_MODE || 'not set' },
+    ...(isProd
+      ? {}
+      : {
+          environment: process.env.NODE_ENV || 'development',
+          paydunya: { configured: paydunyaConfigured, mode: process.env.PAYDUNYA_MODE || 'not set' },
+        }),
   });
 });
 

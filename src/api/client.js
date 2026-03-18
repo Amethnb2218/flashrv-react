@@ -31,13 +31,7 @@ export function isRetryableHttpError(error) {
 
 async function apiFetch(path, { method = 'GET', body, headers = {}, timeoutMs = DEFAULT_TIMEOUT_MS, ...options } = {}) {
   const url = `${BASE_URL}${path.startsWith('/') ? path : `/${path}`}`
-  const token = sessionStorage.getItem('flashrv_token')
-  const authHeader = token ? { Authorization: `Bearer ${token}` } : {}
-  const hasAuth = Boolean(token)
-
-  if (hasAuth) {
-    document.cookie = `token=${token}; path=/; SameSite=Lax`
-  }
+  const authHeader = {}
 
   const isFormData = typeof FormData !== 'undefined' && body instanceof FormData
   const finalHeaders = {
@@ -51,7 +45,7 @@ async function apiFetch(path, { method = 'GET', body, headers = {}, timeoutMs = 
 
   const fetchOptions = {
     method,
-    credentials: hasAuth ? 'include' : 'omit',
+    credentials: 'include',
     headers: finalHeaders,
     cache: 'no-store',
     ...options,

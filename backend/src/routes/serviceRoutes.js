@@ -86,7 +86,7 @@ router.post('/', authenticate, uploadServiceImages, async (req, res) => {
     });
     res.status(201).json({ status: 'success', data: service });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 
@@ -103,7 +103,7 @@ router.get('/', authenticate, async (req, res) => {
     const services = await prisma.service.findMany({ where: { salonId: salon.id }, include: { images: true } });
     res.json(services);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 
@@ -162,7 +162,7 @@ router.patch('/:id', authenticate, uploadServiceImages, async (req, res) => {
     });
     res.json({ status: 'success', data: updated });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 

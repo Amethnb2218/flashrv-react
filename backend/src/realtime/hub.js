@@ -2,6 +2,15 @@ const { WebSocketServer } = require('ws');
 const { verifyToken } = require('../utils/jwt');
 
 const clientsByUser = new Map();
+const wsAllowedOrigins = (process.env.ALLOWED_ORIGINS || process.env.FRONTEND_URL || '')
+  .split(',')
+  .map((item) => String(item || '').trim())
+  .filter(Boolean);
+
+function isOriginAllowed(origin) {
+  if (!origin) return process.env.NODE_ENV !== 'production';
+  return wsAllowedOrigins.includes(origin);
+}
 
 const parseCookies = (rawCookie = '') =>
   String(rawCookie)
@@ -64,13 +73,14 @@ function initRealtime(server) {
   const wss = new WebSocketServer({ server, path: '/realtime' });
   wss.on('connection', (ws, req) => {
     try {
-      const origin = `http://${req.headers.host}`;
-      const url = new URL(req.url || '/realtime', origin);
-      let token = url.searchParams.get('token');
-      if (!token) {
-        const cookies = parseCookies(req.headers.cookie || '');
-        token = cookies.token || '';
+      const origin = String(req.headers.origin || '').trim();
+      if (!isOriginAllowed(origin)) {
+        ws.close(1008, 'Origin not allowed');
+        return;
       }
+
+      const cookies = parseCookies(req.headers.cookie || '');
+      const token = cookies.token || '';
       if (!token) {
         ws.close(1008, 'Unauthorized');
         return;
@@ -112,4 +122,3 @@ module.exports = {
   pushNotification,
   pushChatMessage,
 };
-

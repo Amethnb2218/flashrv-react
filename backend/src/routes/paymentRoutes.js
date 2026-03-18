@@ -474,6 +474,29 @@ const resolvePaymentTarget = async ({ bookingId, orderId, userId }) => {
   return null;
 };
 
+const getPaymentSalonOwnerId = (payment) => {
+  return (
+    payment?.appointment?.salon?.ownerId ||
+    payment?.order?.salon?.ownerId ||
+    null
+  );
+};
+
+const canReadPayment = (user, payment) => {
+  if (!user || !payment) return false;
+  if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') return true;
+  if (payment.userId === user.id) return true;
+  const salonOwnerId = getPaymentSalonOwnerId(payment);
+  return Boolean(salonOwnerId && salonOwnerId === user.id);
+};
+
+const canRefundPayment = (user, payment) => {
+  if (!user || !payment) return false;
+  if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') return true;
+  const salonOwnerId = getPaymentSalonOwnerId(payment);
+  return Boolean(salonOwnerId && salonOwnerId === user.id);
+};
+
 /**
  * GET /api/payments
  * Retourne les paiements du salon (proprietaire)
@@ -784,7 +807,20 @@ router.get('/:id/status', authenticate, async (req, res, next) => {
     const payment = await prisma.payment.findUnique({
       where: { id },
       include: {
-        appointment: true,
+        appointment: {
+          select: {
+            id: true,
+            salonId: true,
+            salon: { select: { ownerId: true } },
+          },
+        },
+        order: {
+          select: {
+            id: true,
+            salonId: true,
+            salon: { select: { ownerId: true } },
+          },
+        },
       },
     });
 
@@ -792,6 +828,12 @@ router.get('/:id/status', authenticate, async (req, res, next) => {
       return res.status(404).json({
         status: 'error',
         message: 'Paiement non trouve',
+      });
+    }
+    if (!canReadPayment(req.user, payment)) {
+      return res.status(403).json({
+        status: 'error',
+        message: 'Acces interdit',
       });
     }
 
@@ -815,16 +857,35 @@ router.patch('/:id/refund', authenticate, async (req, res, next) => {
     const { id } = req.params;
     const payment = await prisma.payment.findUnique({
       where: { id },
-      include: { appointment: true },
+      include: {
+        appointment: {
+          select: {
+            id: true,
+            salonId: true,
+            salon: { select: { ownerId: true } },
+          },
+        },
+        order: {
+          select: {
+            id: true,
+            salonId: true,
+            salon: { select: { ownerId: true } },
+          },
+        },
+      },
     });
     if (!payment) {
       return res.status(404).json({ status: 'error', message: 'Paiement introuvable' });
     }
-    if (payment.appointmentId) {
-      const salon = await prisma.salon.findFirst({ where: { ownerId: req.user.id } });
-      if (!salon || payment.appointment?.salonId !== salon.id) {
-        return res.status(403).json({ status: 'error', message: 'Acces interdit' });
-      }
+    if (!canRefundPayment(req.user, payment)) {
+      return res.status(403).json({ status: 'error', message: 'Acces interdit' });
+    }
+    const currentStatus = String(payment.status || '').toUpperCase();
+    if (currentStatus === 'REFUNDED') {
+      return res.status(409).json({ status: 'error', message: 'Paiement deja rembourse' });
+    }
+    if (currentStatus !== 'COMPLETED') {
+      return res.status(400).json({ status: 'error', message: 'Seuls les paiements completes peuvent etre rembourses' });
     }
     const updated = await prisma.payment.update({
       where: { id },

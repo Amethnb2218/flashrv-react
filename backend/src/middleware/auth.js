@@ -52,6 +52,28 @@ async function authenticate(req, res, next) {
     // Find user in database
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        phoneNumber: true,
+        address: true,
+        noShowCount: true,
+        preferences: true,
+        notes: true,
+        googleSub: true,
+        name: true,
+        picture: true,
+        role: true,
+        status: true,
+        canCreateService: true,
+        canBook: true,
+        isPublic: true,
+        adminType: true,
+        isRestricted: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
     if (!user) {
       // ...
@@ -177,7 +199,6 @@ function requireApprovedPro(req, res, next) {
         status: 'error',
         message: 'Your PRO account is pending approval. Please wait for validation.',
         code: 'PRO_PENDING',
-        debug: { user: req.user }
       });
     }
     // Restriction: canCreateService, canBook, isPublic
@@ -187,7 +208,6 @@ function requireApprovedPro(req, res, next) {
         status: 'error',
         message: 'You are not allowed to create services. Contact admin.',
         code: 'PRO_RESTRICTED_SERVICE',
-        debug: { user: req.user }
       });
     }
     if (req.user.canBook === false) {
@@ -196,7 +216,6 @@ function requireApprovedPro(req, res, next) {
         status: 'error',
         message: 'You are not allowed to accept bookings. Contact admin.',
         code: 'PRO_RESTRICTED_BOOK',
-        debug: { user: req.user }
       });
     }
   }

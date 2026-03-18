@@ -108,7 +108,7 @@ exports.getAll = async (req, res) => {
     });
     res.json(methods);
   } catch (err) {
-    res.status(500).json({ error: 'Erreur serveur', details: err.message });
+    res.status(500).json({ error: 'Erreur serveur' });
   }
 };
 
@@ -130,7 +130,7 @@ exports.create = async (req, res) => {
     if (err.statusCode) {
       return res.status(err.statusCode).json({ error: err.message });
     }
-    return res.status(500).json({ error: 'Erreur serveur', details: err.message });
+    return res.status(500).json({ error: 'Erreur serveur' });
   }
 };
 
@@ -156,7 +156,7 @@ exports.update = async (req, res) => {
     if (err.statusCode) {
       return res.status(err.statusCode).json({ error: err.message });
     }
-    return res.status(500).json({ error: 'Erreur serveur', details: err.message });
+    return res.status(500).json({ error: 'Erreur serveur' });
   }
 };
 
@@ -175,7 +175,7 @@ exports.delete = async (req, res) => {
     await prisma.salonPaymentMethod.delete({ where: { id } });
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: 'Erreur serveur', details: err.message });
+    res.status(500).json({ error: 'Erreur serveur' });
   }
 };
 
@@ -189,6 +189,6 @@ exports.uploadQr = async (req, res) => {
     if (!url) return res.status(500).json({ error: 'Upload QR invalide.' });
     res.status(201).json({ url });
   } catch (err) {
-    res.status(500).json({ error: 'Erreur serveur', details: err.message });
+    res.status(500).json({ error: 'Erreur serveur' });
   }
 };

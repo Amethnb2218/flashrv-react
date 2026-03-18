@@ -584,9 +584,9 @@ function Profile() {
                           const res = await fetch('/api/users/update-notifications', {
                             method: 'PUT',
                             headers: {
-                              'Content-Type': 'application/json',
-                              'Authorization': `Bearer ${sessionStorage.getItem('flashrv_token')}`
+                              'Content-Type': 'application/json'
                             },
+                            credentials: 'include',
                             body: JSON.stringify(notifications)
                           })
                           if (!res.ok) throw new Error('Erreur lors de la sauvegarde')

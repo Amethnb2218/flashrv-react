@@ -1,6 +1,5 @@
 let socket = null
 let reconnectTimer = null
-let activeToken = ''
 let listeners = new Set()
 let manuallyClosed = false
 
@@ -31,26 +30,21 @@ const resolveWsUrl = () => {
 }
 
 const scheduleReconnect = () => {
-  if (reconnectTimer || !activeToken || manuallyClosed) return
+  if (reconnectTimer || manuallyClosed) return
   reconnectTimer = setTimeout(() => {
     reconnectTimer = null
-    connectRealtime(activeToken)
+    connectRealtime()
   }, 2000)
 }
 
-export const connectRealtime = (token) => {
-  const nextToken = String(token || '').trim()
-  if (!nextToken) return null
-  activeToken = nextToken
+export const connectRealtime = () => {
   manuallyClosed = false
 
   if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
     return socket
   }
 
-  const base = resolveWsUrl()
-  const wsUrl = `${base}?token=${encodeURIComponent(nextToken)}`
-  socket = new WebSocket(wsUrl)
+  socket = new WebSocket(resolveWsUrl())
 
   socket.onopen = () => {
     emit({ type: 'realtime:open' })
@@ -83,7 +77,6 @@ export const subscribeRealtime = (listener) => {
 
 export const disconnectRealtime = () => {
   manuallyClosed = true
-  activeToken = ''
   if (reconnectTimer) {
     clearTimeout(reconnectTimer)
     reconnectTimer = null
@@ -93,4 +86,3 @@ export const disconnectRealtime = () => {
     socket = null
   }
 }
-

@@ -31,7 +31,7 @@ router.post('/ipn', async (req, res) => {
   try {
     const expectedToken = process.env.PAYDUNYA_TOKEN;
     const requesterToken = extractRequesterToken(req);
-    if (expectedToken && requesterToken && requesterToken !== expectedToken) {
+    if (expectedToken && requesterToken !== expectedToken) {
       return res.status(401).json({ status: 'error', message: 'Token IPN invalide' });
     }
 

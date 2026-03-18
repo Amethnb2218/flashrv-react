@@ -13,12 +13,10 @@ export default function AddAdminForm({ onAdminAdded }) {
     setMessage('')
     setIsSuccess(false)
     try {
-      const token = sessionStorage.getItem('flashrv_token') || ''
       const res = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/admin/admins`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         credentials: 'include',
         body: JSON.stringify({ email }),
