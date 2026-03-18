@@ -84,13 +84,20 @@ async function login(req, res, next) {
       });
     }
 
-    const user = await prisma.user.findUnique({ where: { email: normalizedIdentifier } });
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: normalizedIdentifier },
+          { username: normalizedIdentifier },
+          { phoneNumber: String(identifier).trim() },
+        ],
+      },
+    });
     if (!user || !user.password) {
       registerFailedLogin(normalizedIdentifier);
       return res.status(401).json({ status: 'error', message: 'Identifiants incorrects' });
     }
-    const bcrypt = require('bcryptjs');
-    const valid = await bcrypt.compare(password, user.password);
+    const valid = await verifyPasswordWithLegacyMigration(user, password);
     if (!valid) {
       registerFailedLogin(normalizedIdentifier);
       return res.status(401).json({ status: 'error', message: 'Identifiants incorrects' });
@@ -105,6 +112,12 @@ async function login(req, res, next) {
       data: { user: safeUser, token },
     });
   } catch (error) {
+    // Prisma network/runtime errors should not surface as generic 500 auth failures.
+    if (typeof error?.code === 'string' && /^P\d{4}$/.test(error.code)) {
+      error.statusCode = 503;
+      error.expose = true;
+      error.message = 'Service de connexion temporairement indisponible. Reessayez dans un instant.';
+    }
     return next(error);
   }
 }
@@ -149,6 +162,41 @@ function registerFailedLogin(identifier) {
 
 function clearLoginFailures(identifier) {
   failedLoginMap.delete(identifier);
+}
+
+function isBcryptHash(value) {
+  return /^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/.test(String(value || ''));
+}
+
+async function verifyPasswordWithLegacyMigration(user, rawPassword) {
+  const bcrypt = require('bcryptjs');
+  const stored = String(user?.password || '');
+  const plain = String(rawPassword || '');
+
+  if (!stored || !plain) return false;
+
+  if (isBcryptHash(stored)) {
+    try {
+      return await bcrypt.compare(plain, stored);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // Legacy fallback: some old accounts may still have non-bcrypt passwords.
+  if (stored !== plain) return false;
+
+  try {
+    const hashed = await bcrypt.hash(plain, 10);
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashed },
+    });
+  } catch (_) {
+    // Keep login successful even if migration fails; it can be retried next login.
+  }
+
+  return true;
 }
 
 /**
