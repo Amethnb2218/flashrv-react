@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { GoogleLogin } from '@react-oauth/google'
@@ -19,8 +19,6 @@ function Register() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState({})
-  const [googleCredential, setGoogleCredential] = useState(null)
-
   const { register, loginWithGoogle } = useAuth()
   const navigate = useNavigate()
 
@@ -61,7 +59,7 @@ function Register() {
     if (errors[field]) setErrors(prev => ({ ...prev, [field]: null }))
   }
 
-  const handleGoogleSuccess = async (credentialResponse) => {
+  const handleGoogleSuccess = useCallback(async (credentialResponse) => {
     setIsLoading(true)
     try {
       const accountType = formData.role === 'pro' ? 'PRO' : 'CLIENT'
@@ -76,11 +74,23 @@ function Register() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [formData.role, loginWithGoogle, navigate])
 
-  const handleGoogleError = () => {
+  const handleGoogleError = useCallback(() => {
     toast.error("Échec de l'inscription avec Google")
-  }
+  }, [])
+
+  const googleLoginButton = useMemo(() => (
+    <GoogleLogin
+      onSuccess={handleGoogleSuccess}
+      onError={handleGoogleError}
+      theme="outline"
+      size="large"
+      text="continue_with"
+      shape="rectangular"
+      locale="fr"
+    />
+  ), [handleGoogleError, handleGoogleSuccess])
 
   return (
     <div className="min-h-screen flex">
@@ -294,15 +304,7 @@ function Register() {
 
             {/* Google */}
             <div className="flex justify-center">
-              <GoogleLogin
-                onSuccess={handleGoogleSuccess}
-                onError={handleGoogleError}
-                theme="outline"
-                size="large"
-                text="continue_with"
-                shape="rectangular"
-                locale="fr"
-              />
+              {googleLoginButton}
             </div>
           </form>
 

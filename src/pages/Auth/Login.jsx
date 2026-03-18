@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { GoogleLogin } from '@react-oauth/google'
@@ -66,7 +66,7 @@ function Login() {
     }
   }
 
-  const handleGoogleSuccess = async (credentialResponse) => {
+  const handleGoogleSuccess = useCallback(async (credentialResponse) => {
     setIsLoading(true)
     try {
       const user = await loginWithGoogle(credentialResponse.credential, googleAccountType)
@@ -79,11 +79,23 @@ function Login() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [from, googleAccountType, loginWithGoogle, navigate])
 
-  const handleGoogleError = () => {
+  const handleGoogleError = useCallback(() => {
     toast.error('Échec de la connexion avec Google')
-  }
+  }, [])
+
+  const googleLoginButton = useMemo(() => (
+    <GoogleLogin
+      onSuccess={handleGoogleSuccess}
+      onError={handleGoogleError}
+      theme="outline"
+      size="large"
+      text="continue_with"
+      shape="rectangular"
+      locale="fr"
+    />
+  ), [handleGoogleError, handleGoogleSuccess])
 
   return (
     <div className="min-h-screen flex">
@@ -192,15 +204,7 @@ function Login() {
 
             {/* Google */}
             <div className="flex justify-center">
-              <GoogleLogin
-                onSuccess={handleGoogleSuccess}
-                onError={handleGoogleError}
-                theme="outline"
-                size="large"
-                text="continue_with"
-                shape="rectangular"
-                locale="fr"
-              />
+              {googleLoginButton}
             </div>
           </form>
 
