@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import SectionCard from "../../components/UI/SectionCard.jsx";
 import DataTable from "../../components/UI/DataTable.jsx";
+import ContextActionMenu from "../../components/UI/ContextActionMenu.jsx";
 import {
   FiUsers,
   FiSearch,
@@ -52,6 +53,22 @@ export default function ClientsSection({ clients, loading, onRefresh, onDelete }
         <span className={compact ? "sr-only 2xl:not-sr-only" : ""}>Supprimer</span>
       </button>
     ) : null;
+
+  const DesktopActionsMenu = ({ row }) => (
+    <ContextActionMenu
+      label={`Actions pour ${row.name || row.email}`}
+      items={[
+        {
+          key: "delete",
+          label: "Supprimer",
+          icon: FiTrash2,
+          danger: true,
+          hidden: !onDelete,
+          onClick: () => onDelete && onDelete(row),
+        },
+      ]}
+    />
+  );
 
   const ClientCard = ({ row }) => (
     <div className="group rounded-xl border border-primary-200 bg-white hover:border-primary-300 hover:shadow-md transition-all duration-200 overflow-hidden">
@@ -174,13 +191,19 @@ export default function ClientsSection({ clients, loading, onRefresh, onDelete }
               {
                 key: "phoneNumber",
                 label: "Telephone",
-                render: (row) => <span className="text-xs text-primary-700">{row.phoneNumber || "-"}</span>,
+                render: (row) => (
+                  <span className="inline-flex items-center gap-1 rounded-full border border-primary-200 bg-primary-50 px-2.5 py-1 text-[11px] font-semibold text-primary-700">
+                    <FiPhone className="w-3 h-3 text-primary-400" />
+                    {row.phoneNumber || "Non renseigne"}
+                  </span>
+                ),
               },
               {
                 key: "createdAt",
                 label: "Inscription",
                 render: (row) => (
-                  <span className="text-xs text-primary-500">
+                  <span className="inline-flex items-center gap-1 rounded-full border border-primary-200 bg-primary-50 px-2.5 py-1 text-[11px] font-semibold text-primary-600">
+                    <FiCalendar className="w-3 h-3 text-primary-400" />
                     {row.createdAt ? new Date(row.createdAt).toLocaleDateString("fr-FR") : "-"}
                   </span>
                 ),
@@ -188,7 +211,7 @@ export default function ClientsSection({ clients, loading, onRefresh, onDelete }
             ]}
             data={filtered}
             toolbar={<Toolbar />}
-            rowActions={onDelete ? (row) => <DeleteButton row={row} compact /> : undefined}
+            rowActions={onDelete ? (row) => <DesktopActionsMenu row={row} /> : undefined}
             onRefresh={onRefresh}
             emptyLabel="Aucun client trouve"
             pagination={null}

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import SectionCard from "../../components/UI/SectionCard.jsx";
 import DataTable from "../../components/UI/DataTable.jsx";
 import StatusBadge from "../../components/UI/StatusBadge.jsx";
+import ContextActionMenu from "../../components/UI/ContextActionMenu.jsx";
 import {
   FiUserCheck,
   FiSearch,
@@ -86,6 +87,31 @@ export default function PendingProsSection({
         </button>
       )}
     </div>
+  );
+
+  const DesktopActionsMenu = ({ row }) => (
+    <ContextActionMenu
+      label={`Actions pour ${row.name || row.email}`}
+      items={[
+        { key: "approve", label: "Valider", icon: FiCheck, onClick: () => onApprove(row) },
+        { key: "reject", label: "Refuser", icon: FiX, onClick: () => onReject(row) },
+        {
+          key: "restrict",
+          label: "Restreindre",
+          icon: FiSlash,
+          hidden: !onRestrict,
+          onClick: () => onRestrict && onRestrict(row),
+        },
+        {
+          key: "delete",
+          label: "Supprimer",
+          icon: FiTrash2,
+          danger: true,
+          hidden: !onDelete,
+          onClick: () => onDelete && onDelete(row),
+        },
+      ]}
+    />
   );
 
   const Toolbar = () => (
@@ -254,7 +280,12 @@ export default function PendingProsSection({
             {
               key: "phoneNumber",
               label: "Telephone",
-              render: (row) => <span className="text-xs text-primary-700">{row.phoneNumber || "-"}</span>,
+              render: (row) => (
+                <span className="inline-flex items-center gap-1 rounded-full border border-primary-200 bg-primary-50 px-2.5 py-1 text-[11px] font-semibold text-primary-700">
+                  <FiPhone className="w-3 h-3 text-primary-400" />
+                  {row.phoneNumber || "Non renseigne"}
+                </span>
+              ),
             },
             {
               key: "salon",
@@ -262,8 +293,14 @@ export default function PendingProsSection({
               render: (row) => (
                 <div className="text-xs text-primary-700 space-y-0.5">
                   <div className="font-semibold text-primary-800">{row.salon?.name || "-"}</div>
-                  <div className="text-primary-500">{row.salon?.city || "-"}</div>
-                  <div className="text-primary-500">{row.salon?.phone || "-"}</div>
+                  <div className="inline-flex items-center gap-1 rounded-full border border-primary-200 bg-white px-2 py-0.5 w-fit text-primary-500">
+                    <FiMapPin className="w-3 h-3" />
+                    {row.salon?.city || "-"}
+                  </div>
+                  <div className="inline-flex items-center gap-1 rounded-full border border-primary-200 bg-white px-2 py-0.5 w-fit text-primary-500">
+                    <FiPhone className="w-3 h-3" />
+                    {row.salon?.phone || "-"}
+                  </div>
                 </div>
               ),
             },
@@ -281,7 +318,8 @@ export default function PendingProsSection({
               key: "createdAt",
               label: "Inscription",
               render: (row) => (
-                <span className="text-xs text-primary-500">
+                <span className="inline-flex items-center gap-1 rounded-full border border-primary-200 bg-primary-50 px-2.5 py-1 text-[11px] font-semibold text-primary-600">
+                  <FiCalendar className="w-3 h-3 text-primary-400" />
                   {row.createdAt ? new Date(row.createdAt).toLocaleDateString("fr-FR") : "-"}
                 </span>
               ),
@@ -289,7 +327,7 @@ export default function PendingProsSection({
           ]}
           data={filtered}
           toolbar={<Toolbar />}
-          rowActions={(row) => <ActionButtons row={row} compact />}
+          rowActions={(row) => <DesktopActionsMenu row={row} />}
           emptyLabel="Aucun PRO en attente"
           pagination={null}
         />

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import SectionCard from "../../components/UI/SectionCard.jsx";
 import DataTable from "../../components/UI/DataTable.jsx";
+import ContextActionMenu from "../../components/UI/ContextActionMenu.jsx";
 import { FiShield, FiSearch, FiRefreshCw, FiUsers, FiCalendar, FiX, FiSlash } from "react-icons/fi";
 
 export default function AdminsSection({ admins, loading, onRefresh, onDelete, onRestrict }) {
@@ -67,6 +68,29 @@ export default function AdminsSection({ admins, loading, onRefresh, onDelete, on
         </button>
       )}
     </div>
+  );
+
+  const DesktopActionsMenu = ({ row }) => (
+    <ContextActionMenu
+      label={`Actions pour ${row.name || row.email}`}
+      items={[
+        {
+          key: "restrict",
+          label: "Restreindre",
+          icon: FiSlash,
+          hidden: !onRestrict,
+          onClick: () => onRestrict && onRestrict(row),
+        },
+        {
+          key: "delete",
+          label: "Supprimer",
+          icon: FiX,
+          danger: true,
+          hidden: !onDelete,
+          onClick: () => onDelete && onDelete(row),
+        },
+      ]}
+    />
   );
 
   const AdminCard = ({ row }) => (
@@ -189,7 +213,8 @@ export default function AdminsSection({ admins, loading, onRefresh, onDelete, on
               key: "createdAt",
               label: "Inscription",
               render: (row) => (
-                <span className="text-xs text-primary-500">
+                <span className="inline-flex items-center gap-1 rounded-full border border-primary-200 bg-primary-50 px-2.5 py-1 text-[11px] font-semibold text-primary-600">
+                  <FiCalendar className="w-3 h-3 text-primary-400" />
                   {row.createdAt ? new Date(row.createdAt).toLocaleDateString("fr-FR") : "-"}
                 </span>
               ),
@@ -206,7 +231,7 @@ export default function AdminsSection({ admins, loading, onRefresh, onDelete, on
           ]}
           data={filtered}
           toolbar={<Toolbar />}
-          rowActions={onRestrict || onDelete ? (row) => <ActionButtons row={row} compact /> : undefined}
+          rowActions={onRestrict || onDelete ? (row) => <DesktopActionsMenu row={row} /> : undefined}
           onRefresh={onRefresh}
           emptyLabel="Aucun administrateur trouve"
           pagination={null}
