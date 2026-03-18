@@ -9,7 +9,14 @@ import {
   readAccountDeletionRecord,
 } from '../utils/accountDeletion'
 import { clearProOnboardingDraft, isProUser } from '../utils/proOnboarding'
-import { buildAuthHeaders, clearAuthToken, readAuthToken, writeAuthToken } from '../utils/authToken'
+import {
+  buildAuthHeaders,
+  clearAuthToken,
+  clearCsrfToken,
+  readAuthToken,
+  writeAuthToken,
+  writeCsrfToken,
+} from '../utils/authToken'
 
 const AuthContext = createContext()
 
@@ -66,7 +73,7 @@ function authReducer(state, action) {
 export function AuthProvider({ children }) {
   const [state, dispatch] = useReducer(authReducer, initialState)
   const API_BASE = import.meta.env.VITE_API_URL || '/api'
-  const authHeaders = (headers = {}) => buildAuthHeaders(headers)
+  const authHeaders = (headers = {}, method = 'GET') => buildAuthHeaders(headers, method)
 
   const hydrateProAccountState = async (user) => {
     const normalizedUser = normalizeUserShape(user)
@@ -78,7 +85,7 @@ export function AuthProvider({ children }) {
     try {
       const response = await fetch(`${API_BASE}/salons/me`, {
         method: 'GET',
-        headers: authHeaders(),
+        headers: authHeaders({}, 'GET'),
         credentials: 'include',
         cache: 'no-store',
       })
@@ -141,7 +148,7 @@ export function AuthProvider({ children }) {
     return normalizedUser
   }
 
-  const persistAuthenticatedUser = async (apiUser, apiToken = null) => {
+  const persistAuthenticatedUser = async (apiUser, apiToken = null, apiCsrfToken = null) => {
     const restoredUser = restorePendingDeletionIfNeeded(apiUser)
     const hydratedUser = await hydrateProAccountState(restoredUser)
     const normalizedUser = normalizeUserShape(hydratedUser)
@@ -149,6 +156,9 @@ export function AuthProvider({ children }) {
     sessionStorage.setItem('flashrv_user', JSON.stringify(normalizedUser))
     if (apiToken) {
       writeAuthToken(apiToken)
+    }
+    if (apiCsrfToken) {
+      writeCsrfToken(apiCsrfToken)
     }
     const activeToken = apiToken || readAuthToken()
 
@@ -167,7 +177,7 @@ export function AuthProvider({ children }) {
       try {
         const response = await fetch(`${API_BASE}/auth/session`, {
           method: 'GET',
-          headers: authHeaders(),
+          headers: authHeaders({}, 'GET'),
           credentials: 'include',
           cache: 'no-store',
         })
@@ -175,6 +185,7 @@ export function AuthProvider({ children }) {
         if (!response.ok) {
           sessionStorage.removeItem('flashrv_user')
           clearAuthToken()
+          clearCsrfToken()
           dispatch({ type: 'SET_LOADING', payload: false })
           return
         }
@@ -184,15 +195,21 @@ export function AuthProvider({ children }) {
         if (!apiUser) {
           sessionStorage.removeItem('flashrv_user')
           clearAuthToken()
+          clearCsrfToken()
           dispatch({ type: 'SET_LOADING', payload: false })
           return
         }
 
-        await persistAuthenticatedUser(apiUser, data?.data?.token || null)
+        await persistAuthenticatedUser(
+          apiUser,
+          data?.data?.token || null,
+          data?.data?.csrfToken || null
+        )
       } catch (error) {
         console.error('Error parsing saved user:', error)
         sessionStorage.removeItem('flashrv_user')
         clearAuthToken()
+        clearCsrfToken()
         dispatch({ type: 'SET_LOADING', payload: false })
       }
     }
@@ -205,7 +222,7 @@ export function AuthProvider({ children }) {
     try {
       const res = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
-        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        headers: authHeaders({ 'Content-Type': 'application/json' }, 'POST'),
         credentials: 'include',
         body: JSON.stringify({ identifier, password }),
       });
@@ -215,8 +232,9 @@ export function AuthProvider({ children }) {
       }
       const user = data.data?.user;
       const token = data.data?.token || null;
+      const csrfToken = data.data?.csrfToken || null;
       if (user) {
-        return await persistAuthenticatedUser(user, token);
+        return await persistAuthenticatedUser(user, token, csrfToken);
       } else {
         throw new Error('Utilisateur manquant');
       }
@@ -230,7 +248,7 @@ export function AuthProvider({ children }) {
     try {
       const res = await fetch(`${API_BASE}/auth/google`, {
         method: 'POST',
-        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        headers: authHeaders({ 'Content-Type': 'application/json' }, 'POST'),
         credentials: 'include',
         body: JSON.stringify({ credential, customName, accountType }),
       });
@@ -240,8 +258,9 @@ export function AuthProvider({ children }) {
       }
       let user = data.data?.user;
       const token = data.data?.token || null;
+      const csrfToken = data.data?.csrfToken || null;
       if (user) {
-        return await persistAuthenticatedUser(user, token);
+        return await persistAuthenticatedUser(user, token, csrfToken);
       } else {
         throw new Error('Utilisateur Google manquant');
       }
@@ -254,7 +273,7 @@ export function AuthProvider({ children }) {
     // Appel API backend pour créer un vrai utilisateur
     const res = await fetch(`${API_BASE}/auth/register`, {
       method: 'POST',
-      headers: authHeaders({ 'Content-Type': 'application/json' }),
+      headers: authHeaders({ 'Content-Type': 'application/json' }, 'POST'),
       credentials: 'include',
       body: JSON.stringify(userData),
     });
@@ -264,8 +283,9 @@ export function AuthProvider({ children }) {
     }
     const user = data.data?.user;
     const token = data.data?.token || null;
+    const csrfToken = data.data?.csrfToken || null;
     if (user) {
-      return await persistAuthenticatedUser(user, token);
+      return await persistAuthenticatedUser(user, token, csrfToken);
     } else {
       throw new Error('Utilisateur manquant');
     }
@@ -276,13 +296,14 @@ export function AuthProvider({ children }) {
       // Call backend logout to clear cookie
       await fetch(`${API_BASE}/auth/logout`, {
         method: 'POST',
-        headers: authHeaders(),
+        headers: authHeaders({}, 'POST'),
         credentials: 'include',
       })
     } catch (error) {
       console.error('Logout error:', error)
     }
     clearAuthToken()
+    clearCsrfToken()
     sessionStorage.removeItem('flashrv_user')
     sessionStorage.removeItem('flashrv_booking')
     disconnectRealtime()
@@ -296,7 +317,7 @@ export function AuthProvider({ children }) {
       const body = accountType ? { credential, accountType } : { credential };
       const response = await fetch(`${API_BASE}/auth/google`, {
         method: 'POST',
-        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        headers: authHeaders({ 'Content-Type': 'application/json' }, 'POST'),
         credentials: 'include',
         body: JSON.stringify(body),
       });
@@ -306,10 +327,11 @@ export function AuthProvider({ children }) {
       }
       const user = data.data?.user;
       const token = data.data?.token || null;
+      const csrfToken = data.data?.csrfToken || null;
       if (!user) {
         throw new Error('Utilisateur Google manquant');
       }
-      return await persistAuthenticatedUser(user, token);
+      return await persistAuthenticatedUser(user, token, csrfToken);
     } catch (error) {
       console.error('Google login error:', error);
       throw error;
@@ -320,7 +342,7 @@ export function AuthProvider({ children }) {
   // Basic checkAuth implementation
   const checkAuth = () => {
     const user = sessionStorage.getItem('flashrv_user');
-    return !!user || !!readAuthToken();
+    return !!user;
   };
 
   const updateUser = (userData) => {

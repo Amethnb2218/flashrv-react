@@ -34,7 +34,7 @@ export function isRetryableHttpError(error) {
 async function apiFetch(path, { method = 'GET', body, headers = {}, timeoutMs = DEFAULT_TIMEOUT_MS, ...options } = {}) {
   const url = `${BASE_URL}${path.startsWith('/') ? path : `/${path}`}`
   const isFormData = typeof FormData !== 'undefined' && body instanceof FormData
-  const finalHeaders = buildAuthHeaders({ ...headers })
+  const finalHeaders = buildAuthHeaders({ ...headers }, method)
 
   if (!isFormData && !finalHeaders['Content-Type']) {
     finalHeaders['Content-Type'] = 'application/json'

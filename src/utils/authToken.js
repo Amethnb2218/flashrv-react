@@ -1,53 +1,53 @@
-const AUTH_TOKEN_KEY = 'flashrv_auth_token'
+let inMemoryAuthToken = null
+let inMemoryCsrfToken = null
 
-function canUseSessionStorage() {
-  return typeof window !== 'undefined' && typeof window.sessionStorage !== 'undefined'
-}
+const SAFE_HTTP_METHODS = new Set(['GET', 'HEAD', 'OPTIONS'])
 
 export function readAuthToken() {
-  if (!canUseSessionStorage()) return null
-  try {
-    const token = String(sessionStorage.getItem(AUTH_TOKEN_KEY) || '').trim()
-    return token || null
-  } catch (_) {
-    return null
-  }
+  const token = String(inMemoryAuthToken || '').trim()
+  return token || null
 }
 
 export function writeAuthToken(token) {
-  if (!canUseSessionStorage()) return
   const nextToken = String(token || '').trim()
-  try {
-    if (!nextToken) {
-      sessionStorage.removeItem(AUTH_TOKEN_KEY)
-      return
-    }
-    sessionStorage.setItem(AUTH_TOKEN_KEY, nextToken)
-  } catch (_) {
-    // noop
-  }
+  inMemoryAuthToken = nextToken || null
 }
 
 export function clearAuthToken() {
-  if (!canUseSessionStorage()) return
-  try {
-    sessionStorage.removeItem(AUTH_TOKEN_KEY)
-  } catch (_) {
-    // noop
-  }
+  inMemoryAuthToken = null
 }
 
-export function buildAuthHeaders(headers = {}) {
+export function readCsrfToken() {
+  const token = String(inMemoryCsrfToken || '').trim()
+  return token || null
+}
+
+export function writeCsrfToken(token) {
+  const nextToken = String(token || '').trim()
+  inMemoryCsrfToken = nextToken || null
+}
+
+export function clearCsrfToken() {
+  inMemoryCsrfToken = null
+}
+
+export function buildAuthHeaders(headers = {}, method = 'GET') {
   const normalized = { ...headers }
-  if (normalized.Authorization || normalized.authorization) {
-    return normalized
+
+  if (!normalized.Authorization && !normalized.authorization) {
+    const token = readAuthToken()
+    if (token) {
+      normalized.Authorization = `Bearer ${token}`
+    }
   }
 
-  const token = readAuthToken()
-  if (!token) return normalized
-
-  return {
-    ...normalized,
-    Authorization: `Bearer ${token}`,
+  const normalizedMethod = String(method || 'GET').trim().toUpperCase()
+  if (!SAFE_HTTP_METHODS.has(normalizedMethod) && !normalized['X-CSRF-Token'] && !normalized['x-csrf-token']) {
+    const csrfToken = readCsrfToken()
+    if (csrfToken) {
+      normalized['X-CSRF-Token'] = csrfToken
+    }
   }
+
+  return normalized
 }

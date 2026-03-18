@@ -19,12 +19,13 @@ const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 /** Helper: returns fetch options with auth headers (token + cookie) */
 function authFetchOpts(extra = {}) {
+  const method = String(extra.method || 'GET').toUpperCase()
   return {
     credentials: 'include',
     headers: buildAuthHeaders({
       'Content-Type': 'application/json',
       ...(extra.headers || {}),
-    }),
+    }, method),
     ...extra,
   };
 }

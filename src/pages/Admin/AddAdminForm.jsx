@@ -18,7 +18,7 @@ export default function AddAdminForm({ onAdminAdded }) {
         method: 'POST',
         headers: buildAuthHeaders({
           'Content-Type': 'application/json',
-        }),
+        }, 'POST'),
         credentials: 'include',
         body: JSON.stringify({ email }),
       })

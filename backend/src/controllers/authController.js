@@ -53,12 +53,13 @@ async function register(req, res, next) {
     }
     // Générer un token (mock, à sécuriser en prod)
     const token = generateToken({ userId: user.id, email: user.email, role: user.role });
+    const csrfToken = buildCsrfToken(token);
     setTokenCookie(res, token);
     const { password: _pw, ...safeUser } = user;
     return res.status(201).json({
       status: 'success',
       message: 'Inscription réussie',
-      data: { user: safeUser, token },
+      data: { user: safeUser, token, csrfToken },
     });
   } catch (error) {
     return next(error);
@@ -104,12 +105,13 @@ async function login(req, res, next) {
     }
     clearLoginFailures(normalizedIdentifier);
     const token = generateToken({ userId: user.id, email: user.email, role: user.role });
+    const csrfToken = buildCsrfToken(token);
     setTokenCookie(res, token);
     const { password: _pw, ...safeUser } = user;
     return res.json({
       status: 'success',
       message: 'Connexion réussie',
-      data: { user: safeUser, token },
+      data: { user: safeUser, token, csrfToken },
     });
   } catch (error) {
     // Prisma network/runtime errors should not surface as generic 500 auth failures.
@@ -124,6 +126,7 @@ async function login(req, res, next) {
 const prisma = require("../lib/prisma");
 const { verifyGoogleToken } = require("../services/googleAuth");
 const { generateToken, setTokenCookie, clearTokenCookie } = require("../utils/jwt");
+const { buildCsrfToken } = require("../utils/csrf");
 const { ROLES, STATUS } = require("../middleware/auth");
 const { sendWelcomeEmail, sendProPendingNotification } = require("../services/emailService");
 
@@ -319,6 +322,7 @@ async function googleAuth(req, res, next) {
       email: user.email,
       role: user.role,
     });
+    const csrfToken = buildCsrfToken(token);
 
     // Set token as httpOnly cookie
     setTokenCookie(res, token);
@@ -343,6 +347,7 @@ async function googleAuth(req, res, next) {
           phoneNumber: user.phoneNumber,
         },
         token,
+        csrfToken,
         isNewUser,
         accountLinked,
       },
@@ -365,6 +370,7 @@ async function getCurrentUser(req, res, next) {
       status: "success",
       data: {
         user: req.user,
+        csrfToken: req.authToken ? buildCsrfToken(req.authToken) : null,
       },
     });
   } catch (error) {
@@ -382,6 +388,7 @@ async function getSession(req, res, next) {
       status: "success",
       data: {
         user: req.user || null,
+        csrfToken: req.authToken ? buildCsrfToken(req.authToken) : null,
       },
     });
   } catch (error) {

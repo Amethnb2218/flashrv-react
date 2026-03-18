@@ -1,4 +1,5 @@
 const { verifyToken } = require('../utils/jwt');
+const { readCsrfHeader, verifyCsrfToken } = require('../utils/csrf');
 const prisma = require('../lib/prisma');
 
 // ============================================
@@ -18,6 +19,8 @@ const STATUS = {
   SUSPENDED: 'SUSPENDED',
 };
 
+const SAFE_HTTP_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+
 /**
  * Authentication middleware - verifies JWT token from cookies
  * Attaches user to req.user if authenticated
@@ -26,9 +29,11 @@ async function authenticate(req, res, next) {
   try {
     // Get token from cookie or Authorization header
     let token = req.cookies.token;
+    let tokenSource = token ? 'cookie' : null;
     // ...
     if (!token && req.headers.authorization) {
       token = req.headers.authorization.replace('Bearer ', '').trim();
+      tokenSource = token ? 'header' : null;
       // ...
     }
     if (!token) {
@@ -37,6 +42,19 @@ async function authenticate(req, res, next) {
         message: 'Not authenticated',
       });
     }
+
+    if (tokenSource === 'cookie' && !SAFE_HTTP_METHODS.has(String(req.method || 'GET').toUpperCase())) {
+      const providedCsrfToken = readCsrfHeader(req);
+      const csrfValid = verifyCsrfToken(token, providedCsrfToken);
+      if (!csrfValid) {
+        return res.status(403).json({
+          status: 'error',
+          message: 'Invalid CSRF token',
+          code: 'CSRF_INVALID',
+        });
+      }
+    }
+
     // Verify token
     let decoded;
     try {
@@ -96,6 +114,8 @@ async function authenticate(req, res, next) {
         message: 'Your account has been rejected.',
       });
     }
+    req.authToken = token;
+    req.authTokenSource = tokenSource;
     req.user = user;
     next();
   } catch (err) {
@@ -113,7 +133,10 @@ async function authenticate(req, res, next) {
  */
 async function optionalAuth(req, res, next) {
   try {
-    const token = req.cookies.token;
+    let token = req.cookies.token;
+    if (!token && req.headers.authorization) {
+      token = req.headers.authorization.replace('Bearer ', '').trim();
+    }
 
     if (!token) {
       return next();
@@ -134,6 +157,7 @@ async function optionalAuth(req, res, next) {
     });
 
     if (user) {
+      req.authToken = token;
       req.user = user;
     }
 
