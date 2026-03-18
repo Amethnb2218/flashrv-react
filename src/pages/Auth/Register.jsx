@@ -7,6 +7,7 @@ import { FiUser, FiMail, FiPhone, FiLock, FiEye, FiEyeOff, FiArrowRight } from '
 import toast from 'react-hot-toast'
 import { isValidEmail, isValidPhone } from '../../utils/helpers'
 import { getProRedirectPath, isProUser } from '../../utils/proOnboarding'
+import { ADMIN_PATH } from '../../utils/adminPath'
 
 function Register() {
   const [searchParams] = useSearchParams()
@@ -67,7 +68,7 @@ function Register() {
       const user = await loginWithGoogle(credentialResponse.credential, accountType)
       toast.success(`Bienvenue, ${user.name || user.email} !`)
       if (isProUser(user)) navigate(getProRedirectPath(user) || '/pro/onboarding')
-      else if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') navigate('/admin')
+      else if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') navigate(ADMIN_PATH)
       else if (user.role === 'CLIENT' || user.role === 'client') navigate('/')
       else navigate('/salons')
     } catch (error) {

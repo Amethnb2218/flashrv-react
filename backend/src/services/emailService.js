@@ -11,6 +11,20 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+const getFrontendBaseUrl = () => {
+  const raw = String(process.env.FRONTEND_URL || process.env.BASE_URL || 'https://styleflow.me').trim();
+  return raw.replace(/\/+$/, '');
+};
+
+const getFrontendAdminPath = () => {
+  const raw = String(process.env.FRONTEND_ADMIN_PATH || '/backoffice').trim();
+  if (!raw) return '/backoffice';
+  const normalized = raw.startsWith('/') ? raw : `/${raw}`;
+  return normalized.replace(/\/+$/, '') || '/backoffice';
+};
+
+const getFrontendAdminUrl = () => `${getFrontendBaseUrl()}${getFrontendAdminPath()}`;
+
 /**
  * Send a welcome / account-created confirmation email.
  * Fails silently so registration is never blocked by email issues.
@@ -79,7 +93,7 @@ async function sendProPendingNotification({ proName, proEmail }) {
             <p style="margin:4px 0"><strong>Nom :</strong> ${proName}</p>
             <p style="margin:4px 0"><strong>Email :</strong> ${proEmail}</p>
           </div>
-          <a href="https://styleflow.me/admin"
+          <a href="${getFrontendAdminUrl()}"
              style="display:inline-block;margin-top:16px;padding:12px 28px;background:#7c3aed;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">
              Gérer les validations
           </a>
@@ -246,7 +260,7 @@ async function sendAdminPromotionEmail({ to, name }) {
         <p style="color:#334155;font-size:15px;line-height:1.6;margin:0 0 16px">
           Vous avez désormais accès au tableau de bord d'administration pour gérer les salons, les professionnels et les utilisateurs.
         </p>
-        <a href="${process.env.FRONTEND_URL || 'https://styleflow.fr'}/admin"
+        <a href="${getFrontendAdminUrl()}"
            style="display:inline-block;padding:12px 28px;background:#4f46e5;color:#fff;text-decoration:none;border-radius:10px;font-weight:600;font-size:14px;margin-top:8px">
            Accéder au dashboard admin
         </a>

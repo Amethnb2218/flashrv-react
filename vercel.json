@@ -1,6 +1,16 @@
 {
   "redirects": [
     {
+      "source": "/admin",
+      "destination": "/login",
+      "permanent": false
+    },
+    {
+      "source": "/admin/:path*",
+      "destination": "/login",
+      "permanent": false
+    },
+    {
       "source": "/:path(.*)",
       "has": [{ "type": "host", "value": "flashrv-react.vercel.app" }],
       "destination": "https://www.styleflow.me/:path",
@@ -43,6 +53,18 @@
     },
     {
       "source": "/register",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive" }
+      ]
+    },
+    {
+      "source": "/backoffice/(.*)",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive" }
+      ]
+    },
+    {
+      "source": "/backoffice",
       "headers": [
         { "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive" }
       ]

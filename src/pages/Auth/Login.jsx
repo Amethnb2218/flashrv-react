@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { GoogleLogin } from '@react-oauth/google'
@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import { FiEye, FiEyeOff, FiArrowRight } from 'react-icons/fi'
 import toast from 'react-hot-toast'
 import { getProRedirectPath, isProUser } from '../../utils/proOnboarding'
+import { ADMIN_PATH } from '../../utils/adminPath'
 
 function Login() {
   const [googleAccountType, setGoogleAccountType] = useState('CLIENT')
@@ -14,7 +15,7 @@ function Login() {
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState({})
 
-  const { login, loginWithGoogle } = useAuth()
+  const { login, loginWithGoogle, isAuthenticated, user } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -26,6 +27,19 @@ function Login() {
     return path
   }
   const from = normalizeRedirectPath(rawFrom)
+
+  useEffect(() => {
+    if (!isAuthenticated || !user) return
+    if (isProUser(user)) {
+      navigate(getProRedirectPath(user) || '/pro/onboarding', { replace: true })
+      return
+    }
+    if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') {
+      navigate(ADMIN_PATH, { replace: true })
+      return
+    }
+    navigate('/dashboard', { replace: true })
+  }, [isAuthenticated, user, navigate])
 
   const validate = () => {
     const newErrors = {}
@@ -43,7 +57,7 @@ function Login() {
       const user = await login({ identifier: formData.identifier, password: formData.password })
       toast.success(`Bienvenue, ${user.name} !`)
       if (isProUser(user)) navigate(getProRedirectPath(user) || '/pro/onboarding')
-      else if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') navigate('/admin')
+      else if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') navigate(ADMIN_PATH)
       else navigate(from, { replace: true })
     } catch (error) {
       toast.error(error.message || 'Identifiants incorrects')
@@ -58,7 +72,7 @@ function Login() {
       const user = await loginWithGoogle(credentialResponse.credential, googleAccountType)
       toast.success(`Bienvenue, ${user.name || user.email} !`)
       if (isProUser(user)) navigate(getProRedirectPath(user) || '/pro/onboarding')
-      else if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') navigate('/admin')
+      else if (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') navigate(ADMIN_PATH)
       else navigate(from, { replace: true })
     } catch (error) {
       toast.error(error.message || 'Erreur lors de la connexion avec Google')

@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { FiHeadphones, FiHelpCircle, FiMic, FiSend, FiVolume2, FiX } from 'react-icons/fi'
 import apiFetch from '@/api/client'
 import { useAuth } from '../../context/AuthContext'
+import { ADMIN_PATH } from '../../utils/adminPath'
 
 const QUICK_PROMPTS = [
   'Comment réserver un salon ?',
@@ -17,7 +18,7 @@ function SiteAssistantWidget() {
   const { user, isAuthenticated } = useAuth()
 
   const role = String(user?.role || '').toUpperCase()
-  const isAdminArea = location.pathname.startsWith('/admin')
+  const isAdminArea = location.pathname.startsWith(ADMIN_PATH) || location.pathname.startsWith('/admin')
   const isProArea = location.pathname.startsWith('/pro')
   const isBookingPage = location.pathname.startsWith('/booking')
   const isClientScope = !isAuthenticated || role === 'CLIENT'

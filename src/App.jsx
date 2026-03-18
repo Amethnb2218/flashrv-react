@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/Layout/Layout'
 import Home from './pages/Home'
 import Login from './pages/Auth/Login'
@@ -26,6 +26,7 @@ import OrderReceipt from './pages/Order/OrderReceipt'
 import OrderPaymentSuccess from './pages/Order/OrderPaymentSuccess'
 import OrderPaymentCancel from './pages/Order/OrderPaymentCancel'
 import SEOHead from './components/SEO/SEOHead'
+import { ADMIN_PATH_ROUTE_SEGMENT } from './utils/adminPath'
 
 function App() {
   return (
@@ -125,8 +126,11 @@ function App() {
           </ProtectedRoute>
         } />
         
+        {/* Legacy admin path - no dashboard exposure */}
+        <Route path="admin/*" element={<Navigate to="/login" replace />} />
+
         {/* Protected routes - ADMIN */}
-        <Route path="admin/*" element={
+        <Route path={`${ADMIN_PATH_ROUTE_SEGMENT}/*`} element={
           <ProtectedRoute adminOnly>
             <SEOHead title="Administration — StyleFlow" noindex />
             <AdminDashboard />
