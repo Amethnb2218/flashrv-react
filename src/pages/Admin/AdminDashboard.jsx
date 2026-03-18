@@ -5,7 +5,7 @@ import {
   FiUsers, FiUserCheck, FiClock, 
   FiBarChart2, FiRefreshCw, FiShield,
   FiCalendar, FiMessageSquare,
-  FiBell, FiMapPin, FiX
+  FiBell, FiMapPin, FiX, FiTrash2
 } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 import StatCard from '../../components/UI/StatCard';
@@ -14,6 +14,7 @@ import ClientsSection from './ClientsSection';
 import AdminsSection from './AdminsSection';
 import StatsSection from './StatsSection';
 import { buildAuthHeaders } from '../../utils/authToken';
+import Modal from '../../components/UI/Modal';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -48,6 +49,12 @@ export default function AdminDashboard() {
   const [disputesLoading, setDisputesLoading] = useState(false)
   const [disputeScope, setDisputeScope] = useState('open')
   const [disputeCounts, setDisputeCounts] = useState({ open: 0, resolved: 0, total: 0 })
+  const [deleteDialog, setDeleteDialog] = useState({
+    isOpen: false,
+    type: null,
+    item: null,
+    label: '',
+  })
 
   // Notification bell state
   const [notifOpen, setNotifOpen] = useState(false)
@@ -192,44 +199,59 @@ export default function AdminDashboard() {
   const handleDeletePro = async (pro) => {
     if (!pro?.id) return
     const label = pro?.salon?.name || pro?.name || pro?.email || 'ce professionnel'
-    const confirmed = window.confirm(`Supprimer définitivement ${label} ? Cette action est irréversible.`)
-    if (!confirmed) return
-
-    setActionLoading(true)
-    try {
-      const res = await fetch(`${API_URL}/admin/pro/${pro.id}`, authFetchOpts({ method: 'DELETE' }))
-      const payload = await res.json().catch(() => ({}))
-      if (!res.ok) {
-        alert(payload?.message || 'Suppression impossible pour ce compte PRO.')
-        return
-      }
-      fetchData()
-      alert('Compte PRO supprimé avec succès.')
-    } catch (e) {
-      alert('Erreur réseau lors de la suppression du compte PRO.')
-    } finally {
-      setActionLoading(false)
-    }
+    setDeleteDialog({
+      isOpen: true,
+      type: 'pro',
+      item: pro,
+      label,
+    })
   }
 
   const handleDeleteClient = async (client) => {
     if (!client?.id) return
     const label = client?.name || client?.email || 'ce client'
-    const confirmed = window.confirm(`Supprimer définitivement ${label} ? Cette action est irréversible.`)
-    if (!confirmed) return
+    setDeleteDialog({
+      isOpen: true,
+      type: 'client',
+      item: client,
+      label,
+    })
+  }
+
+  const closeDeleteDialog = () => {
+    if (actionLoading) return
+    setDeleteDialog({ isOpen: false, type: null, item: null, label: '' })
+  }
+
+  const confirmDelete = async () => {
+    if (!deleteDialog?.item?.id || !deleteDialog?.type) return
+
+    const isPro = deleteDialog.type === 'pro'
+    const endpoint = isPro
+      ? `${API_URL}/admin/pro/${deleteDialog.item.id}`
+      : `${API_URL}/admin/clients/${deleteDialog.item.id}`
 
     setActionLoading(true)
     try {
-      const res = await fetch(`${API_URL}/admin/clients/${client.id}`, authFetchOpts({ method: 'DELETE' }))
+      const res = await fetch(endpoint, authFetchOpts({ method: 'DELETE' }))
       const payload = await res.json().catch(() => ({}))
       if (!res.ok) {
-        alert(payload?.message || 'Suppression impossible pour ce compte client.')
+        alert(payload?.message || (isPro
+          ? 'Suppression impossible pour ce compte PRO.'
+          : 'Suppression impossible pour ce compte client.'))
         return
       }
-      fetchClients()
-      alert('Compte client supprimé avec succès.')
+      if (isPro) {
+        fetchData()
+      } else {
+        fetchClients()
+      }
+      alert(isPro ? 'Compte PRO supprimé avec succès.' : 'Compte client supprimé avec succès.')
+      setDeleteDialog({ isOpen: false, type: null, item: null, label: '' })
     } catch (e) {
-      alert('Erreur réseau lors de la suppression du compte client.')
+      alert(isPro
+        ? 'Erreur réseau lors de la suppression du compte PRO.'
+        : 'Erreur réseau lors de la suppression du compte client.')
     } finally {
       setActionLoading(false)
     }
@@ -784,6 +806,44 @@ export default function AdminDashboard() {
           </>
         )}
       </div>
+
+      <Modal
+        isOpen={deleteDialog.isOpen}
+        onClose={closeDeleteDialog}
+        title="Confirmer la suppression"
+        size="sm"
+      >
+        <div className="p-6">
+          <div className="rounded-xl border border-red-100 bg-red-50 p-4 text-red-700">
+            <p className="font-semibold">
+              Supprimer définitivement {deleteDialog.label || 'ce compte'} ?
+            </p>
+            <p className="mt-2 text-sm">
+              Cette action est irréversible et supprimera toutes les données liées à ce compte.
+            </p>
+          </div>
+
+          <div className="mt-6 flex items-center justify-end gap-3">
+            <button
+              type="button"
+              onClick={closeDeleteDialog}
+              disabled={actionLoading}
+              className="px-4 py-2 rounded-lg border border-primary-200 text-primary-700 font-semibold hover:bg-primary-50 disabled:opacity-50"
+            >
+              Annuler
+            </button>
+            <button
+              type="button"
+              onClick={confirmDelete}
+              disabled={actionLoading}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 disabled:opacity-50"
+            >
+              <FiTrash2 className="w-4 h-4" />
+              {actionLoading ? 'Suppression...' : 'Supprimer'}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
