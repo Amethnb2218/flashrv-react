@@ -299,7 +299,7 @@ function Register() {
                 onError={handleGoogleError}
                 theme="outline"
                 size="large"
-                text="signup_with"
+                text="continue_with"
                 shape="rectangular"
                 locale="fr"
               />

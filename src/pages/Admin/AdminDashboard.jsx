@@ -125,12 +125,6 @@ export default function AdminDashboard() {
     }
   }
 
-  // Log temporaire pour debug
-  useEffect(() => {
-    if (pros && Array.isArray(pros)) {
-      console.log('[DEBUG] PROS chargés:', pros);
-    }
-  }, [pros]);
 
   // Charger les données à chaque changement d'onglet PROs/pending ou stats
   useEffect(() => {
