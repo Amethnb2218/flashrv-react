@@ -26,11 +26,48 @@ const rateLimit = require('express-rate-limit');
 const app = express();
 app.set('trust proxy', 1);
 
-function buildCspDirectives() {
-  const extraConnectSources = (process.env.CSP_CONNECT_SRC || '')
-    .split(',')
-    .map((item) => item.trim())
+function toOrigin(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return null;
+  try {
+    const url = new URL(raw);
+    return `${url.protocol}//${url.host}`;
+  } catch (_) {
+    return null;
+  }
+}
+
+function parseOrigins(...values) {
+  const parsed = values
+    .flatMap((value) => String(value || '').split(','))
+    .map((item) => toOrigin(item))
     .filter(Boolean);
+  return [...new Set(parsed)];
+}
+
+function buildCspDirectives() {
+  const extraConnectSources = parseOrigins(
+    process.env.CSP_CONNECT_SRC,
+    process.env.API_URL,
+    process.env.FRONTEND_URL,
+    process.env.BASE_URL,
+    process.env.ALLOWED_ORIGINS
+  );
+
+  const connectSrc = [
+    "'self'",
+    'https://styleflow.me',
+    'https://www.styleflow.me',
+    'https://api.styleflow.me',
+    'https://flashrv-react-backend-xtlu2.ondigitalocean.app',
+    'https://*.ondigitalocean.app',
+    'https://oauth2.googleapis.com',
+    'https://www.googleapis.com',
+    'https://accounts.google.com',
+    'ws:',
+    'wss:',
+    ...extraConnectSources,
+  ];
 
   return {
     defaultSrc: ["'self'"],
@@ -44,21 +81,11 @@ function buildCspDirectives() {
       'https://www.google.com',
       'https://www.gstatic.com',
     ],
-    styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+    styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://accounts.google.com'],
+    styleSrcElem: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com', 'https://accounts.google.com'],
     fontSrc: ["'self'", 'data:', 'https://fonts.gstatic.com'],
     imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
-    connectSrc: [
-      "'self'",
-      'https://styleflow.me',
-      'https://www.styleflow.me',
-      'https://api.styleflow.me',
-      'https://oauth2.googleapis.com',
-      'https://www.googleapis.com',
-      'https://accounts.google.com',
-      'ws:',
-      'wss:',
-      ...extraConnectSources,
-    ],
+    connectSrc: [...new Set(connectSrc)],
     frameSrc: ["'self'", 'https://accounts.google.com', 'https://www.google.com'],
     workerSrc: ["'self'", 'blob:'],
     manifestSrc: ["'self'"],

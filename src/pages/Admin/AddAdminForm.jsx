@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { FiUserPlus, FiCheck, FiAlertCircle } from 'react-icons/fi'
+import { buildAuthHeaders } from '../../utils/authToken'
 
 export default function AddAdminForm({ onAdminAdded }) {
   const [email, setEmail] = useState('')
@@ -15,9 +16,9 @@ export default function AddAdminForm({ onAdminAdded }) {
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL || '/api'}/admin/admins`, {
         method: 'POST',
-        headers: {
+        headers: buildAuthHeaders({
           'Content-Type': 'application/json',
-        },
+        }),
         credentials: 'include',
         body: JSON.stringify({ email }),
       })

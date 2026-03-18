@@ -182,7 +182,7 @@ async function googleAuth(req, res, next) {
 
     // ✅ rendre robuste selon ce que retourne verifyGoogleToken
     const googleSub = googleUser.googleSub || googleUser.sub;
-    const email = googleUser.email;
+    const email = String(googleUser.email || '').trim().toLowerCase();
     const googleName = googleUser.name || "";
 
     if (!googleSub || !email) {

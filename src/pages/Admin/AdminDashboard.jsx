@@ -13,6 +13,7 @@ import PendingProsSection from './PendingProsSection';
 import ClientsSection from './ClientsSection';
 import AdminsSection from './AdminsSection';
 import StatsSection from './StatsSection';
+import { buildAuthHeaders } from '../../utils/authToken';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -20,10 +21,10 @@ const API_URL = import.meta.env.VITE_API_URL || '/api';
 function authFetchOpts(extra = {}) {
   return {
     credentials: 'include',
-    headers: {
+    headers: buildAuthHeaders({
       'Content-Type': 'application/json',
       ...(extra.headers || {}),
-    },
+    }),
     ...extra,
   };
 }

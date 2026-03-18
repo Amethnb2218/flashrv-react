@@ -9,12 +9,13 @@ import {
   readAccountDeletionRecord,
 } from '../utils/accountDeletion'
 import { clearProOnboardingDraft, isProUser } from '../utils/proOnboarding'
+import { buildAuthHeaders, clearAuthToken, readAuthToken, writeAuthToken } from '../utils/authToken'
 
 const AuthContext = createContext()
 
 const initialState = {
   user: null,
-  token: null,
+  token: readAuthToken(),
   isAuthenticated: false,
   isLoading: true,
 }
@@ -65,6 +66,7 @@ function authReducer(state, action) {
 export function AuthProvider({ children }) {
   const [state, dispatch] = useReducer(authReducer, initialState)
   const API_BASE = import.meta.env.VITE_API_URL || '/api'
+  const authHeaders = (headers = {}) => buildAuthHeaders(headers)
 
   const hydrateProAccountState = async (user) => {
     const normalizedUser = normalizeUserShape(user)
@@ -76,6 +78,7 @@ export function AuthProvider({ children }) {
     try {
       const response = await fetch(`${API_BASE}/salons/me`, {
         method: 'GET',
+        headers: authHeaders(),
         credentials: 'include',
         cache: 'no-store',
       })
@@ -138,18 +141,40 @@ export function AuthProvider({ children }) {
     return normalizedUser
   }
 
+  const persistAuthenticatedUser = async (apiUser, apiToken = null) => {
+    const restoredUser = restorePendingDeletionIfNeeded(apiUser)
+    const hydratedUser = await hydrateProAccountState(restoredUser)
+    const normalizedUser = normalizeUserShape(hydratedUser)
+
+    sessionStorage.setItem('flashrv_user', JSON.stringify(normalizedUser))
+    if (apiToken) {
+      writeAuthToken(apiToken)
+    }
+    const activeToken = apiToken || readAuthToken()
+
+    dispatch({
+      type: 'LOGIN',
+      payload: { user: normalizedUser, token: activeToken }
+    })
+
+    subscribeToPush().catch(() => {})
+    return normalizedUser
+  }
+
   // Check for saved auth on mount et synchronise le cookie "token"
   useEffect(() => {
     const restoreAuth = async () => {
       try {
         const response = await fetch(`${API_BASE}/auth/me`, {
           method: 'GET',
+          headers: authHeaders(),
           credentials: 'include',
           cache: 'no-store',
         })
 
         if (!response.ok) {
           sessionStorage.removeItem('flashrv_user')
+          clearAuthToken()
           dispatch({ type: 'SET_LOADING', payload: false })
           return
         }
@@ -158,22 +183,16 @@ export function AuthProvider({ children }) {
         const apiUser = data?.data?.user
         if (!apiUser) {
           sessionStorage.removeItem('flashrv_user')
+          clearAuthToken()
           dispatch({ type: 'SET_LOADING', payload: false })
           return
         }
 
-        const restoredUser = restorePendingDeletionIfNeeded(apiUser)
-        const hydratedUser = await hydrateProAccountState(restoredUser)
-
-        sessionStorage.setItem('flashrv_user', JSON.stringify(normalizeUserShape(hydratedUser)))
-        dispatch({
-          type: 'LOGIN',
-          payload: { user: hydratedUser, token: null }
-        })
-        subscribeToPush().catch(() => {})
+        await persistAuthenticatedUser(apiUser, data?.data?.token || null)
       } catch (error) {
         console.error('Error parsing saved user:', error)
         sessionStorage.removeItem('flashrv_user')
+        clearAuthToken()
         dispatch({ type: 'SET_LOADING', payload: false })
       }
     }
@@ -186,7 +205,7 @@ export function AuthProvider({ children }) {
     try {
       const res = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
         credentials: 'include',
         body: JSON.stringify({ identifier, password }),
       });
@@ -195,16 +214,9 @@ export function AuthProvider({ children }) {
         throw new Error(data.message || 'Identifiants incorrects');
       }
       const user = data.data?.user;
+      const token = data.data?.token || null;
       if (user) {
-        const restoredUser = restorePendingDeletionIfNeeded(user);
-        const hydratedUser = await hydrateProAccountState(restoredUser);
-        sessionStorage.setItem('flashrv_user', JSON.stringify(normalizeUserShape(hydratedUser)));
-        dispatch({
-          type: 'LOGIN',
-          payload: { user: hydratedUser, token: null }
-        });
-        subscribeToPush().catch(() => {});
-        return hydratedUser;
+        return await persistAuthenticatedUser(user, token);
       } else {
         throw new Error('Utilisateur manquant');
       }
@@ -218,7 +230,7 @@ export function AuthProvider({ children }) {
     try {
       const res = await fetch(`${API_BASE}/auth/google`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
         credentials: 'include',
         body: JSON.stringify({ credential, customName, accountType }),
       });
@@ -227,16 +239,9 @@ export function AuthProvider({ children }) {
         throw new Error(data.message || 'Erreur de connexion Google');
       }
       let user = data.data?.user;
+      const token = data.data?.token || null;
       if (user) {
-        const restoredUser = restorePendingDeletionIfNeeded(user);
-        const hydratedUser = await hydrateProAccountState(restoredUser);
-        sessionStorage.setItem('flashrv_user', JSON.stringify(normalizeUserShape(hydratedUser)));
-        dispatch({
-          type: 'LOGIN',
-          payload: { user: hydratedUser, token: null }
-        });
-        subscribeToPush().catch(() => {});
-        return hydratedUser;
+        return await persistAuthenticatedUser(user, token);
       } else {
         throw new Error('Utilisateur Google manquant');
       }
@@ -249,7 +254,7 @@ export function AuthProvider({ children }) {
     // Appel API backend pour créer un vrai utilisateur
     const res = await fetch(`${API_BASE}/auth/register`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders({ 'Content-Type': 'application/json' }),
       credentials: 'include',
       body: JSON.stringify(userData),
     });
@@ -258,16 +263,9 @@ export function AuthProvider({ children }) {
       throw new Error(data.message || 'Erreur lors de l\'inscription');
     }
     const user = data.data?.user;
+    const token = data.data?.token || null;
     if (user) {
-      const restoredUser = restorePendingDeletionIfNeeded(user);
-      const hydratedUser = await hydrateProAccountState(restoredUser);
-      sessionStorage.setItem('flashrv_user', JSON.stringify(normalizeUserShape(hydratedUser)));
-      dispatch({
-        type: 'LOGIN',
-        payload: { user: hydratedUser, token: null }
-      });
-      subscribeToPush().catch(() => {});
-      return hydratedUser;
+      return await persistAuthenticatedUser(user, token);
     } else {
       throw new Error('Utilisateur manquant');
     }
@@ -278,11 +276,13 @@ export function AuthProvider({ children }) {
       // Call backend logout to clear cookie
       await fetch(`${API_BASE}/auth/logout`, {
         method: 'POST',
+        headers: authHeaders(),
         credentials: 'include',
       })
     } catch (error) {
       console.error('Logout error:', error)
     }
+    clearAuthToken()
     sessionStorage.removeItem('flashrv_user')
     sessionStorage.removeItem('flashrv_booking')
     disconnectRealtime()
@@ -296,7 +296,7 @@ export function AuthProvider({ children }) {
       const body = accountType ? { credential, accountType } : { credential };
       const response = await fetch(`${API_BASE}/auth/google`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
         credentials: 'include',
         body: JSON.stringify(body),
       });
@@ -305,18 +305,11 @@ export function AuthProvider({ children }) {
         throw new Error(data.message || 'Erreur de connexion Google');
       }
       const user = data.data?.user;
+      const token = data.data?.token || null;
       if (!user) {
         throw new Error('Utilisateur Google manquant');
       }
-      const restoredUser = restorePendingDeletionIfNeeded(user);
-      const hydratedUser = await hydrateProAccountState(restoredUser);
-      sessionStorage.setItem('flashrv_user', JSON.stringify(normalizeUserShape(hydratedUser)));
-      dispatch({
-        type: 'LOGIN',
-        payload: { user: hydratedUser, token: null },
-      });
-      subscribeToPush().catch(() => {});
-      return hydratedUser;
+      return await persistAuthenticatedUser(user, token);
     } catch (error) {
       console.error('Google login error:', error);
       throw error;
@@ -327,7 +320,7 @@ export function AuthProvider({ children }) {
   // Basic checkAuth implementation
   const checkAuth = () => {
     const user = sessionStorage.getItem('flashrv_user');
-    return !!user;
+    return !!user || !!readAuthToken();
   };
 
   const updateUser = (userData) => {

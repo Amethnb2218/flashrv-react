@@ -1,3 +1,5 @@
+import { buildAuthHeaders } from '../utils/authToken'
+
 const BASE_URL = import.meta.env.VITE_API_URL || '/api'
 const DEFAULT_TIMEOUT_MS = Number(import.meta.env.VITE_API_TIMEOUT_MS || 15000)
 const RETRYABLE_HTTP_STATUSES = new Set([0, 408, 425, 429, 500, 502, 503, 504])
@@ -31,13 +33,8 @@ export function isRetryableHttpError(error) {
 
 async function apiFetch(path, { method = 'GET', body, headers = {}, timeoutMs = DEFAULT_TIMEOUT_MS, ...options } = {}) {
   const url = `${BASE_URL}${path.startsWith('/') ? path : `/${path}`}`
-  const authHeader = {}
-
   const isFormData = typeof FormData !== 'undefined' && body instanceof FormData
-  const finalHeaders = {
-    ...authHeader,
-    ...headers,
-  }
+  const finalHeaders = buildAuthHeaders({ ...headers })
 
   if (!isFormData && !finalHeaders['Content-Type']) {
     finalHeaders['Content-Type'] = 'application/json'

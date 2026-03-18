@@ -1,9 +1,18 @@
 const { OAuth2Client } = require('google-auth-library');
 
-const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+function buildAllowedGoogleAudiences() {
+  const raw = [process.env.GOOGLE_CLIENT_IDS, process.env.GOOGLE_CLIENT_ID]
+    .filter(Boolean)
+    .join(',')
+    .split(',')
+    .map((item) => String(item || '').trim())
+    .filter(Boolean)
+
+  return [...new Set(raw)]
+}
 
 // Create OAuth2 client
-const client = new OAuth2Client(GOOGLE_CLIENT_ID);
+const client = new OAuth2Client();
 
 /**
  * Verify a Google ID token and extract user information
@@ -12,13 +21,35 @@ const client = new OAuth2Client(GOOGLE_CLIENT_ID);
  * @throws {Error} If token verification fails
  */
 async function verifyGoogleToken(idToken) {
+  const audiences = buildAllowedGoogleAudiences()
+
+  if (!audiences.length) {
+    const err = new Error('Google OAuth is not configured on server')
+    err.statusCode = 503
+    err.expose = true
+    throw err
+  }
+
   try {
     const ticket = await client.verifyIdToken({
       idToken,
-      audience: GOOGLE_CLIENT_ID,
+      audience: audiences,
     });
 
     const payload = ticket.getPayload();
+    if (!payload?.sub || !payload?.email) {
+      const err = new Error('Invalid Google token payload')
+      err.statusCode = 401
+      err.expose = true
+      throw err
+    }
+
+    if (payload.email_verified === false) {
+      const err = new Error('Google account email is not verified')
+      err.statusCode = 401
+      err.expose = true
+      throw err
+    }
 
     // Extract user information
     return {
@@ -31,8 +62,21 @@ async function verifyGoogleToken(idToken) {
       familyName: payload.family_name,
     };
   } catch (error) {
-    console.error('Google token verification failed:', error.message);
-    throw new Error('Invalid Google token');
+    if (error?.statusCode) throw error
+
+    const details = String(error?.message || '').toLowerCase()
+    const invalidAudience = details.includes('audience') || details.includes('recipient')
+
+    const err = new Error(
+      invalidAudience
+        ? 'Google token audience mismatch. Verify GOOGLE_CLIENT_ID/GOOGLE_CLIENT_IDS.'
+        : 'Invalid Google token'
+    )
+    err.statusCode = 401
+    err.expose = true
+
+    console.error('Google token verification failed:', error?.message || error);
+    throw err;
   }
 }
 

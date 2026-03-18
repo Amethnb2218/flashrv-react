@@ -581,15 +581,10 @@ function Profile() {
                       onClick={async () => {
                         setLoading(true)
                         try {
-                          const res = await fetch('/api/users/update-notifications', {
+                          await apiFetch('/users/update-notifications', {
                             method: 'PUT',
-                            headers: {
-                              'Content-Type': 'application/json'
-                            },
-                            credentials: 'include',
-                            body: JSON.stringify(notifications)
+                            body: notifications,
                           })
-                          if (!res.ok) throw new Error('Erreur lors de la sauvegarde')
                           setSuccess(true)
                         } catch (err) {
                           toast.error('Erreur lors de la sauvegarde')
