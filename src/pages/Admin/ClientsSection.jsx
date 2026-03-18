@@ -1,19 +1,26 @@
 import React, { useState } from "react";
 import SectionCard from "../../components/UI/SectionCard.jsx";
 import DataTable from "../../components/UI/DataTable.jsx";
-import { FiUsers, FiSearch, FiRefreshCw, FiMail, FiPhone, FiCalendar, FiTrash2 } from "react-icons/fi";
-
+import {
+  FiUsers,
+  FiSearch,
+  FiRefreshCw,
+  FiMail,
+  FiPhone,
+  FiCalendar,
+  FiTrash2,
+} from "react-icons/fi";
 
 export default function ClientsSection({ clients, loading, onRefresh, onDelete }) {
   const [search, setSearch] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
-  const filtered = clients.filter(
-    c =>
+
+  const filtered = (clients || []).filter(
+    (c) =>
       c.name?.toLowerCase().includes(search.toLowerCase()) ||
       c.email?.toLowerCase().includes(search.toLowerCase())
   );
 
-  /* ── Toolbar (shared) ── */
   const Toolbar = () => (
     <div className="flex gap-2 w-full">
       <div className="relative flex-1">
@@ -21,8 +28,8 @@ export default function ClientsSection({ clients, loading, onRefresh, onDelete }
           type="text"
           placeholder="Rechercher un client..."
           value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 bg-primary-50 border border-primary-200 rounded-xl text-primary-700 placeholder:text-primary-400 focus:ring-2 focus:ring-blue-100 focus:border-blue-400 font-inter text-base shadow-sm transition"
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full pl-10 pr-4 py-2.5 bg-white border border-primary-200 rounded-xl text-primary-700 placeholder:text-primary-400 focus:ring-2 focus:ring-blue-100 focus:border-blue-400 font-inter text-sm shadow-sm transition"
         />
         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary-300">
           <FiSearch className="w-5 h-5" />
@@ -31,7 +38,21 @@ export default function ClientsSection({ clients, loading, onRefresh, onDelete }
     </div>
   );
 
-  /* ── Mobile card (modern SaaS style) ── */
+  const DeleteButton = ({ row, compact = false }) =>
+    onDelete ? (
+      <button
+        onClick={() => onDelete(row)}
+        className={`inline-flex items-center gap-1.5 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 active:scale-95 transition ${
+          compact ? "px-2.5 py-1.5 text-[11px]" : "px-3 py-1.5 text-xs"
+        }`}
+        title="Supprimer ce client"
+        aria-label="Supprimer ce client"
+      >
+        <FiTrash2 className="w-3.5 h-3.5" />
+        <span className={compact ? "sr-only 2xl:not-sr-only" : ""}>Supprimer</span>
+      </button>
+    ) : null;
+
   const ClientCard = ({ row }) => (
     <div className="group rounded-xl border border-primary-200 bg-white hover:border-primary-300 hover:shadow-md transition-all duration-200 overflow-hidden">
       <div className="px-4 py-3.5 flex items-center gap-3">
@@ -51,23 +72,24 @@ export default function ClientsSection({ clients, loading, onRefresh, onDelete }
             {row.name || row.email}
           </button>
           <div className="text-xs text-primary-500 truncate flex items-center gap-1 mt-0.5">
-            <FiMail className="w-3 h-3 shrink-0 text-primary-400" /> {row.email}
+            <FiMail className="w-3 h-3 shrink-0 text-primary-400" />
+            {row.email}
           </div>
         </div>
       </div>
       <div className="px-4 pb-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-primary-500">
-        <span className="flex items-center gap-1"><FiPhone className="w-3 h-3 text-primary-400" /> {row.phoneNumber || "-"}</span>
-        <span className="flex items-center gap-1"><FiCalendar className="w-3 h-3 text-primary-400" /> {row.createdAt ? new Date(row.createdAt).toLocaleDateString("fr-FR") : "-"}</span>
+        <span className="flex items-center gap-1">
+          <FiPhone className="w-3 h-3 text-primary-400" />
+          {row.phoneNumber || "-"}
+        </span>
+        <span className="flex items-center gap-1">
+          <FiCalendar className="w-3 h-3 text-primary-400" />
+          {row.createdAt ? new Date(row.createdAt).toLocaleDateString("fr-FR") : "-"}
+        </span>
       </div>
       {onDelete && (
         <div className="px-4 pb-3">
-          <button
-            onClick={() => onDelete(row)}
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-600 text-white font-semibold text-xs hover:bg-red-700 active:scale-95 transition"
-          >
-            <FiTrash2 className="w-3.5 h-3.5" />
-            Supprimer
-          </button>
+          <DeleteButton row={row} />
         </div>
       )}
     </div>
@@ -84,11 +106,11 @@ export default function ClientsSection({ clients, loading, onRefresh, onDelete }
             onClick={onRefresh}
             className="bg-blue-600 text-white rounded-xl px-4 py-2 font-semibold shadow-sm hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 transition flex items-center gap-2"
           >
+            <FiRefreshCw className="w-4 h-4" />
             Actualiser
           </button>
         }
       >
-        {/* ─── MOBILE: card list (< lg) ─── */}
         <div className="lg:hidden flex flex-col gap-3">
           <div className="flex flex-col gap-2 p-3 rounded-xl bg-primary-50 border border-primary-100">
             <Toolbar />
@@ -97,35 +119,42 @@ export default function ClientsSection({ clients, loading, onRefresh, onDelete }
                 onClick={onRefresh}
                 className="self-end flex items-center gap-2 bg-blue-600 text-white rounded-xl px-3 py-2 font-semibold shadow-sm hover:bg-blue-700 transition text-sm"
               >
-                <FiRefreshCw className="w-4 h-4" /> Actualiser
+                <FiRefreshCw className="w-4 h-4" />
+                Actualiser
               </button>
             )}
           </div>
+
           {loading ? (
             Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className="rounded-2xl border border-primary-200 bg-white p-4 animate-pulse">
-                <div className="flex gap-3 mb-3"><div className="w-11 h-11 rounded-full bg-primary-100" /><div className="flex-1 space-y-2"><div className="h-4 bg-primary-100 rounded w-3/4" /><div className="h-3 bg-primary-100 rounded w-1/2" /></div></div>
+                <div className="flex gap-3 mb-3">
+                  <div className="w-11 h-11 rounded-full bg-primary-100" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-primary-100 rounded w-3/4" />
+                    <div className="h-3 bg-primary-100 rounded w-1/2" />
+                  </div>
+                </div>
               </div>
             ))
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-8 text-primary-400 font-medium">
               <FiUsers className="w-10 h-10 text-primary-200" />
-              <span>Aucun client trouvé</span>
+              <span>Aucun client trouve</span>
             </div>
           ) : (
-            filtered.map(row => <ClientCard key={row.id} row={row} />)
+            filtered.map((row) => <ClientCard key={row.id} row={row} />)
           )}
         </div>
 
-        {/* ─── DESKTOP: table (>= lg) ─── */}
         <div className="hidden lg:block">
           <DataTable
             loading={loading}
-            columns={[ 
+            columns={[
               {
                 key: "email",
                 label: "Client",
-                render: row => (
+                render: (row) => (
                   <button
                     type="button"
                     onClick={() => setSelectedUser(row)}
@@ -144,13 +173,13 @@ export default function ClientsSection({ clients, loading, onRefresh, onDelete }
               },
               {
                 key: "phoneNumber",
-                label: "Téléphone",
-                render: row => <span className="text-xs text-primary-700">{row.phoneNumber || "-"}</span>,
+                label: "Telephone",
+                render: (row) => <span className="text-xs text-primary-700">{row.phoneNumber || "-"}</span>,
               },
               {
                 key: "createdAt",
                 label: "Inscription",
-                render: row => (
+                render: (row) => (
                   <span className="text-xs text-primary-500">
                     {row.createdAt ? new Date(row.createdAt).toLocaleDateString("fr-FR") : "-"}
                   </span>
@@ -159,59 +188,65 @@ export default function ClientsSection({ clients, loading, onRefresh, onDelete }
             ]}
             data={filtered}
             toolbar={<Toolbar />}
-            rowActions={onDelete ? (row => (
-              <button
-                onClick={() => onDelete(row)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-600 text-white font-semibold text-xs hover:bg-red-700 active:scale-95 transition"
-              >
-                <FiTrash2 className="w-3.5 h-3.5" />
-                Supprimer
-              </button>
-            )) : undefined}
+            rowActions={onDelete ? (row) => <DeleteButton row={row} compact /> : undefined}
             onRefresh={onRefresh}
-            emptyLabel="Aucun client trouvé"
+            emptyLabel="Aucun client trouve"
             pagination={null}
           />
         </div>
       </SectionCard>
-      {/* Modern detail modal */}
+
       {selectedUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setSelectedUser(null)}>
-          <div className="bg-white rounded-2xl shadow-2xl border border-primary-200 max-w-md w-full mx-4 overflow-hidden" onClick={e => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          onClick={() => setSelectedUser(null)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl border border-primary-200 max-w-md w-full mx-4 overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="relative bg-gradient-to-r from-blue-500 to-indigo-500 px-6 pt-6 pb-10">
               <button
                 onClick={() => setSelectedUser(null)}
                 className="absolute top-3 right-3 p-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-white transition"
                 title="Fermer"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
             <div className="flex flex-col items-center -mt-8 px-6 pb-6">
               <div className="w-16 h-16 rounded-full bg-white border-4 border-white shadow-lg flex items-center justify-center text-2xl font-bold text-blue-600 bg-blue-50">
                 {selectedUser.name?.[0]?.toUpperCase() || selectedUser.email?.[0]?.toUpperCase()}
               </div>
-              <h3 className="mt-3 text-lg font-bold text-primary-900">{selectedUser.name || <span className="italic text-primary-400">Nom inconnu</span>}</h3>
+              <h3 className="mt-3 text-lg font-bold text-primary-900">
+                {selectedUser.name || <span className="italic text-primary-400">Nom inconnu</span>}
+              </h3>
               <p className="text-sm text-primary-500">{selectedUser.email}</p>
               <div className="w-full mt-5 space-y-3">
                 <div className="flex items-center gap-3 text-sm">
                   <FiPhone className="w-4 h-4 text-primary-400 shrink-0" />
-                  <span className="text-primary-600">{selectedUser.phoneNumber || <span className="italic text-primary-400">Non renseigné</span>}</span>
+                  <span className="text-primary-600">
+                    {selectedUser.phoneNumber || <span className="italic text-primary-400">Non renseigne</span>}
+                  </span>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
                   <FiCalendar className="w-4 h-4 text-primary-400 shrink-0" />
-                  <span className="text-primary-600">{selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}</span>
+                  <span className="text-primary-600">
+                    {selectedUser.createdAt
+                      ? new Date(selectedUser.createdAt).toLocaleDateString("fr-FR", {
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
+                        })
+                      : "-"}
+                  </span>
                 </div>
               </div>
               {onDelete && (
                 <div className="w-full mt-5 pt-4 border-t border-primary-100">
-                  <button
-                    onClick={() => onDelete(selectedUser)}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 text-white font-semibold text-sm hover:bg-red-700 active:scale-95 transition"
-                  >
-                    <FiTrash2 className="w-4 h-4" />
-                    Supprimer ce client
-                  </button>
+                  <DeleteButton row={selectedUser} />
                 </div>
               )}
             </div>

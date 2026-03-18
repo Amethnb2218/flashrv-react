@@ -14,7 +14,7 @@ export default function DataTable({
 }) {
   // Pagination: {page, pageCount, onPrev, onNext}
   return (
-    <div className={`overflow-x-auto rounded-2xl border border-primary-200/70 shadow-sm bg-white ${className}`}>
+    <div className={`overflow-x-auto scrollbar-hide rounded-2xl border border-primary-200/70 shadow-sm bg-white ${className}`}>
       {toolbar && (
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 p-4 border-b border-primary-100 bg-primary-50">
           {toolbar}

@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import SectionCard from "../../components/UI/SectionCard.jsx";
 import DataTable from "../../components/UI/DataTable.jsx";
-import { FiShield, FiSearch, FiRefreshCw, FiUsers, FiCalendar } from "react-icons/fi";
+import { FiShield, FiSearch, FiRefreshCw, FiUsers, FiCalendar, FiX, FiSlash } from "react-icons/fi";
 
 export default function AdminsSection({ admins, loading, onRefresh, onDelete, onRestrict }) {
   const [search, setSearch] = useState("");
   const [selectedUser, setSelectedUser] = useState(null);
 
-  const filtered = admins.filter(
-    a =>
+  const filtered = (admins || []).filter(
+    (a) =>
       a.name?.toLowerCase().includes(search.toLowerCase()) ||
       a.email?.toLowerCase().includes(search.toLowerCase())
   );
@@ -16,11 +16,11 @@ export default function AdminsSection({ admins, loading, onRefresh, onDelete, on
   const handleDelete = (admin) => {
     if (onDelete) return onDelete(admin);
   };
+
   const handleRestrict = (admin) => {
     if (onRestrict) return onRestrict(admin);
   };
 
-  /* ── Toolbar (shared) ── */
   const Toolbar = () => (
     <div className="flex gap-2 w-full">
       <div className="relative flex-1">
@@ -28,8 +28,8 @@ export default function AdminsSection({ admins, loading, onRefresh, onDelete, on
           type="text"
           placeholder="Rechercher un admin..."
           value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 bg-primary-50 border border-primary-200 rounded-xl text-primary-700 placeholder:text-primary-400 focus:ring-2 focus:ring-blue-100 focus:border-blue-400 font-inter text-base shadow-sm transition"
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full pl-10 pr-4 py-2.5 bg-white border border-primary-200 rounded-xl text-primary-700 placeholder:text-primary-400 focus:ring-2 focus:ring-blue-100 focus:border-blue-400 font-inter text-sm shadow-sm transition"
         />
         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary-300">
           <FiSearch className="w-5 h-5" />
@@ -38,36 +38,44 @@ export default function AdminsSection({ admins, loading, onRefresh, onDelete, on
     </div>
   );
 
-  /* ── Action buttons (shared) ── */
-  const ActionButtons = ({ row }) => (
-    <div className="flex items-center gap-1.5">
-      <button
-        onClick={() => handleRestrict(row)}
-        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-gold-500 text-white font-semibold text-xs hover:bg-gold-600 active:scale-95 transition"
-        title="Restreindre les droits"
-      >
-        <FiShield className="w-3.5 h-3.5" />
-        Restreindre
-      </button>
-      <button
-        onClick={() => handleDelete(row)}
-        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-rose-500 text-white font-semibold text-xs hover:bg-rose-600 active:scale-95 transition"
-        title="Supprimer l'admin"
-      >
-        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-        Supprimer
-      </button>
+  const ActionButtons = ({ row, compact = false }) => (
+    <div className={`flex items-center ${compact ? "justify-end gap-1.5 flex-wrap" : "gap-1.5"}`}>
+      {onRestrict && (
+        <button
+          onClick={() => handleRestrict(row)}
+          className={`inline-flex items-center gap-1 rounded-lg bg-gold-500 text-white font-semibold hover:bg-gold-600 active:scale-95 transition ${
+            compact ? "px-2.5 py-1.5 text-[11px]" : "px-3 py-1.5 text-xs"
+          }`}
+          title="Restreindre les droits"
+          aria-label="Restreindre les droits"
+        >
+          <FiSlash className="w-3.5 h-3.5" />
+          <span className={compact ? "sr-only 2xl:not-sr-only" : ""}>Restreindre</span>
+        </button>
+      )}
+      {onDelete && (
+        <button
+          onClick={() => handleDelete(row)}
+          className={`inline-flex items-center gap-1 rounded-lg bg-rose-500 text-white font-semibold hover:bg-rose-600 active:scale-95 transition ${
+            compact ? "px-2.5 py-1.5 text-[11px]" : "px-3 py-1.5 text-xs"
+          }`}
+          title="Supprimer l admin"
+          aria-label="Supprimer l admin"
+        >
+          <FiX className="w-3.5 h-3.5" />
+          <span className={compact ? "sr-only 2xl:not-sr-only" : ""}>Supprimer</span>
+        </button>
+      )}
     </div>
   );
 
-  /* ── Mobile card (modern SaaS style) ── */
   const AdminCard = ({ row }) => (
     <div className="group rounded-xl border border-primary-200 bg-white hover:border-primary-300 hover:shadow-md transition-all duration-200 overflow-hidden">
       <div className="px-4 pt-4 pb-3 flex items-start gap-3">
         <button
           type="button"
           onClick={() => setSelectedUser(row)}
-          className="w-10 h-10 shrink-0 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-sm text-white font-bold shadow-sm"
+          className="w-10 h-10 shrink-0 rounded-full bg-gradient-to-br from-indigo-400 to-sky-500 flex items-center justify-center text-sm text-white font-bold shadow-sm"
         >
           {row.name?.[0]?.toUpperCase() || row.email?.[0]?.toUpperCase()}
         </button>
@@ -90,11 +98,16 @@ export default function AdminsSection({ admins, loading, onRefresh, onDelete, on
         </div>
       </div>
       <div className="px-4 pb-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-primary-500">
-        <span className="flex items-center gap-1"><FiCalendar className="w-3 h-3 text-primary-400" /> {row.createdAt ? new Date(row.createdAt).toLocaleDateString("fr-FR") : "-"}</span>
+        <span className="flex items-center gap-1">
+          <FiCalendar className="w-3 h-3 text-primary-400" />
+          {row.createdAt ? new Date(row.createdAt).toLocaleDateString("fr-FR") : "-"}
+        </span>
       </div>
-      <div className="px-4 py-2.5 border-t border-primary-100 bg-primary-50/50">
-        <ActionButtons row={row} />
-      </div>
+      {(onRestrict || onDelete) && (
+        <div className="px-4 py-2.5 border-t border-primary-100 bg-primary-50/50">
+          <ActionButtons row={row} />
+        </div>
+      )}
     </div>
   );
 
@@ -108,11 +121,11 @@ export default function AdminsSection({ admins, loading, onRefresh, onDelete, on
           onClick={onRefresh}
           className="bg-blue-600 text-white rounded-xl px-4 py-2 font-semibold shadow-sm hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 transition flex items-center gap-2"
         >
+          <FiRefreshCw className="w-4 h-4" />
           Actualiser
         </button>
       }
     >
-      {/* ─── MOBILE: card list (< lg) ─── */}
       <div className="lg:hidden flex flex-col gap-3">
         <div className="flex flex-col gap-2 p-3 rounded-xl bg-primary-50 border border-primary-100">
           <Toolbar />
@@ -121,27 +134,33 @@ export default function AdminsSection({ admins, loading, onRefresh, onDelete, on
               onClick={onRefresh}
               className="self-end flex items-center gap-2 bg-blue-600 text-white rounded-xl px-3 py-2 font-semibold shadow-sm hover:bg-blue-700 transition text-sm"
             >
-              <FiRefreshCw className="w-4 h-4" /> Actualiser
+              <FiRefreshCw className="w-4 h-4" />
+              Actualiser
             </button>
           )}
         </div>
         {loading ? (
           Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="rounded-2xl border border-primary-200 bg-white p-4 animate-pulse">
-              <div className="flex gap-3 mb-3"><div className="w-11 h-11 rounded-full bg-primary-100" /><div className="flex-1 space-y-2"><div className="h-4 bg-primary-100 rounded w-3/4" /><div className="h-3 bg-primary-100 rounded w-1/2" /></div></div>
+              <div className="flex gap-3 mb-3">
+                <div className="w-11 h-11 rounded-full bg-primary-100" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 bg-primary-100 rounded w-3/4" />
+                  <div className="h-3 bg-primary-100 rounded w-1/2" />
+                </div>
+              </div>
             </div>
           ))
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center gap-2 py-8 text-primary-400 font-medium">
             <FiUsers className="w-10 h-10 text-primary-200" />
-            <span>Aucun administrateur trouvé</span>
+            <span>Aucun administrateur trouve</span>
           </div>
         ) : (
-          filtered.map(row => <AdminCard key={row.id} row={row} />)
+          filtered.map((row) => <AdminCard key={row.id} row={row} />)
         )}
       </div>
 
-      {/* ─── DESKTOP: table (>= lg) ─── */}
       <div className="hidden lg:block">
         <DataTable
           loading={loading}
@@ -149,14 +168,14 @@ export default function AdminsSection({ admins, loading, onRefresh, onDelete, on
             {
               key: "email",
               label: "Administrateur",
-              render: row => (
+              render: (row) => (
                 <button
                   type="button"
                   onClick={() => setSelectedUser(row)}
                   className="flex items-center gap-3 hover:opacity-80 transition"
                   title="Voir le profil complet"
                 >
-                  <div className="w-8 h-8 shrink-0 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-xs text-white font-bold">
+                  <div className="w-8 h-8 shrink-0 rounded-full bg-gradient-to-br from-indigo-400 to-sky-500 flex items-center justify-center text-xs text-white font-bold">
                     {row.name?.[0]?.toUpperCase() || row.email?.[0]?.toUpperCase()}
                   </div>
                   <div className="text-left min-w-0">
@@ -169,7 +188,7 @@ export default function AdminsSection({ admins, loading, onRefresh, onDelete, on
             {
               key: "createdAt",
               label: "Inscription",
-              render: row => (
+              render: (row) => (
                 <span className="text-xs text-primary-500">
                   {row.createdAt ? new Date(row.createdAt).toLocaleDateString("fr-FR") : "-"}
                 </span>
@@ -178,7 +197,7 @@ export default function AdminsSection({ admins, loading, onRefresh, onDelete, on
             {
               key: "adminType",
               label: "Type",
-              render: row => (
+              render: (row) => (
                 <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border bg-indigo-50 text-indigo-700 border-indigo-200">
                   {row.adminType || "-"}
                 </span>
@@ -187,46 +206,69 @@ export default function AdminsSection({ admins, loading, onRefresh, onDelete, on
           ]}
           data={filtered}
           toolbar={<Toolbar />}
-          rowActions={row => <ActionButtons row={row} />}
+          rowActions={onRestrict || onDelete ? (row) => <ActionButtons row={row} compact /> : undefined}
           onRefresh={onRefresh}
-          emptyLabel="Aucun administrateur trouvé"
+          emptyLabel="Aucun administrateur trouve"
           pagination={null}
         />
       </div>
-    {/* Modern detail modal */}
-    {selectedUser && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setSelectedUser(null)}>
-        <div className="bg-white rounded-2xl shadow-2xl border border-primary-200 max-w-md w-full mx-4 overflow-hidden" onClick={e => e.stopPropagation()}>
-          <div className="relative bg-gradient-to-r from-indigo-500 to-purple-500 px-6 pt-6 pb-10">
-            <button
-              onClick={() => setSelectedUser(null)}
-              className="absolute top-3 right-3 p-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-white transition"
-              title="Fermer"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-            </button>
-          </div>
-          <div className="flex flex-col items-center -mt-8 px-6 pb-6">
-            <div className="w-16 h-16 rounded-full bg-white border-4 border-white shadow-lg flex items-center justify-center text-2xl font-bold text-indigo-600 bg-indigo-50">
-              {selectedUser.name?.[0]?.toUpperCase() || selectedUser.email?.[0]?.toUpperCase()}
+
+      {selectedUser && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          onClick={() => setSelectedUser(null)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl border border-primary-200 max-w-md w-full mx-4 overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="relative bg-gradient-to-r from-indigo-500 to-sky-500 px-6 pt-6 pb-10">
+              <button
+                onClick={() => setSelectedUser(null)}
+                className="absolute top-3 right-3 p-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-white transition"
+                title="Fermer"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
-            <h3 className="mt-3 text-lg font-bold text-primary-900">{selectedUser.name || <span className="italic text-primary-400">Nom inconnu</span>}</h3>
-            <p className="text-sm text-primary-500">{selectedUser.email}</p>
-            {selectedUser.adminType && (
-              <span className="mt-2 inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                {selectedUser.adminType}
-              </span>
-            )}
-            <div className="w-full mt-5 space-y-3">
-              <div className="flex items-center gap-3 text-sm">
-                <FiCalendar className="w-4 h-4 text-primary-400 shrink-0" />
-                <span className="text-primary-600">{selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}</span>
+            <div className="flex flex-col items-center -mt-8 px-6 pb-6">
+              <div className="w-16 h-16 rounded-full bg-white border-4 border-white shadow-lg flex items-center justify-center text-2xl font-bold text-indigo-600 bg-indigo-50">
+                {selectedUser.name?.[0]?.toUpperCase() || selectedUser.email?.[0]?.toUpperCase()}
               </div>
+              <h3 className="mt-3 text-lg font-bold text-primary-900">
+                {selectedUser.name || <span className="italic text-primary-400">Nom inconnu</span>}
+              </h3>
+              <p className="text-sm text-primary-500">{selectedUser.email}</p>
+              {selectedUser.adminType && (
+                <span className="mt-2 inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                  {selectedUser.adminType}
+                </span>
+              )}
+              <div className="w-full mt-5 space-y-3">
+                <div className="flex items-center gap-3 text-sm">
+                  <FiCalendar className="w-4 h-4 text-primary-400 shrink-0" />
+                  <span className="text-primary-600">
+                    {selectedUser.createdAt
+                      ? new Date(selectedUser.createdAt).toLocaleDateString("fr-FR", {
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
+                        })
+                      : "-"}
+                  </span>
+                </div>
+              </div>
+              {(onRestrict || onDelete) && (
+                <div className="w-full mt-5 pt-4 border-t border-primary-100">
+                  <ActionButtons row={selectedUser} />
+                </div>
+              )}
             </div>
           </div>
         </div>
-      </div>
-    )}
+      )}
     </SectionCard>
   );
 }

@@ -5,7 +5,7 @@ import {
   FiUsers, FiUserCheck, FiClock, 
   FiBarChart2, FiRefreshCw, FiShield,
   FiCalendar, FiMessageSquare,
-  FiBell, FiMapPin, FiX, FiTrash2
+  FiBell, FiMapPin, FiX, FiTrash2, FiCheckCircle, FiAlertCircle
 } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 import StatCard from '../../components/UI/StatCard';
@@ -55,6 +55,8 @@ export default function AdminDashboard() {
     item: null,
     label: '',
   })
+  const [toast, setToast] = useState({ open: false, type: 'success', message: '' })
+  const toastTimerRef = useRef(null)
 
   // Notification bell state
   const [notifOpen, setNotifOpen] = useState(false)
@@ -67,6 +69,25 @@ export default function AdminDashboard() {
   const pendingCount = stats?.pros?.pending || 0
   const unreadCount = Math.max(0, pendingCount - getLastSeen())
 
+  const showToast = useCallback((message, type = 'success') => {
+    if (!message) return
+    setToast({ open: true, type, message })
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current)
+    }
+    toastTimerRef.current = setTimeout(() => {
+      setToast((prev) => ({ ...prev, open: false }))
+    }, 3000)
+  }, [])
+
+  const hideToast = useCallback(() => {
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current)
+      toastTimerRef.current = null
+    }
+    setToast((prev) => ({ ...prev, open: false }))
+  }, [])
+
   // Close notification dropdown on outside click
   useEffect(() => {
     const handler = (e) => {
@@ -76,6 +97,14 @@ export default function AdminDashboard() {
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) {
+        clearTimeout(toastTimerRef.current)
+      }
+    }
   }, [])
 
   // Fetch pending pros for notification dropdown
@@ -114,7 +143,7 @@ export default function AdminDashboard() {
     } else if (actionType === 'reject') {
       url = `${API_URL}/admin/pro/${userId}/reject`;
     } else {
-      alert(`Action inconnue: ${actionType}`);
+      showToast(`Action inconnue: ${actionType}`, 'error');
       return;
     }
     setActionLoading(true);
@@ -122,12 +151,12 @@ export default function AdminDashboard() {
       const res = await fetch(url, authFetchOpts({ method }));
       if (!res.ok) {
         const data = await res.json();
-        alert(data.message || 'Erreur lors de la mise à jour du statut');
+        showToast(data.message || 'Erreur lors de la mise a jour du statut', 'error');
       } else {
         fetchData();
       }
     } catch (e) {
-      alert('Erreur réseau lors de la validation/refus');
+      showToast('Erreur reseau lors de la validation/refus', 'error');
     } finally {
       setActionLoading(false);
     }
@@ -192,7 +221,7 @@ export default function AdminDashboard() {
       }))
       fetchData()
     } catch (error) {
-      alert('Erreur lors de la restriction')
+      showToast('Erreur lors de la restriction', 'error')
     }
   }
 
@@ -236,9 +265,9 @@ export default function AdminDashboard() {
       const res = await fetch(endpoint, authFetchOpts({ method: 'DELETE' }))
       const payload = await res.json().catch(() => ({}))
       if (!res.ok) {
-        alert(payload?.message || (isPro
+        showToast(payload?.message || (isPro
           ? 'Suppression impossible pour ce compte PRO.'
-          : 'Suppression impossible pour ce compte client.'))
+          : 'Suppression impossible pour ce compte client.'), 'error')
         return
       }
       if (isPro) {
@@ -246,12 +275,12 @@ export default function AdminDashboard() {
       } else {
         fetchClients()
       }
-      alert(isPro ? 'Compte PRO supprimé avec succès.' : 'Compte client supprimé avec succès.')
+      showToast(isPro ? 'Compte PRO supprime avec succes.' : 'Compte client supprime avec succes.')
       setDeleteDialog({ isOpen: false, type: null, item: null, label: '' })
     } catch (e) {
-      alert(isPro
+      showToast(isPro
         ? 'Erreur réseau lors de la suppression du compte PRO.'
-        : 'Erreur réseau lors de la suppression du compte client.')
+        : 'Erreur réseau lors de la suppression du compte client.', 'error')
     } finally {
       setActionLoading(false)
     }
@@ -285,7 +314,7 @@ export default function AdminDashboard() {
       }))
       fetchAdmins()
     } catch (error) {
-      alert('Erreur lors de la restriction admin')
+      showToast('Erreur lors de la restriction admin', 'error')
     }
   }
 
@@ -359,7 +388,7 @@ export default function AdminDashboard() {
     if (upper === 'REJECT') {
       reason = window.prompt("Motif du rejet (obligatoire):", "") || ""
       if (!String(reason || '').trim()) {
-        alert('Le motif du rejet est obligatoire.')
+        showToast('Le motif du rejet est obligatoire.', 'error')
         return
       }
       const confirmed = window.confirm('Confirmer le rejet du litige et l annulation de la commande ?')
@@ -375,13 +404,13 @@ export default function AdminDashboard() {
       }))
       const payload = await res.json().catch(() => ({}))
       if (!res.ok) {
-        alert(payload?.message || 'Erreur lors de la resolution du litige')
+        showToast(payload?.message || 'Erreur lors de la resolution du litige', 'error')
         return
       }
       fetchDisputes(disputeScope)
-      alert(upper === 'APPROVE' ? 'Litige valide: paiement confirme.' : 'Litige rejete: commande annulee.')
+      showToast(upper === 'APPROVE' ? 'Litige valide: paiement confirme.' : 'Litige rejete: commande annulee.')
     } catch (e) {
-      alert('Erreur reseau lors de la resolution du litige')
+      showToast('Erreur reseau lors de la resolution du litige', 'error')
     }
   }
 
@@ -407,6 +436,40 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-[#F7FAFC] overflow-x-hidden">
+      <AnimatePresence>
+        {toast.open && (
+          <motion.div
+            initial={{ opacity: 0, y: -16, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -16, scale: 0.98 }}
+            transition={{ duration: 0.2 }}
+            className={`fixed top-4 right-4 z-[80] max-w-sm w-[calc(100vw-2rem)] rounded-xl border shadow-xl p-3 pr-10 ${
+              toast.type === 'error'
+                ? 'bg-red-50 border-red-200 text-red-700'
+                : 'bg-emerald-50 border-emerald-200 text-emerald-700'
+            }`}
+            role="status"
+            aria-live="polite"
+          >
+            <div className="flex items-start gap-2">
+              {toast.type === 'error' ? (
+                <FiAlertCircle className="w-5 h-5 mt-0.5 shrink-0" />
+              ) : (
+                <FiCheckCircle className="w-5 h-5 mt-0.5 shrink-0" />
+              )}
+              <p className="text-sm font-semibold leading-snug">{toast.message}</p>
+            </div>
+            <button
+              type="button"
+              onClick={hideToast}
+              className="absolute top-2 right-2 p-1 rounded-md hover:bg-black/5 transition"
+              aria-label="Fermer la notification"
+            >
+              <FiX className="w-4 h-4" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <div className="max-w-7xl mx-auto px-4">
         {/* Header */}
         <header className="sticky top-0 z-20 flex flex-col gap-2 py-5 sm:py-8 mb-6 sm:mb-8 bg-white rounded-2xl shadow-md border border-primary-200 px-4 sm:px-6">
@@ -550,13 +613,16 @@ export default function AdminDashboard() {
         )}
 
         {/* Tabs */}
-        <div className="bg-white rounded-xl shadow border border-primary-200 mb-6">
-          <div className="flex border-b border-primary-200 overflow-x-auto">
+        <div className="bg-white rounded-xl shadow border border-primary-200 mb-6 overflow-hidden">
+          <div className="relative">
+            <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-white to-transparent z-10 sm:hidden" />
+            <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-white to-transparent z-10 sm:hidden" />
+            <div className="flex border-b border-primary-200 overflow-x-auto scrollbar-hide px-1 sm:px-2">
             {tabs.map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-3 sm:py-4 text-sm sm:text-base font-semibold whitespace-nowrap transition-colors ${
+                className={`shrink-0 flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-3 sm:py-4 text-sm sm:text-base font-semibold whitespace-nowrap transition-colors ${
                   activeTab === tab.id
                     ? 'text-blue-700 border-b-2 border-blue-700 bg-blue-50'
                     : 'text-primary-500 hover:text-blue-700 hover:bg-blue-50'
@@ -575,6 +641,7 @@ export default function AdminDashboard() {
                 )}
               </button>
             ))}
+            </div>
           </div>
         </div>
 
