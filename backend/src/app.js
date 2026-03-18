@@ -24,6 +24,50 @@ const paydunyaRoutes = require('./routes/paydunyaRoutes');
 const rateLimit = require('express-rate-limit');
 
 const app = express();
+app.set('trust proxy', 1);
+
+function buildCspDirectives() {
+  const extraConnectSources = (process.env.CSP_CONNECT_SRC || '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  return {
+    defaultSrc: ["'self'"],
+    baseUri: ["'self'"],
+    objectSrc: ["'none'"],
+    frameAncestors: ["'none'"],
+    scriptSrc: [
+      "'self'",
+      "'unsafe-inline'",
+      "'unsafe-eval'",
+      'https://accounts.google.com',
+      'https://apis.google.com',
+      'https://www.google.com',
+      'https://www.gstatic.com',
+    ],
+    styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+    fontSrc: ["'self'", 'data:', 'https://fonts.gstatic.com'],
+    imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
+    connectSrc: [
+      "'self'",
+      'https://styleflow.me',
+      'https://www.styleflow.me',
+      'https://api.styleflow.me',
+      'https://oauth2.googleapis.com',
+      'https://www.googleapis.com',
+      'https://accounts.google.com',
+      'ws:',
+      'wss:',
+      ...extraConnectSources,
+    ],
+    frameSrc: ["'self'", 'https://accounts.google.com', 'https://www.google.com'],
+    workerSrc: ["'self'", 'blob:'],
+    manifestSrc: ["'self'"],
+    formAction: ["'self'"],
+    upgradeInsecureRequests: [],
+  };
+}
 
 // ===========================================
 // CORS CONFIGURATION (must be BEFORE helmet and other middleware)
@@ -42,6 +86,7 @@ app.options('*', cors({
     cb(new Error('Not allowed by CORS'));
   },
   credentials: true,
+  optionsSuccessStatus: 204,
 }));
 
 app.use(cors({
@@ -50,14 +95,39 @@ app.use(cors({
     cb(new Error('Not allowed by CORS'));
   },
   credentials: true,
+  optionsSuccessStatus: 204,
 }));
 
 // ===========================================
 // SECURITY HEADERS (after CORS)
 // ===========================================
 app.use(helmet({
+  contentSecurityPolicy: {
+    useDefaults: false,
+    directives: buildCspDirectives(),
+    reportOnly: process.env.CSP_REPORT_ONLY === 'true',
+  },
+  hsts: process.env.NODE_ENV === 'production'
+    ? {
+        maxAge: 31536000,
+        includeSubDomains: true,
+        preload: true,
+      }
+    : false,
   crossOriginResourcePolicy: { policy: 'cross-origin' },
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
 }));
+
+app.use((req, res, next) => {
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Permitted-Cross-Domain-Policies', 'none');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(self)');
+  if (req.path.startsWith('/api/admin') || req.path.startsWith('/admin')) {
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive');
+  }
+  next();
+});
 
 // ===========================================
 // RATE LIMITING
@@ -74,6 +144,13 @@ const globalLimiter = rateLimit({
   max: 200,
   standardHeaders: true,
   legacyHeaders: false,
+});
+const adminApiLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { status: 'error', message: 'Trop de requetes admin. Reessayez plus tard.' },
 });
 app.use(globalLimiter);
 
@@ -147,7 +224,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/salons', salonRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/payments', paymentRoutes);
-app.use('/api/admin', adminRoutes);
+app.use('/api/admin', adminApiLimiter, adminRoutes);
 app.use('/api', compatRoutes);
 app.use('/api/salon/payment-methods', salonPaymentMethodsRoute);
 app.use('/api/services', serviceRoutes);

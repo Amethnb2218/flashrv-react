@@ -6,6 +6,9 @@ if (!JWT_SECRET) {
   process.exit(1);
 }
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
+const COOKIE_SECURE = process.env.COOKIE_SECURE === 'true' || process.env.NODE_ENV === 'production';
+const COOKIE_SAMESITE = process.env.COOKIE_SAMESITE || (COOKIE_SECURE ? 'none' : 'lax');
+const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN || undefined;
 
 /**
  * Generate a JWT token for a user
@@ -33,10 +36,11 @@ function verifyToken(token) {
  */
 const cookieOptions = {
   httpOnly: true, // Not accessible via JavaScript
-  secure: process.env.NODE_ENV === 'production', // HTTPS only in production
-  sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'none' required for cross-origin (styleflow.me → ondigitalocean.app)
+  secure: COOKIE_SECURE, // HTTPS only in production
+  sameSite: COOKIE_SAMESITE, // configurable (none/lax/strict)
   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
   path: '/',
+  ...(COOKIE_DOMAIN ? { domain: COOKIE_DOMAIN } : {}),
 };
 
 /**

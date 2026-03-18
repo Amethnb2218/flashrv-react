@@ -12,8 +12,15 @@ async function register(req, res, next) {
     if (password.length < 8) {
       return res.status(400).json({ status: 'error', message: 'Le mot de passe doit contenir au moins 8 caractères' });
     }
+    if (!isStrongPassword(password)) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Le mot de passe doit contenir majuscule, minuscule et chiffre',
+      });
+    }
+    const normalizedEmail = String(email).trim().toLowerCase();
     // Vérifier unicité email
-    const existing = await prisma.user.findUnique({ where: { email } });
+    const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } });
     if (existing) {
       return res.status(409).json({ status: 'error', message: 'Email déjà utilisé' });
     }
@@ -27,8 +34,8 @@ async function register(req, res, next) {
     const bcrypt = require('bcryptjs');
     const hashedPassword = await bcrypt.hash(password, 10);
     const userData = {
-      name,
-      email,
+      name: String(name).trim(),
+      email: normalizedEmail,
       phoneNumber: phone,
       role: normalizedRole,
       status: userStatus,
@@ -69,15 +76,26 @@ async function login(req, res, next) {
     if (!identifier || !password) {
       return res.status(400).json({ status: 'error', message: 'Email et mot de passe requis' });
     }
-    const user = await prisma.user.findUnique({ where: { email: identifier } });
+    const normalizedIdentifier = String(identifier).trim().toLowerCase();
+    if (isLoginLocked(normalizedIdentifier)) {
+      return res.status(429).json({
+        status: 'error',
+        message: 'Compte temporairement bloqué. Réessayez dans quelques minutes.',
+      });
+    }
+
+    const user = await prisma.user.findUnique({ where: { email: normalizedIdentifier } });
     if (!user || !user.password) {
+      registerFailedLogin(normalizedIdentifier);
       return res.status(401).json({ status: 'error', message: 'Identifiants incorrects' });
     }
     const bcrypt = require('bcryptjs');
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) {
+      registerFailedLogin(normalizedIdentifier);
       return res.status(401).json({ status: 'error', message: 'Identifiants incorrects' });
     }
+    clearLoginFailures(normalizedIdentifier);
     const token = generateToken({ userId: user.id, email: user.email, role: user.role });
     setTokenCookie(res, token);
     const { password: _pw, ...safeUser } = user;
@@ -95,6 +113,43 @@ const { verifyGoogleToken } = require("../services/googleAuth");
 const { generateToken, setTokenCookie, clearTokenCookie } = require("../utils/jwt");
 const { ROLES, STATUS } = require("../middleware/auth");
 const { sendWelcomeEmail, sendProPendingNotification } = require("../services/emailService");
+
+const LOGIN_LOCK_WINDOW_MS = 15 * 60 * 1000;
+const LOGIN_MAX_FAILURES = 5;
+const failedLoginMap = new Map();
+
+function isStrongPassword(password) {
+  return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(String(password || ''));
+}
+
+function isLoginLocked(identifier) {
+  const item = failedLoginMap.get(identifier);
+  if (!item) return false;
+  const elapsed = Date.now() - item.firstFailureAt;
+  if (elapsed > LOGIN_LOCK_WINDOW_MS) {
+    failedLoginMap.delete(identifier);
+    return false;
+  }
+  return item.failures >= LOGIN_MAX_FAILURES;
+}
+
+function registerFailedLogin(identifier) {
+  const current = failedLoginMap.get(identifier);
+  if (!current) {
+    failedLoginMap.set(identifier, { failures: 1, firstFailureAt: Date.now() });
+    return;
+  }
+  const elapsed = Date.now() - current.firstFailureAt;
+  if (elapsed > LOGIN_LOCK_WINDOW_MS) {
+    failedLoginMap.set(identifier, { failures: 1, firstFailureAt: Date.now() });
+    return;
+  }
+  failedLoginMap.set(identifier, { ...current, failures: current.failures + 1 });
+}
+
+function clearLoginFailures(identifier) {
+  failedLoginMap.delete(identifier);
+}
 
 /**
  * Petit helper: force les bons headers CORS sur la réponse
