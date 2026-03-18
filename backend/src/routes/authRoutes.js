@@ -3,7 +3,7 @@ const rateLimit = require('express-rate-limit');
 const router = express.Router();
 
 const authController = require("../controllers/authController");
-const { authenticate } = require("../middleware/auth");
+const { authenticate, optionalAuth } = require("../middleware/auth");
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -65,6 +65,13 @@ router.post("/logout", authController.logout);
 /* ===========================================
    PROTECTED ROUTES (authentification requise)
    =========================================== */
+
+/**
+ * @route   GET /api/auth/session
+ * @desc    Retourne l'utilisateur courant si connecté, sinon user=null (sans 401)
+ * @access  Public
+ */
+router.get("/session", optionalAuth, authController.getSession);
 
 /**
  * @route   GET /api/auth/me

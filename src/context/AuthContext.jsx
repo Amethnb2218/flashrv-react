@@ -165,7 +165,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const restoreAuth = async () => {
       try {
-        const response = await fetch(`${API_BASE}/auth/me`, {
+        const response = await fetch(`${API_BASE}/auth/session`, {
           method: 'GET',
           headers: authHeaders(),
           credentials: 'include',

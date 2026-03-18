@@ -373,6 +373,23 @@ async function getCurrentUser(req, res, next) {
 }
 
 /**
+ * Get optional authenticated user (no 401 when logged out)
+ * GET /api/auth/session
+ */
+async function getSession(req, res, next) {
+  try {
+    return res.status(200).json({
+      status: "success",
+      data: {
+        user: req.user || null,
+      },
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+/**
  * Logout - clears the JWT cookie
  * POST /api/auth/logout
  */
@@ -473,6 +490,7 @@ async function deleteAccount(req, res, next) {
 
 module.exports = {
   googleAuth,
+  getSession,
   getCurrentUser,
   logout,
   updateProfile,

@@ -7,8 +7,25 @@ if (!JWT_SECRET) {
 }
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 const COOKIE_SECURE = process.env.COOKIE_SECURE === 'true' || process.env.NODE_ENV === 'production';
-const COOKIE_SAMESITE = process.env.COOKIE_SAMESITE || (COOKIE_SECURE ? 'none' : 'lax');
-const COOKIE_DOMAIN = process.env.COOKIE_DOMAIN || undefined;
+
+function normalizeSameSite(value) {
+  const raw = String(value || '').trim().toLowerCase();
+  if (!raw) return COOKIE_SECURE ? 'none' : 'lax';
+  if (raw === 'none' || raw === 'lax' || raw === 'strict') return raw;
+  if (raw === 'false') return false;
+  return COOKIE_SECURE ? 'none' : 'lax';
+}
+
+function normalizeCookieDomain(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return undefined;
+  // Keep a conservative domain format to avoid runtime cookie serialization errors.
+  if (/^[a-z0-9.-]+$/i.test(raw)) return raw;
+  return undefined;
+}
+
+const COOKIE_SAMESITE = normalizeSameSite(process.env.COOKIE_SAMESITE);
+const COOKIE_DOMAIN = normalizeCookieDomain(process.env.COOKIE_DOMAIN);
 
 /**
  * Generate a JWT token for a user
@@ -49,7 +66,19 @@ const cookieOptions = {
  * @param {string} token - The JWT token
  */
 function setTokenCookie(res, token) {
-  res.cookie('token', token, cookieOptions);
+  try {
+    res.cookie('token', token, cookieOptions);
+  } catch (error) {
+    // Never break auth flow because of an invalid cookie option in env.
+    console.error('JWT cookie set failed, applying safe fallback options:', error?.message || error);
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: COOKIE_SECURE,
+      sameSite: COOKIE_SECURE ? 'none' : 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: '/',
+    });
+  }
 }
 
 /**
@@ -57,10 +86,21 @@ function setTokenCookie(res, token) {
  * @param {Object} res - Express response object
  */
 function clearTokenCookie(res) {
-  res.cookie('token', '', {
-    ...cookieOptions,
-    maxAge: 0,
-  });
+  try {
+    res.cookie('token', '', {
+      ...cookieOptions,
+      maxAge: 0,
+    });
+  } catch (error) {
+    console.error('JWT cookie clear failed, applying safe fallback options:', error?.message || error);
+    res.cookie('token', '', {
+      httpOnly: true,
+      secure: COOKIE_SECURE,
+      sameSite: COOKIE_SECURE ? 'none' : 'lax',
+      maxAge: 0,
+      path: '/',
+    });
+  }
 }
 
 module.exports = {
