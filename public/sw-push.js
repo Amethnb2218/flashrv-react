@@ -1,4 +1,4 @@
-// Service Worker for Web Push Notifications â€” Jolof’Era
+// Service Worker for Web Push Notifications — Jolof’Era
 self.addEventListener('push', (event) => {
   if (!event.data) return;
 

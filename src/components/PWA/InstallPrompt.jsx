@@ -10,7 +10,7 @@ export default function InstallPrompt() {
   const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
-    // Already installed as PWA â€” don't show
+    // Already installed as PWA — don't show
     if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) return;
 
     // Already dismissed this session
@@ -57,9 +57,9 @@ export default function InstallPrompt() {
       // Fallback: open in browser so the user can use the browser menu to install
       const ua = navigator.userAgent.toLowerCase();
       if (ua.includes('android')) {
-        alert('Pour installer Jolof’Era :\nOuvrez le menu du navigateur (â‹®) puis appuyez sur Â« Ajouter Ã  l\'Ã©cran d\'accueil Â»');
+        alert('Pour installer Jolof’Era :\nOuvrez le menu du navigateur (⋮) puis appuyez sur « Ajouter à l\'écran d\'accueil »');
       } else {
-        alert('Pour installer Jolof’Era :\nOuvrez le menu du navigateur puis Â« Installer l\'application Â» ou Â« Ajouter Ã  l\'Ã©cran d\'accueil Â»');
+        alert('Pour installer Jolof’Era :\nOuvrez le menu du navigateur puis « Installer l\'application » ou « Ajouter à l\'écran d\'accueil »');
       }
     }
   };
@@ -71,7 +71,7 @@ export default function InstallPrompt() {
 
   if (!show) return null;
 
-  /* â”€â”€ iOS : instructions interactives â”€â”€ */
+  /* -- iOS : instructions interactives -- */
   if (isIOS) {
     if (!expanded) {
       return (
@@ -112,19 +112,19 @@ export default function InstallPrompt() {
             <div className="flex items-start gap-2.5">
               <span className="flex-shrink-0 w-5 h-5 bg-primary-900 text-white rounded-full flex items-center justify-center text-[10px] font-bold mt-0.5">1</span>
               <p className="text-xs text-primary-600 leading-relaxed">
-                Appuyez sur l'icÃ´ne <IoShareOutline className="inline w-4 h-4 text-blue-500 -mt-0.5 mx-0.5" /> <strong className="text-primary-800">Partager</strong> en bas de Safari
+                Appuyez sur l'icône <IoShareOutline className="inline w-4 h-4 text-blue-500 -mt-0.5 mx-0.5" /> <strong className="text-primary-800">Partager</strong> en bas de Safari
               </p>
             </div>
             <div className="flex items-start gap-2.5">
               <span className="flex-shrink-0 w-5 h-5 bg-primary-900 text-white rounded-full flex items-center justify-center text-[10px] font-bold mt-0.5">2</span>
               <p className="text-xs text-primary-600 leading-relaxed">
-                Faites dÃ©filer et appuyez sur <HiPlus className="inline w-3.5 h-3.5 text-primary-800 -mt-0.5 mx-0.5" /> <strong className="text-primary-800">Sur l'Ã©cran d'accueil</strong>
+                Faites défiler et appuyez sur <HiPlus className="inline w-3.5 h-3.5 text-primary-800 -mt-0.5 mx-0.5" /> <strong className="text-primary-800">Sur l'écran d'accueil</strong>
               </p>
             </div>
             <div className="flex items-start gap-2.5">
               <span className="flex-shrink-0 w-5 h-5 bg-primary-900 text-white rounded-full flex items-center justify-center text-[10px] font-bold mt-0.5">3</span>
               <p className="text-xs text-primary-600 leading-relaxed">
-                Appuyez sur <strong className="text-primary-800">Ajouter</strong> en haut Ã  droite
+                Appuyez sur <strong className="text-primary-800">Ajouter</strong> en haut à droite
               </p>
             </div>
           </div>
@@ -136,7 +136,7 @@ export default function InstallPrompt() {
     );
   }
 
-  /* â”€â”€ Android / Desktop : compact pill â”€â”€ */
+  /* -- Android / Desktop : compact pill -- */
   return (
     <div className="fixed z-[9999] animate-slide-up
                     bottom-6 left-3 right-3 mx-auto max-w-[260px]

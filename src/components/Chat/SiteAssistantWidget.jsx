@@ -6,10 +6,10 @@ import { useAuth } from '../../context/AuthContext'
 import { ADMIN_PATH } from '../../utils/adminPath'
 
 const QUICK_PROMPTS = [
-  'Comment rÃ©server un salon ?',
+  'Comment réserver un salon ?',
   'Naka laa booking def ?',
   'Comment payer mon acompte ?',
-  'OÃ¹ voir mes rÃ©servations ?',
+  'Où voir mes réservations ?',
 ]
 
 function SiteAssistantWidget() {
@@ -30,7 +30,7 @@ function SiteAssistantWidget() {
     {
       id: `assistant-${Date.now()}`,
       role: 'assistant',
-      text: 'Bonjour. Je suis votre assistant client Jolof’Era (franÃ§ais + wolof simple).',
+      text: 'Bonjour. Je suis votre assistant client Jolof’Era (français + wolof simple).',
       cta: null,
     },
   ])
@@ -94,12 +94,12 @@ function SiteAssistantWidget() {
           page: location.pathname,
         },
       })
-      const answer = res?.data?.answer || 'Je nâ€™ai pas de rÃ©ponse pour le moment.'
+      const answer = res?.data?.answer || "Je n'ai pas de réponse pour le moment."
       const cta = (() => {
         const text = String(answer || '').toLowerCase()
         if (text.includes('salon')) return { label: 'Voir les salons', path: '/salons' }
         if (text.includes('profil')) return { label: 'Mon profil', path: '/profile' }
-        if (text.includes('dashboard') || text.includes('rÃ©servation')) return { label: 'Mon dashboard', path: '/dashboard' }
+        if (text.includes('dashboard') || text.includes('réservation')) return { label: 'Mon dashboard', path: '/dashboard' }
         return null
       })()
       setMessages((prev) => [
@@ -117,7 +117,7 @@ function SiteAssistantWidget() {
         {
           id: `assistant-${Date.now()}-${Math.random()}`,
           role: 'assistant',
-          text: "Je n'arrive pas Ã  rÃ©pondre maintenant. RÃ©essayez dans quelques secondes.",
+          text: "Je n'arrive pas à répondre maintenant. Réessayez dans quelques secondes.",
           cta: null,
         },
       ])
@@ -190,7 +190,7 @@ function SiteAssistantWidget() {
         await audio.play()
       } else if (typeof window !== 'undefined' && window.speechSynthesis) {
         const utterance = new SpeechSynthesisUtterance(msg.text)
-        utterance.lang = /[Ã±Å‹]/i.test(msg.text) ? 'wo-SN' : 'fr-FR'
+        utterance.lang = /[ñŋ]/i.test(msg.text) ? 'wo-SN' : 'fr-FR'
         window.speechSynthesis.speak(utterance)
       }
     } catch {
@@ -264,7 +264,7 @@ function SiteAssistantWidget() {
                       className="mt-2 inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 disabled:opacity-50"
                     >
                       <FiVolume2 className="h-3 w-3" />
-                      {speakingId === msg.id ? 'Lecture...' : 'Ã‰couter'}
+                      {speakingId === msg.id ? 'Lecture...' : 'Écouter'}
                     </button>
                   ) : null}
                 </div>
@@ -273,7 +273,7 @@ function SiteAssistantWidget() {
             {sending ? (
               <div className="inline-flex items-center gap-2 rounded-xl border border-primary-200 bg-white px-3 py-2 text-xs text-primary-500">
                 <FiHeadphones className="h-3 w-3 animate-pulse" />
-                RÃ©ponse en cours...
+                Réponse en cours...
               </div>
             ) : null}
           </div>
@@ -311,7 +311,7 @@ function SiteAssistantWidget() {
                   className={`rounded-xl border px-3 py-2 ${
                     recording ? 'border-red-300 text-red-600 hover:bg-red-50' : 'border-primary-200 text-primary-700 hover:bg-primary-50'
                   } disabled:opacity-50`}
-                  title={recording ? 'ArrÃªter' : 'Parler'}
+                  title={recording ? 'Arrêter' : 'Parler'}
                 >
                   <FiMic className="h-4 w-4" />
                 </button>

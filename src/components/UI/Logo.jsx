@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 
-// Logo Style•Flow - design lumineux & moderne 2026
+// Logo Jolof'Era
 function Logo({ variant = 'default', size = 'md', showTagline = true }) {
   const sizes = {
     sm: { logo: 'w-9 h-9', text: 'text-lg', tagline: 'text-[8px]' },
@@ -14,16 +14,16 @@ function Logo({ variant = 'default', size = 'md', showTagline = true }) {
 
   return (
     <Link to="/" className="flex items-center space-x-3 group select-none">
-      {/* Logo Icon - F stylisé avec éclair lumineux */}
+      {/* Logo icon */}
       <div className="relative">
         <svg
           className={`${s.logo} transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_16px_#facc15] drop-shadow-lg`}
           viewBox="0 0 48 48"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          aria-label="Logo Style•Flow"
+          aria-label="Logo Jolof'Era"
         >
-          {/* Dégradés Black & Gold élégant */}
+          {/* Black and gold gradients */}
           <defs>
             <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#171717" />
@@ -67,7 +67,7 @@ function Logo({ variant = 'default', size = 'md', showTagline = true }) {
             fill="white"
           />
 
-          {/* Flash/éclair symbol - lumineux */}
+          {/* Flash symbol */}
           <path
             d="M30 10L26 20H32L25 30L28 22H23L30 10Z"
             fill="url(#flashGradient)"
@@ -89,12 +89,9 @@ function Logo({ variant = 'default', size = 'md', showTagline = true }) {
                 : 'text-primary-900 dark:text-slate-100 drop-shadow-[0_1px_4px_rgba(0,0,0,0.24)]'
             }
           >
-            Style
+            Jolof'
           </span>
-          <span className="bg-gradient-to-r from-gold-400 via-gold-300 to-gold-400 bg-clip-text text-transparent drop-shadow-[0_0_8px_#fde047]">
-            •
-          </span>
-          <span className="text-gold-500 dark:text-gold-300 drop-shadow-[0_0_6px_#fde047]">Flow</span>
+          <span className="text-gold-500 dark:text-gold-300 drop-shadow-[0_0_6px_#fde047]">Era</span>
         </span>
         {showTagline && (
           <span
@@ -103,7 +100,7 @@ function Logo({ variant = 'default', size = 'md', showTagline = true }) {
             `}
             style={{ letterSpacing: '0.22em', textShadow: '0 0 8px #fde047, 0 1px 2px rgba(0,0,0,0.35)' }}
           >
-            Réservez. Brillez.
+            Reservez. Brillez.
           </span>
         )}
       </div>

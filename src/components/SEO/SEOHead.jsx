@@ -4,11 +4,11 @@ import { useLocation } from 'react-router-dom'
 const BASE_URL = 'https://jolofera.com'
 
 /**
- * GÃ¨re dynamiquement les balises canonical et meta robots pour le SEO.
+ * Gère dynamiquement les balises canonical et meta robots pour le SEO.
  * @param {Object} props
  * @param {string} [props.title] - Titre de la page
  * @param {string} [props.description] - Description meta
- * @param {string} [props.canonical] - URL canonical custom (sinon basÃ©e sur le path)
+ * @param {string} [props.canonical] - URL canonical custom (sinon basée sur le path)
  * @param {boolean} [props.noindex] - Si true, ajoute noindex
  */
 export default function SEOHead({ title, description, canonical, noindex = false }) {

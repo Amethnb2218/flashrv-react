@@ -110,7 +110,7 @@ function Footer() {
 
         <div className="mt-6 pt-4 flex flex-col md:flex-row justify-between items-center border-t border-primary-300/80 dark:border-[#382c22]">
           <p className="text-primary-800 dark:text-[#ab967c] text-xs">
-            Â© {currentYear} Jolof’Era. Tous droits reserves.
+            © {currentYear} Jolof’Era. Tous droits reserves.
           </p>
         </div>
       </div>

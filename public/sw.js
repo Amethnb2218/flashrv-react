@@ -1,8 +1,8 @@
-// Service Worker â€” Jolof’Era PWA (cache + push)
+// Service Worker — Jolof’Era PWA (cache + push)
 const CACHE_NAME = 'jolofera-v1';
 const SHELL = ['/', '/favicon.svg', '/manifest.json'];
 
-// Install â€” pre-cache app shell
+// Install — pre-cache app shell
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL))
@@ -10,7 +10,7 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// Activate â€” purge old caches
+// Activate — purge old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
@@ -20,7 +20,7 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch â€” network-first for navigation, cache-first for assets
+// Fetch — network-first for navigation, cache-first for assets
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -28,7 +28,7 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
   if (url.pathname.startsWith('/api') || url.origin !== self.location.origin) return;
 
-  // Navigation (HTML pages) â€” network-first
+  // Navigation (HTML pages) — network-first
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
@@ -42,7 +42,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Static assets â€” cache-first
+  // Static assets — cache-first
   event.respondWith(
     caches.match(request).then((cached) => {
       if (cached) return cached;
@@ -57,7 +57,7 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// â”€â”€ Push Notifications â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- Push Notifications ----------------------------------------------
 self.addEventListener('push', (event) => {
   if (!event.data) return;
 

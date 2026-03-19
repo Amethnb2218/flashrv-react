@@ -35,73 +35,73 @@ function App() {
     <Routes>
       <Route path="/" element={<Layout />}>
         {/* Public routes */}
-        <Route index element={<><SEOHead title="Jolof’Era â€” Salon de coiffure, rÃ©servation en ligne & boutique au SÃ©nÃ©gal" description="Jolof’Era est la plateforme nÂ°1 au SÃ©nÃ©gal pour rÃ©server un salon de coiffure, un institut de beautÃ© ou commander dans une boutique en ligne Ã  Dakar." canonical="https://jolofera.com" /><Home /></>} />
-        <Route path="login" element={<><SEOHead title="Connexion â€” Jolof’Era" noindex /><Login /></>} />
-        <Route path="register" element={<><SEOHead title="Inscription â€” Jolof’Era" noindex /><Register /></>} />
-        <Route path="forgot-password" element={<><SEOHead title="Mot de passe oubliÃ© â€” Jolof’Era" noindex /><ForgotPassword /></>} />
-        <Route path="salons" element={<><SEOHead title="Salons de coiffure & boutiques Ã  Dakar â€” Jolof’Era" description="Trouvez et rÃ©servez les meilleurs salons de coiffure, barbershops, instituts de beautÃ© et boutiques Ã  Dakar, SÃ©nÃ©gal." /><Salons /></>} />
+        <Route index element={<><SEOHead title="Jolof’Era — Salon de coiffure, réservation en ligne & boutique au Sénégal" description="Jolof’Era est la plateforme n°1 au Sénégal pour réserver un salon de coiffure, un institut de beauté ou commander dans une boutique en ligne à Dakar." canonical="https://jolofera.com" /><Home /></>} />
+        <Route path="login" element={<><SEOHead title="Connexion — Jolof’Era" noindex /><Login /></>} />
+        <Route path="register" element={<><SEOHead title="Inscription — Jolof’Era" noindex /><Register /></>} />
+        <Route path="forgot-password" element={<><SEOHead title="Mot de passe oublié — Jolof’Era" noindex /><ForgotPassword /></>} />
+        <Route path="salons" element={<><SEOHead title="Salons de coiffure & boutiques à Dakar — Jolof’Era" description="Trouvez et réservez les meilleurs salons de coiffure, barbershops, instituts de beauté et boutiques à Dakar, Sénégal." /><Salons /></>} />
         <Route path="salon/:id" element={<SalonDetail />} />
-        <Route path="qr-codes" element={<><SEOHead title="QR Codes â€” Jolof’Era" noindex /><QRCodes /></>} />
+        <Route path="qr-codes" element={<><SEOHead title="QR Codes — Jolof’Era" noindex /><QRCodes /></>} />
         
         {/* Protected routes - Client */}
         <Route path="booking/:salonId" element={
           <ProtectedRoute>
-            <SEOHead title="RÃ©servation â€” Jolof’Era" noindex />
+            <SEOHead title="Réservation — Jolof’Era" noindex />
             <Booking />
           </ProtectedRoute>
         } />
         <Route path="payment" element={
           <ProtectedRoute>
-            <SEOHead title="Paiement â€” Jolof’Era" noindex />
+            <SEOHead title="Paiement — Jolof’Era" noindex />
             <Payment />
           </ProtectedRoute>
         } />
         <Route path="payment/success" element={
           <ProtectedRoute>
-            <SEOHead title="Paiement rÃ©ussi â€” Jolof’Era" noindex />
+            <SEOHead title="Paiement réussi — Jolof’Era" noindex />
             <PaymentSuccess />
           </ProtectedRoute>
         } />
         <Route path="payment/cancel" element={
           <ProtectedRoute>
-            <SEOHead title="Paiement annulÃ© â€” Jolof’Era" noindex />
+            <SEOHead title="Paiement annulé — Jolof’Era" noindex />
             <PaymentCancel />
           </ProtectedRoute>
         } />
-        <Route path="cart" element={<><SEOHead title="Panier â€” Jolof’Era" noindex /><Cart /></>} />
+        <Route path="cart" element={<><SEOHead title="Panier — Jolof’Era" noindex /><Cart /></>} />
         <Route path="order/checkout" element={
           <ProtectedRoute>
-            <SEOHead title="Commande â€” Jolof’Era" noindex />
+            <SEOHead title="Commande — Jolof’Era" noindex />
             <OrderCheckout />
           </ProtectedRoute>
         } />
         <Route path="order/receipt" element={
           <ProtectedRoute>
-            <SEOHead title="ReÃ§u de commande â€” Jolof’Era" noindex />
+            <SEOHead title="Reçu de commande — Jolof’Era" noindex />
             <OrderReceipt />
           </ProtectedRoute>
         } />
         <Route path="order/payment/success" element={
           <ProtectedRoute>
-            <SEOHead title="Paiement rÃ©ussi â€” Jolof’Era" noindex />
+            <SEOHead title="Paiement réussi — Jolof’Era" noindex />
             <OrderPaymentSuccess />
           </ProtectedRoute>
         } />
         <Route path="order/payment/cancel" element={
           <ProtectedRoute>
-            <SEOHead title="Paiement annulÃ© â€” Jolof’Era" noindex />
+            <SEOHead title="Paiement annulé — Jolof’Era" noindex />
             <OrderPaymentCancel />
           </ProtectedRoute>
         } />
         <Route path="dashboard" element={
           <ProtectedRoute>
-            <SEOHead title="Mon tableau de bord â€” Jolof’Era" noindex />
+            <SEOHead title="Mon tableau de bord — Jolof’Era" noindex />
             <ClientDashboard />
           </ProtectedRoute>
         } />
         <Route path="profile" element={
           <ProtectedRoute>
-            <SEOHead title="Mon profil â€” Jolof’Era" noindex />
+            <SEOHead title="Mon profil — Jolof’Era" noindex />
             <Profile />
           </ProtectedRoute>
         } />
@@ -109,19 +109,19 @@ function App() {
         {/* Protected routes - PRO */}
         <Route path="pro/onboarding" element={
           <ProtectedRoute requiredRole="PRO">
-            <SEOHead title="Inscription Pro â€” Jolof’Era" noindex />
+            <SEOHead title="Inscription Pro — Jolof’Era" noindex />
             <ProOnboarding />
           </ProtectedRoute>
         } />
         <Route path="pro/pending" element={
           <ProtectedRoute requiredRole="PRO">
-            <SEOHead title="En attente d'approbation â€” Jolof’Era" noindex />
+            <SEOHead title="En attente d'approbation — Jolof’Era" noindex />
             <ProPending />
           </ProtectedRoute>
         } />
         <Route path="pro/dashboard" element={
           <ProtectedRoute requiredRole="PRO" requireApproved>
-            <SEOHead title="Dashboard Pro â€” Jolof’Era" noindex />
+            <SEOHead title="Dashboard Pro — Jolof’Era" noindex />
             <CoiffeurDashboard />
           </ProtectedRoute>
         } />
@@ -132,13 +132,13 @@ function App() {
         {/* Protected routes - ADMIN */}
         <Route path={`${ADMIN_PATH_ROUTE_SEGMENT}/*`} element={
           <ProtectedRoute adminOnly>
-            <SEOHead title="Administration â€” Jolof’Era" noindex />
+            <SEOHead title="Administration — Jolof’Era" noindex />
             <AdminDashboard />
           </ProtectedRoute>
         } />
         
         {/* 404 */}
-        <Route path="*" element={<><SEOHead title="Page non trouvÃ©e â€” Jolof’Era" noindex /><NotFound /></>} />
+        <Route path="*" element={<><SEOHead title="Page non trouvée — Jolof’Era" noindex /><NotFound /></>} />
       </Route>
     </Routes>
     </>
