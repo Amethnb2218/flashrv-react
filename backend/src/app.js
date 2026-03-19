@@ -1,4 +1,4 @@
-﻿const express = require('express');
+const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
@@ -56,9 +56,9 @@ function buildCspDirectives() {
 
   const connectSrc = [
     "'self'",
-    'https://styleflow.me',
-    'https://www.styleflow.me',
-    'https://api.styleflow.me',
+    'https://jolofera.com',
+    'https://www.jolofera.com',
+    'https://api.jolofera.com',
     'https://flashrv-react-backend-xtlu2.ondigitalocean.app',
     'https://*.ondigitalocean.app',
     'https://oauth2.googleapis.com',
@@ -342,3 +342,4 @@ app.use((err, req, res, next) => {
 });
 
 module.exports = app;
+

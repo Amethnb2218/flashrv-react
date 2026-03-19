@@ -1,8 +1,8 @@
-// Service Worker — StyleFlow PWA (cache + push)
-const CACHE_NAME = 'styleflow-v1';
+// Service Worker â€” Jolof’Era PWA (cache + push)
+const CACHE_NAME = 'jolofera-v1';
 const SHELL = ['/', '/favicon.svg', '/manifest.json'];
 
-// Install — pre-cache app shell
+// Install â€” pre-cache app shell
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL))
@@ -10,7 +10,7 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// Activate — purge old caches
+// Activate â€” purge old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
@@ -20,7 +20,7 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch — network-first for navigation, cache-first for assets
+// Fetch â€” network-first for navigation, cache-first for assets
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -28,7 +28,7 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
   if (url.pathname.startsWith('/api') || url.origin !== self.location.origin) return;
 
-  // Navigation (HTML pages) — network-first
+  // Navigation (HTML pages) â€” network-first
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
@@ -42,7 +42,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Static assets — cache-first
+  // Static assets â€” cache-first
   event.respondWith(
     caches.match(request).then((cached) => {
       if (cached) return cached;
@@ -57,7 +57,7 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// ── Push Notifications ──────────────────────────────────────────────
+// â”€â”€ Push Notifications â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 self.addEventListener('push', (event) => {
   if (!event.data) return;
 
@@ -65,13 +65,13 @@ self.addEventListener('push', (event) => {
   try {
     payload = event.data.json();
   } catch {
-    payload = { title: 'StyleFlow', body: event.data.text() };
+    payload = { title: 'Jolof’Era', body: event.data.text() };
   }
 
   const { title, body, url, icon } = payload;
 
   event.waitUntil(
-    self.registration.showNotification(title || 'StyleFlow', {
+    self.registration.showNotification(title || 'Jolof’Era', {
       body: body || '',
       icon: icon || '/favicon.svg',
       badge: '/favicon.svg',
@@ -97,3 +97,4 @@ self.addEventListener('notificationclick', (event) => {
     })
   );
 });
+

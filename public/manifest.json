@@ -1,7 +1,7 @@
 {
-  "name": "StyleFlow — Salons & Boutiques",
-  "short_name": "StyleFlow",
-  "description": "Réservez votre salon de coiffure, beauté ou boutique en ligne au Sénégal",
+  "name": "Jolof’Era â€” Salons & Boutiques",
+  "short_name": "Jolof’Era",
+  "description": "RÃ©servez votre salon de coiffure, beautÃ© ou boutique en ligne au SÃ©nÃ©gal",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -45,3 +45,4 @@
     }
   ]
 }
+

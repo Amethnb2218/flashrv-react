@@ -287,9 +287,9 @@ const createPaydunyaPaymentForBooking = async ({
     invoice = await createPaydunyaInvoice({
       amount: value,
       bookingId,
-      customerName: customerName || user.name || 'Client StyleFlow',
+      customerName: customerName || user.name || 'Client Jolof’Era',
       customerEmail: customerEmail || user.email || '',
-      description: `Reservation ${booking.service?.name || 'Salon'} - ${booking.salon?.name || 'StyleFlow'}`,
+      description: `Reservation ${booking.service?.name || 'Salon'} - ${booking.salon?.name || 'Jolof’Era'}`,
       successUrl: resolvedSuccessUrl,
       cancelUrl: resolvedCancelUrl,
       callbackUrl,
@@ -372,9 +372,9 @@ const createPaydunyaPaymentForOrder = async ({
     invoice = await createPaydunyaInvoice({
       amount: value,
       bookingId: orderId,
-      customerName: customerName || user.name || 'Client StyleFlow',
+      customerName: customerName || user.name || 'Client Jolof’Era',
       customerEmail: customerEmail || user.email || '',
-      description: `Commande ${itemLabel || 'Boutique'} - ${order.salon?.name || 'StyleFlow'}`,
+      description: `Commande ${itemLabel || 'Boutique'} - ${order.salon?.name || 'Jolof’Era'}`,
       successUrl: resolvedSuccessUrl,
       cancelUrl: resolvedCancelUrl,
       callbackUrl,
@@ -937,3 +937,4 @@ router.get('/me', authenticate, async (req, res, next) => {
 // until Wave API key is obtained and axios is added to dependencies.
 
 module.exports = router;
+

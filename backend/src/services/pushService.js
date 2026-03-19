@@ -3,13 +3,13 @@ const prisma = require('../lib/prisma');
 
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY;
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
-const VAPID_MAILTO = process.env.VAPID_MAILTO || 'mailto:contact@styleflow.me';
+const VAPID_MAILTO = process.env.VAPID_MAILTO || 'mailto:contact@jolofera.com';
 
 if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
   webpush.setVapidDetails(VAPID_MAILTO, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
   console.log('Web Push VAPID configured');
 } else {
-  console.warn('VAPID keys not set — Web Push disabled');
+  console.warn('VAPID keys not set â€” Web Push disabled');
 }
 
 /**
@@ -23,7 +23,7 @@ async function sendPushToUser(userId, { title, body, url, icon }) {
   if (!subs.length) return;
 
   const payload = JSON.stringify({
-    title: title || 'StyleFlow',
+    title: title || 'Jolof’Era',
     body: body || '',
     url: url || '/',
     icon: icon || '/favicon.svg',
@@ -56,3 +56,4 @@ async function sendPushToUser(userId, { title, body, url, icon }) {
 }
 
 module.exports = { sendPushToUser, VAPID_PUBLIC_KEY };
+

@@ -16,21 +16,21 @@ const QR_PRESETS = [
     id: 'salons',
     name: 'Liste des salons',
     path: '/salons',
-    description: 'Découvrir tous les salons',
+    description: 'DÃ©couvrir tous les salons',
     color: '#10B981',
   },
   {
     id: 'register',
     name: 'Inscription',
     path: '/register',
-    description: 'Créer un compte client',
+    description: 'CrÃ©er un compte client',
     color: '#8B5CF6',
   },
   {
     id: 'booking',
-    name: 'Réservation rapide',
+    name: 'RÃ©servation rapide',
     path: '/booking',
-    description: 'Réserver directement',
+    description: 'RÃ©server directement',
     color: '#F59E0B',
   },
 ]
@@ -39,12 +39,12 @@ const QR_SIZES = [
   { label: 'Petit (128px)', value: 128 },
   { label: 'Moyen (256px)', value: 256 },
   { label: 'Grand (512px)', value: 512 },
-  { label: 'Très grand (1024px)', value: 1024 },
+  { label: 'TrÃ¨s grand (1024px)', value: 1024 },
 ]
 
 const QR_COLORS = [
   { label: 'Noir', value: '#000000' },
-  { label: 'Bleu StyleFlow', value: '#3B82F6' },
+  { label: 'Bleu Jolof’Era', value: '#3B82F6' },
   { label: 'Vert', value: '#10B981' },
   { label: 'Violet', value: '#8B5CF6' },
   { label: 'Orange', value: '#F59E0B' },
@@ -52,7 +52,7 @@ const QR_COLORS = [
 ]
 
 export default function QRCodes() {
-  // URL de base du site (à changer en production)
+  // URL de base du site (Ã  changer en production)
   const baseUrl = window.location.origin
   
   const [selectedPreset, setSelectedPreset] = useState(QR_PRESETS[0])
@@ -70,19 +70,19 @@ export default function QRCodes() {
     ? `${baseUrl}${customPath.startsWith('/') ? customPath : '/' + customPath}`
     : `${baseUrl}${selectedPreset.path}`
   
-  // Télécharger en PNG
+  // TÃ©lÃ©charger en PNG
   const downloadPNG = () => {
     const canvas = document.getElementById('qr-canvas')
     if (canvas) {
       const url = canvas.toDataURL('image/png')
       const link = document.createElement('a')
       link.href = url
-      link.download = `styleflow-qrcode-${selectedPreset.id}-${qrSize}px.png`
+      link.download = `jolofera-qrcode-${selectedPreset.id}-${qrSize}px.png`
       link.click()
     }
   }
   
-  // Télécharger en SVG
+  // TÃ©lÃ©charger en SVG
   const downloadSVG = () => {
     const svg = document.getElementById('qr-svg')
     if (svg) {
@@ -91,7 +91,7 @@ export default function QRCodes() {
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
-      link.download = `styleflow-qrcode-${selectedPreset.id}.svg`
+      link.download = `jolofera-qrcode-${selectedPreset.id}.svg`
       link.click()
       URL.revokeObjectURL(url)
     }
@@ -117,11 +117,11 @@ export default function QRCodes() {
             <HiOutlineQrcode className="w-8 h-8 text-blue-600" />
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-primary-900 mb-4">
-            Générateur de QR Codes
+            GÃ©nÃ©rateur de QR Codes
           </h1>
           <p className="text-primary-600 max-w-2xl mx-auto">
-            Créez des QR codes personnalisés pour vos affiches, cartes de visite, 
-            flyers et supports marketing. Scannez pour accéder directement à StyleFlow !
+            CrÃ©ez des QR codes personnalisÃ©s pour vos affiches, cartes de visite, 
+            flyers et supports marketing. Scannez pour accÃ©der directement Ã  Jolof’Era !
           </p>
         </motion.div>
         
@@ -172,7 +172,7 @@ export default function QRCodes() {
             {/* Custom URL */}
             <div className="mb-6">
               <label className="block text-sm font-medium text-primary-700 mb-2">
-                Ou URL personnalisée
+                Ou URL personnalisÃ©e
               </label>
               <input
                 type="text"
@@ -259,7 +259,7 @@ export default function QRCodes() {
                 className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
               />
               <label htmlFor="include-logo" className="text-sm text-primary-700">
-                Inclure le logo StyleFlow au centre
+                Inclure le logo Jolof’Era au centre
               </label>
             </div>
             
@@ -295,7 +295,7 @@ export default function QRCodes() {
             className="bg-white rounded-2xl shadow-lg p-6"
           >
             <h2 className="text-xl font-semibold text-primary-900 mb-6">
-              Aperçu & Téléchargement
+              AperÃ§u & TÃ©lÃ©chargement
             </h2>
             
             {/* QR Code Preview */}
@@ -360,14 +360,14 @@ export default function QRCodes() {
             {/* Tips */}
             <div className="bg-blue-50 rounded-lg p-4">
               <h3 className="font-medium text-blue-900 mb-2">
-                💡 Conseils d'utilisation
+                ðŸ’¡ Conseils d'utilisation
               </h3>
               <ul className="text-sm text-blue-800 space-y-1">
-                <li>• <strong>Affiches</strong> : Utilisez la taille 512px ou 1024px</li>
-                <li>• <strong>Cartes de visite</strong> : 256px suffit</li>
-                <li>• <strong>SVG</strong> : Idéal pour l'impression haute qualité</li>
-                <li>• <strong>PNG</strong> : Parfait pour le web et réseaux sociaux</li>
-                <li>• Testez toujours le QR code avant impression !</li>
+                <li>â€¢ <strong>Affiches</strong> : Utilisez la taille 512px ou 1024px</li>
+                <li>â€¢ <strong>Cartes de visite</strong> : 256px suffit</li>
+                <li>â€¢ <strong>SVG</strong> : IdÃ©al pour l'impression haute qualitÃ©</li>
+                <li>â€¢ <strong>PNG</strong> : Parfait pour le web et rÃ©seaux sociaux</li>
+                <li>â€¢ Testez toujours le QR code avant impression !</li>
               </ul>
             </div>
           </motion.div>
@@ -381,40 +381,40 @@ export default function QRCodes() {
           className="mt-12 max-w-6xl mx-auto"
         >
           <h2 className="text-2xl font-bold text-primary-900 mb-6 text-center">
-            Idées d'utilisation
+            IdÃ©es d'utilisation
           </h2>
           
           <div className="grid md:grid-cols-3 gap-6">
             {[
               {
                 title: 'Affiches dans le salon',
-                description: 'Placez un QR code près de la caisse pour que les clients puissent réserver leur prochain rendez-vous',
-                icon: '🪧',
+                description: 'Placez un QR code prÃ¨s de la caisse pour que les clients puissent rÃ©server leur prochain rendez-vous',
+                icon: 'ðŸª§',
               },
               {
                 title: 'Cartes de visite',
                 description: 'Ajoutez un petit QR code au dos de vos cartes de visite professionnelles',
-                icon: '💳',
+                icon: 'ðŸ’³',
               },
               {
                 title: 'Flyers & Prospectus',
                 description: 'Distribuez des flyers avec QR code dans le quartier pour attirer de nouveaux clients',
-                icon: '📄',
+                icon: 'ðŸ“„',
               },
               {
                 title: 'Vitrine du salon',
                 description: 'Collez un grand QR code sur la vitrine pour les passants',
-                icon: '🏪',
+                icon: 'ðŸª',
               },
               {
-                title: 'Réseaux sociaux',
+                title: 'RÃ©seaux sociaux',
                 description: 'Partagez le QR code dans vos stories Instagram et Facebook',
-                icon: '📱',
+                icon: 'ðŸ“±',
               },
               {
                 title: 'Tables d\'attente',
                 description: 'Posez des supports avec QR code sur les tables de la salle d\'attente',
-                icon: '🪑',
+                icon: 'ðŸª‘',
               },
             ].map((item, index) => (
               <div
@@ -432,3 +432,4 @@ export default function QRCodes() {
     </div>
   )
 }
+

@@ -29,24 +29,24 @@ const STT_MODEL = process.env.OPENAI_STT_MODEL || 'gpt-4o-mini-transcribe';
 const TTS_MODEL = process.env.OPENAI_TTS_MODEL || 'gpt-4o-mini-tts';
 
 const SITE_CAPABILITIES = `
-StyleFlow (côté client) :
-- Trouver des salons et voir leurs détails.
-- Réserver un rendez-vous (service, date/heure, confirmation).
+Jolof’Era (cÃ´tÃ© client) :
+- Trouver des salons et voir leurs dÃ©tails.
+- RÃ©server un rendez-vous (service, date/heure, confirmation).
 - Payer un acompte puis payer le reste au salon.
-- Consulter son dashboard client (réservations à venir/historique).
-- Modifier son profil (nom, email, téléphone, adresse).
-- Utiliser le chat client <-> salon pendant le suivi de réservation.
-- Laisser un avis après prestation.
+- Consulter son dashboard client (rÃ©servations Ã  venir/historique).
+- Modifier son profil (nom, email, tÃ©lÃ©phone, adresse).
+- Utiliser le chat client <-> salon pendant le suivi de rÃ©servation.
+- Laisser un avis aprÃ¨s prestation.
 `;
 
 const SYSTEM_PROMPT = `
-Tu es l'assistant client de StyleFlow.
-Règles:
+Tu es l'assistant client de Jolof’Era.
+RÃ¨gles:
 - Tu aides UNIQUEMENT les clients et visiteurs.
-- Tu ne donnes pas de procédures internes pro/admin.
-- Réponses courtes, concrètes, orientées action.
-- Si l'utilisateur parle en wolof, réponds en wolof simple. Sinon, réponds en français.
-- Si tu n'es pas sûr, dis-le clairement et propose l'étape la plus utile.
+- Tu ne donnes pas de procÃ©dures internes pro/admin.
+- RÃ©ponses courtes, concrÃ¨tes, orientÃ©es action.
+- Si l'utilisateur parle en wolof, rÃ©ponds en wolof simple. Sinon, rÃ©ponds en franÃ§ais.
+- Si tu n'es pas sÃ»r, dis-le clairement et propose l'Ã©tape la plus utile.
 Contexte plateforme:
 ${SITE_CAPABILITIES}
 `;
@@ -60,23 +60,23 @@ const normalize = (value) =>
 
 function fallbackAssistantReply(message) {
   const text = normalize(message);
-  if (!text) return 'Je suis là pour vous guider. Posez votre question.';
+  if (!text) return 'Je suis lÃ  pour vous guider. Posez votre question.';
   if (text.includes('naka') || text.includes('salam') || text.includes('na nga def')) {
     return 'Mangi fi rek. Maa ngi lay dimbali ci reservation, salons ak compte client.';
   }
   if (text.includes('reserv') || text.includes('rdv') || text.includes('book')) {
-    return 'Pour réserver: allez sur Salons, ouvrez un salon, cliquez sur Réserver, choisissez service puis créneau.';
+    return 'Pour rÃ©server: allez sur Salons, ouvrez un salon, cliquez sur RÃ©server, choisissez service puis crÃ©neau.';
   }
   if (text.includes('paiement') || text.includes('acompte')) {
-    return "Le paiement se fait en deux parties: acompte en ligne puis reste à payer au salon.";
+    return "Le paiement se fait en deux parties: acompte en ligne puis reste Ã  payer au salon.";
   }
   if (text.includes('profil') || text.includes('email') || text.includes('telephone')) {
-    return 'Pour modifier vos infos: ouvrez Profil, mettez à jour les champs puis cliquez sur Enregistrer.';
+    return 'Pour modifier vos infos: ouvrez Profil, mettez Ã  jour les champs puis cliquez sur Enregistrer.';
   }
   if (text.includes('dashboard') || text.includes('historique')) {
-    return 'Votre dashboard client affiche vos rendez-vous à venir et votre historique.';
+    return 'Votre dashboard client affiche vos rendez-vous Ã  venir et votre historique.';
   }
-  return 'Je peux vous aider pour réserver, payer, suivre vos rendez-vous et gérer votre profil.';
+  return 'Je peux vous aider pour rÃ©server, payer, suivre vos rendez-vous et gÃ©rer votre profil.';
 }
 
 function extractResponseText(data) {
@@ -243,3 +243,4 @@ router.post('/speak', authenticate, assistantHeavyLimiter, async (req, res, next
 });
 
 module.exports = router;
+

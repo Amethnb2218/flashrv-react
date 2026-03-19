@@ -72,7 +72,7 @@ const ensureConfigured = () => {
   const mode = normalizeMode(process.env.PAYDUNYA_MODE);
   const baseUrl = mode === 'live' ? PAYDUNYA_LIVE_BASE_URL : PAYDUNYA_TEST_BASE_URL;
   const store = {
-    name: process.env.PAYDUNYA_STORE_NAME || 'StyleFlow',
+    name: process.env.PAYDUNYA_STORE_NAME || 'Jolof’Era',
     tagline: process.env.PAYDUNYA_STORE_TAGLINE || 'Paiement securise des reservations',
     phone_number: process.env.PAYDUNYA_STORE_PHONE || '',
     postal_address: process.env.PAYDUNYA_STORE_ADDRESS || '',
@@ -293,3 +293,4 @@ module.exports = {
   createPaydunyaInvoice,
   confirmPaydunyaInvoice,
 };
+

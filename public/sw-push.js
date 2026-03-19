@@ -1,4 +1,4 @@
-// Service Worker for Web Push Notifications — StyleFlow
+// Service Worker for Web Push Notifications â€” Jolof’Era
 self.addEventListener('push', (event) => {
   if (!event.data) return;
 
@@ -6,13 +6,13 @@ self.addEventListener('push', (event) => {
   try {
     payload = event.data.json();
   } catch {
-    payload = { title: 'StyleFlow', body: event.data.text() };
+    payload = { title: 'Jolof’Era', body: event.data.text() };
   }
 
   const { title, body, url, icon } = payload;
 
   event.waitUntil(
-    self.registration.showNotification(title || 'StyleFlow', {
+    self.registration.showNotification(title || 'Jolof’Era', {
       body: body || '',
       icon: icon || '/favicon.svg',
       badge: '/favicon.svg',
@@ -38,3 +38,4 @@ self.addEventListener('notificationclick', (event) => {
     })
   );
 });
+

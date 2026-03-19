@@ -13,4 +13,5 @@ User-agent: Bingbot
 Allow: /
 Crawl-delay: 2
 
-Sitemap: https://styleflow.me/sitemap.xml
+Sitemap: https://jolofera.com/sitemap.xml
+
