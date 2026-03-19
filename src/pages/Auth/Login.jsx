@@ -114,7 +114,7 @@ function Login() {
           <div className="text-center mb-8">
             <Link to="/" className="inline-flex items-center space-x-2 mb-6">
               <div className="w-12 h-12 bg-gradient-to-br from-primary-600 to-accent-500 rounded-full flex items-center justify-center shadow-lg">
-                <span className="text-white font-bold text-2xl" style={{ fontFamily: "'Poppins', sans-serif" }}>F</span>
+                <span className="text-white font-bold text-2xl" style={{ fontFamily: "'Poppins', sans-serif" }}>J</span>
               </div>
             </Link>
             <h1 className="text-3xl font-bold text-primary-900 dark:text-white">Bon retour !</h1>
@@ -227,7 +227,7 @@ function Login() {
         <div className="absolute inset-0 bg-gradient-to-br from-dark-900/80 to-accent-700/80" />
         <div className="absolute inset-0 flex items-center justify-center p-12">
           <div className="text-center text-white">
-            <h2 className="text-4xl font-bold mb-4">Style • Flow</h2>
+            <h2 className="text-4xl font-bold mb-4">Jolof'Era</h2>
             <p className="text-xl text-primary-100">La beauté à portée de clic</p>
           </div>
         </div>

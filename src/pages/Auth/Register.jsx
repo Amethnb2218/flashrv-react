@@ -106,7 +106,7 @@ function Register() {
         <div className="absolute bottom-20 right-20 w-80 h-80 bg-gold-300/15 rounded-full blur-3xl"></div>
         <div className="absolute inset-0 flex items-start justify-center p-12 pt-20 xl:pt-24">
           <div className="text-center text-white">
-            <h2 className="text-4xl font-bold mb-4">Rejoignez Style • Flow</h2>
+            <h2 className="text-4xl font-bold mb-4">Rejoignez Jolof'Era</h2>
             <p className="text-xl text-primary-100 mb-8">
               {formData.role === 'pro'
                 ? 'Développez votre activité salon ou boutique'
@@ -146,12 +146,12 @@ function Register() {
           <div className="text-center mb-8">
             <Link to="/" className="inline-flex items-center space-x-2 mb-6">
               <div className="w-12 h-12 bg-gradient-to-br from-primary-600 to-accent-500 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-2xl">F</span>
+                <span className="text-white font-bold text-2xl">J</span>
               </div>
             </Link>
             <h1 className="text-3xl font-bold text-primary-900 dark:text-white">Créer un compte</h1>
             <p className="mt-2 text-primary-600 dark:text-gray-400">
-              Rejoignez la communauté Style • Flow
+              Rejoignez la communauté Jolof'Era
             </p>
           </div>
 

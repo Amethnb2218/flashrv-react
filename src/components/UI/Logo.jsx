@@ -30,7 +30,7 @@ function Logo({ variant = 'default', size = 'md', showTagline = true }) {
               <stop offset="50%" stopColor="#262626" />
               <stop offset="100%" stopColor="#404040" />
             </linearGradient>
-            <linearGradient id="flashGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#facc15" />
               <stop offset="100%" stopColor="#eab308" />
             </linearGradient>
@@ -61,16 +61,16 @@ function Logo({ variant = 'default', size = 'md', showTagline = true }) {
             opacity="0.25"
           />
 
-          {/* Letter F - Bold */}
+          {/* Letter J */}
           <path
-            d="M16 12H32V17H22V21H30V26H22V36H16V12Z"
+            d="M32 12H21.6V17H26.6V29.2C26.6 31.9 25.1 33.5 22.8 33.5C20.9 33.5 19.5 32.7 18.4 31.3L14.4 34.6C16.5 37.4 19.4 38.8 23 38.8C28.8 38.8 32 35.3 32 29.4V12Z"
             fill="white"
           />
 
-          {/* Flash symbol */}
+          {/* Apostrophe accent */}
           <path
-            d="M30 10L26 20H32L25 30L28 22H23L30 10Z"
-            fill="url(#flashGradient)"
+            d="M16.6 9.1C18 9.1 19.1 10.2 19.1 11.6C19.1 13 18 14.1 16.6 14.1C15.3 14.1 14.2 13 14.2 11.6C14.2 10.2 15.3 9.1 16.6 9.1ZM18.7 13.8L16.6 19H20.1L22.2 13.8H18.7Z"
+            fill="url(#accentGradient)"
             filter="url(#glow)"
           />
         </svg>
@@ -125,7 +125,7 @@ export function LogoIcon({ size = 40 }) {
           <stop offset="40%" stopColor="#262626" />
           <stop offset="100%" stopColor="#404040" />
         </linearGradient>
-        <linearGradient id="flashGradientIcon" x1="0%" y1="0%" x2="100%" y2="100%">
+        <linearGradient id="accentGradientIcon" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#fcd34d" />
           <stop offset="100%" stopColor="#fbbf24" />
         </linearGradient>
@@ -133,8 +133,8 @@ export function LogoIcon({ size = 40 }) {
 
       <rect x="2" y="2" width="44" height="44" rx="14" fill="url(#logoGradientIcon)" />
       <path d="M10 8C10 5.79086 11.7909 4 14 4H26C28.2091 4 30 5.79086 30 8V10H14C11.7909 10 10 11.7909 10 14V8Z" fill="white" opacity="0.25" />
-      <path d="M16 12H32V17H22V21H30V26H22V36H16V12Z" fill="white" />
-      <path d="M30 10L26 20H32L25 30L28 22H23L30 10Z" fill="url(#flashGradientIcon)" />
+      <path d="M32 12H21.6V17H26.6V29.2C26.6 31.9 25.1 33.5 22.8 33.5C20.9 33.5 19.5 32.7 18.4 31.3L14.4 34.6C16.5 37.4 19.4 38.8 23 38.8C28.8 38.8 32 35.3 32 29.4V12Z" fill="white" />
+      <path d="M16.6 9.1C18 9.1 19.1 10.2 19.1 11.6C19.1 13 18 14.1 16.6 14.1C15.3 14.1 14.2 13 14.2 11.6C14.2 10.2 15.3 9.1 16.6 9.1ZM18.7 13.8L16.6 19H20.1L22.2 13.8H18.7Z" fill="url(#accentGradientIcon)" />
     </svg>
   )
 }
