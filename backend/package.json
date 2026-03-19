@@ -10,6 +10,8 @@
     "db:migrate": "npx prisma migrate dev",
     "db:generate": "npx prisma generate",
     "db:push": "npx prisma db push",
+    "db:publish-salons": "node scripts/publishSalons.js",
+    "db:reset-marketplace": "node scripts/resetMarketplace.js",
     "db:studio": "npx prisma studio",
     "postinstall": "npx prisma generate"
   },

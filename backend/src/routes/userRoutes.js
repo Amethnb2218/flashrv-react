@@ -2,14 +2,14 @@ const express = require('express');
 const router = express.Router();
 const prisma = require('../lib/prisma');
 const { authenticate, authorize } = require('../middleware/auth');
-const { cloudinary } = require('../config/cloudinary');
+const { cloudinary, cloudinaryFolders, extractCloudinaryPublicId } = require('../config/cloudinary');
 const multer = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 const avatarStorage = new CloudinaryStorage({
   cloudinary,
   params: {
-    folder: 'styleflow/avatars',
+    folder: cloudinaryFolders.avatars,
     allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
     transformation: [{ width: 400, height: 400, crop: 'fill', gravity: 'face', quality: 'auto' }],
   },
@@ -130,9 +130,10 @@ router.delete('/delete-avatar', authenticate, async (req, res, next) => {
   try {
     const user = await prisma.user.findUnique({ where: { id: req.user.id }, select: { picture: true } });
     if (user?.picture && user.picture.includes('cloudinary')) {
-      const parts = user.picture.split('/');
-      const publicId = 'styleflow/avatars/' + parts[parts.length - 1].split('.')[0];
-      try { await cloudinary.uploader.destroy(publicId); } catch (e) { /* ignore */ }
+      const publicId = extractCloudinaryPublicId(user.picture);
+      if (publicId) {
+        try { await cloudinary.uploader.destroy(publicId); } catch (e) { /* ignore */ }
+      }
     }
     await prisma.user.update({
       where: { id: req.user.id },

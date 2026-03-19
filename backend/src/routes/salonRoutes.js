@@ -9,7 +9,12 @@ const path = require('path');
 const fs = require('fs');
 const { uploadsDir, uploadsSubdir } = require('../utils/paths');
 const { pushNotification } = require('../realtime/hub');
-const { uploadGallery, uploadSalonImage: cloudinarySalonUpload, cloudinary } = require('../config/cloudinary');
+const {
+  uploadGallery,
+  uploadSalonImage: cloudinarySalonUpload,
+  cloudinary,
+  extractCloudinaryPublicId,
+} = require('../config/cloudinary');
 
 const attachServiceImages = async (salon) => {
   if (!salon || !Array.isArray(salon.services) || salon.services.length === 0) {
@@ -94,9 +99,8 @@ router.delete('/:salonId/gallery/:imageId', authenticate, async (req, res, next)
     // Delete from Cloudinary if it's a Cloudinary URL, else try local file
     if (image.url && image.url.includes('cloudinary.com')) {
       try {
-        const parts = image.url.split('/upload/');
-        if (parts[1]) {
-          const publicId = parts[1].replace(/^v\d+\//, '').replace(/\.[^.]+$/, '');
+        const publicId = extractCloudinaryPublicId(image.url);
+        if (publicId) {
           await cloudinary.uploader.destroy(publicId);
         }
       } catch (e) { /* ignore cloudinary delete errors */ }
@@ -298,8 +302,10 @@ router.patch('/me', authenticate, async (req, res, next) => {
  */
 router.get('/', optionalAuth, async (req, res, next) => {
   try {
-    const { city, salonType, search, page = 1, limit = 10, ownerId } = req.query;
+    const { city, salonType, search, page = 1, limit = 10, ownerId, includeClosed } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
+    const showClosed = String(includeClosed || '').trim().toLowerCase();
+    const includeClosedSalons = showClosed === '1' || showClosed === 'true' || showClosed === 'yes';
 
     const searchValue = typeof search === 'string' ? search.trim() : '';
     const searchVariants = searchValue
@@ -312,11 +318,13 @@ router.get('/', optionalAuth, async (req, res, next) => {
       : [];
 
     const where = {
-      isOpen: true,
+      ...(includeClosedSalons ? {} : { isOpen: true }),
+      status: STATUS.APPROVED,
       ...(ownerId && { ownerId }),
       owner: {
         status: STATUS.APPROVED,
-        role: ROLES.PRO,
+        role: { in: [ROLES.PRO, 'SALON_OWNER'] },
+        isPublic: true,
       },
       ...(city && { city: { contains: city } }),
       ...(salonType && { salonType }),
