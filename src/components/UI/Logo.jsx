@@ -11,7 +11,7 @@ const ICON_FRAME_CLASS =
 const ICON_GLOW_CLASS =
   'absolute inset-0 rounded-2xl bg-[linear-gradient(180deg,rgba(255,255,255,0.14),transparent_36%)]'
 const ICON_IMAGE_CLASS =
-  'absolute inset-0 h-full w-full object-cover object-center scale-[2.74] invert contrast-[1.9] brightness-[1.04] saturate-0 opacity-100'
+  'absolute inset-0 h-full w-full object-cover object-center scale-[2.92] invert contrast-[1.9] brightness-[1.04] saturate-0 opacity-100'
 
 // Logo Jolof'Era
 function Logo({ variant = 'default', size = 'md', showTagline = true, forceIconText = false }) {
