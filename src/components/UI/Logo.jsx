@@ -48,7 +48,7 @@ function Logo({ variant = 'default', size = 'md', showTagline = true, forceIconT
             <img
               src={BRAND_ASSETS.icon}
               alt="Jolof'Era icon"
-              className="w-full h-full object-cover object-center scale-[1.24]"
+              className="w-full h-full object-cover object-center scale-[1.42]"
               onError={() => setIconLogoFailed(true)}
               loading="eager"
               decoding="async"
@@ -164,7 +164,7 @@ export function LogoIcon({ size = 40 }) {
           alt="Jolof'Era icon"
           width={size}
           height={size}
-          className="w-full h-full object-cover object-center scale-[1.24]"
+          className="w-full h-full object-cover object-center scale-[1.42]"
           onError={() => setIconLogoFailed(true)}
           loading="eager"
           decoding="async"
