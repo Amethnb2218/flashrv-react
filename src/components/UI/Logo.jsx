@@ -1,4 +1,10 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
+
+const BRAND_ASSETS = {
+  full: '/brand/logo-full.png',
+  icon: '/brand/logo-icon.png',
+}
 
 // Logo Jolof'Era
 function Logo({ variant = 'default', size = 'md', showTagline = true }) {
@@ -11,69 +17,99 @@ function Logo({ variant = 'default', size = 'md', showTagline = true }) {
 
   const s = sizes[size] || sizes.md
   const isLight = variant === 'light'
+  const fullLogoHeights = {
+    sm: 'h-9',
+    md: 'h-11',
+    lg: 'h-14',
+    xl: 'h-20',
+  }
+  const [fullLogoFailed, setFullLogoFailed] = useState(false)
+  const [iconLogoFailed, setIconLogoFailed] = useState(false)
 
   return (
     <Link to="/" className="flex items-center space-x-3 group select-none">
+      {!fullLogoFailed ? (
+        <img
+          src={BRAND_ASSETS.full}
+          alt="Jolof'Era"
+          className={`${fullLogoHeights[size] || fullLogoHeights.md} w-auto object-contain transition-all duration-300 group-hover:scale-[1.02]`}
+          onError={() => setFullLogoFailed(true)}
+          loading="eager"
+          decoding="async"
+        />
+      ) : (
+        <>
       {/* Logo icon */}
       <div className="relative">
-        <svg
-          className={`${s.logo} transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_16px_#facc15] drop-shadow-lg`}
-          viewBox="0 0 48 48"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          aria-label="Logo Jolof'Era"
-        >
-          {/* Black and gold gradients */}
-          <defs>
-            <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#171717" />
-              <stop offset="50%" stopColor="#262626" />
-              <stop offset="100%" stopColor="#404040" />
-            </linearGradient>
-            <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#facc15" />
-              <stop offset="100%" stopColor="#eab308" />
-            </linearGradient>
-            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="2" result="coloredBlur" />
-              <feMerge>
-                <feMergeNode in="coloredBlur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
-
-          {/* Main rounded square background */}
-          <rect
-            x="2"
-            y="2"
-            width="44"
-            height="44"
-            rx="14"
-            fill="url(#logoGradient)"
-            filter="url(#glow)"
+        {!iconLogoFailed ? (
+          <img
+            src={BRAND_ASSETS.icon}
+            alt="Jolof'Era icon"
+            className={`${s.logo} object-cover rounded-2xl transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_16px_#facc15] drop-shadow-lg`}
+            onError={() => setIconLogoFailed(true)}
+            loading="eager"
+            decoding="async"
           />
+        ) : (
+          <svg
+            className={`${s.logo} transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_16px_#facc15] drop-shadow-lg`}
+            viewBox="0 0 48 48"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-label="Logo Jolof'Era"
+          >
+            {/* Black and gold gradients */}
+            <defs>
+              <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#171717" />
+                <stop offset="50%" stopColor="#262626" />
+                <stop offset="100%" stopColor="#404040" />
+              </linearGradient>
+              <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#facc15" />
+                <stop offset="100%" stopColor="#eab308" />
+              </linearGradient>
+              <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+                <feMerge>
+                  <feMergeNode in="coloredBlur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
 
-          {/* Shine effect */}
-          <path
-            d="M10 8C10 5.79086 11.7909 4 14 4H26C28.2091 4 30 5.79086 30 8V10H14C11.7909 10 10 11.7909 10 14V8Z"
-            fill="white"
-            opacity="0.25"
-          />
+            {/* Main rounded square background */}
+            <rect
+              x="2"
+              y="2"
+              width="44"
+              height="44"
+              rx="14"
+              fill="url(#logoGradient)"
+              filter="url(#glow)"
+            />
 
-          {/* Letter J */}
-          <path
-            d="M32 12H21.6V17H26.6V29.2C26.6 31.9 25.1 33.5 22.8 33.5C20.9 33.5 19.5 32.7 18.4 31.3L14.4 34.6C16.5 37.4 19.4 38.8 23 38.8C28.8 38.8 32 35.3 32 29.4V12Z"
-            fill="white"
-          />
+            {/* Shine effect */}
+            <path
+              d="M10 8C10 5.79086 11.7909 4 14 4H26C28.2091 4 30 5.79086 30 8V10H14C11.7909 10 10 11.7909 10 14V8Z"
+              fill="white"
+              opacity="0.25"
+            />
 
-          {/* Apostrophe accent */}
-          <path
-            d="M16.6 9.1C18 9.1 19.1 10.2 19.1 11.6C19.1 13 18 14.1 16.6 14.1C15.3 14.1 14.2 13 14.2 11.6C14.2 10.2 15.3 9.1 16.6 9.1ZM18.7 13.8L16.6 19H20.1L22.2 13.8H18.7Z"
-            fill="url(#accentGradient)"
-            filter="url(#glow)"
-          />
-        </svg>
+            {/* Letter J */}
+            <path
+              d="M32 12H21.6V17H26.6V29.2C26.6 31.9 25.1 33.5 22.8 33.5C20.9 33.5 19.5 32.7 18.4 31.3L14.4 34.6C16.5 37.4 19.4 38.8 23 38.8C28.8 38.8 32 35.3 32 29.4V12Z"
+              fill="white"
+            />
+
+            {/* Apostrophe accent */}
+            <path
+              d="M16.6 9.1C18 9.1 19.1 10.2 19.1 11.6C19.1 13 18 14.1 16.6 14.1C15.3 14.1 14.2 13 14.2 11.6C14.2 10.2 15.3 9.1 16.6 9.1ZM18.7 13.8L16.6 19H20.1L22.2 13.8H18.7Z"
+              fill="url(#accentGradient)"
+              filter="url(#glow)"
+            />
+          </svg>
+        )}
       </div>
 
       {/* Brand text */}
@@ -104,12 +140,30 @@ function Logo({ variant = 'default', size = 'md', showTagline = true }) {
           </span>
         )}
       </div>
+        </>
+      )}
     </Link>
   )
 }
 
 // Logo icon seul (favicon, app icon, etc.)
 export function LogoIcon({ size = 40 }) {
+  const [iconLogoFailed, setIconLogoFailed] = useState(false)
+  if (!iconLogoFailed) {
+    return (
+      <img
+        src={BRAND_ASSETS.icon}
+        alt="Jolof'Era icon"
+        width={size}
+        height={size}
+        className="drop-shadow-lg rounded-2xl object-cover"
+        onError={() => setIconLogoFailed(true)}
+        loading="eager"
+        decoding="async"
+      />
+    )
+  }
+
   return (
     <svg
       width={size}
