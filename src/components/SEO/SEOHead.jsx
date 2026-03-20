@@ -1,13 +1,13 @@
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 
-const BASE_URL = 'https://jolofera.com'
-const SEO_TITLE_MAX = 58
+const BASE_URL = 'https://www.jolofera.com'
+const SEO_TITLE_MAX = 50
 const SEO_DESC_MIN = 70
-const SEO_DESC_MAX = 155
-const DEFAULT_TITLE = "Jolof'Era | Salons & boutiques au Senegal"
+const SEO_DESC_MAX = 140
+const DEFAULT_TITLE = "Jolof'Era | Reservation salons Dakar"
 const DEFAULT_DESCRIPTION =
-  "Reservez un salon de coiffure ou commandez en boutique a Dakar avec Jolof'Era. Disponibilites en ligne, confirmation rapide et paiement securise."
+  "Reservez un salon de coiffure ou une boutique a Dakar avec Jolof'Era. Disponibilites en ligne et confirmation rapide."
 
 const normalizeTitle = (value) => {
   const raw = String(value || '').trim() || DEFAULT_TITLE
