@@ -7,11 +7,11 @@ const BRAND_ASSETS = {
 }
 
 const ICON_FRAME_CLASS =
-  'absolute inset-0 rounded-2xl overflow-hidden bg-[linear-gradient(145deg,#2b1d12_0%,#6a4822_34%,#b68432_70%,#f3cb67_100%)] shadow-[0_12px_28px_rgba(99,63,17,0.24)]'
+  'absolute inset-0 rounded-2xl overflow-hidden bg-[linear-gradient(145deg,#ffffff_0%,#f7f3ec_58%,#efe7da_100%)] shadow-[0_12px_28px_rgba(15,23,42,0.12)] ring-1 ring-black/8'
 const ICON_GLOW_CLASS =
-  'absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_28%_20%,rgba(255,247,222,0.42),transparent_36%),linear-gradient(180deg,rgba(255,255,255,0.16),transparent_48%)]'
+  'absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_28%_20%,rgba(255,255,255,0.7),transparent_38%),linear-gradient(180deg,rgba(255,255,255,0.22),transparent_48%)]'
 const ICON_IMAGE_CLASS =
-  'absolute -inset-[4%] h-[108%] w-[108%] object-cover object-center scale-[2.62] mix-blend-screen brightness-110 contrast-125 saturate-0 opacity-95'
+  'absolute -inset-[4%] h-[108%] w-[108%] object-cover object-center scale-[2.62] invert brightness-[0.22] contrast-[1.35] saturate-0 opacity-100'
 
 // Logo Jolof'Era
 function Logo({ variant = 'default', size = 'md', showTagline = true, forceIconText = false }) {
