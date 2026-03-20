@@ -652,6 +652,11 @@ function FeedbackWidget({ onClose, defaultType = 'suggestion' }) {
     }
   }
 
+  const labelClass = 'block text-sm font-medium text-primary-700 dark:text-[#e9dccb] mb-2'
+  const fieldClass = 'w-full px-4 py-3 border border-primary-200 dark:border-[#5a4735] rounded-xl bg-white dark:bg-[#2b2017] text-primary-900 dark:text-[#f6ecdf] placeholder:text-primary-400 dark:placeholder-[#d2bfa8] focus:ring-2 focus:ring-gold-500 focus:border-transparent'
+  const textareaClass = `${fieldClass} resize-none`
+  const hintClass = 'text-sm text-primary-600 dark:text-[#d6c4ad]'
+
   if (submitted) {
     return (
       <motion.div
@@ -701,21 +706,21 @@ function FeedbackWidget({ onClose, defaultType = 'suggestion' }) {
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 w-10 h-10 rounded-full border border-primary-200 flex items-center justify-center hover:bg-primary-50"
+          className="absolute top-4 right-4 w-10 h-10 rounded-full border border-primary-200 dark:border-[#6b5744] flex items-center justify-center hover:bg-primary-50 dark:hover:bg-[#31261d] transition-colors"
           aria-label="Fermer le formulaire"
         >
-          <FiX className="w-5 h-5 text-primary-600" />
+          <FiX className="w-5 h-5 text-primary-600 dark:text-[#f0e4d3]" />
         </button>
       )}
-      <div className="grid sm:grid-cols-3 border-b border-primary-100">
+      <div className="grid sm:grid-cols-3 border-b border-primary-100 dark:border-[#4a3a2c]">
         {types.map((type) => (
           <button
             key={type.id}
             onClick={() => setFeedbackType(type.id)}
             className={`flex items-center justify-center gap-2 py-4 px-4 text-sm font-medium transition-all ${
               feedbackType === type.id
-                ? 'bg-gold-50 text-primary-900 border-b-2 border-gold-500'
-                : 'text-primary-500 hover:bg-primary-50'
+                ? 'bg-gold-50 dark:bg-gold-500/15 text-primary-900 dark:text-gold-200 border-b-2 border-gold-500 dark:border-gold-400'
+                : 'text-primary-500 dark:text-[#cdb89d] hover:bg-primary-50 dark:hover:bg-[#2b2119]'
             }`}
           >
             <span className="text-gold-500">{type.icon}</span>
@@ -726,7 +731,7 @@ function FeedbackWidget({ onClose, defaultType = 'suggestion' }) {
 
       <form onSubmit={handleSubmit} className="p-6 sm:p-8">
         <div className="mb-6">
-          <p className="text-sm text-primary-600">
+          <p className={hintClass}>
             {types.find((t) => t.id === feedbackType)?.hint}
           </p>
         </div>
@@ -734,43 +739,43 @@ function FeedbackWidget({ onClose, defaultType = 'suggestion' }) {
         {feedbackType === 'bug' && (
           <div className="grid md:grid-cols-2 gap-5">
             <div>
-              <label className="block text-sm font-medium text-primary-700 mb-2">Page concernée</label>
+              <label className={labelClass}>Page concernée</label>
               <input
                 value={form.page}
                 onChange={(e) => updateField('page', e.target.value)}
-                className="w-full px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                className={fieldClass}
                 placeholder="/salon/..."
               />
               {errors.page && <p className="text-xs text-red-600 mt-1">{errors.page}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-primary-700 mb-2">Étapes pour reproduire</label>
+              <label className={labelClass}>Étapes pour reproduire</label>
               <input
                 value={form.steps}
                 onChange={(e) => updateField('steps', e.target.value)}
-                className="w-full px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                className={fieldClass}
                 placeholder="Ex. ouvrir, cliquer, ..."
               />
               {errors.steps && <p className="text-xs text-red-600 mt-1">{errors.steps}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-primary-700 mb-2">Résultat attendu</label>
+              <label className={labelClass}>Résultat attendu</label>
               <textarea
                 value={form.expected}
                 onChange={(e) => updateField('expected', e.target.value)}
                 rows={3}
-                className="w-full resize-none px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                className={textareaClass}
                 placeholder="Ce que vous vouliez voir"
               />
               {errors.expected && <p className="text-xs text-red-600 mt-1">{errors.expected}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-primary-700 mb-2">Résultat obtenu</label>
+              <label className={labelClass}>Résultat obtenu</label>
               <textarea
                 value={form.actual}
                 onChange={(e) => updateField('actual', e.target.value)}
                 rows={3}
-                className="w-full resize-none px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                className={textareaClass}
                 placeholder="Ce qui s'est réellement passé"
               />
               {errors.actual && <p className="text-xs text-red-600 mt-1">{errors.actual}</p>}
@@ -781,23 +786,23 @@ function FeedbackWidget({ onClose, defaultType = 'suggestion' }) {
         {feedbackType === 'suggestion' && (
           <div className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-primary-700 mb-2">Votre idée</label>
+              <label className={labelClass}>Votre idée</label>
               <textarea
                 value={form.idea}
                 onChange={(e) => updateField('idea', e.target.value)}
                 rows={4}
-                className="w-full resize-none px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                className={textareaClass}
                 placeholder="Décrivez l'amélioration que vous aimeriez"
               />
               {errors.idea && <p className="text-xs text-red-600 mt-1">{errors.idea}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-primary-700 mb-2">Bénéfice attendu</label>
+              <label className={labelClass}>Bénéfice attendu</label>
               <textarea
                 value={form.benefit}
                 onChange={(e) => updateField('benefit', e.target.value)}
                 rows={3}
-                className="w-full resize-none px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                className={textareaClass}
                 placeholder="Pourquoi est-ce utile pour vous ?"
               />
             </div>
@@ -807,22 +812,22 @@ function FeedbackWidget({ onClose, defaultType = 'suggestion' }) {
         {feedbackType === 'problem' && (
           <div className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-primary-700 mb-2">Quel problème rencontrez-vous ?</label>
+              <label className={labelClass}>Quel problème rencontrez-vous ?</label>
               <textarea
                 value={form.problem}
                 onChange={(e) => updateField('problem', e.target.value)}
                 rows={4}
-                className="w-full resize-none px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                className={textareaClass}
                 placeholder="Décrivez ce qui vous bloque"
               />
               {errors.problem && <p className="text-xs text-red-600 mt-1">{errors.problem}</p>}
             </div>
             <div>
-              <label className="block text-sm font-medium text-primary-700 mb-2">Impact</label>
+              <label className={labelClass}>Impact</label>
               <select
                 value={form.impact}
                 onChange={(e) => updateField('impact', e.target.value)}
-                className="w-full px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+                className={fieldClass}
               >
                 <option value="bloquant">Bloquant</option>
                 <option value="gênant">Gênant</option>
@@ -834,17 +839,17 @@ function FeedbackWidget({ onClose, defaultType = 'suggestion' }) {
         )}
 
         <div className="mt-6">
-          <label className="block text-sm font-medium text-primary-700 mb-2">Contact (optionnel)</label>
+          <label className={labelClass}>Contact (optionnel)</label>
           <input
             value={form.contact}
             onChange={(e) => updateField('contact', e.target.value)}
-            className="w-full px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-gold-500 focus:border-transparent"
+            className={fieldClass}
             placeholder="email@exemple.com"
           />
         </div>
 
         <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <p className="text-xs text-primary-400">
+          <p className="text-xs text-primary-400 dark:text-[#cab69d]">
             Nous répondons aux problèmes critiques sous 48h ouvrées.
           </p>
           <button
