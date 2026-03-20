@@ -86,8 +86,14 @@ function Home() {
   const featuredBoutiqueGridClass = getFeaturedGridClass(featuredBoutiques.length, loadingSalons)
   const centerSalonsGrid = !loadingSalons && featuredSalons.length === 1
   const centerBoutiquesGrid = !loadingSalons && featuredBoutiques.length === 1
+  const tightenBoutiquesGrid = !loadingSalons && featuredBoutiques.length === 2
   const featuredSalonWrapClass = 'w-full max-w-[430px] mx-auto'
   const featuredBoutiqueWrapClass = 'w-full max-w-[380px] mx-auto'
+  const featuredBoutiqueContainerClass = tightenBoutiquesGrid
+    ? 'mx-auto max-w-[790px]'
+    : centerBoutiquesGrid
+      ? 'mx-auto max-w-md'
+      : ''
 
   const totalReviews = salons.reduce((sum, s) => sum + (s.reviewCount || 0), 0)
   const avgRating = salons.length
@@ -409,7 +415,7 @@ function Home() {
             </Link>
           </div>
 
-          <div className={`grid ${featuredBoutiqueGridClass} gap-3 justify-items-center ${centerBoutiquesGrid ? 'mx-auto max-w-md' : ''}`}>
+          <div className={`grid ${featuredBoutiqueGridClass} gap-3 justify-items-center ${featuredBoutiqueContainerClass}`}>
             {loadingSalons ? (
               [1, 2, 3].map((i) => (
                 <div key={i} className={`${featuredBoutiqueWrapClass} bg-white dark:bg-[#1d1712] rounded-xl border border-primary-100 dark:border-[#46382a] p-3 animate-pulse`}>
