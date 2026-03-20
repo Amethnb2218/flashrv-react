@@ -9,9 +9,9 @@ const BRAND_ASSETS = {
 const ICON_FRAME_CLASS =
   'absolute inset-0 rounded-2xl overflow-hidden bg-white dark:bg-[#15110d] shadow-[0_12px_28px_rgba(15,23,42,0.12)] ring-1 ring-black/10 dark:ring-white/10'
 const ICON_GLOW_CLASS =
-  'absolute inset-0 rounded-2xl bg-[linear-gradient(180deg,rgba(255,255,255,0.12),transparent_38%)] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.05),transparent_34%)]'
+  'absolute inset-0 rounded-2xl bg-[linear-gradient(180deg,rgba(255,255,255,0.08),transparent_34%)] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.03),transparent_28%)]'
 const ICON_IMAGE_CLASS =
-  'absolute inset-0 h-full w-full object-cover object-center scale-[2.3] invert contrast-[2.05] brightness-[0.42] saturate-0 opacity-100 drop-shadow-[0_0_0.65px_rgba(12,12,12,0.98)] drop-shadow-[0_0_1.1px_rgba(12,12,12,0.92)]'
+  'absolute inset-0 h-full w-full object-cover object-center scale-[2.42] invert mix-blend-multiply contrast-[3] brightness-[0.3] saturate-0 opacity-100'
 
 // Logo Jolof'Era
 function Logo({ variant = 'default', size = 'md', showTagline = true, forceIconText = false }) {
