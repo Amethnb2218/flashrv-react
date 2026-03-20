@@ -242,7 +242,7 @@ function Salons() {
       </div>
       
       {/* Header */}
-      <div className="relative z-10 bg-gradient-to-r from-primary-900 via-primary-800 to-primary-900 py-10 overflow-hidden">
+      <div className="relative z-10 bg-gradient-to-r from-primary-900 via-primary-800 to-primary-900 py-4 sm:py-7 md:py-10 overflow-hidden">
         {/* Decorative elements */}
         <div className="absolute inset-0">
           <div className="absolute top-0 left-1/4 w-64 h-64 bg-gold-500/10 rounded-full blur-3xl"></div>
@@ -254,18 +254,18 @@ function Salons() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: reduceMotion ? 0 : 0.45 }}
           >
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            <h1 className="text-[1.75rem] sm:text-3xl md:text-4xl font-bold text-white mb-1.5 sm:mb-4 leading-tight">
               {filters.businessType === 'BOUTIQUE' ? 'Trouvez votre boutique' : 'Trouvez votre salon idéal'}
             </h1>
-            <p className="text-primary-100 mb-6">
+            <p className="text-sm sm:text-base text-primary-100 mb-2.5 sm:mb-6">
               {filteredSalons.length} établissement{filteredSalons.length > 1 ? 's' : ''} disponible{filteredSalons.length > 1 ? 's' : ''}
             </p>
 
             {/* Type toggle - Categories */}
-            <div className="flex flex-wrap gap-2 mb-4">
+            <div className="flex sm:flex-wrap gap-2 mb-2.5 sm:mb-4 overflow-x-auto sm:overflow-visible whitespace-nowrap sm:whitespace-normal scrollbar-hide pb-1">
               <button
                 onClick={() => { updateFilter('type', ''); updateFilter('salonType', ''); updateFilter('businessType', ''); }}
-                className={`px-4 py-2 rounded-full font-medium text-sm transition-all ${
+                className={`shrink-0 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full font-medium text-xs sm:text-sm transition-all ${
                   filters.type === '' && filters.salonType === '' && filters.businessType === ''
                     ? 'bg-white text-primary-900 shadow-lg' 
                     : 'bg-white/20 text-white hover:bg-white/30'
@@ -275,7 +275,7 @@ function Salons() {
               </button>
               <button
                 onClick={() => { updateFilter('type', ''); updateFilter('salonType', 'coiffure'); updateFilter('businessType', ''); }}
-                className={`px-4 py-2 rounded-full font-medium text-sm transition-all ${
+                className={`shrink-0 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full font-medium text-xs sm:text-sm transition-all ${
                   filters.salonType === 'coiffure' 
                     ? 'bg-white text-primary-900 shadow-lg' 
                     : 'bg-white/20 text-white hover:bg-white/30'
@@ -285,7 +285,7 @@ function Salons() {
               </button>
               <button
                 onClick={() => { updateFilter('type', ''); updateFilter('salonType', 'beaute'); updateFilter('businessType', ''); }}
-                className={`px-4 py-2 rounded-full font-medium text-sm transition-all ${
+                className={`shrink-0 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full font-medium text-xs sm:text-sm transition-all ${
                   filters.salonType === 'beaute' 
                     ? 'bg-white text-primary-900 shadow-lg' 
                     : 'bg-white/20 text-white hover:bg-white/30'
@@ -295,7 +295,7 @@ function Salons() {
               </button>
               <button
                 onClick={() => { updateFilter('type', ''); updateFilter('salonType', 'mixte'); updateFilter('businessType', ''); }}
-                className={`px-4 py-2 rounded-full font-medium text-sm transition-all ${
+                className={`shrink-0 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full font-medium text-xs sm:text-sm transition-all ${
                   filters.salonType === 'mixte' 
                     ? 'bg-white text-primary-900 shadow-lg' 
                     : 'bg-white/20 text-white hover:bg-white/30'
@@ -305,7 +305,7 @@ function Salons() {
               </button>
               <button
                 onClick={() => { updateFilter('type', 'barber'); updateFilter('salonType', ''); updateFilter('businessType', ''); }}
-                className={`px-4 py-2 rounded-full font-medium text-sm transition-all ${
+                className={`shrink-0 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full font-medium text-xs sm:text-sm transition-all ${
                   filters.type === 'barber' 
                     ? 'bg-white text-primary-900 shadow-lg' 
                     : 'bg-white/20 text-white hover:bg-white/30'
@@ -315,7 +315,7 @@ function Salons() {
               </button>
               <button
                 onClick={() => { updateFilter('type', 'shooting'); updateFilter('salonType', ''); updateFilter('businessType', ''); }}
-                className={`flex items-center gap-1 px-4 py-2 rounded-full font-medium text-sm transition-all ${
+                className={`shrink-0 flex items-center gap-1 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full font-medium text-xs sm:text-sm transition-all ${
                   filters.type === 'shooting' 
                     ? 'bg-white text-primary-900 shadow-lg' 
                     : 'bg-white/20 text-white hover:bg-white/30'
@@ -326,7 +326,7 @@ function Salons() {
               </button>
               <button
                 onClick={() => { updateFilter('type', ''); updateFilter('salonType', ''); updateFilter('businessType', 'BOUTIQUE'); }}
-                className={`flex items-center gap-1 px-4 py-2 rounded-full font-medium text-sm transition-all ${
+                className={`shrink-0 flex items-center gap-1 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full font-medium text-xs sm:text-sm transition-all ${
                   filters.businessType === 'BOUTIQUE' 
                     ? 'bg-gold-500 text-white shadow-lg' 
                     : 'bg-white/20 text-white hover:bg-white/30'
@@ -338,7 +338,7 @@ function Salons() {
             </div>
 
             {/* Search bar */}
-            <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex flex-col md:flex-row gap-2.5 sm:gap-4">
               <div className="flex-1 relative">
                 <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-primary-400 w-5 h-5" />
                 <input
@@ -347,7 +347,7 @@ function Salons() {
                   value={filters.search}
                   onChange={(e) => updateFilter('search', e.target.value)}
                   placeholder="Rechercher un salon, un service..."
-                  className="w-full pl-12 pr-4 py-3 rounded-xl bg-white/95 shadow-sm border border-white/30 focus:ring-2 focus:ring-gold-400 focus:border-transparent"
+                  className="w-full pl-12 pr-4 py-2.5 sm:py-3 rounded-xl bg-white/95 shadow-sm border border-white/30 focus:ring-2 focus:ring-gold-400 focus:border-transparent"
                 />
               </div>
               <QuartierSelector
@@ -356,7 +356,7 @@ function Salons() {
               />
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className={`flex items-center justify-center space-x-2 px-6 py-3 rounded-xl font-medium transition-colors ${
+                className={`flex items-center justify-center space-x-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl font-medium transition-colors ${
                   showFilters || activeFiltersCount > 0
                     ? 'bg-white text-primary-600'
                     : 'bg-white/20 text-white hover:bg-white/30'
@@ -372,7 +372,7 @@ function Salons() {
               </button>
             </div>
             {activeChips.length > 0 && (
-              <div className="mt-4 flex flex-wrap gap-2">
+              <div className="mt-2.5 sm:mt-4 flex flex-wrap gap-2">
                 {activeChips.map((chip) => (
                   <button
                     key={`${chip.key}-${chip.label}`}
