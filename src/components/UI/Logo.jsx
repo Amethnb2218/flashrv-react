@@ -3,17 +3,13 @@ import { Link } from 'react-router-dom'
 
 const BRAND_ASSETS = {
   full: '/brand/logo-full.png',
-  icon: '/brand/logo-icon.png',
+  icon: '/brand/logo-icon-transparent.png',
 }
 
-const ICON_FRAME_CLASS =
-  'absolute inset-0 rounded-2xl overflow-hidden bg-transparent shadow-none ring-0'
-const ICON_GLOW_CLASS =
-  'absolute inset-0 rounded-2xl bg-transparent'
 const LIGHT_ICON_IMAGE_CLASS =
-  'absolute inset-0 h-full w-full object-cover object-center scale-[3.12] invert mix-blend-multiply contrast-[1.9] brightness-[0.92] saturate-0 opacity-100 dark:hidden'
+  'absolute inset-0 h-full w-full object-contain object-center scale-[1.24] invert contrast-[1.4] brightness-[0.42] saturate-0 opacity-100 dark:hidden'
 const DARK_ICON_IMAGE_CLASS =
-  'absolute inset-0 hidden h-full w-full object-cover object-center scale-[3.12] mix-blend-screen contrast-[1.08] brightness-[1.18] saturate-0 opacity-100 dark:block'
+  'absolute inset-0 hidden h-full w-full object-contain object-center scale-[1.24] contrast-[1.02] brightness-[1.08] saturate-0 opacity-100 dark:block'
 
 // Logo Jolof'Era
 function Logo({ variant = 'default', size = 'md', showTagline = true, forceIconText = false }) {
@@ -56,9 +52,7 @@ function Logo({ variant = 'default', size = 'md', showTagline = true, forceIconT
       {/* Logo icon */}
       <div className="relative">
         {!iconLogoFailed ? (
-          <div className={`${s.logo} relative overflow-hidden rounded-2xl transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_16px_#facc15]`}>
-            <div className={ICON_FRAME_CLASS} />
-            <div className={ICON_GLOW_CLASS} />
+          <div className={`${s.logo} relative overflow-hidden rounded-2xl bg-transparent transition-all duration-300 group-hover:scale-110`}>
             <img
               src={BRAND_ASSETS.icon}
               alt="Jolof'Era icon"
@@ -178,11 +172,9 @@ export function LogoIcon({ size = 40 }) {
   if (!iconLogoFailed) {
     return (
       <div
-        className="relative overflow-hidden rounded-2xl drop-shadow-lg"
+        className="relative overflow-hidden rounded-2xl bg-transparent drop-shadow-lg"
         style={{ width: size, height: size }}
       >
-        <div className={ICON_FRAME_CLASS} />
-        <div className={ICON_GLOW_CLASS} />
         <img
           src={BRAND_ASSETS.icon}
           alt="Jolof'Era icon"
