@@ -10,8 +10,10 @@ const ICON_FRAME_CLASS =
   'absolute inset-0 rounded-2xl overflow-hidden bg-transparent shadow-none ring-0'
 const ICON_GLOW_CLASS =
   'absolute inset-0 rounded-2xl bg-transparent'
-const ICON_IMAGE_CLASS =
-  'absolute inset-0 h-full w-full object-cover object-center scale-[3.12] invert contrast-[1.9] brightness-[1.04] saturate-0 opacity-100'
+const LIGHT_ICON_IMAGE_CLASS =
+  'absolute inset-0 h-full w-full object-cover object-center scale-[3.12] invert mix-blend-multiply contrast-[1.9] brightness-[0.92] saturate-0 opacity-100 dark:hidden'
+const DARK_ICON_IMAGE_CLASS =
+  'absolute inset-0 hidden h-full w-full object-cover object-center scale-[3.12] mix-blend-screen contrast-[1.08] brightness-[1.18] saturate-0 opacity-100 dark:block'
 
 // Logo Jolof'Era
 function Logo({ variant = 'default', size = 'md', showTagline = true, forceIconText = false }) {
@@ -60,7 +62,15 @@ function Logo({ variant = 'default', size = 'md', showTagline = true, forceIconT
             <img
               src={BRAND_ASSETS.icon}
               alt="Jolof'Era icon"
-              className={ICON_IMAGE_CLASS}
+              className={LIGHT_ICON_IMAGE_CLASS}
+              onError={() => setIconLogoFailed(true)}
+              loading="eager"
+              decoding="async"
+            />
+            <img
+              src={BRAND_ASSETS.icon}
+              alt="Jolof'Era icon"
+              className={DARK_ICON_IMAGE_CLASS}
               onError={() => setIconLogoFailed(true)}
               loading="eager"
               decoding="async"
@@ -178,7 +188,17 @@ export function LogoIcon({ size = 40 }) {
           alt="Jolof'Era icon"
           width={size}
           height={size}
-          className={ICON_IMAGE_CLASS}
+          className={LIGHT_ICON_IMAGE_CLASS}
+          onError={() => setIconLogoFailed(true)}
+          loading="eager"
+          decoding="async"
+        />
+        <img
+          src={BRAND_ASSETS.icon}
+          alt="Jolof'Era icon"
+          width={size}
+          height={size}
+          className={DARK_ICON_IMAGE_CLASS}
           onError={() => setIconLogoFailed(true)}
           loading="eager"
           decoding="async"
