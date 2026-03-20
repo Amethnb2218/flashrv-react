@@ -44,14 +44,16 @@ function Logo({ variant = 'default', size = 'md', showTagline = true, forceIconT
       {/* Logo icon */}
       <div className="relative">
         {!iconLogoFailed ? (
-          <img
-            src={BRAND_ASSETS.icon}
-            alt="Jolof'Era icon"
-            className={`${s.logo} object-cover rounded-2xl transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_16px_#facc15] drop-shadow-lg`}
-            onError={() => setIconLogoFailed(true)}
-            loading="eager"
-            decoding="async"
-          />
+          <div className={`${s.logo} rounded-2xl overflow-hidden transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_16px_#facc15] drop-shadow-lg`}>
+            <img
+              src={BRAND_ASSETS.icon}
+              alt="Jolof'Era icon"
+              className="w-full h-full object-cover object-center scale-[1.24]"
+              onError={() => setIconLogoFailed(true)}
+              loading="eager"
+              decoding="async"
+            />
+          </div>
         ) : (
           <svg
             className={`${s.logo} transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_16px_#facc15] drop-shadow-lg`}
@@ -153,16 +155,21 @@ export function LogoIcon({ size = 40 }) {
   const [iconLogoFailed, setIconLogoFailed] = useState(false)
   if (!iconLogoFailed) {
     return (
-      <img
-        src={BRAND_ASSETS.icon}
-        alt="Jolof'Era icon"
-        width={size}
-        height={size}
-        className="drop-shadow-lg rounded-2xl object-cover"
-        onError={() => setIconLogoFailed(true)}
-        loading="eager"
-        decoding="async"
-      />
+      <div
+        className="drop-shadow-lg rounded-2xl overflow-hidden"
+        style={{ width: size, height: size }}
+      >
+        <img
+          src={BRAND_ASSETS.icon}
+          alt="Jolof'Era icon"
+          width={size}
+          height={size}
+          className="w-full h-full object-cover object-center scale-[1.24]"
+          onError={() => setIconLogoFailed(true)}
+          loading="eager"
+          decoding="async"
+        />
+      </div>
     )
   }
 
