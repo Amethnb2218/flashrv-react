@@ -86,7 +86,7 @@ function SalonCard({ salon, index = 0, variant = 'featured' }) {
   const typeBadge = getSalonTypeBadge()
   const isList = variant === 'list'
   const ctaLabel = isBoutique ? 'Voir les articles' : isList ? 'Voir disponibilités' : 'Réserver'
-  const imageHeight = isList ? 'h-32 md:h-36' : 'h-52 sm:h-60'
+  const imageHeight = isList ? 'h-32 md:h-36' : 'h-36 sm:h-40'
   const cardClass = 'bg-white dark:bg-[#1d1712] rounded-xl overflow-hidden shadow-md dark:shadow-black/30 hover:shadow-xl transition-all duration-300 border border-primary-100 dark:border-[#46382a] group hover:-translate-y-0.5'
 
   return (
@@ -153,17 +153,17 @@ function SalonCard({ salon, index = 0, variant = 'featured' }) {
         </div>
 
         {/* Content */}
-        <div className="p-3">
-          <h3 className="font-semibold text-sm sm:text-base text-primary-900 dark:text-[#f3e8d9] group-hover:text-gold-600 dark:group-hover:text-gold-300 transition-colors mb-1 truncate">
+        <div className="p-2.5">
+          <h3 className="font-semibold text-sm sm:text-base text-primary-900 dark:text-[#f3e8d9] group-hover:text-gold-600 dark:group-hover:text-gold-300 transition-colors mb-0.5 truncate">
             {salon.name}
           </h3>
 
-          <div className="flex items-center text-primary-500 dark:text-[#cfbca4] text-xs sm:text-sm mb-1">
+          <div className="flex items-center text-primary-500 dark:text-[#cfbca4] text-xs sm:text-sm mb-0.5">
             <FiMapPin className="w-3 h-3 mr-1 text-primary-400 dark:text-[#ab967c] flex-shrink-0" />
             <span className="truncate">{neighborhood}{salon.city ? `, ${salon.city}` : ''}</span>
           </div>
 
-          <div className="flex items-center text-xs sm:text-sm mb-2">
+          <div className="flex items-center text-xs sm:text-sm mb-1.5">
             <FiClock className="w-3 h-3 mr-1 text-primary-400 dark:text-[#ab967c] flex-shrink-0" />
             {todayHours ? (
               isOpen ? (
@@ -180,7 +180,7 @@ function SalonCard({ salon, index = 0, variant = 'featured' }) {
 
           {/* Specialties */}
           {specialties.length > 0 && (
-            <div className="flex flex-wrap gap-1 mb-2">
+            <div className="flex flex-wrap gap-1 mb-1.5">
               {specialties.slice(0, 2).map((specialty, i) => (
                 <span
                   key={i}
@@ -193,7 +193,7 @@ function SalonCard({ salon, index = 0, variant = 'featured' }) {
           )}
 
           {/* Price */}
-          <div className="pt-2 border-t border-primary-100 dark:border-[#46382a] flex items-center justify-between">
+          <div className="pt-1.5 border-t border-primary-100 dark:border-[#46382a] flex items-center justify-between">
             <div>
               <span className="text-xs sm:text-sm text-primary-500 dark:text-[#cfbca4]">
                 Dès <span className="font-bold text-primary-900 dark:text-[#f3e8d9]">{minPriceLabel}</span>
