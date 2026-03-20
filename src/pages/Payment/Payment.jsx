@@ -332,24 +332,24 @@ function Payment() {
         </div>
       )}
 
-      <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-8">
+      <div className="relative z-10 max-w-4xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="mb-5 sm:mb-8">
           <button
             onClick={() => navigate(-1)}
             disabled={loading || paymentStatus === 'pending_confirmation'}
-            className="flex items-center text-primary-600 hover:text-primary-900 transition-colors mb-4 disabled:opacity-50"
+            className="flex items-center text-primary-600 hover:text-primary-900 transition-colors mb-2 sm:mb-4 disabled:opacity-50"
           >
             <FiChevronLeft className="w-5 h-5 mr-1" />
             Retour
           </button>
-          <h1 className="text-2xl sm:text-3xl font-bold text-primary-900">Paiement</h1>
-          <p className="text-primary-600 mt-2">Finalisez votre reservation en toute securite</p>
+          <h1 className="text-xl sm:text-3xl font-bold text-primary-900">Paiement</h1>
+          <p className="text-sm sm:text-base text-primary-600 mt-1 sm:mt-2">Finalisez votre reservation en toute securite</p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-5 sm:gap-8">
+        <div className="grid md:grid-cols-2 gap-3 sm:gap-8">
           <div>
-            <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6">
-              <h2 className="text-xl font-bold text-primary-900 mb-6">Mode de paiement</h2>
+            <div className="bg-white rounded-2xl shadow-sm p-3 sm:p-6">
+              <h2 className="text-lg sm:text-xl font-bold text-primary-900 mb-3 sm:mb-6">Mode de paiement</h2>
 
               <div className="space-y-3">
                 {availablePaymentMethods.map((method) => (
@@ -358,21 +358,21 @@ function Payment() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => setSelectedMethod(method.id)}
-                    className={`w-full flex items-center p-4 border-2 rounded-xl transition-all ${
+                    className={`w-full flex items-center p-3 sm:p-4 border-2 rounded-xl transition-all ${
                       selectedMethod === method.id
                         ? 'border-primary-600 bg-primary-50'
                         : 'border-primary-200 hover:border-primary-300'
                     }`}
                   >
-                    <span className="text-sm sm:text-base mr-4 px-2.5 py-1 rounded-full bg-primary-100 font-semibold text-primary-700">
+                    <span className="text-sm sm:text-base mr-3 px-2 py-1 rounded-full bg-primary-100 font-semibold text-primary-700">
                       {method.icon}
                     </span>
                     <div className="text-left flex-1">
                       <p className="font-semibold text-primary-900">{method.name}</p>
-                      <p className="text-sm text-primary-500">{method.description}</p>
+                      <p className="text-xs sm:text-sm text-primary-500">{method.description}</p>
                     </div>
                     {selectedMethod === method.id && (
-                      <FiCheck className="w-6 h-6 text-primary-600" />
+                      <FiCheck className="w-5 h-5 text-primary-600" />
                     )}
                   </motion.button>
                 ))}
@@ -388,20 +388,20 @@ function Payment() {
           </div>
 
           <div>
-            <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 md:sticky md:top-24">
-              <h2 className="text-xl font-bold text-primary-900 mb-6">Recapitulatif</h2>
+            <div className="bg-white rounded-2xl shadow-sm p-3 sm:p-6 md:sticky md:top-24">
+              <h2 className="text-lg sm:text-xl font-bold text-primary-900 mb-3 sm:mb-6">Recapitulatif</h2>
 
-              <div className="rounded-3xl border border-primary-100 overflow-hidden shadow-[0_20px_60px_-45px_rgba(17,24,39,0.45)]">
-                <div className="bg-gradient-to-br from-primary-900 via-primary-800 to-gold-700 px-5 py-5 text-white">
+              <div className="rounded-2xl sm:rounded-3xl border border-primary-100 overflow-hidden shadow-[0_20px_60px_-45px_rgba(17,24,39,0.45)]">
+                <div className="bg-gradient-to-br from-primary-900 via-primary-800 to-gold-700 px-4 py-4 sm:px-5 sm:py-5 text-white">
                   <div className="flex items-center gap-4">
                     {salonImage ? (
                       <img
                         src={salonImage}
                         alt={bookingState.salon.name}
-                        className="w-16 h-16 rounded-2xl object-cover border border-white/20"
+                        className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover border border-white/20"
                       />
                     ) : (
-                      <div className="w-16 h-16 rounded-2xl bg-white/12 backdrop-blur flex items-center justify-center text-white font-bold text-2xl border border-white/10">
+                      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white/12 backdrop-blur flex items-center justify-center text-white font-bold text-2xl border border-white/10">
                         {bookingState.salon.name?.charAt(0) || 'S'}
                       </div>
                     )}
@@ -413,8 +413,8 @@ function Payment() {
                   </div>
                 </div>
 
-                <div className="bg-white px-5 py-5">
-                  <div className="pb-5 border-b border-primary-100">
+                <div className="bg-white px-4 py-4 sm:px-5 sm:py-5">
+                  <div className="pb-4 sm:pb-5 border-b border-primary-100">
                     <div className="flex items-center justify-between mb-3">
                       <h4 className="font-semibold text-primary-900">Services</h4>
                       <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-primary-100 text-primary-600">
@@ -436,7 +436,7 @@ function Payment() {
                     </div>
                   </div>
 
-                  <div className="py-5 border-b border-primary-100 space-y-3">
+                  <div className="py-4 sm:py-5 border-b border-primary-100 space-y-3">
                     <div className="flex justify-between items-center gap-4 text-sm">
                       <span className="text-primary-500">Date</span>
                       <span className="font-semibold text-primary-900 text-right">
@@ -457,14 +457,14 @@ function Payment() {
                     </div>
                   </div>
 
-                  <div className="pt-5 space-y-4">
+                  <div className="pt-4 sm:pt-5 space-y-4">
                     <div className="flex justify-between text-sm text-primary-600">
                       <span>Total services</span>
                       <span className="font-semibold text-primary-900">{bookingState.totalPrice.toLocaleString()} FCFA</span>
                     </div>
 
                     {hasDeposit && selectedMethod && selectedMethod !== 'pay_on_site' ? (
-                      <div className="rounded-2xl bg-gradient-to-br from-gold-50 to-orange-50 border border-gold-100 p-4">
+                      <div className="rounded-2xl bg-gradient-to-br from-gold-50 to-orange-50 border border-gold-100 p-3.5 sm:p-4">
                         <div className="flex justify-between items-start gap-3 mb-3">
                           <div>
                             <p className="text-sm font-semibold text-primary-900">
@@ -482,7 +482,7 @@ function Payment() {
                         </div>
                       </div>
                     ) : (
-                      <div className="rounded-2xl bg-primary-50 border border-primary-100 p-4 space-y-3">
+                      <div className="rounded-2xl bg-primary-50 border border-primary-100 p-3.5 sm:p-4 space-y-3">
                         <div className="flex justify-between items-center gap-4">
                           <span className="text-lg font-bold text-primary-900">{hasDeposit ? 'Total' : 'Aucun acompte requis'}</span>
                           <span className="text-2xl font-black text-primary-900">
@@ -511,7 +511,7 @@ function Payment() {
               <button
                 onClick={handlePayment}
                 disabled={loading || !selectedMethod || paymentStatus === 'pending_confirmation'}
-                className="w-full py-4 px-3 bg-gradient-to-r from-primary-600 to-accent-600 text-white font-semibold text-sm sm:text-base rounded-xl hover:from-primary-700 hover:to-accent-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-center"
+                className="w-full py-3.5 sm:py-4 px-3 bg-gradient-to-r from-primary-600 to-accent-600 text-white font-semibold text-sm sm:text-base rounded-xl hover:from-primary-700 hover:to-accent-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-center"
               >
                 {loading ? (
                   <LoadingSpinner size="sm" />

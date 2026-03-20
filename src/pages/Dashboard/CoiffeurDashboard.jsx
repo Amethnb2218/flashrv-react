@@ -4263,59 +4263,113 @@ Annuler
 <Card>
 <CardHeader icon={<FiDollarSign />} title="Paiements" />
 <div className="p-3 sm:p-5">
-{/* ? petit fix: afficher payments si dispo, sinon fallback appointments (tu ne perds aucune donnée) */}
-<DataTable
-emptyLabel="Aucun paiement"
-columns={[
-{ key: "clientName", label: "Client" },
-{ key: "serviceName", label: "Service" },
-{ key: "amount", label: "Total", render: (r) => <span className="font-extrabold">{formatMoney(r.amount)}</span> },
-{
-key: "deposit",
-label: "Acompte",
-render: (r) => {
-const dep = Math.round((r.amount * (r.depositPct || 0)) / 100);
+{(() => {
+const paymentRows = payments.length ? payments : appointments;
+if (!paymentRows?.length) {
+  return <EmptyState icon={<FiDollarSign />} title="Aucun paiement" />;
+}
 return (
-<div className="flex items-center gap-2">
-<Badge tone={r.depositPaid ? "blue" : "gray"}>{r.depositPct || 0}%</Badge>
-<span className="text-sm text-primary-700 font-semibold">{formatMoney(dep)}</span>
-</div>
+<>
+  <div className="space-y-2 sm:hidden">
+    {paymentRows.map((r) => {
+      const dep = Math.round((r.amount * (r.depositPct || 0)) / 100);
+      const tone =
+        r.paymentStatus === "paid"
+          ? "green"
+          : r.paymentStatus === "deposit_paid"
+            ? "blue"
+            : r.paymentStatus === "refunded"
+              ? "red"
+              : "gray";
+      return (
+        <div key={r.id} className="rounded-2xl border border-primary-100 bg-white p-3 shadow-sm">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="font-bold text-primary-900 truncate">{r.clientName || "Client"}</p>
+              <p className="text-xs text-primary-500 truncate">{r.serviceName || "Service"}</p>
+            </div>
+            <Badge tone={tone}>{getStatusLabel(r.paymentStatus)}</Badge>
+          </div>
+          <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
+            <div className="rounded-xl bg-primary-50 px-2.5 py-2">
+              <p className="text-[11px] text-primary-500">Total</p>
+              <p className="font-extrabold text-primary-900">{formatMoney(r.amount)}</p>
+            </div>
+            <div className="rounded-xl bg-primary-50 px-2.5 py-2">
+              <p className="text-[11px] text-primary-500">Acompte</p>
+              <p className="font-semibold text-primary-800">{formatMoney(dep)} ({r.depositPct || 0}%)</p>
+            </div>
+          </div>
+          <div className="mt-3 flex gap-2">
+            <Button variant="secondary" className="flex-1 px-2.5 py-2 text-xs" onClick={() => generateInvoiceForAppointment(r)}>
+              <FiFileText className="mr-1.5" /> Facture
+            </Button>
+            <Button variant="secondary" className="flex-1 px-2.5 py-2 text-xs" onClick={() => refundAppointmentDeposit(r)}>
+              <FiDollarSign className="mr-1.5" /> Rembourser
+            </Button>
+          </div>
+        </div>
+      );
+    })}
+  </div>
+
+  <div className="hidden sm:block">
+    <DataTable
+      emptyLabel="Aucun paiement"
+      columns={[
+        { key: "clientName", label: "Client" },
+        { key: "serviceName", label: "Service" },
+        { key: "amount", label: "Total", render: (r) => <span className="font-extrabold">{formatMoney(r.amount)}</span> },
+        {
+          key: "deposit",
+          label: "Acompte",
+          render: (r) => {
+            const dep = Math.round((r.amount * (r.depositPct || 0)) / 100);
+            return (
+              <div className="flex items-center gap-2">
+                <Badge tone={r.depositPaid ? "blue" : "gray"}>{r.depositPct || 0}%</Badge>
+                <span className="text-sm text-primary-700 font-semibold">{formatMoney(dep)}</span>
+              </div>
+            );
+          },
+        },
+        {
+          key: "paymentStatus",
+          label: "Statut",
+          render: (r) => {
+            const tone =
+              r.paymentStatus === "paid"
+                ? "green"
+                : r.paymentStatus === "deposit_paid"
+                  ? "blue"
+                  : r.paymentStatus === "refunded"
+                    ? "red"
+                    : "gray";
+            const label = getStatusLabel(r.paymentStatus);
+            return <Badge tone={tone}>{label}</Badge>;
+          },
+        },
+        {
+          key: "actions",
+          label: "Actions",
+          render: (r) => (
+            <div className="flex gap-2 flex-wrap">
+              <Button variant="secondary" className="px-3 py-2" onClick={() => generateInvoiceForAppointment(r)}>
+                <FiFileText className="mr-2" /> Facture
+              </Button>
+              <Button variant="secondary" className="px-3 py-2" onClick={() => refundAppointmentDeposit(r)}>
+                <FiDollarSign className="mr-2" /> Rembourser
+              </Button>
+            </div>
+          ),
+        },
+      ]}
+      data={paymentRows}
+    />
+  </div>
+</>
 );
-},
-},
-{
-key: "paymentStatus",
-label: "Statut",
-render: (r) => {
-const tone =
-r.paymentStatus === "paid"
-? "green"
-: r.paymentStatus === "deposit_paid"
-? "blue"
-: r.paymentStatus === "refunded"
-? "red"
-: "gray";
-const label = getStatusLabel(r.paymentStatus);
-return <Badge tone={tone}>{label}</Badge>;
-},
-},
-{
-key: "actions",
-label: "Actions",
-render: (r) => (
-<div className="flex gap-2 flex-wrap">
-<Button variant="secondary" className="px-3 py-2" onClick={() => generateInvoiceForAppointment(r)}>
-<FiFileText className="mr-2" /> Facture
-</Button>
-<Button variant="secondary" className="px-3 py-2" onClick={() => refundAppointmentDeposit(r)}>
-<FiDollarSign className="mr-2" /> Rembourser
-</Button>
-</div>
-),
-},
-]}
-data={payments.length ? payments : appointments}
-/>
+})()}
 </div>
 </Card>
 </motion.div>
@@ -5067,7 +5121,7 @@ return (
 
 {/* ------------------ SETTINGS ------------------ */}
 {activeTab === "settings" && (
-<motion.div key="settings" {...pageAnim} className="space-y-4">
+<motion.div key="settings" {...pageAnim} className="space-y-3 sm:space-y-4">
 <Card>
 <CardHeader
 icon={<FiSettings />}
@@ -5079,7 +5133,7 @@ right={
 }
 />
 <div className="p-3 sm:p-5">
-<div className="grid md:grid-cols-2 gap-6">
+<div className="grid md:grid-cols-2 gap-4 sm:gap-6">
 <Input label="Nom du salon" value={salonSettings.name} onChange={(e) => setSalonSettings((p) => ({ ...p, name: e.target.value }))} />
 <Input label="Téléphone" value={salonSettings.phone} onChange={(e) => setSalonSettings((p) => ({ ...p, phone: e.target.value }))} />
 <Input label="WhatsApp" value={salonSettings.whatsapp} onChange={(e) => setSalonSettings((p) => ({ ...p, whatsapp: e.target.value }))} />
@@ -5172,11 +5226,11 @@ right={
 </Button>
 }
 />
-<div className="p-6 space-y-3">
+<div className="p-3 sm:p-6 space-y-2.5 sm:space-y-3">
 {weekDays.map(([label, key]) => {
 const hours = salonSettings.openingHours?.[key];
 return (
-<div key={key} className="flex flex-col md:flex-row md:items-center gap-3 p-4 bg-primary-50 rounded-2xl">
+<div key={key} className="flex flex-col md:flex-row md:items-center gap-2.5 sm:gap-3 p-3 sm:p-4 bg-primary-50 rounded-2xl">
 <span className="w-24 font-extrabold text-primary-900">{label}</span>
 {hours ? (
 <>
@@ -5231,6 +5285,15 @@ Ajouter horaires
 })}
 </div>
 </Card>
+<div className="sm:hidden sticky bottom-3 z-30">
+<button
+  onClick={saveSettings}
+  disabled={savingSettings}
+  className="w-full rounded-2xl bg-primary-900 text-white font-semibold py-3.5 shadow-lg shadow-primary-900/20 disabled:opacity-50"
+>
+  {savingSettings ? "Sauvegarde..." : "Sauvegarder les modifications"}
+</button>
+</div>
 </motion.div>
 )}
 </AnimatePresence>

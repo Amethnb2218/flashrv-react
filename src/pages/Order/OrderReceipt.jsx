@@ -69,13 +69,13 @@ function OrderReceipt() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-gold-50/20 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-gold-50/20 py-4 sm:py-8">
       <div className="max-w-2xl mx-auto px-4">
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-          className="flex flex-col items-center mb-8"
+          className="flex flex-col items-center mb-5 sm:mb-8"
         >
           <div className="w-20 h-20 rounded-full bg-green-500 flex items-center justify-center shadow-lg shadow-green-500/30 mb-4">
             <FiCheck className="w-10 h-10 text-white" />
@@ -96,7 +96,7 @@ function OrderReceipt() {
           transition={{ delay: 0.2 }}
           className="bg-white rounded-2xl border border-primary-100 shadow-lg overflow-hidden"
         >
-          <div className="bg-primary-900 text-white p-6">
+          <div className="bg-primary-900 text-white p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-primary-400 uppercase tracking-wider">Recu de commande</p>
@@ -118,7 +118,7 @@ function OrderReceipt() {
             </div>
           </div>
 
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             <h3 className="font-bold text-primary-900 mb-3 flex items-center gap-2">
               <FiShoppingBag className="w-4 h-4" /> Articles commandes
             </h3>
@@ -150,7 +150,7 @@ function OrderReceipt() {
 
           <div className="mx-6 border-t border-dashed border-primary-200" />
 
-          <div className="p-6 space-y-2">
+          <div className="p-4 sm:p-6 space-y-2">
             <div className="flex justify-between text-sm text-primary-600">
               <span>Sous-total</span>
               <span>{formatPrice(items.reduce((s, c) => s + (c.product || c).price * c.quantity, 0))}</span>
@@ -167,7 +167,7 @@ function OrderReceipt() {
 
           <div className="mx-6 border-t border-dashed border-primary-200" />
 
-          <div className="p-6 grid sm:grid-cols-2 gap-6">
+          <div className="p-4 sm:p-6 grid sm:grid-cols-2 gap-4 sm:gap-6">
             <div>
               <h4 className="font-bold text-primary-900 mb-2 flex items-center gap-2">
                 {deliveryMode === 'DELIVERY' ? <FiTruck className="w-4 h-4" /> : <FiHome className="w-4 h-4" />}
