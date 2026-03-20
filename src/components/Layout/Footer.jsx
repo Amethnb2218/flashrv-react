@@ -44,14 +44,14 @@ function Footer() {
                 </Link>
               </li>
               <li>
-                <a href="#" className="text-primary-800 dark:text-[#cfbca4] hover:text-primary-900 dark:hover:text-gold-300 transition-colors">
+                <Link to="/comment-ca-marche" className="text-primary-800 dark:text-[#cfbca4] hover:text-primary-900 dark:hover:text-gold-300 transition-colors">
                   Comment ca marche
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-primary-800 dark:text-[#cfbca4] hover:text-primary-900 dark:hover:text-gold-300 transition-colors">
+                <Link to="/faq" className="text-primary-800 dark:text-[#cfbca4] hover:text-primary-900 dark:hover:text-gold-300 transition-colors">
                   FAQ
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -60,24 +60,24 @@ function Footer() {
             <h4 className="font-semibold text-sm mb-3 text-primary-900 dark:text-[#f3e8d9]">Legal</h4>
             <ul className="space-y-1.5 text-sm">
               <li>
-                <a href="#" className="text-primary-800 dark:text-[#cfbca4] hover:text-primary-900 dark:hover:text-gold-300 transition-colors">
+                <Link to="/legal/conditions-utilisation" className="text-primary-800 dark:text-[#cfbca4] hover:text-primary-900 dark:hover:text-gold-300 transition-colors">
                   Conditions d'utilisation
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-primary-800 dark:text-[#cfbca4] hover:text-primary-900 dark:hover:text-gold-300 transition-colors">
+                <Link to="/legal/confidentialite" className="text-primary-800 dark:text-[#cfbca4] hover:text-primary-900 dark:hover:text-gold-300 transition-colors">
                   Politique de confidentialite
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-primary-800 dark:text-[#cfbca4] hover:text-primary-900 dark:hover:text-gold-300 transition-colors">
+                <Link to="/legal/mentions-legales" className="text-primary-800 dark:text-[#cfbca4] hover:text-primary-900 dark:hover:text-gold-300 transition-colors">
                   Mentions legales
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="text-primary-800 dark:text-[#cfbca4] hover:text-primary-900 dark:hover:text-gold-300 transition-colors">
+                <Link to="/legal/cgv" className="text-primary-800 dark:text-[#cfbca4] hover:text-primary-900 dark:hover:text-gold-300 transition-colors">
                   CGV
-                </a>
+                </Link>
               </li>
             </ul>
           </div>

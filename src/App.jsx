@@ -18,6 +18,12 @@ import ProPending from './pages/Pro/ProPending'
 import ProOnboarding from './pages/Auth/ProOnboarding'
 import AdminDashboard from './pages/Admin/AdminDashboard'
 import NotFound from './pages/NotFound'
+import FAQ from './pages/Info/FAQ'
+import HowItWorks from './pages/Info/HowItWorks'
+import TermsOfUse from './pages/Legal/TermsOfUse'
+import PrivacyPolicy from './pages/Legal/PrivacyPolicy'
+import LegalNotice from './pages/Legal/LegalNotice'
+import TermsOfSale from './pages/Legal/TermsOfSale'
 import ProtectedRoute from './components/Auth/ProtectedRoute'
 import InstallPrompt from './components/PWA/InstallPrompt'
 import Cart from './pages/Order/Cart'
@@ -43,6 +49,13 @@ function App() {
         <Route path="salon/:id" element={<SalonDetail />} />
         <Route path="qr-codes" element={<><SEOHead title="QR Codes — Jolof’Era" noindex /><QRCodes /></>} />
         
+        <Route path="comment-ca-marche" element={<><SEOHead title="Comment ca marche | Jolof'Era" description="Decouvrez comment reserver un salon, commander en boutique et utiliser Jolof'Era." /><HowItWorks /></>} />
+        <Route path="faq" element={<><SEOHead title="FAQ | Jolof'Era" description="Questions frequentes sur les reservations, commandes, comptes clients et partenaires." /><FAQ /></>} />
+        <Route path="legal/conditions-utilisation" element={<><SEOHead title="Conditions d'utilisation | Jolof'Era" /><TermsOfUse /></>} />
+        <Route path="legal/confidentialite" element={<><SEOHead title="Politique de confidentialite | Jolof'Era" /><PrivacyPolicy /></>} />
+        <Route path="legal/mentions-legales" element={<><SEOHead title="Mentions legales | Jolof'Era" /><LegalNotice /></>} />
+        <Route path="legal/cgv" element={<><SEOHead title="CGV | Jolof'Era" /><TermsOfSale /></>} />
+
         {/* Protected routes - Client */}
         <Route path="booking/:salonId" element={
           <ProtectedRoute>
