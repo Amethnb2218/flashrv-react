@@ -37,6 +37,8 @@ const normalizeUserShape = (user) => {
   return next
 }
 
+const normalizeStatus = (status) => String(status || '').trim().toUpperCase()
+
 function authReducer(state, action) {
   switch (action.type) {
     case 'LOGIN':
@@ -116,8 +118,16 @@ export function AuthProvider({ children }) {
 
       clearProOnboardingDraft(normalizedUser)
 
+      // Some session responses can miss user.status depending on auth middleware path.
+      // In that case, use salon.status as a reliable fallback to keep redirects stable.
+      const mergedStatus =
+        normalizeStatus(normalizedUser?.status) ||
+        normalizeStatus(salon?.status) ||
+        ''
+
       return normalizeUserShape({
         ...normalizedUser,
+        ...(mergedStatus ? { status: mergedStatus } : {}),
         hasSalon: true,
         salonId: salon.id,
         salon,

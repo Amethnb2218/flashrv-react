@@ -17,6 +17,8 @@ const STATUS = {
   SUSPENDED: 'SUSPENDED',
 }
 
+const normalizeStatus = (status) => String(status || '').trim().toUpperCase()
+
 /**
  * ProtectedRoute - Gère l'accès aux routes protégées
  * 
@@ -35,6 +37,7 @@ function ProtectedRoute({
 }) {
   const { isAuthenticated, isLoading, user } = useAuth()
   const location = useLocation()
+  const effectiveStatus = normalizeStatus(user?.status || user?.salon?.status)
 
   // Affichage du loader pendant le chargement
   if (isLoading) {
@@ -51,7 +54,7 @@ function ProtectedRoute({
   }
 
   // Vérifier si le compte est suspendu ou rejeté
-  if (user?.status === STATUS.SUSPENDED || user?.status === STATUS.REJECTED) {
+  if (effectiveStatus === STATUS.SUSPENDED || effectiveStatus === STATUS.REJECTED) {
     return <Navigate to="/pro/pending" replace />
   }
 
@@ -62,7 +65,7 @@ function ProtectedRoute({
   }
 
   // Vérifier si un PRO est en attente de validation
-  if (user?.role === ROLES.PRO && user?.status === STATUS.PENDING) {
+  if (user?.role === ROLES.PRO && effectiveStatus === STATUS.PENDING) {
     // Autoriser seulement certaines pages pour les PRO en attente
     const allowedPaths = ['/pro/pending', '/pro/onboarding', '/profile', '/logout']
     if (!allowedPaths.some(path => location.pathname.startsWith(path))) {
@@ -85,7 +88,7 @@ function ProtectedRoute({
 
   // Vérifier si un PRO approuvé est requis
   if (requireApproved && user?.role === ROLES.PRO) {
-    if (user?.status !== STATUS.APPROVED) {
+    if (effectiveStatus !== STATUS.APPROVED) {
       return <Navigate to={proRedirectPath || '/pro/pending'} replace />
     }
   }

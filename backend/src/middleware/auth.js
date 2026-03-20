@@ -150,9 +150,15 @@ async function optionalAuth(req, res, next) {
         id: true,
         email: true,
         username: true,
+        phoneNumber: true,
+        address: true,
         name: true,
         picture: true,
         role: true,
+        status: true,
+        canCreateService: true,
+        canBook: true,
+        isPublic: true,
       },
     });
 
