@@ -86,7 +86,7 @@ function SalonCard({ salon, index = 0, variant = 'featured' }) {
   const typeBadge = getSalonTypeBadge()
   const isList = variant === 'list'
   const ctaLabel = isBoutique ? 'Voir les articles' : isList ? 'Voir disponibilités' : 'Réserver'
-  const imageHeight = isList ? 'h-32 md:h-36' : 'h-36 sm:h-40'
+  const imageHeight = isList ? 'h-32 md:h-36' : 'h-52 sm:h-60'
   const cardClass = 'bg-white dark:bg-[#1d1712] rounded-xl overflow-hidden shadow-md dark:shadow-black/30 hover:shadow-xl transition-all duration-300 border border-primary-100 dark:border-[#46382a] group hover:-translate-y-0.5'
 
   return (
