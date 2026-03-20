@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import { formatPrice } from '../../utils/helpers'
 import { resolveMediaUrl } from '../../utils/media'
 
-function SalonCard({ salon, index = 0, variant = 'featured' }) {
+function SalonCard({ salon, index = 0, variant = 'featured', compact = false }) {
   const resolveMedia = resolveMediaUrl
   const getDayName = () => {
     const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
@@ -85,6 +85,7 @@ function SalonCard({ salon, index = 0, variant = 'featured' }) {
 
   const typeBadge = getSalonTypeBadge()
   const isList = variant === 'list'
+  const isCompactBoutique = compact && isBoutique && !isList
   const ctaLabel = isBoutique ? 'Voir les articles' : isList ? 'Voir disponibilités' : 'Réserver'
   const imageHeight = isList ? 'h-32 md:h-36' : 'h-36 sm:h-40'
   const cardClass = 'bg-white dark:bg-[#1d1712] rounded-xl overflow-hidden shadow-md dark:shadow-black/30 hover:shadow-xl transition-all duration-300 border border-primary-100 dark:border-[#46382a] group hover:-translate-y-0.5'
@@ -153,8 +154,8 @@ function SalonCard({ salon, index = 0, variant = 'featured' }) {
         </div>
 
         {/* Content */}
-        <div className="p-2.5">
-          <h3 className="font-semibold text-sm sm:text-base text-primary-900 dark:text-[#f3e8d9] group-hover:text-gold-600 dark:group-hover:text-gold-300 transition-colors mb-0.5 truncate">
+        <div className={isCompactBoutique ? 'p-2 pt-1.5' : 'p-2.5'}>
+          <h3 className={`font-semibold text-sm sm:text-base text-primary-900 dark:text-[#f3e8d9] group-hover:text-gold-600 dark:group-hover:text-gold-300 transition-colors truncate ${isCompactBoutique ? 'mb-0' : 'mb-0.5'}`}>
             {salon.name}
           </h3>
 
@@ -163,6 +164,7 @@ function SalonCard({ salon, index = 0, variant = 'featured' }) {
             <span className="truncate">{neighborhood}{salon.city ? `, ${salon.city}` : ''}</span>
           </div>
 
+          {!isCompactBoutique && (
           <div className="flex items-center text-xs sm:text-sm mb-1.5">
             <FiClock className="w-3 h-3 mr-1 text-primary-400 dark:text-[#ab967c] flex-shrink-0" />
             {todayHours ? (
@@ -177,9 +179,10 @@ function SalonCard({ salon, index = 0, variant = 'featured' }) {
               <span className="text-primary-400 dark:text-[#ab967c]">Horaires non renseignés</span>
             )}
           </div>
+          )}
 
           {/* Specialties */}
-          {specialties.length > 0 && (
+          {specialties.length > 0 && !isCompactBoutique && (
             <div className="flex flex-wrap gap-1 mb-1.5">
               {specialties.slice(0, 2).map((specialty, i) => (
                 <span
@@ -193,7 +196,7 @@ function SalonCard({ salon, index = 0, variant = 'featured' }) {
           )}
 
           {/* Price */}
-          <div className="pt-1.5 border-t border-primary-100 dark:border-[#46382a] flex items-center justify-between">
+          <div className={`${isCompactBoutique ? 'pt-1' : 'pt-1.5'} border-t border-primary-100 dark:border-[#46382a] flex items-center justify-between`}>
             <div>
               <span className="text-xs sm:text-sm text-primary-500 dark:text-[#cfbca4]">
                 Dès <span className="font-bold text-primary-900 dark:text-[#f3e8d9]">{minPriceLabel}</span>
@@ -202,7 +205,7 @@ function SalonCard({ salon, index = 0, variant = 'featured' }) {
                 <span className="block text-[10px] text-primary-400 dark:text-[#ab967c]">{salon.services.length} service{salon.services.length > 1 ? 's' : ''}</span>
               )}
             </div>
-            <span className="inline-flex items-center gap-1 text-[11px] sm:text-xs font-semibold px-2.5 py-1 rounded-full bg-primary-900 dark:bg-gold-500 text-white dark:text-primary-900 shadow-sm group-hover:translate-x-0.5 transition-transform">
+            <span className={`inline-flex items-center gap-1 text-[11px] sm:text-xs font-semibold rounded-full bg-primary-900 dark:bg-gold-500 text-white dark:text-primary-900 shadow-sm group-hover:translate-x-0.5 transition-transform ${isCompactBoutique ? 'px-2 py-0.5' : 'px-2.5 py-1'}`}>
               {ctaLabel} →
             </span>
           </div>

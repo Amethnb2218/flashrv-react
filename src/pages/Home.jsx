@@ -86,7 +86,8 @@ function Home() {
   const featuredBoutiqueGridClass = getFeaturedGridClass(featuredBoutiques.length, loadingSalons)
   const centerSalonsGrid = !loadingSalons && featuredSalons.length === 1
   const centerBoutiquesGrid = !loadingSalons && featuredBoutiques.length === 1
-  const featuredCardWrapClass = 'w-full max-w-[430px] mx-auto'
+  const featuredSalonWrapClass = 'w-full max-w-[430px] mx-auto'
+  const featuredBoutiqueWrapClass = 'w-full max-w-[380px] mx-auto'
 
   const totalReviews = salons.reduce((sum, s) => sum + (s.reviewCount || 0), 0)
   const avgRating = salons.length
@@ -371,7 +372,7 @@ function Home() {
           <div className={`grid ${featuredSalonGridClass} gap-3 justify-items-center ${centerSalonsGrid ? 'mx-auto max-w-md' : ''}`}>
             {loadingSalons ? (
               [1, 2, 3].map((i) => (
-                <div key={i} className={`${featuredCardWrapClass} bg-white dark:bg-[#1d1712] rounded-xl border border-primary-100 dark:border-[#46382a] p-3 animate-pulse`}>
+                <div key={i} className={`${featuredSalonWrapClass} bg-white dark:bg-[#1d1712] rounded-xl border border-primary-100 dark:border-[#46382a] p-3 animate-pulse`}>
                   <div className="h-32 bg-primary-100 dark:bg-[#251d16] rounded-lg mb-3"></div>
                   <div className="h-3 bg-primary-100 dark:bg-[#251d16] rounded w-2/3 mb-2"></div>
                   <div className="h-2.5 bg-primary-100 dark:bg-[#251d16] rounded w-1/2"></div>
@@ -379,7 +380,7 @@ function Home() {
               ))
             ) : (
               featuredSalons.map((salon, i) => (
-                <div key={salon.id} className={featuredCardWrapClass}>
+                <div key={salon.id} className={featuredSalonWrapClass}>
                   <SalonCard salon={salon} index={i} />
                 </div>
               ))
@@ -411,7 +412,7 @@ function Home() {
           <div className={`grid ${featuredBoutiqueGridClass} gap-3 justify-items-center ${centerBoutiquesGrid ? 'mx-auto max-w-md' : ''}`}>
             {loadingSalons ? (
               [1, 2, 3].map((i) => (
-                <div key={i} className={`${featuredCardWrapClass} bg-white dark:bg-[#1d1712] rounded-xl border border-primary-100 dark:border-[#46382a] p-3 animate-pulse`}>
+                <div key={i} className={`${featuredBoutiqueWrapClass} bg-white dark:bg-[#1d1712] rounded-xl border border-primary-100 dark:border-[#46382a] p-3 animate-pulse`}>
                   <div className="h-32 bg-primary-100 dark:bg-[#251d16] rounded-lg mb-3"></div>
                   <div className="h-3 bg-primary-100 dark:bg-[#251d16] rounded w-2/3 mb-2"></div>
                   <div className="h-2.5 bg-primary-100 dark:bg-[#251d16] rounded w-1/2"></div>
@@ -419,8 +420,8 @@ function Home() {
               ))
             ) : (
               featuredBoutiques.map((salon, i) => (
-                <div key={salon.id} className={featuredCardWrapClass}>
-                  <SalonCard salon={salon} index={i} />
+                <div key={salon.id} className={featuredBoutiqueWrapClass}>
+                  <SalonCard salon={salon} index={i} compact />
                 </div>
               ))
             )}
