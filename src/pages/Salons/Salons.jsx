@@ -8,6 +8,8 @@ import apiFetch from '@/api/client'
 import QuartierSelector from '../../components/UI/QuartierSelector'
 
 function Salons() {
+  const normalizeFilterValue = (value) => String(value || '').trim().toLowerCase()
+
   const [searchParams, setSearchParams] = useSearchParams()
   const [showFilters, setShowFilters] = useState(false)
   const searchInputRef = useRef(null)
@@ -48,11 +50,10 @@ function Salons() {
       try {
         setLoading(true)
         const params = new URLSearchParams()
+        params.set('limit', '300')
         if (filters.search) {
           params.set('search', filters.search)
-          params.set('limit', '200')
         }
-        if (filters.salonType) params.set('salonType', filters.salonType)
         const query = params.toString()
         const res = await apiFetch(`/salons${query ? `?${query}` : ''}`)
         const data = res?.data ?? res
@@ -64,7 +65,7 @@ function Salons() {
       }
     }
     fetchSalons()
-  }, [filters.search, filters.salonType])
+  }, [filters.search])
 
   const filteredSalons = useMemo(() => {
     let result = [...salons]
@@ -91,10 +92,48 @@ function Salons() {
       )
     }
     if (filters.type) {
-      result = result.filter(s => String(s.type || '').toLowerCase() === filters.type.toLowerCase())
+      const wantedType = normalizeFilterValue(filters.type)
+      result = result.filter((s) => {
+        const typeValue = normalizeFilterValue(s.type)
+        const salonTypeValue = normalizeFilterValue(s.salonType)
+        const nameValue = normalizeFilterValue(s.name)
+
+        if (wantedType === 'barber') {
+          return (
+            typeValue === 'barber' ||
+            typeValue === 'barbershop' ||
+            salonTypeValue === 'barber' ||
+            salonTypeValue === 'barbershop' ||
+            nameValue.includes('barber')
+          )
+        }
+        if (wantedType === 'shooting') {
+          return typeValue === 'shooting' || salonTypeValue === 'shooting'
+        }
+        if (wantedType === 'salon') {
+          const bt = String(s.businessType || 'SALON').trim().toUpperCase()
+          return bt !== 'BOUTIQUE'
+        }
+        return typeValue === wantedType
+      })
     }
     if (filters.salonType) {
-      result = result.filter(s => s.salonType === filters.salonType)
+      const wantedSalonType = normalizeFilterValue(filters.salonType)
+      result = result.filter((s) => {
+        const salonTypeValue = normalizeFilterValue(s.salonType)
+        const typeValue = normalizeFilterValue(s.type)
+
+        if (wantedSalonType === 'coiffure') {
+          return salonTypeValue === 'coiffure' || typeValue === 'barber' || salonTypeValue === 'barber'
+        }
+        if (wantedSalonType === 'beaute') {
+          return salonTypeValue === 'beaute' || salonTypeValue === 'esthetique' || salonTypeValue === 'beauty'
+        }
+        if (wantedSalonType === 'mixte') {
+          return salonTypeValue === 'mixte' || salonTypeValue === 'coiffure_beaute' || salonTypeValue === 'coiffure+beaute'
+        }
+        return salonTypeValue === wantedSalonType
+      })
     }
     const normalizedBusinessType = String(filters.businessType || '').trim().toUpperCase()
     if (normalizedBusinessType) {
@@ -235,7 +274,7 @@ function Salons() {
                 Tous
               </button>
               <button
-                onClick={() => { updateFilter('type', 'salon'); updateFilter('salonType', 'coiffure'); updateFilter('businessType', ''); }}
+                onClick={() => { updateFilter('type', ''); updateFilter('salonType', 'coiffure'); updateFilter('businessType', ''); }}
                 className={`px-4 py-2 rounded-full font-medium text-sm transition-all ${
                   filters.salonType === 'coiffure' 
                     ? 'bg-white text-primary-900 shadow-lg' 
@@ -245,7 +284,7 @@ function Salons() {
                 Salons coiffure
               </button>
               <button
-                onClick={() => { updateFilter('type', 'salon'); updateFilter('salonType', 'beaute'); updateFilter('businessType', ''); }}
+                onClick={() => { updateFilter('type', ''); updateFilter('salonType', 'beaute'); updateFilter('businessType', ''); }}
                 className={`px-4 py-2 rounded-full font-medium text-sm transition-all ${
                   filters.salonType === 'beaute' 
                     ? 'bg-white text-primary-900 shadow-lg' 
@@ -255,7 +294,7 @@ function Salons() {
                 Salons beauté
               </button>
               <button
-                onClick={() => { updateFilter('type', 'salon'); updateFilter('salonType', 'mixte'); updateFilter('businessType', ''); }}
+                onClick={() => { updateFilter('type', ''); updateFilter('salonType', 'mixte'); updateFilter('businessType', ''); }}
                 className={`px-4 py-2 rounded-full font-medium text-sm transition-all ${
                   filters.salonType === 'mixte' 
                     ? 'bg-white text-primary-900 shadow-lg' 
