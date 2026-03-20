@@ -1,15 +1,14 @@
 {
-  "name": "Jolof’Era — Salons & Boutiques",
-  "short_name": "Jolof’Era",
-  "description": "Réservez votre salon de coiffure, beauté ou boutique en ligne au Sénégal",
+  "name": "Jolof'Era - Salons & Boutiques",
+  "short_name": "Jolof'Era",
+  "description": "Reservation de salons de coiffure, beaute et boutiques en ligne au Senegal",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#111827",
   "orientation": "portrait-primary",
-  "scope": "/",
   "lang": "fr",
-  "categories": ["beauty", "lifestyle", "shopping"],
   "icons": [
     {
       "src": "/icons/icon-192.png",
@@ -24,19 +23,28 @@
       "purpose": "any maskable"
     }
   ],
-  "screenshots": [],
   "shortcuts": [
     {
       "name": "Voir les salons",
       "short_name": "Salons",
       "url": "/salons",
-      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     },
     {
       "name": "Voir les boutiques",
       "short_name": "Boutiques",
       "url": "/salons?businessType=BOUTIQUE",
-      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     }
   ]
 }

@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { FiSearch, FiCalendar, FiStar, FiShoppingBag, FiArrowRight } from 'react-icons/fi'
 
@@ -27,6 +28,48 @@ function StepCard({ step }) {
 }
 
 function HowItWorks() {
+  useEffect(() => {
+    const scriptId = 'howitworks-jsonld'
+    const previous = document.getElementById(scriptId)
+    if (previous) previous.remove()
+
+    const schema = {
+      '@context': 'https://schema.org',
+      '@graph': [
+        {
+          '@type': 'HowTo',
+          name: 'Comment reserver un salon avec Jolof Era',
+          step: CLIENT_STEPS.map((item, index) => ({
+            '@type': 'HowToStep',
+            position: index + 1,
+            name: item.title,
+            text: item.text,
+          })),
+        },
+        {
+          '@type': 'HowTo',
+          name: 'Comment demarrer comme professionnel sur Jolof Era',
+          step: PRO_STEPS.map((item, index) => ({
+            '@type': 'HowToStep',
+            position: index + 1,
+            name: item.title,
+            text: item.text,
+          })),
+        },
+      ],
+    }
+
+    const script = document.createElement('script')
+    script.type = 'application/ld+json'
+    script.id = scriptId
+    script.text = JSON.stringify(schema)
+    document.head.appendChild(script)
+
+    return () => {
+      script.remove()
+    }
+  }, [])
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-gold-50/30 dark:from-[#16120e] dark:via-[#15110d] dark:to-[#120e0b]">
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -62,4 +105,3 @@ function HowItWorks() {
 }
 
 export default HowItWorks
-

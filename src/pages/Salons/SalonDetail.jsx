@@ -622,8 +622,8 @@ function SalonDetail() {
     <div className="min-h-screen bg-primary-50 relative">
       <SEOHead
         title={`${salon.name} — ${salon.zone || 'Dakar'} | Jolof’Era`}
-        description={`Réservez chez ${salon.name}${salon.zone ? ` à ${salon.zone}` : ''} sur Jolof’Era. ${salon.businessType === 'BOUTIQUE' ? 'Boutique en ligne' : 'Salon de coiffure & beauté'} au Sénégal.`}
-        canonical={`https://jolofera.com/salon/${id}`}
+        description={`Réservez chez ${salon.name}${salon.zone ? ` à ${salon.zone}` : ''} sur Jolof’Era. ${salon.businessType === 'BOUTIQUE' ? 'Boutique en ligne' : 'Salon de coiffure et beauté'} au Sénégal.`}
+        canonical={`https://www.jolofera.com/salon/${id}`}
       />
       {/* Image Gallery — flush under navbar */}
       <div className="relative z-10 -mt-14 h-[276px] sm:h-[396px] md:h-[420px] lg:h-[420px] max-h-[60vh] bg-primary-900 overflow-hidden">

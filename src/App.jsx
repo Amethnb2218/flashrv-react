@@ -41,11 +41,11 @@ function App() {
     <Routes>
       <Route path="/" element={<Layout />}>
         {/* Public routes */}
-        <Route index element={<><SEOHead title="Jolof'Era | Reservation salons Dakar" description="Reservez un salon de coiffure ou une boutique a Dakar avec Jolof'Era. Disponibilites en ligne et confirmation rapide." canonical="https://www.jolofera.com/" /><Home /></>} />
+        <Route index element={<><SEOHead title="Reservation salon coiffure Dakar | Jolof'Era" description="Reservez un salon de coiffure, barbershop ou boutique a Dakar et au Senegal. Comparez les avis, tarifs et disponibilites avec Jolof'Era." canonical="https://www.jolofera.com/" /><Home /></>} />
         <Route path="login" element={<><SEOHead title="Connexion — Jolof’Era" noindex /><Login /></>} />
         <Route path="register" element={<><SEOHead title="Inscription — Jolof’Era" noindex /><Register /></>} />
         <Route path="forgot-password" element={<><SEOHead title="Mot de passe oublié — Jolof’Era" noindex /><ForgotPassword /></>} />
-        <Route path="salons" element={<><SEOHead title="Salons & boutiques a Dakar | Jolof'Era" description="Decouvrez les salons de coiffure, instituts et boutiques a Dakar. Comparez les avis, services et tarifs puis reservez en ligne." /><Salons /></>} />
+        <Route path="salons" element={<><SEOHead title="Salons coiffure et boutiques a Dakar | Jolof'Era" description="Trouvez un salon de coiffure, institut beaute, barbershop ou boutique a Dakar. Comparez les prix et reservez en ligne rapidement." /><Salons /></>} />
         <Route path="salon/:id" element={<SalonDetail />} />
         <Route path="qr-codes" element={<><SEOHead title="QR Codes — Jolof’Era" noindex /><QRCodes /></>} />
         

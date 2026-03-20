@@ -1,17 +1,25 @@
 User-agent: *
 Allow: /
+
+# Public pages
 Allow: /salons
-Allow: /salons?businessType=BOUTIQUE
+Allow: /salon/
+Allow: /faq
+Allow: /comment-ca-marche
+Allow: /legal/
 
-# Google
-User-agent: Googlebot
-Allow: /
-Crawl-delay: 1
+# Private and utility pages (crawl budget)
+Disallow: /dashboard
+Disallow: /pro/
+Disallow: /profile
+Disallow: /booking/
+Disallow: /payment
+Disallow: /cart
+Disallow: /order/
+Disallow: /admin/
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
 
-# Bing
-User-agent: Bingbot
-Allow: /
-Crawl-delay: 2
-
-Sitemap: https://jolofera.com/sitemap.xml
+Sitemap: https://www.jolofera.com/sitemap.xml
 

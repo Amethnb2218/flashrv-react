@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 const FAQ_ITEMS = [
@@ -22,6 +22,35 @@ const FAQ_ITEMS = [
 
 function FAQ() {
   const [openIndex, setOpenIndex] = useState(0)
+
+  useEffect(() => {
+    const scriptId = 'faq-jsonld'
+    const previous = document.getElementById(scriptId)
+    if (previous) previous.remove()
+
+    const faqSchema = {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: FAQ_ITEMS.map((item) => ({
+        '@type': 'Question',
+        name: item.q,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: item.a,
+        },
+      })),
+    }
+
+    const script = document.createElement('script')
+    script.type = 'application/ld+json'
+    script.id = scriptId
+    script.text = JSON.stringify(faqSchema)
+    document.head.appendChild(script)
+
+    return () => {
+      script.remove()
+    }
+  }, [])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-gold-50/30 dark:from-[#16120e] dark:via-[#15110d] dark:to-[#120e0b]">
@@ -64,4 +93,3 @@ function FAQ() {
 }
 
 export default FAQ
-
