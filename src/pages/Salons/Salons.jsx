@@ -194,7 +194,7 @@ function Salons() {
   }, [filters])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-gold-50/30 pt-20 relative">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-gold-50/30 pt-0 relative">
       {/* Global decorative background elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
         <div className="absolute top-40 right-10 w-[500px] h-[500px] bg-gold-200/50 rounded-full blur-3xl"></div>
