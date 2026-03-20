@@ -2,6 +2,25 @@ import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 
 const BASE_URL = 'https://jolofera.com'
+const SEO_TITLE_MAX = 58
+const SEO_DESC_MIN = 70
+const SEO_DESC_MAX = 155
+const DEFAULT_TITLE = "Jolof'Era | Salons & boutiques au Senegal"
+const DEFAULT_DESCRIPTION =
+  "Reservez un salon de coiffure ou commandez en boutique a Dakar avec Jolof'Era. Disponibilites en ligne, confirmation rapide et paiement securise."
+
+const normalizeTitle = (value) => {
+  const raw = String(value || '').trim() || DEFAULT_TITLE
+  return raw.length > SEO_TITLE_MAX ? `${raw.slice(0, SEO_TITLE_MAX - 1).trim()}…` : raw
+}
+
+const normalizeDescription = (value) => {
+  const raw = String(value || '').trim()
+  const withFallback = raw.length < SEO_DESC_MIN ? DEFAULT_DESCRIPTION : raw
+  return withFallback.length > SEO_DESC_MAX
+    ? `${withFallback.slice(0, SEO_DESC_MAX - 1).trim()}…`
+    : withFallback
+}
 
 /**
  * Gère dynamiquement les balises canonical et meta robots pour le SEO.
@@ -15,6 +34,9 @@ export default function SEOHead({ title, description, canonical, noindex = false
   const { pathname } = useLocation()
 
   useEffect(() => {
+    const safeTitle = normalizeTitle(title)
+    const safeDescription = normalizeDescription(description)
+
     // --- Canonical ---
     const canonicalUrl = canonical || `${BASE_URL}${pathname === '/' ? '' : pathname}`
     let link = document.querySelector('link[rel="canonical"]')
@@ -28,16 +50,12 @@ export default function SEOHead({ title, description, canonical, noindex = false
     }
 
     // --- Title ---
-    if (title) {
-      document.title = title
-    }
+    document.title = safeTitle
 
     // --- Meta description ---
-    if (description) {
-      let meta = document.querySelector('meta[name="description"]')
-      if (meta) {
-        meta.setAttribute('content', description)
-      }
+    let meta = document.querySelector('meta[name="description"]')
+    if (meta) {
+      meta.setAttribute('content', safeDescription)
     }
 
     // --- Meta robots ---
@@ -62,6 +80,16 @@ export default function SEOHead({ title, description, canonical, noindex = false
     if (ogUrl) {
       ogUrl.setAttribute('content', canonicalUrl)
     }
+
+    // --- Keep OG/Twitter aligned with optimized title & description ---
+    const ogTitle = document.querySelector('meta[property="og:title"]')
+    if (ogTitle) ogTitle.setAttribute('content', safeTitle)
+    const ogDescription = document.querySelector('meta[property="og:description"]')
+    if (ogDescription) ogDescription.setAttribute('content', safeDescription)
+    const twitterTitle = document.querySelector('meta[name="twitter:title"]')
+    if (twitterTitle) twitterTitle.setAttribute('content', safeTitle)
+    const twitterDescription = document.querySelector('meta[name="twitter:description"]')
+    if (twitterDescription) twitterDescription.setAttribute('content', safeDescription)
   }, [pathname, title, description, canonical, noindex])
 
   return null

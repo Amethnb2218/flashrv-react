@@ -39,7 +39,7 @@ function App() {
         <Route path="login" element={<><SEOHead title="Connexion — Jolof’Era" noindex /><Login /></>} />
         <Route path="register" element={<><SEOHead title="Inscription — Jolof’Era" noindex /><Register /></>} />
         <Route path="forgot-password" element={<><SEOHead title="Mot de passe oublié — Jolof’Era" noindex /><ForgotPassword /></>} />
-        <Route path="salons" element={<><SEOHead title="Salons de coiffure & boutiques à Dakar — Jolof’Era" description="Trouvez et réservez les meilleurs salons de coiffure, barbershops, instituts de beauté et boutiques à Dakar, Sénégal." /><Salons /></>} />
+        <Route path="salons" element={<><SEOHead title="Salons & boutiques a Dakar | Jolof'Era" description="Decouvrez les salons de coiffure, instituts et boutiques a Dakar. Comparez les avis, services et tarifs puis reservez en ligne." /><Salons /></>} />
         <Route path="salon/:id" element={<SalonDetail />} />
         <Route path="qr-codes" element={<><SEOHead title="QR Codes — Jolof’Era" noindex /><QRCodes /></>} />
         
