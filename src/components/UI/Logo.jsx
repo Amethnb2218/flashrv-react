@@ -7,9 +7,9 @@ const BRAND_ASSETS = {
 }
 
 const LIGHT_ICON_IMAGE_CLASS =
-  'absolute inset-0 h-full w-full object-contain object-center scale-[1.24] invert contrast-[1.4] brightness-[0.42] saturate-0 opacity-100 dark:hidden'
+  'absolute inset-0 h-full w-full object-contain object-center scale-[1.62] brightness-0 contrast-[2.4] saturate-0 opacity-100 dark:hidden'
 const DARK_ICON_IMAGE_CLASS =
-  'absolute inset-0 hidden h-full w-full object-contain object-center scale-[1.24] contrast-[1.02] brightness-[1.08] saturate-0 opacity-100 dark:block'
+  'absolute inset-0 hidden h-full w-full object-contain object-center scale-[1.62] contrast-[1.05] brightness-[1.16] saturate-0 opacity-100 dark:block'
 
 // Logo Jolof'Era
 function Logo({ variant = 'default', size = 'md', showTagline = true, forceIconText = false }) {
