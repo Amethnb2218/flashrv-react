@@ -324,14 +324,14 @@ function Navbar() {
         : 'bg-white shadow-sm border-b border-primary-100/70 dark:!bg-[#15110d] dark:border-[#382c22]'
         }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-[72px] md:h-14">
+          <div className="flex items-center justify-between h-[86px] md:h-14">
             {/* Brand logo */}
             <div className="min-w-0">
               <div className="hidden md:block">
                 <Logo variant="default" size="md" />
               </div>
-              <div className="md:hidden max-w-[calc(100vw-5.8rem)]">
-                <Logo variant="default" size="lg" forceIconText />
+              <div className="md:hidden max-w-[calc(100vw-6rem)]">
+                <Logo variant="default" size="xl" forceIconText />
               </div>
             </div>
 
