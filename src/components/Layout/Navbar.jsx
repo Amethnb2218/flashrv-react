@@ -324,9 +324,16 @@ function Navbar() {
         : 'bg-white shadow-sm border-b border-primary-100/70 dark:!bg-[#15110d] dark:border-[#382c22]'
         }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-14">
-            {/* Logo FlashRV' */}
-            <Logo variant="default" size="md" />
+          <div className="flex items-center justify-between h-16 md:h-14">
+            {/* Brand logo */}
+            <div className="min-w-0">
+              <div className="hidden md:block">
+                <Logo variant="default" size="md" />
+              </div>
+              <div className="md:hidden max-w-[calc(100vw-5.2rem)]">
+                <Logo variant="default" size="md" forceIconText />
+              </div>
+            </div>
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-1">
@@ -558,7 +565,7 @@ function Navbar() {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="md:hidden p-2 rounded-lg text-primary-700 dark:text-[#f3e8d9] hover:bg-primary-100 dark:hover:bg-[#292018] transition-colors"
+              className="md:hidden p-2 rounded-lg text-primary-700 dark:text-[#f3e8d9] hover:bg-primary-100 dark:hover:bg-[#292018] transition-colors flex-shrink-0"
               aria-label="Ouvrir le menu"
             >
               {isOpen ? <FiX className="w-6 h-6" /> : <FiMenu className="w-6 h-6" />}

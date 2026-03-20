@@ -7,7 +7,7 @@ const BRAND_ASSETS = {
 }
 
 // Logo Jolof'Era
-function Logo({ variant = 'default', size = 'md', showTagline = true }) {
+function Logo({ variant = 'default', size = 'md', showTagline = true, forceIconText = false }) {
   const sizes = {
     sm: { logo: 'w-9 h-9', text: 'text-lg', tagline: 'text-[8px]' },
     md: { logo: 'w-11 h-11', text: 'text-xl', tagline: 'text-[10px]' },
@@ -26,9 +26,11 @@ function Logo({ variant = 'default', size = 'md', showTagline = true }) {
   const [fullLogoFailed, setFullLogoFailed] = useState(false)
   const [iconLogoFailed, setIconLogoFailed] = useState(false)
 
+  const shouldUseFullLogo = !forceIconText && !fullLogoFailed
+
   return (
-    <Link to="/" className="flex items-center space-x-3 group select-none">
-      {!fullLogoFailed ? (
+    <Link to="/" className="flex items-center space-x-3 group select-none max-w-full">
+      {shouldUseFullLogo ? (
         <img
           src={BRAND_ASSETS.full}
           alt="Jolof'Era"
@@ -113,9 +115,9 @@ function Logo({ variant = 'default', size = 'md', showTagline = true }) {
       </div>
 
       {/* Brand text */}
-      <div className="flex flex-col">
+      <div className="flex flex-col min-w-0">
         <span
-          className={`font-extrabold ${s.text} tracking-tight leading-none font-poppins`}
+          className={`font-extrabold ${s.text} tracking-tight leading-none font-poppins whitespace-nowrap`}
           style={{ letterSpacing: '-0.01em' }}
         >
           <span
@@ -131,7 +133,7 @@ function Logo({ variant = 'default', size = 'md', showTagline = true }) {
         </span>
         {showTagline && (
           <span
-            className={`${s.tagline} font-semibold tracking-[0.22em] uppercase font-inter transition-all duration-300
+            className={`${s.tagline} font-semibold tracking-[0.22em] uppercase font-inter transition-all duration-300 whitespace-nowrap
               ${isLight ? 'text-gold-100/90 drop-shadow-[0_0_8px_#facc15] animate-pulse' : 'text-yellow-700/80 dark:text-gold-300/90 drop-shadow-[0_0_8px_#fde047]'}
             `}
             style={{ letterSpacing: '0.22em', textShadow: '0 0 8px #fde047, 0 1px 2px rgba(0,0,0,0.35)' }}
