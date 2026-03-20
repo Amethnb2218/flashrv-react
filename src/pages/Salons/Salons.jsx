@@ -96,8 +96,9 @@ function Salons() {
     if (filters.salonType) {
       result = result.filter(s => s.salonType === filters.salonType)
     }
-    if (filters.businessType) {
-      result = result.filter(s => (s.businessType || 'SALON') === filters.businessType)
+    const normalizedBusinessType = String(filters.businessType || '').trim().toUpperCase()
+    if (normalizedBusinessType) {
+      result = result.filter((s) => String(s.businessType || 'SALON').trim().toUpperCase() === normalizedBusinessType)
     }
     // Price range filter
     if (filters.priceRange) {
@@ -185,7 +186,10 @@ function Salons() {
     if (filters.minRating) chips.push({ key: 'minRating', label: `Note = ${filters.minRating}` })
     if (filters.type) chips.push({ key: 'type', label: `Type: ${filters.type}` })
     if (filters.salonType) chips.push({ key: 'salonType', label: `Type salon: ${filters.salonType}` })
-    if (filters.businessType) chips.push({ key: 'businessType', label: filters.businessType === 'BOUTIQUE' ? 'Boutiques' : 'Salons' })
+    if (filters.businessType) {
+      const normalizedBusinessType = String(filters.businessType || '').trim().toUpperCase()
+      chips.push({ key: 'businessType', label: normalizedBusinessType === 'BOUTIQUE' ? 'Boutiques' : 'Salons' })
+    }
     return chips
   }, [filters])
 

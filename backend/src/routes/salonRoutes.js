@@ -305,7 +305,7 @@ router.get('/', optionalAuth, async (req, res, next) => {
     const { city, salonType, search, page = 1, limit = 10, ownerId, includeClosed } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const showClosed = String(includeClosed || '').trim().toLowerCase();
-    const includeClosedSalons = showClosed === '1' || showClosed === 'true' || showClosed === 'yes';
+    const filterOpenOnly = showClosed === '0' || showClosed === 'false' || showClosed === 'no';
 
     const searchValue = typeof search === 'string' ? search.trim() : '';
     const searchVariants = searchValue
@@ -318,14 +318,17 @@ router.get('/', optionalAuth, async (req, res, next) => {
       : [];
 
     const where = {
-      ...(includeClosedSalons ? {} : { isOpen: true }),
-      status: STATUS.APPROVED,
+      ...(filterOpenOnly ? { isOpen: true } : {}),
       ...(ownerId && { ownerId }),
-      owner: {
-        status: STATUS.APPROVED,
-        role: { in: [ROLES.PRO, 'SALON_OWNER'] },
-        isPublic: true,
-      },
+      OR: [
+        { status: STATUS.APPROVED },
+        {
+          owner: {
+            status: STATUS.APPROVED,
+            role: { in: [ROLES.PRO, 'SALON_OWNER', 'COIFFEUR'] },
+          },
+        },
+      ],
       ...(city && { city: { contains: city } }),
       ...(salonType && { salonType }),
       ...(searchVariants.length && {
@@ -475,7 +478,8 @@ router.get('/:id', optionalAuth, async (req, res, next) => {
     const isOwner = req.user && salon && salon.ownerId === req.user.id;
     const isAdmin = req.user && (req.user.role === 'ADMIN' || req.user.role === 'SUPER_ADMIN');
     const ownerStatus = salon?.owner?.status ? String(salon.owner.status).toUpperCase() : '';
-    const isPublic = ownerStatus === STATUS.APPROVED;
+    const salonStatus = salon?.status ? String(salon.status).toUpperCase() : '';
+    const isPublic = ownerStatus === STATUS.APPROVED || salonStatus === STATUS.APPROVED;
     if (!salon || (!isOwner && !isAdmin && !isPublic)) {
       return res.status(404).json({
         status: 'error',

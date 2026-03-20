@@ -47,8 +47,14 @@ function Home() {
     }
   }, [])
 
-  const onlySalons = useMemo(() => salons.filter(s => (s.businessType || 'SALON') !== 'BOUTIQUE'), [salons])
-  const onlyBoutiques = useMemo(() => salons.filter(s => s.businessType === 'BOUTIQUE'), [salons])
+  const onlySalons = useMemo(
+    () => salons.filter((s) => String(s.businessType || 'SALON').trim().toUpperCase() !== 'BOUTIQUE'),
+    [salons]
+  )
+  const onlyBoutiques = useMemo(
+    () => salons.filter((s) => String(s.businessType || '').trim().toUpperCase() === 'BOUTIQUE'),
+    [salons]
+  )
 
   const featuredSalons = useMemo(() => {
     const list = [...onlySalons]
