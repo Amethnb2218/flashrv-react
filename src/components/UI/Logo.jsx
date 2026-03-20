@@ -11,7 +11,7 @@ const ICON_FRAME_CLASS =
 const ICON_GLOW_CLASS =
   'absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_28%_20%,rgba(255,241,202,0.32),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.12),transparent_46%)]'
 const ICON_IMAGE_CLASS =
-  'absolute -inset-[10%] h-[120%] w-[120%] object-cover object-center scale-[2.9] mix-blend-screen brightness-110 contrast-125 saturate-0 opacity-95'
+  'absolute -inset-[6%] h-[112%] w-[112%] object-cover object-center scale-[2.74] mix-blend-screen brightness-110 contrast-125 saturate-0 opacity-95'
 
 // Logo Jolof'Era
 function Logo({ variant = 'default', size = 'md', showTagline = true, forceIconText = false }) {
