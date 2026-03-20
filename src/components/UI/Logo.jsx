@@ -7,11 +7,11 @@ const BRAND_ASSETS = {
 }
 
 const ICON_FRAME_CLASS =
-  'absolute inset-0 rounded-2xl overflow-hidden bg-[linear-gradient(145deg,#ffffff_0%,#f7f3ec_58%,#efe7da_100%)] shadow-[0_12px_28px_rgba(15,23,42,0.12)] ring-1 ring-black/8'
+  'absolute inset-0 rounded-2xl overflow-hidden bg-white shadow-[0_12px_28px_rgba(15,23,42,0.12)] ring-1 ring-black/10'
 const ICON_GLOW_CLASS =
-  'absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_28%_20%,rgba(255,255,255,0.7),transparent_38%),linear-gradient(180deg,rgba(255,255,255,0.22),transparent_48%)]'
+  'absolute inset-0 rounded-2xl bg-[linear-gradient(180deg,rgba(255,255,255,0.22),transparent_42%)]'
 const ICON_IMAGE_CLASS =
-  'absolute -inset-[4%] h-[108%] w-[108%] object-cover object-center scale-[2.62] invert brightness-[0.22] contrast-[1.35] saturate-0 opacity-100'
+  'absolute inset-0 h-full w-full object-cover object-center scale-[2.18] invert contrast-[1.45] brightness-[0.82] saturate-0 opacity-100'
 
 // Logo Jolof'Era
 function Logo({ variant = 'default', size = 'md', showTagline = true, forceIconText = false }) {
@@ -50,7 +50,7 @@ function Logo({ variant = 'default', size = 'md', showTagline = true, forceIconT
       {/* Logo icon */}
       <div className="relative">
         {!iconLogoFailed ? (
-          <div className={`${s.logo} relative overflow-visible transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_16px_#facc15]`}>
+          <div className={`${s.logo} relative overflow-hidden rounded-2xl transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_16px_#facc15]`}>
             <div className={ICON_FRAME_CLASS} />
             <div className={ICON_GLOW_CLASS} />
             <img
@@ -164,7 +164,7 @@ export function LogoIcon({ size = 40 }) {
   if (!iconLogoFailed) {
     return (
       <div
-        className="relative overflow-visible drop-shadow-lg"
+        className="relative overflow-hidden rounded-2xl drop-shadow-lg"
         style={{ width: size, height: size }}
       >
         <div className={ICON_FRAME_CLASS} />
