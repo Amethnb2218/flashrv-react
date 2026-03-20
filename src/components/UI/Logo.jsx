@@ -27,6 +27,10 @@ function Logo({ variant = 'default', size = 'md', showTagline = true, forceIconT
   const [iconLogoFailed, setIconLogoFailed] = useState(false)
 
   const shouldUseFullLogo = !forceIconText && !fullLogoFailed
+  const iconShellClass =
+    'relative isolate rounded-2xl overflow-hidden bg-[linear-gradient(145deg,#16110d_0%,#3a2818_38%,#8a6423_72%,#f0be4c_100%)] shadow-[0_12px_28px_rgba(55,33,10,0.28)]'
+  const iconImageClass =
+    'absolute inset-0 w-full h-full object-cover object-center scale-[2.72] mix-blend-screen brightness-110 contrast-125 saturate-0 opacity-95'
 
   return (
     <Link to="/" className="flex items-center space-x-3 group select-none max-w-full">
@@ -44,11 +48,12 @@ function Logo({ variant = 'default', size = 'md', showTagline = true, forceIconT
       {/* Logo icon */}
       <div className="relative">
         {!iconLogoFailed ? (
-          <div className={`${s.logo} rounded-2xl overflow-hidden transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_16px_#facc15] drop-shadow-lg`}>
+          <div className={`${s.logo} ${iconShellClass} transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_16px_#facc15]`}>
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_28%_20%,rgba(255,241,202,0.32),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.12),transparent_46%)]" />
             <img
               src={BRAND_ASSETS.icon}
               alt="Jolof'Era icon"
-              className="w-full h-full object-cover object-center scale-[2.65]"
+              className={iconImageClass}
               onError={() => setIconLogoFailed(true)}
               loading="eager"
               decoding="async"
@@ -156,15 +161,16 @@ export function LogoIcon({ size = 40 }) {
   if (!iconLogoFailed) {
     return (
       <div
-        className="drop-shadow-lg rounded-2xl overflow-hidden"
+        className={`${iconShellClass} drop-shadow-lg`}
         style={{ width: size, height: size }}
       >
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_28%_20%,rgba(255,241,202,0.32),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.12),transparent_46%)]" />
         <img
           src={BRAND_ASSETS.icon}
           alt="Jolof'Era icon"
           width={size}
           height={size}
-          className="w-full h-full object-cover object-center scale-[2.65]"
+          className={iconImageClass}
           onError={() => setIconLogoFailed(true)}
           loading="eager"
           decoding="async"
