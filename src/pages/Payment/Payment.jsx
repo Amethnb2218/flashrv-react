@@ -10,20 +10,22 @@ import { resolveMediaUrl } from '../../utils/media'
 import { buildPaydunyaPaymentPayload } from '../../utils/payments'
 import { calculateBookingDeposit } from '../../utils/bookingDeposit'
 
-const PAYMENT_METHODS = [
-  {
-    id: 'paydunya',
-    name: 'PayDunya',
-    icon: 'PD',
-    description: 'Paiement securise (Orange, Free, Carte bancaire)',
-  },
-  {
-    id: 'pay_on_site',
-    name: 'Payer au salon',
-    icon: 'Cash',
-    description: 'Confirmez la reservation et payez sur place',
-  },
-]
+const SUPPORTED_BOOKING_PAYMENT_METHODS = new Set(['PAYDUNYA', 'PAY_ON_SITE'])
+
+const PAYMENT_METHOD_LABELS = {
+  PAYDUNYA: 'PayDunya',
+  PAY_ON_SITE: 'Payer au salon',
+}
+
+const PAYMENT_METHOD_ICONS = {
+  PAYDUNYA: 'PD',
+  PAY_ON_SITE: 'Cash',
+}
+
+const PAYMENT_METHOD_DESCRIPTIONS = {
+  PAYDUNYA: 'Paiement securise (Orange, Free, Carte bancaire)',
+  PAY_ON_SITE: 'Confirmez la reservation et payez sur place',
+}
 
 const DUPLICATE_CONFLICT_PATTERNS = [
   'already exists',
@@ -72,7 +74,7 @@ const getFriendlyPaymentError = (error, { selectedMethod, bookingState, appointm
     }
   }
 
-  if (selectedMethod === 'paydunya' && appointmentId) {
+  if (selectedMethod === 'PAYDUNYA' && appointmentId) {
     return {
       message: 'Le serveur est temporairement indisponible. Reessayez dans un instant. Votre réservation a bien été conservée.',
       type: 'pending_online_booking',
@@ -90,10 +92,14 @@ function Payment() {
   const { state: bookingState, dispatch: bookingDispatch } = useBooking()
   const { user } = useAuth()
 
-  const [selectedMethod, setSelectedMethod] = useState('paydunya')
+  const [selectedMethod, setSelectedMethod] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [paymentStatus, setPaymentStatus] = useState(null)
+  const [salonPaymentMethods, setSalonPaymentMethods] = useState(() =>
+    Array.isArray(bookingState.salon?.paymentMethods) ? bookingState.salon.paymentMethods : []
+  )
+  const [loadingPaymentMethods, setLoadingPaymentMethods] = useState(false)
 
   useEffect(() => {
     if (!bookingState.salon || bookingState.services.length === 0) {
@@ -115,16 +121,64 @@ function Payment() {
     [bookingState.services, bookingState.salon, bookingState.totalPrice]
   )
   const hasDeposit = depositAmount > 0
+
+  useEffect(() => {
+    let mounted = true
+
+    const fetchSalonMethods = async () => {
+      if (!bookingState.salon?.id) return
+
+      setLoadingPaymentMethods(true)
+      try {
+        const res = await apiFetch(`/salons/${bookingState.salon.id}`)
+        const data = res?.data ?? res
+        const payloadSalon = data?.salon ?? data
+        if (!mounted) return
+        setSalonPaymentMethods(Array.isArray(payloadSalon?.paymentMethods) ? payloadSalon.paymentMethods : [])
+      } catch (_) {
+        if (!mounted) return
+        setSalonPaymentMethods(Array.isArray(bookingState.salon?.paymentMethods) ? bookingState.salon.paymentMethods : [])
+      } finally {
+        if (mounted) {
+          setLoadingPaymentMethods(false)
+        }
+      }
+    }
+
+    fetchSalonMethods()
+    return () => {
+      mounted = false
+    }
+  }, [bookingState.salon?.id, bookingState.salon?.paymentMethods])
+
   const availablePaymentMethods = useMemo(
-    () => PAYMENT_METHODS.filter((method) => hasDeposit || method.id !== 'paydunya'),
-    [hasDeposit]
+    () =>
+      (Array.isArray(salonPaymentMethods) ? salonPaymentMethods : [])
+        .filter((method) => method?.enabled !== false)
+        .map((method) => {
+          const methodKey = String(method?.method || '').toUpperCase()
+          return {
+            id: methodKey,
+            name: PAYMENT_METHOD_LABELS[methodKey] || method?.displayName || methodKey,
+            icon: PAYMENT_METHOD_ICONS[methodKey] || 'PAY',
+            description: PAYMENT_METHOD_DESCRIPTIONS[methodKey] || 'Paiement disponible pour cette reservation',
+          }
+        })
+        .filter((method) => SUPPORTED_BOOKING_PAYMENT_METHODS.has(method.id))
+        .filter((method) => hasDeposit || method.id !== 'PAYDUNYA'),
+    [hasDeposit, salonPaymentMethods]
   )
 
   useEffect(() => {
-    if (!hasDeposit && selectedMethod === 'paydunya') {
-      setSelectedMethod('pay_on_site')
+    if (availablePaymentMethods.length === 0) {
+      setSelectedMethod('')
+      return
     }
-  }, [hasDeposit, selectedMethod])
+
+    if (!availablePaymentMethods.some((method) => method.id === selectedMethod)) {
+      setSelectedMethod(availablePaymentMethods[0].id)
+    }
+  }, [availablePaymentMethods, selectedMethod])
 
   const buildAppointmentNotes = () => {
     const baseNotes = bookingState.notes?.trim()
@@ -176,7 +230,7 @@ function Payment() {
       clientAddress: clientAddress || null,
     }
 
-    if (paymentMethod === 'paydunya') {
+    if (paymentMethod === 'PAYDUNYA') {
       payload.status = 'PENDING_PAYMENT'
       payload.paymentMethod = 'PAYDUNYA'
       payload.paymentStatus = 'PENDING'
@@ -186,7 +240,7 @@ function Payment() {
       payload.sendConfirmation = false
     }
 
-    if (paymentMethod === 'pay_on_site') {
+    if (paymentMethod === 'PAY_ON_SITE') {
       payload.paymentMethod = 'PAY_ON_SITE'
     }
 
@@ -229,7 +283,7 @@ function Payment() {
     try {
       appointmentId = await ensureAppointment(selectedMethod)
 
-      if (selectedMethod === 'pay_on_site') {
+      if (selectedMethod === 'PAY_ON_SITE') {
         const result = await apiFetch('/payments/confirm-on-site', {
           method: 'POST',
           body: {
@@ -378,6 +432,16 @@ function Payment() {
                 ))}
               </div>
 
+              {loadingPaymentMethods && (
+                <p className="mt-3 text-xs text-primary-500">Chargement des moyens de paiement du salon...</p>
+              )}
+
+              {!loadingPaymentMethods && availablePaymentMethods.length === 0 && (
+                <div className="mt-4 p-3 bg-amber-50 text-amber-700 rounded-xl text-sm">
+                  Aucun moyen de paiement compatible n'est disponible pour cette reservation.
+                </div>
+              )}
+
               {error && (
                 <div className="mt-4 p-3 bg-red-50 text-red-600 rounded-xl text-sm flex items-center">
                   <FiAlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />
@@ -463,7 +527,7 @@ function Payment() {
                       <span className="font-semibold text-primary-900">{bookingState.totalPrice.toLocaleString()} FCFA</span>
                     </div>
 
-                    {hasDeposit && selectedMethod && selectedMethod !== 'pay_on_site' ? (
+                    {hasDeposit && selectedMethod && selectedMethod !== 'PAY_ON_SITE' ? (
                       <div className="rounded-2xl bg-gradient-to-br from-gold-50 to-orange-50 border border-gold-100 p-3.5 sm:p-4">
                         <div className="flex justify-between items-start gap-3 mb-3">
                           <div>
@@ -518,7 +582,7 @@ function Payment() {
                 ) : (
                   <>
                     <FiLock className="w-5 h-5 mr-2" />
-                    {selectedMethod === 'pay_on_site'
+                    {selectedMethod === 'PAY_ON_SITE'
                       ? 'Confirmer la reservation'
                       : `Payer l'acompte - ${depositAmount.toLocaleString()} FCFA`}
                   </>
