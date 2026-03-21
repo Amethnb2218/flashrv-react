@@ -8,9 +8,23 @@ import LoadingSpinner from '../../components/UI/LoadingSpinner'
 import apiFetch from '../../api/client'
 import { resolveMediaUrl } from '../../utils/media'
 import { buildPaydunyaPaymentPayload } from '../../utils/payments'
-import { calculateBookingDeposit } from '../../utils/bookingDeposit'
 
-const SUPPORTED_BOOKING_PAYMENT_METHODS = new Set(['PAYDUNYA', 'PAY_ON_SITE'])
+const ONLINE_BOOKING_PAYMENT_METHODS = new Set(['PAYDUNYA'])
+
+const PAYMENT_FLOW_OPTIONS = [
+  {
+    id: 'PAY_ON_SITE',
+    name: 'Payer sur place',
+    icon: 'Cash',
+    description: 'Confirmez maintenant puis reglez au salon le jour du rendez-vous',
+  },
+  {
+    id: 'PAY_IN_ADVANCE',
+    name: 'Payer a l avance',
+    icon: 'Now',
+    description: 'Payez avant votre rendez-vous pour arriver, faire vos soins et repartir',
+  },
+]
 
 const PAYMENT_METHOD_LABELS = {
   PAYDUNYA: 'PayDunya',
@@ -92,6 +106,7 @@ function Payment() {
   const { state: bookingState, dispatch: bookingDispatch } = useBooking()
   const { user } = useAuth()
 
+  const [paymentChoice, setPaymentChoice] = useState('PAY_ON_SITE')
   const [selectedMethod, setSelectedMethod] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -110,17 +125,6 @@ function Payment() {
   if (!bookingState.salon || bookingState.services.length === 0) {
     return null
   }
-
-  const { depositAmount, remainingAmount, uniformPercentage, usesMixedPercentages } = useMemo(
-    () =>
-      calculateBookingDeposit({
-        services: bookingState.services,
-        salon: bookingState.salon,
-        totalPrice: bookingState.totalPrice,
-      }),
-    [bookingState.services, bookingState.salon, bookingState.totalPrice]
-  )
-  const hasDeposit = depositAmount > 0
 
   useEffect(() => {
     let mounted = true
@@ -151,7 +155,7 @@ function Payment() {
     }
   }, [bookingState.salon?.id, bookingState.salon?.paymentMethods])
 
-  const availablePaymentMethods = useMemo(
+  const availableAdvancePaymentMethods = useMemo(
     () =>
       (Array.isArray(salonPaymentMethods) ? salonPaymentMethods : [])
         .filter((method) => method?.enabled !== false)
@@ -164,21 +168,24 @@ function Payment() {
             description: PAYMENT_METHOD_DESCRIPTIONS[methodKey] || 'Paiement disponible pour cette reservation',
           }
         })
-        .filter((method) => SUPPORTED_BOOKING_PAYMENT_METHODS.has(method.id))
-        .filter((method) => hasDeposit || method.id !== 'PAYDUNYA'),
-    [hasDeposit, salonPaymentMethods]
+        .filter((method) => ONLINE_BOOKING_PAYMENT_METHODS.has(method.id)),
+    [salonPaymentMethods]
   )
 
   useEffect(() => {
-    if (availablePaymentMethods.length === 0) {
+    if (availableAdvancePaymentMethods.length === 0) {
       setSelectedMethod('')
       return
     }
 
-    if (!availablePaymentMethods.some((method) => method.id === selectedMethod)) {
-      setSelectedMethod(availablePaymentMethods[0].id)
+    if (!availableAdvancePaymentMethods.some((method) => method.id === selectedMethod)) {
+      setSelectedMethod(availableAdvancePaymentMethods[0].id)
     }
-  }, [availablePaymentMethods, selectedMethod])
+  }, [availableAdvancePaymentMethods, selectedMethod])
+
+  const resolvedPaymentMethod = paymentChoice === 'PAY_IN_ADVANCE' ? selectedMethod : 'PAY_ON_SITE'
+  const amountToPayNow = paymentChoice === 'PAY_IN_ADVANCE' ? bookingState.totalPrice : 0
+  const remainingAmountAtSalon = paymentChoice === 'PAY_IN_ADVANCE' ? 0 : bookingState.totalPrice
 
   const buildAppointmentNotes = () => {
     const baseNotes = bookingState.notes?.trim()
@@ -270,7 +277,7 @@ function Payment() {
   }
 
   const handlePayment = async () => {
-    if (!selectedMethod) {
+    if (!resolvedPaymentMethod) {
       setError('Veuillez choisir un mode de paiement')
       return
     }
@@ -281,9 +288,9 @@ function Payment() {
     let appointmentId = bookingState.bookingId || null
 
     try {
-      appointmentId = await ensureAppointment(selectedMethod)
+      appointmentId = await ensureAppointment(resolvedPaymentMethod)
 
-      if (selectedMethod === 'PAY_ON_SITE') {
+      if (resolvedPaymentMethod === 'PAY_ON_SITE') {
         const result = await apiFetch('/payments/confirm-on-site', {
           method: 'POST',
           body: {
@@ -299,7 +306,7 @@ function Payment() {
       const serviceLabel = bookingState.services.map((service) => service.name).filter(Boolean).join(', ')
       const paymentBody = buildPaydunyaPaymentPayload({
         bookingId: appointmentId,
-        amount: depositAmount,
+        amount: amountToPayNow,
         customerName: `${bookingState.clientFirstName || ''} ${bookingState.clientLastName || ''}`.trim() || user?.name || '',
         customerEmail: user?.email || bookingState.clientEmail || '',
         customerPhone: bookingState.clientPhone || user?.phoneNumber || user?.phone || '',
@@ -333,7 +340,7 @@ function Payment() {
       window.location.href = payload.invoiceUrl
     } catch (err) {
       const friendlyError = getFriendlyPaymentError(err, {
-        selectedMethod,
+        selectedMethod: resolvedPaymentMethod,
         bookingState,
         appointmentId,
       })
@@ -406,39 +413,77 @@ function Payment() {
               <h2 className="text-lg sm:text-xl font-bold text-primary-900 mb-3 sm:mb-6">Mode de paiement</h2>
 
               <div className="space-y-3">
-                {availablePaymentMethods.map((method) => (
+                {PAYMENT_FLOW_OPTIONS.map((option) => (
                   <motion.button
-                    key={method.id}
+                    key={option.id}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => setSelectedMethod(method.id)}
+                    onClick={() => setPaymentChoice(option.id)}
                     className={`w-full flex items-center p-3 sm:p-4 border-2 rounded-xl transition-all ${
-                      selectedMethod === method.id
+                      paymentChoice === option.id
                         ? 'border-primary-600 bg-primary-50'
                         : 'border-primary-200 hover:border-primary-300'
                     }`}
                   >
                     <span className="text-sm sm:text-base mr-3 px-2 py-1 rounded-full bg-primary-100 font-semibold text-primary-700">
-                      {method.icon}
+                      {option.icon}
                     </span>
                     <div className="text-left flex-1">
-                      <p className="font-semibold text-primary-900">{method.name}</p>
-                      <p className="text-xs sm:text-sm text-primary-500">{method.description}</p>
+                      <p className="font-semibold text-primary-900">{option.name}</p>
+                      <p className="text-xs sm:text-sm text-primary-500">{option.description}</p>
                     </div>
-                    {selectedMethod === method.id && (
+                    {paymentChoice === option.id && (
                       <FiCheck className="w-5 h-5 text-primary-600" />
                     )}
                   </motion.button>
                 ))}
               </div>
 
-              {loadingPaymentMethods && (
-                <p className="mt-3 text-xs text-primary-500">Chargement des moyens de paiement du salon...</p>
-              )}
+              {paymentChoice === 'PAY_IN_ADVANCE' && (
+                <div className="mt-5 space-y-3 border-t border-primary-100 pt-5">
+                  <div>
+                    <p className="font-semibold text-primary-900">Moyens de paiement du salon</p>
+                    <p className="text-xs sm:text-sm text-primary-500 mt-1">
+                      Choisissez parmi les moyens ajoutes par le professionnel pour payer avant votre rendez-vous.
+                    </p>
+                  </div>
 
-              {!loadingPaymentMethods && availablePaymentMethods.length === 0 && (
-                <div className="mt-4 p-3 bg-amber-50 text-amber-700 rounded-xl text-sm">
-                  Aucun moyen de paiement compatible n'est disponible pour cette reservation.
+                  <div className="space-y-3">
+                    {availableAdvancePaymentMethods.map((method) => (
+                      <motion.button
+                        key={method.id}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => setSelectedMethod(method.id)}
+                        className={`w-full flex items-center p-3 sm:p-4 border-2 rounded-xl transition-all ${
+                          selectedMethod === method.id
+                            ? 'border-primary-600 bg-primary-50'
+                            : 'border-primary-200 hover:border-primary-300'
+                        }`}
+                      >
+                        <span className="text-sm sm:text-base mr-3 px-2 py-1 rounded-full bg-primary-100 font-semibold text-primary-700">
+                          {method.icon}
+                        </span>
+                        <div className="text-left flex-1">
+                          <p className="font-semibold text-primary-900">{method.name}</p>
+                          <p className="text-xs sm:text-sm text-primary-500">{method.description}</p>
+                        </div>
+                        {selectedMethod === method.id && (
+                          <FiCheck className="w-5 h-5 text-primary-600" />
+                        )}
+                      </motion.button>
+                    ))}
+                  </div>
+
+                  {loadingPaymentMethods && (
+                    <p className="text-xs text-primary-500">Chargement des moyens de paiement du salon...</p>
+                  )}
+
+                  {!loadingPaymentMethods && availableAdvancePaymentMethods.length === 0 && (
+                    <div className="p-3 bg-amber-50 text-amber-700 rounded-xl text-sm">
+                      Aucun moyen de paiement a l avance n'est configure par ce salon pour le moment.
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -527,38 +572,36 @@ function Payment() {
                       <span className="font-semibold text-primary-900">{bookingState.totalPrice.toLocaleString()} FCFA</span>
                     </div>
 
-                    {hasDeposit && selectedMethod && selectedMethod !== 'PAY_ON_SITE' ? (
+                    {paymentChoice === 'PAY_IN_ADVANCE' ? (
                       <div className="rounded-2xl bg-gradient-to-br from-gold-50 to-orange-50 border border-gold-100 p-3.5 sm:p-4">
                         <div className="flex justify-between items-start gap-3 mb-3">
                           <div>
                             <p className="text-sm font-semibold text-primary-900">
-                              {`Acompte a payer${uniformPercentage !== null ? ` (${uniformPercentage}%)` : usesMixedPercentages ? ' (selon services)' : ''}`}
+                              Paiement a l avance
                             </p>
-                            <p className="text-xs text-primary-500 mt-1">Paiement en ligne pour confirmer votre reservation</p>
+                            <p className="text-xs text-primary-500 mt-1">Reglez maintenant et vous n'aurez rien a payer au salon</p>
                           </div>
                           <span className="text-2xl font-black text-gold-700 whitespace-nowrap">
-                            {depositAmount.toLocaleString()} FCFA
+                            {amountToPayNow.toLocaleString()} FCFA
                           </span>
                         </div>
                         <div className="flex justify-between items-center text-sm text-primary-600 pt-3 border-t border-gold-100">
                           <span>Reste a payer au salon</span>
-                          <span className="font-semibold text-primary-900">{remainingAmount.toLocaleString()} FCFA</span>
+                          <span className="font-semibold text-primary-900">0 FCFA</span>
                         </div>
                       </div>
                     ) : (
                       <div className="rounded-2xl bg-primary-50 border border-primary-100 p-3.5 sm:p-4 space-y-3">
                         <div className="flex justify-between items-center gap-4">
-                          <span className="text-lg font-bold text-primary-900">{hasDeposit ? 'Total' : 'Aucun acompte requis'}</span>
+                          <span className="text-lg font-bold text-primary-900">Paiement sur place</span>
                           <span className="text-2xl font-black text-primary-900">
-                            {(hasDeposit ? bookingState.totalPrice : remainingAmount).toLocaleString()} FCFA
+                            {bookingState.totalPrice.toLocaleString()} FCFA
                           </span>
                         </div>
-                        {!hasDeposit && (
-                          <div className="flex justify-between items-center text-sm text-primary-600 pt-3 border-t border-primary-100">
-                            <span>Total a payer au salon</span>
-                            <span className="font-semibold text-primary-900">{remainingAmount.toLocaleString()} FCFA</span>
-                          </div>
-                        )}
+                        <div className="flex justify-between items-center text-sm text-primary-600 pt-3 border-t border-primary-100">
+                          <span>Total a payer au salon</span>
+                          <span className="font-semibold text-primary-900">{remainingAmountAtSalon.toLocaleString()} FCFA</span>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -574,7 +617,7 @@ function Payment() {
 
               <button
                 onClick={handlePayment}
-                disabled={loading || !selectedMethod || paymentStatus === 'pending_confirmation'}
+                disabled={loading || !resolvedPaymentMethod || paymentStatus === 'pending_confirmation'}
                 className="w-full py-3.5 sm:py-4 px-3 bg-gradient-to-r from-primary-600 to-accent-600 text-white font-semibold text-sm sm:text-base rounded-xl hover:from-primary-700 hover:to-accent-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-center"
               >
                 {loading ? (
@@ -582,9 +625,9 @@ function Payment() {
                 ) : (
                   <>
                     <FiLock className="w-5 h-5 mr-2" />
-                    {selectedMethod === 'PAY_ON_SITE'
+                    {paymentChoice === 'PAY_ON_SITE'
                       ? 'Confirmer la reservation'
-                      : `Payer l'acompte - ${depositAmount.toLocaleString()} FCFA`}
+                      : `Payer maintenant - ${amountToPayNow.toLocaleString()} FCFA`}
                   </>
                 )}
               </button>
