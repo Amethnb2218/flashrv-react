@@ -730,6 +730,7 @@ const [serviceCategory, setServiceCategory] = useState("all");
 const [serviceSort, setServiceSort] = useState("recent");
 
 const fileInputRef = useRef(null);
+const salonImageInputRef = useRef(null);
 const notificationsPanelRef = useRef(null);
 const navStateHandledRef = useRef("");
 
@@ -5122,164 +5123,197 @@ return (
 {/* ------------------ SETTINGS ------------------ */}
 {activeTab === "settings" && (
 <motion.div key="settings" {...pageAnim} className="space-y-3 sm:space-y-4">
-<Card>
-<CardHeader
-icon={<FiSettings />}
-title="Paramètres du salon"
-right={
-<Button onClick={saveSettings} disabled={savingSettings}>
-<FiSave className="mr-2" /> Sauvegarder
-</Button>
-}
-/>
-<div className="p-3 sm:p-5">
-<div className="grid md:grid-cols-2 gap-4 sm:gap-6">
-<Input label="Nom du salon" value={salonSettings.name} onChange={(e) => setSalonSettings((p) => ({ ...p, name: e.target.value }))} />
-<Input label="Téléphone" value={salonSettings.phone} onChange={(e) => setSalonSettings((p) => ({ ...p, phone: e.target.value }))} />
-<Input label="WhatsApp" value={salonSettings.whatsapp} onChange={(e) => setSalonSettings((p) => ({ ...p, whatsapp: e.target.value }))} />
-<Input label="Adresse" value={salonSettings.address} onChange={(e) => setSalonSettings((p) => ({ ...p, address: e.target.value }))} />
-<div>
-  <label className="block text-sm font-semibold text-primary-700 mb-1">Quartier</label>
-  <QuartierSelector
-    value={salonSettings.neighborhood}
-    onChange={(v) => setSalonSettings((p) => ({ ...p, neighborhood: v }))}
-    placeholder="Sélectionner votre quartier"
-    variant="form"
-  />
-</div>
-<Textarea className="md:col-span-2" label="Description" rows={4} value={salonSettings.description} onChange={(e) => setSalonSettings((p) => ({ ...p, description: e.target.value }))} />
-<div className="md:col-span-2">
-  <label className="block text-sm font-semibold text-primary-700 mb-2">Photo du salon</label>
-  <div className="flex flex-col md:flex-row gap-4">
-    <div className="w-full md:w-64 h-40 rounded-2xl overflow-hidden bg-primary-50 border border-dashed border-primary-200 flex items-center justify-center">
-      {salonSettings.image ? (
-        <img src={resolveMediaUrl(salonSettings.image)} alt="Salon" className="w-full h-full object-cover" />
-      ) : (
-        <FiImage className="w-10 h-10 text-primary-300" />
-      )}
+<Card className="overflow-hidden">
+<div className="bg-gradient-to-r from-primary-900 via-primary-800 to-primary-900 px-4 py-4 sm:px-5 sm:py-5 text-white">
+  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="min-w-0">
+      <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-gold-100">
+        <FiSettings className="h-3.5 w-3.5" /> Dashboard pro
+      </div>
+      <h2 className="mt-3 text-xl sm:text-2xl font-extrabold">Paramètres du salon</h2>
+      <p className="mt-1 text-sm text-primary-100">
+        Mettez à jour vos infos visibles par les clients sans vous perdre dans de grands blocs.
+      </p>
     </div>
-    <input
-      type="file"
-      accept="image/*"
-      ref={(el) => (window._salonImageInput = el)}
-      className="hidden"
-      onChange={async (e) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        if (!validateMedia(file)) return;
-        readMediaAsDataUrl(file, (dataUrl) =>
-          setSalonSettings((p) => ({ ...p, image: dataUrl }))
-        );
-        try {
-          const imageUrl = await uploadSalonImage(file);
-          if (imageUrl) {
-            setSalonSettings((p) => ({ ...p, image: imageUrl }));
-            toast.success("Photo du salon mise à jour.");
-          }
-        } catch (err) {
-          toast.error(err.message || "Erreur lors de l'upload de l'image.");
-        }
-        e.target.value = "";
-      }}
+    <div className="hidden sm:block shrink-0">
+      <Button onClick={saveSettings} disabled={savingSettings} className="min-w-[180px] bg-white !text-primary-900 hover:!bg-primary-50">
+        <FiSave className="mr-2" /> {savingSettings ? "Sauvegarde..." : "Sauvegarder"}
+      </Button>
+    </div>
+  </div>
+</div>
+</Card>
+
+<div className="grid gap-4 xl:grid-cols-[minmax(0,1.25fr)_minmax(280px,0.75fr)]">
+  <Card>
+    <CardHeader
+      icon={<FiSettings />}
+      title="Coordonnées"
+      subtitle="Nom, contacts, adresse et description affichés sur la fiche."
     />
-    <div className="flex flex-col gap-2 justify-center">
-      {salonSettings.image ? (
-        <div className="flex gap-2">
+    <div className="p-3 sm:p-5 space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <Input label="Nom du salon" value={salonSettings.name} onChange={(e) => setSalonSettings((p) => ({ ...p, name: e.target.value }))} />
+        <Input label="Téléphone" value={salonSettings.phone} onChange={(e) => setSalonSettings((p) => ({ ...p, phone: e.target.value }))} />
+        <Input label="WhatsApp" value={salonSettings.whatsapp} onChange={(e) => setSalonSettings((p) => ({ ...p, whatsapp: e.target.value }))} />
+        <Input label="Adresse" value={salonSettings.address} onChange={(e) => setSalonSettings((p) => ({ ...p, address: e.target.value }))} />
+      </div>
+      <div>
+        <label className="block text-sm font-semibold text-primary-700 mb-1">Quartier</label>
+        <QuartierSelector
+          value={salonSettings.neighborhood}
+          onChange={(v) => setSalonSettings((p) => ({ ...p, neighborhood: v }))}
+          placeholder="Sélectionner votre quartier"
+          variant="form"
+        />
+      </div>
+      <Textarea label="Description" rows={4} value={salonSettings.description} onChange={(e) => setSalonSettings((p) => ({ ...p, description: e.target.value }))} />
+    </div>
+  </Card>
+
+  <Card>
+    <CardHeader
+      icon={<FiImage />}
+      title="Photo du salon"
+      subtitle="Carrée ou paysage. Visible sur l'accueil et la fiche."
+    />
+    <div className="p-3 sm:p-5 space-y-4">
+      <div className="aspect-[4/3] rounded-2xl overflow-hidden bg-primary-50 border border-dashed border-primary-200 flex items-center justify-center">
+        {salonSettings.image ? (
+          <img src={resolveMediaUrl(salonSettings.image)} alt="Salon" className="w-full h-full object-cover" />
+        ) : (
+          <div className="flex flex-col items-center gap-2 text-center px-4">
+            <FiImage className="w-10 h-10 text-primary-300" />
+            <p className="text-sm font-semibold text-primary-500">Ajoutez une photo nette de votre espace</p>
+          </div>
+        )}
+      </div>
+      <input
+        type="file"
+        accept="image/*"
+        ref={salonImageInputRef}
+        className="hidden"
+        onChange={async (e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          if (!validateMedia(file)) return;
+          readMediaAsDataUrl(file, (dataUrl) =>
+            setSalonSettings((p) => ({ ...p, image: dataUrl }))
+          );
+          try {
+            const imageUrl = await uploadSalonImage(file);
+            if (imageUrl) {
+              setSalonSettings((p) => ({ ...p, image: imageUrl }));
+              toast.success("Photo du salon mise à jour.");
+            }
+          } catch (err) {
+            toast.error(err.message || "Erreur lors de l'upload de l'image.");
+          }
+          e.target.value = "";
+        }}
+      />
+      <div className={cx("grid gap-2", salonSettings.image ? "grid-cols-2" : "grid-cols-1")}>
+        <Button
+          variant="secondary"
+          className="w-full"
+          onClick={() => salonImageInputRef.current?.click()}
+        >
+          {salonSettings.image ? <FiEdit2 className="mr-2" /> : <FiImage className="mr-2" />}
+          {salonSettings.image ? "Modifier" : "Ajouter une photo"}
+        </Button>
+        {salonSettings.image ? (
           <Button
             variant="secondary"
-            onClick={() => window._salonImageInput?.click()}
-          >
-            <FiEdit2 className="mr-2" /> Modifier
-          </Button>
-          <Button
-            variant="secondary"
+            className="w-full border-red-200 text-red-600 hover:bg-red-50"
             onClick={() => setSalonSettings((p) => ({ ...p, image: "" }))}
           >
             <FiTrash2 className="mr-2" /> Supprimer
           </Button>
-        </div>
-      ) : (
-        <Button
-          variant="secondary"
-          onClick={() => window._salonImageInput?.click()}
-        >
-          <FiImage className="mr-2" /> Ajouter une photo
-        </Button>
-      )}
-      <p className="text-xs text-primary-500">
-        Image carrée ou paysage. Affichée sur la page d'accueil et la fiche salon.
+        ) : null}
+      </div>
+      <p className="text-xs leading-relaxed text-primary-500">
+        Choisissez une image claire et bien cadrée pour rendre la fiche plus rassurante sur mobile.
       </p>
     </div>
-  </div>
+  </Card>
 </div>
-</div>
-</div>
-</Card>
 
 <Card>
 <CardHeader
 icon={<FiClock />}
 title="Horaires d'ouverture"
+subtitle="Chaque journée reste modifiable en une seule ligne sur mobile."
 right={
-<Button variant="secondary" onClick={saveSettings} disabled={savingSettings}>
-<FiSave className="mr-2" /> Sauvegarder
-</Button>
+<div className="hidden sm:block">
+  <Button variant="secondary" onClick={saveSettings} disabled={savingSettings}>
+    <FiSave className="mr-2" /> {savingSettings ? "Sauvegarde..." : "Sauvegarder"}
+  </Button>
+</div>
 }
 />
-<div className="p-3 sm:p-6 space-y-2.5 sm:space-y-3">
+<div className="p-3 sm:p-5 space-y-3">
 {weekDays.map(([label, key]) => {
 const hours = salonSettings.openingHours?.[key];
 return (
-<div key={key} className="flex flex-col md:flex-row md:items-center gap-2.5 sm:gap-3 p-3 sm:p-4 bg-primary-50 rounded-2xl">
-<span className="w-24 font-extrabold text-primary-900">{label}</span>
-{hours ? (
-<>
-<input
-type="time"
-value={hours.open}
-onChange={(e) =>
-setSalonSettings((p) => ({
-...p,
-openingHours: { ...p.openingHours, [key]: { ...hours, open: e.target.value } },
-}))
-}
-className="px-3 py-2 border border-primary-200 rounded-xl bg-white"
-/>
-<span className="text-primary-500 font-semibold">à</span>
-<input
-type="time"
-value={hours.close}
-onChange={(e) =>
-setSalonSettings((p) => ({
-...p,
-openingHours: { ...p.openingHours, [key]: { ...hours, close: e.target.value } },
-}))
-}
-className="px-3 py-2 border border-primary-200 rounded-xl bg-white"
-/>
-<button
-onClick={() => setSalonSettings((p) => ({ ...p, openingHours: { ...p.openingHours, [key]: null } }))}
-className="text-red-600 hover:text-red-700 font-semibold text-sm"
->
-Marquer fermé
-</button>
-</>
-) : (
-<>
-<span className="text-primary-400 font-semibold">Fermé</span>
-<button
-onClick={() =>
-setSalonSettings((p) => ({
-...p,
-openingHours: { ...p.openingHours, [key]: { open: "09:00", close: "18:00" } },
-}))
-}
-className="text-gold-700 hover:text-gold-800 font-semibold text-sm"
->
-Ajouter horaires
-</button>
-</>
-)}
+<div key={key} className="rounded-2xl border border-primary-100 bg-white p-3 sm:p-4 shadow-sm">
+  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex items-center justify-between gap-3 sm:min-w-[150px]">
+      <span className="text-sm sm:text-base font-extrabold text-primary-900">{label}</span>
+      <Badge tone={hours ? "green" : "gray"}>{hours ? "Ouvert" : "Fermé"}</Badge>
+    </div>
+    {hours ? (
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end w-full">
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 w-full sm:w-auto">
+          <input
+            type="time"
+            value={hours.open}
+            onChange={(e) =>
+              setSalonSettings((p) => ({
+                ...p,
+                openingHours: { ...p.openingHours, [key]: { ...hours, open: e.target.value } },
+              }))
+            }
+            className="min-w-0 px-3 py-2 border border-primary-200 rounded-xl bg-primary-50 text-primary-900 outline-none focus:ring-2 focus:ring-gold-500"
+          />
+          <span className="text-center text-sm font-semibold text-primary-500">à</span>
+          <input
+            type="time"
+            value={hours.close}
+            onChange={(e) =>
+              setSalonSettings((p) => ({
+                ...p,
+                openingHours: { ...p.openingHours, [key]: { ...hours, close: e.target.value } },
+              }))
+            }
+            className="min-w-0 px-3 py-2 border border-primary-200 rounded-xl bg-primary-50 text-primary-900 outline-none focus:ring-2 focus:ring-gold-500"
+          />
+        </div>
+        <button
+          type="button"
+          onClick={() => setSalonSettings((p) => ({ ...p, openingHours: { ...p.openingHours, [key]: null } }))}
+          className="inline-flex items-center justify-center rounded-xl px-3 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50"
+        >
+          Marquer fermé
+        </button>
+      </div>
+    ) : (
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end w-full">
+        <p className="text-sm text-primary-500">Aucun horaire défini pour cette journée.</p>
+        <button
+          type="button"
+          onClick={() =>
+            setSalonSettings((p) => ({
+              ...p,
+              openingHours: { ...p.openingHours, [key]: { open: "09:00", close: "18:00" } },
+            }))
+          }
+          className="inline-flex items-center justify-center rounded-xl px-3 py-2 text-sm font-semibold text-gold-700 transition hover:bg-gold-50"
+        >
+          Ajouter horaires
+        </button>
+      </div>
+    )}
+  </div>
 </div>
 );
 })}

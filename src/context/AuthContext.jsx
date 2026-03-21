@@ -19,13 +19,7 @@ import {
 } from '../utils/authToken'
 
 const AuthContext = createContext()
-
-const initialState = {
-  user: null,
-  token: readAuthToken(),
-  isAuthenticated: false,
-  isLoading: true,
-}
+const USER_STORAGE_KEY = 'flashrv_user'
 
 const normalizeUserShape = (user) => {
   if (!user || typeof user !== 'object') return user
@@ -35,6 +29,46 @@ const normalizeUserShape = (user) => {
   if (next.avatar && !next.picture) next.picture = next.avatar
   if (next.picture && !next.avatar) next.avatar = next.picture
   return next
+}
+
+const readStoredUser = () => {
+  if (typeof window === 'undefined') return null
+
+  try {
+    const raw = window.sessionStorage.getItem(USER_STORAGE_KEY)
+    if (!raw) return null
+    return normalizeUserShape(JSON.parse(raw))
+  } catch (_) {
+    return null
+  }
+}
+
+const writeStoredUser = (user) => {
+  if (typeof window === 'undefined') return
+
+  try {
+    if (!user) {
+      window.sessionStorage.removeItem(USER_STORAGE_KEY)
+      return
+    }
+    window.sessionStorage.setItem(USER_STORAGE_KEY, JSON.stringify(normalizeUserShape(user)))
+  } catch (_) {
+    // Ignore storage errors to avoid blocking authentication flows.
+  }
+}
+
+const clearStoredUser = () => {
+  writeStoredUser(null)
+}
+
+const initialUser = readStoredUser()
+const initialToken = readAuthToken()
+
+const initialState = {
+  user: initialUser,
+  token: initialToken,
+  isAuthenticated: Boolean(initialUser && initialToken),
+  isLoading: true,
 }
 
 const normalizeStatus = (status) => String(status || '').trim().toUpperCase()
@@ -76,6 +110,22 @@ export function AuthProvider({ children }) {
   const [state, dispatch] = useReducer(authReducer, initialState)
   const API_BASE = import.meta.env.VITE_API_URL || '/api'
   const authHeaders = (headers = {}, method = 'GET') => buildAuthHeaders(headers, method)
+
+  const restoreCachedSession = () => {
+    const cachedUser = readStoredUser()
+    const cachedToken = readAuthToken()
+
+    if (!cachedUser || !cachedToken) {
+      return false
+    }
+
+    dispatch({
+      type: 'LOGIN',
+      payload: { user: cachedUser, token: cachedToken }
+    })
+
+    return true
+  }
 
   const hydrateProAccountState = async (user) => {
     const normalizedUser = normalizeUserShape(user)
@@ -163,7 +213,7 @@ export function AuthProvider({ children }) {
     const hydratedUser = await hydrateProAccountState(restoredUser)
     const normalizedUser = normalizeUserShape(hydratedUser)
 
-    sessionStorage.setItem('flashrv_user', JSON.stringify(normalizedUser))
+    writeStoredUser(normalizedUser)
     if (apiToken) {
       writeAuthToken(apiToken)
     }
@@ -193,7 +243,10 @@ export function AuthProvider({ children }) {
         })
 
         if (!response.ok) {
-          sessionStorage.removeItem('flashrv_user')
+          if (restoreCachedSession()) {
+            return
+          }
+          clearStoredUser()
           clearAuthToken()
           clearCsrfToken()
           dispatch({ type: 'SET_LOADING', payload: false })
@@ -203,7 +256,7 @@ export function AuthProvider({ children }) {
         const data = await response.json().catch(() => null)
         const apiUser = data?.data?.user
         if (!apiUser) {
-          sessionStorage.removeItem('flashrv_user')
+          clearStoredUser()
           clearAuthToken()
           clearCsrfToken()
           dispatch({ type: 'SET_LOADING', payload: false })
@@ -217,7 +270,10 @@ export function AuthProvider({ children }) {
         )
       } catch (error) {
         console.error('Error parsing saved user:', error)
-        sessionStorage.removeItem('flashrv_user')
+        if (restoreCachedSession()) {
+          return
+        }
+        clearStoredUser()
         clearAuthToken()
         clearCsrfToken()
         dispatch({ type: 'SET_LOADING', payload: false })
@@ -314,7 +370,7 @@ export function AuthProvider({ children }) {
     }
     clearAuthToken()
     clearCsrfToken()
-    sessionStorage.removeItem('flashrv_user')
+    clearStoredUser()
     sessionStorage.removeItem('flashrv_booking')
     disconnectRealtime()
     unsubscribeFromPush().catch(() => {})
@@ -351,13 +407,12 @@ export function AuthProvider({ children }) {
 
   // Basic checkAuth implementation
   const checkAuth = () => {
-    const user = sessionStorage.getItem('flashrv_user');
-    return !!user;
-  };
+    return Boolean(readStoredUser() && readAuthToken())
+  }
 
   const updateUser = (userData) => {
     const updatedUser = { ...state.user, ...userData }
-    sessionStorage.setItem('flashrv_user', JSON.stringify(normalizeUserShape(updatedUser)))
+    writeStoredUser(updatedUser)
     dispatch({ type: 'UPDATE_USER', payload: userData })
   }
 
