@@ -25,259 +25,268 @@ const getFrontendAdminPath = () => {
 
 const getFrontendAdminUrl = () => `${getFrontendBaseUrl()}${getFrontendAdminPath()}`;
 
-/**
- * Send a welcome / account-created confirmation email.
- * Fails silently so registration is never blocked by email issues.
- */
-async function sendWelcomeEmail({ to, name }) {
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    console.warn('âš ï¸  SMTP not configured â€“ skipping welcome email');
+const escapeHtml = (value) =>
+  String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
+const formatMoney = (value) => Number(value || 0).toLocaleString('fr-FR');
+
+const isSmtpConfigured = () => Boolean(process.env.SMTP_USER && process.env.SMTP_PASS);
+
+async function deliverEmail({ to, subject, text, html, label, fromName = "Jolof'Era" }) {
+  if (!isSmtpConfigured()) {
+    console.warn(`SMTP not configured - skipping ${label}`);
     return;
   }
 
-  const mailOptions = {
-    from: `"Jolof’Era" <${process.env.SMTP_USER}>`,
-    to,
-    subject: 'Bienvenue sur Jolof’Era ! ðŸŽ‰',
-    html: `
-      <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;border:1px solid #e5e7eb;border-radius:12px">
-        <h2 style="color:#7c3aed">Bienvenue, ${name} !</h2>
-        <p>Votre compte Jolof’Era a Ã©tÃ© crÃ©Ã© avec succÃ¨s.</p>
-        <p>Vous pouvez dÃ¨s maintenant vous connecter et profiter de nos services de rÃ©servation.</p>
-        <a href="https://jolofera.com"
-           style="display:inline-block;margin-top:16px;padding:12px 28px;background:#7c3aed;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">
-           AccÃ©der Ã  Jolof’Era
-        </a>
-        <p style="margin-top:24px;font-size:13px;color:#6b7280">Si vous n'avez pas crÃ©Ã© ce compte, ignorez cet e-mail.</p>
-      </div>
-    `,
-  };
-
   try {
-    await transporter.sendMail(mailOptions);
-    console.log(`ðŸ“§ Welcome email sent to ${to}`);
+    await transporter.sendMail({
+      from: `"${fromName}" <${process.env.SMTP_USER}>`,
+      to,
+      subject,
+      text,
+      html,
+    });
+    console.log(`${label} sent to ${Array.isArray(to) ? to.join(', ') : to}`);
   } catch (err) {
-    console.error('âŒ Failed to send welcome email:', err.message);
+    console.error(`Failed to send ${label}:`, err.message);
   }
 }
 
-/**
- * Notify all ADMIN and SUPER_ADMIN users when a new PRO registers.
- * Fails silently so registration is never blocked.
- */
+const renderEmailShell = ({ title, accent = '#059669', intro, body, ctaLabel, ctaUrl, footer }) => `
+  <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:24px;border:1px solid #e5e7eb;border-radius:16px;background:#ffffff;color:#111827">
+    <div style="margin-bottom:20px">
+      <div style="font-size:12px;letter-spacing:0.16em;text-transform:uppercase;color:#9ca3af;font-weight:700">Jolof'Era</div>
+      <h2 style="margin:10px 0 0;color:${accent};font-size:28px;line-height:1.2">${title}</h2>
+    </div>
+    ${intro}
+    ${body}
+    ${
+      ctaLabel && ctaUrl
+        ? `<a href="${escapeHtml(ctaUrl)}" style="display:inline-block;margin-top:18px;padding:12px 24px;background:${accent};color:#ffffff;text-decoration:none;border-radius:10px;font-weight:700">${ctaLabel}</a>`
+        : ''
+    }
+    <p style="margin-top:24px;font-size:13px;line-height:1.6;color:#6b7280">${footer}</p>
+  </div>
+`;
+
+async function sendWelcomeEmail({ to, name }) {
+  const safeName = escapeHtml(name || 'client');
+  const html = renderEmailShell({
+    title: 'Bienvenue',
+    accent: '#7c3aed',
+    intro: `<p>Bonjour <strong>${safeName}</strong>,</p>`,
+    body: `
+      <p>Votre compte Jolof&#39;Era a bien ete cree.</p>
+      <p>Vous pouvez maintenant vous connecter et utiliser la plateforme pour vos reservations, commandes et suivis.</p>
+    `,
+    ctaLabel: "Acceder a Jolof'Era",
+    ctaUrl: getFrontendBaseUrl(),
+    footer: "Si vous n'etes pas a l'origine de cette inscription, vous pouvez simplement ignorer cet email.",
+  });
+
+  await deliverEmail({
+    to,
+    subject: "Bienvenue sur Jolof'Era",
+    text: `Bonjour ${name || 'client'},\n\nVotre compte Jolof'Era a bien ete cree.\nConnectez-vous ici: ${getFrontendBaseUrl()}\n\nSi vous n'etes pas a l'origine de cette inscription, ignorez cet email.`,
+    html,
+    label: 'welcome email',
+  });
+}
+
 async function sendProPendingNotification({ proName, proEmail }) {
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    console.warn('âš ï¸  SMTP not configured â€“ skipping PRO pending notification');
+  if (!isSmtpConfigured()) {
+    console.warn('SMTP not configured - skipping PRO pending notification');
     return;
   }
 
   try {
     const admins = await prisma.user.findMany({
       where: { role: { in: ['ADMIN', 'SUPER_ADMIN'] } },
-      select: { email: true, name: true },
+      select: { email: true },
     });
 
-    if (!admins.length) return;
+    const adminEmails = admins.map((admin) => admin.email).filter(Boolean);
+    if (!adminEmails.length) return;
 
-    const adminEmails = admins.map(a => a.email).filter(Boolean);
-
-    const mailOptions = {
-      from: `"Jolof’Era" <${process.env.SMTP_USER}>`,
-      to: adminEmails,
-      subject: 'ðŸ†• Nouveau PRO en attente de validation',
-      html: `
-        <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;border:1px solid #e5e7eb;border-radius:12px">
-          <h2 style="color:#7c3aed">Nouveau PRO inscrit</h2>
-          <p>Un nouveau professionnel vient de crÃ©er un compte et attend votre validation :</p>
-          <div style="background:#f8f5ff;padding:16px;border-radius:8px;margin:16px 0">
-            <p style="margin:4px 0"><strong>Nom :</strong> ${proName}</p>
-            <p style="margin:4px 0"><strong>Email :</strong> ${proEmail}</p>
-          </div>
-          <a href="${getFrontendAdminUrl()}"
-             style="display:inline-block;margin-top:16px;padding:12px 28px;background:#7c3aed;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">
-             GÃ©rer les validations
-          </a>
-          <p style="margin-top:24px;font-size:13px;color:#6b7280">Cet email a Ã©tÃ© envoyÃ© automatiquement depuis Jolof’Era.</p>
+    const html = renderEmailShell({
+      title: 'Nouveau PRO en attente',
+      accent: '#7c3aed',
+      intro: '<p>Un nouveau professionnel attend votre validation.</p>',
+      body: `
+        <div style="background:#f5f3ff;border-radius:12px;padding:16px;margin-top:16px">
+          <p style="margin:0 0 8px"><strong>Nom :</strong> ${escapeHtml(proName || '-')}</p>
+          <p style="margin:0"><strong>Email :</strong> ${escapeHtml(proEmail || '-')}</p>
         </div>
       `,
-    };
+      ctaLabel: 'Ouvrir le backoffice',
+      ctaUrl: getFrontendAdminUrl(),
+      footer: "Cet email a ete envoye automatiquement depuis Jolof'Era.",
+    });
 
-    await transporter.sendMail(mailOptions);
-    console.log(`ðŸ“§ PRO pending notification sent to ${adminEmails.length} admin(s)`);
+    await deliverEmail({
+      to: adminEmails,
+      subject: 'Nouveau PRO en attente de validation',
+      text: `Un nouveau professionnel attend votre validation.\n\nNom: ${proName || '-'}\nEmail: ${proEmail || '-'}\n\nBackoffice: ${getFrontendAdminUrl()}`,
+      html,
+      label: 'PRO pending notification',
+    });
   } catch (err) {
-    console.error('âŒ Failed to send PRO pending notification:', err.message);
+    console.error('Failed to send PRO pending notification:', err.message);
   }
 }
 
-/**
- * Notify a PRO that their account has been approved.
- * Fails silently so the approval flow is never blocked.
- */
 async function sendProApprovedEmail({ to, name }) {
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    console.warn('âš ï¸  SMTP not configured â€“ skipping PRO approved email');
-    return;
-  }
-
-  const mailOptions = {
-    from: `"Jolof’Era" <${process.env.SMTP_USER}>`,
-    to,
-    subject: 'âœ… Votre compte PRO Jolof’Era a Ã©tÃ© approuvÃ© !',
-    html: `
-      <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;border:1px solid #e5e7eb;border-radius:12px">
-        <h2 style="color:#059669">FÃ©licitations, ${name} !</h2>
-        <p>Votre compte professionnel Jolof’Era a Ã©tÃ© <strong>approuvÃ©</strong> par notre Ã©quipe.</p>
-        <p>Vous pouvez dÃ¨s maintenant accÃ©der Ã  votre tableau de bord, ajouter vos services et recevoir des rÃ©servations.</p>
-        <a href="https://jolofera.com/dashboard"
-           style="display:inline-block;margin-top:16px;padding:12px 28px;background:#059669;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">
-           AccÃ©der Ã  mon dashboard
-        </a>
-        <p style="margin-top:24px;font-size:13px;color:#6b7280">Merci de faire confiance Ã  Jolof’Era !</p>
-      </div>
+  const safeName = escapeHtml(name || 'partenaire');
+  const proDashboardUrl = `${getFrontendBaseUrl()}/pro/dashboard`;
+  const html = renderEmailShell({
+    title: 'Compte PRO approuve',
+    accent: '#059669',
+    intro: `<p>Bonjour <strong>${safeName}</strong>,</p>`,
+    body: `
+      <p>Votre compte professionnel Jolof&#39;Era a ete approuve.</p>
+      <p>Vous pouvez maintenant acceder a votre dashboard, ajouter vos services et gerer vos reservations ou commandes.</p>
     `,
-  };
+    ctaLabel: 'Acceder au dashboard PRO',
+    ctaUrl: proDashboardUrl,
+    footer: "Merci de faire confiance a Jolof'Era.",
+  });
 
-  try {
-    await transporter.sendMail(mailOptions);
-    console.log(`ðŸ“§ PRO approved email sent to ${to}`);
-  } catch (err) {
-    console.error('âŒ Failed to send PRO approved email:', err.message);
-  }
+  await deliverEmail({
+    to,
+    subject: "Votre compte PRO Jolof'Era est approuve",
+    text: `Bonjour ${name || 'partenaire'},\n\nVotre compte professionnel Jolof'Era a ete approuve.\nAccedez a votre dashboard: ${proDashboardUrl}`,
+    html,
+    label: 'PRO approved email',
+  });
 }
 
-/**
- * Send booking confirmation email to the client.
- * Fails silently so the booking flow is never blocked.
- */
 async function sendBookingConfirmationEmail({ to, clientName, salonName, date, time, services, totalPrice }) {
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    console.warn('âš ï¸  SMTP not configured â€“ skipping booking confirmation email');
-    return;
-  }
-
+  const safeClientName = escapeHtml(clientName || 'client');
+  const safeSalonName = escapeHtml(salonName || 'votre salon');
   const dateStr = date instanceof Date
     ? date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
-    : String(date);
+    : String(date || '');
+  const serviceItems = Array.isArray(services) && services.length > 0
+    ? services
+        .map((service) => `<li>${escapeHtml(service.name || 'Service')} - ${formatMoney(service.price)} FCFA</li>`)
+        .join('')
+    : '<li>Service reserve</li>';
 
-  const servicesList = Array.isArray(services) && services.length > 0
-    ? services.map(s => `<li>${s.name} â€” ${(s.price || 0).toLocaleString('fr-FR')} FCFA</li>`).join('')
-    : '<li>Service rÃ©servÃ©</li>';
-
-  const mailOptions = {
-    from: `"Jolof’Era" <${process.env.SMTP_USER}>`,
-    to,
-    subject: `âœ… Confirmation de votre rÃ©servation â€” ${salonName}`,
-    html: `
-      <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;border:1px solid #e5e7eb;border-radius:12px">
-        <h2 style="color:#059669">RÃ©servation confirmÃ©e !</h2>
-        <p>Bonjour <strong>${clientName}</strong>,</p>
-        <p>Votre rÃ©servation chez <strong>${salonName}</strong> a bien Ã©tÃ© enregistrÃ©e.</p>
-        <div style="background:#f0fdf4;padding:16px;border-radius:8px;margin:16px 0">
-          <p style="margin:4px 0"><strong>ðŸ“… Date :</strong> ${dateStr}</p>
-          <p style="margin:4px 0"><strong>ðŸ• Heure :</strong> ${time}</p>
-          <p style="margin:8px 0 4px"><strong>Services :</strong></p>
-          <ul style="margin:4px 0;padding-left:20px">${servicesList}</ul>
-          <p style="margin:8px 0 0"><strong>Total :</strong> ${(totalPrice || 0).toLocaleString('fr-FR')} FCFA</p>
-        </div>
-        <p style="font-size:14px;color:#6b7280">Le salon vous assignera un(e) coiffeur(se) et vous enverra une confirmation avec les dÃ©tails.</p>
-        <a href="https://jolofera.com/dashboard/client"
-           style="display:inline-block;margin-top:16px;padding:12px 28px;background:#059669;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">
-           Voir mes rÃ©servations
-        </a>
-        <p style="margin-top:24px;font-size:13px;color:#6b7280">Merci d'utiliser Jolof’Era !</p>
+  const html = renderEmailShell({
+    title: 'Reservation confirmee',
+    accent: '#059669',
+    intro: `<p>Bonjour <strong>${safeClientName}</strong>,</p>`,
+    body: `
+      <p>Votre reservation chez <strong>${safeSalonName}</strong> a bien ete enregistree.</p>
+      <div style="background:#f0fdf4;border-radius:12px;padding:16px;margin-top:16px">
+        <p style="margin:0 0 8px"><strong>Date :</strong> ${escapeHtml(dateStr)}</p>
+        <p style="margin:0 0 8px"><strong>Heure :</strong> ${escapeHtml(time || '')}</p>
+        <p style="margin:12px 0 6px"><strong>Services :</strong></p>
+        <ul style="margin:0;padding-left:20px">${serviceItems}</ul>
+        <p style="margin:12px 0 0"><strong>Total :</strong> ${formatMoney(totalPrice)} FCFA</p>
       </div>
+      <p style="margin-top:16px">Le salon vous assignera un(e) coiffeur(se) et vous enverra une confirmation avec les details.</p>
     `,
-  };
+    ctaLabel: 'Voir mes reservations',
+    ctaUrl: `${getFrontendBaseUrl()}/dashboard`,
+    footer: "Merci d'utiliser Jolof'Era.",
+  });
 
-  try {
-    await transporter.sendMail(mailOptions);
-    console.log(`ðŸ“§ Booking confirmation email sent to ${to}`);
-  } catch (err) {
-    console.error('âŒ Failed to send booking confirmation email:', err.message);
-  }
+  await deliverEmail({
+    to,
+    subject: `Confirmation de votre reservation - ${salonName || "Jolof'Era"}`,
+    text:
+      `Bonjour ${clientName || 'client'},\n\n` +
+      `Votre reservation chez ${salonName || 'votre salon'} a bien ete enregistree.\n` +
+      `Date: ${dateStr}\n` +
+      `Heure: ${time || ''}\n` +
+      `Total: ${formatMoney(totalPrice)} FCFA\n\n` +
+      `Consultez vos reservations ici: ${getFrontendBaseUrl()}/dashboard`,
+    html,
+    label: 'booking confirmation email',
+  });
 }
 
-/**
- * Send order confirmation email to the client.
- * Fails silently so the order flow is never blocked.
- */
 async function sendOrderConfirmationEmail({ to, clientName, boutiqueName, items, totalPrice, deliveryMode }) {
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    console.warn('âš ï¸  SMTP not configured â€“ skipping order confirmation email');
-    return;
-  }
-
-  const itemsList = Array.isArray(items) && items.length > 0
-    ? items.map(i => `<li>${i.product?.name || 'Article'} x${i.quantity} â€” ${((i.unitPrice || 0) * i.quantity).toLocaleString('fr-FR')} FCFA</li>`).join('')
-    : '<li>Articles commandÃ©s</li>';
-
+  const safeClientName = escapeHtml(clientName || 'client');
+  const safeBoutiqueName = escapeHtml(boutiqueName || 'votre boutique');
   const modeLabel = deliveryMode === 'DELIVERY' ? 'Livraison' : 'Retrait en boutique';
+  const itemLines = Array.isArray(items) && items.length > 0
+    ? items
+        .map((item) => `<li>${escapeHtml(item.product?.name || 'Article')} x${escapeHtml(item.quantity || 1)} - ${formatMoney((item.unitPrice || 0) * (item.quantity || 0))} FCFA</li>`)
+        .join('')
+    : '<li>Articles commandes</li>';
 
-  const mailOptions = {
-    from: `"Jolof’Era" <${process.env.SMTP_USER}>`,
-    to,
-    subject: `âœ… Confirmation de votre commande â€” ${boutiqueName}`,
-    html: `
-      <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:24px;border:1px solid #e5e7eb;border-radius:12px">
-        <h2 style="color:#7c3aed">Commande confirmÃ©e !</h2>
-        <p>Bonjour <strong>${clientName}</strong>,</p>
-        <p>Votre commande chez <strong>${boutiqueName}</strong> a bien Ã©tÃ© enregistrÃ©e.</p>
-        <div style="background:#f5f3ff;padding:16px;border-radius:8px;margin:16px 0">
-          <p style="margin:4px 0"><strong>ðŸ“¦ Mode :</strong> ${modeLabel}</p>
-          <p style="margin:8px 0 4px"><strong>Articles :</strong></p>
-          <ul style="margin:4px 0;padding-left:20px">${itemsList}</ul>
-          <p style="margin:8px 0 0"><strong>Total :</strong> ${(totalPrice || 0).toLocaleString('fr-FR')} FCFA</p>
-        </div>
-        <p style="font-size:14px;color:#6b7280">La boutique traitera votre commande et vous tiendra informÃ©(e) de l'avancement.</p>
-        <a href="https://jolofera.com/dashboard/client"
-           style="display:inline-block;margin-top:16px;padding:12px 28px;background:#7c3aed;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">
-           Voir mes commandes
-        </a>
-        <p style="margin-top:24px;font-size:13px;color:#6b7280">Merci d'utiliser Jolof’Era !</p>
+  const html = renderEmailShell({
+    title: 'Commande confirmee',
+    accent: '#7c3aed',
+    intro: `<p>Bonjour <strong>${safeClientName}</strong>,</p>`,
+    body: `
+      <p>Votre commande chez <strong>${safeBoutiqueName}</strong> a bien ete enregistree.</p>
+      <div style="background:#f5f3ff;border-radius:12px;padding:16px;margin-top:16px">
+        <p style="margin:0 0 8px"><strong>Mode :</strong> ${escapeHtml(modeLabel)}</p>
+        <p style="margin:12px 0 6px"><strong>Articles :</strong></p>
+        <ul style="margin:0;padding-left:20px">${itemLines}</ul>
+        <p style="margin:12px 0 0"><strong>Total :</strong> ${formatMoney(totalPrice)} FCFA</p>
       </div>
+      <p style="margin-top:16px">La boutique traitera votre commande et vous tiendra informe(e) de l'avancement.</p>
     `,
-  };
+    ctaLabel: 'Voir mes commandes',
+    ctaUrl: `${getFrontendBaseUrl()}/dashboard`,
+    footer: "Merci d'utiliser Jolof'Era.",
+  });
 
-  try {
-    await transporter.sendMail(mailOptions);
-    console.log(`ðŸ“§ Order confirmation email sent to ${to}`);
-  } catch (err) {
-    console.error('âŒ Failed to send order confirmation email:', err.message);
-  }
+  await deliverEmail({
+    to,
+    subject: `Confirmation de votre commande - ${boutiqueName || "Jolof'Era"}`,
+    text:
+      `Bonjour ${clientName || 'client'},\n\n` +
+      `Votre commande chez ${boutiqueName || 'votre boutique'} a bien ete enregistree.\n` +
+      `Mode: ${modeLabel}\n` +
+      `Total: ${formatMoney(totalPrice)} FCFA\n\n` +
+      `Consultez vos commandes ici: ${getFrontendBaseUrl()}/dashboard`,
+    html,
+    label: 'order confirmation email',
+  });
 }
 
 async function sendAdminPromotionEmail({ to, name }) {
-  const mailOptions = {
-    from: `"Jolof’Era" <${process.env.EMAIL_USER}>`,
-    to,
-    subject: 'ðŸ‘‘ Vous Ãªtes dÃ©sormais Administrateur â€” Jolof’Era',
-    html: `
-      <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:520px;margin:auto;padding:32px;border-radius:16px;border:1px solid #e0e7ff;background:#f8fafc">
-        <h2 style="color:#4f46e5;margin:0 0 16px">FÃ©licitations${name ? `, ${name}` : ''} !</h2>
-        <p style="color:#334155;font-size:15px;line-height:1.6;margin:0 0 16px">
-          Vous avez Ã©tÃ© promu(e) <strong>Administrateur</strong> sur la plateforme <strong>Jolof’Era</strong>.
-        </p>
-        <p style="color:#334155;font-size:15px;line-height:1.6;margin:0 0 16px">
-          Vous avez dÃ©sormais accÃ¨s au tableau de bord d'administration pour gÃ©rer les salons, les professionnels et les utilisateurs.
-        </p>
-        <a href="${getFrontendAdminUrl()}"
-           style="display:inline-block;padding:12px 28px;background:#4f46e5;color:#fff;text-decoration:none;border-radius:10px;font-weight:600;font-size:14px;margin-top:8px">
-           AccÃ©der au dashboard admin
-        </a>
-        <p style="margin-top:24px;font-size:13px;color:#6b7280">
-          Si vous pensez que c'est une erreur, contactez le support.
-        </p>
-      </div>
+  const safeName = escapeHtml(name || '');
+  const html = renderEmailShell({
+    title: 'Promotion administrateur',
+    accent: '#4f46e5',
+    intro: `<p>Bonjour${safeName ? ` <strong>${safeName}</strong>` : ''},</p>`,
+    body: `
+      <p>Vous avez ete promu(e) administrateur sur Jolof&#39;Era.</p>
+      <p>Vous pouvez maintenant acceder au backoffice pour gerer les comptes, salons, boutiques et utilisateurs.</p>
     `,
-  };
+    ctaLabel: 'Acceder au dashboard admin',
+    ctaUrl: getFrontendAdminUrl(),
+    footer: "Si vous pensez qu'il s'agit d'une erreur, contactez le support.",
+  });
 
-  try {
-    await transporter.sendMail(mailOptions);
-    console.log(`ðŸ“§ Admin promotion email sent to ${to}`);
-  } catch (err) {
-    console.error('âŒ Failed to send admin promotion email:', err.message);
-  }
+  await deliverEmail({
+    to,
+    subject: 'Vous etes maintenant administrateur - Jolof\'Era',
+    text:
+      `Bonjour ${name || ''},\n\n` +
+      `Vous etes maintenant administrateur sur Jolof'Era.\n` +
+      `Accedez au backoffice: ${getFrontendAdminUrl()}`,
+    html,
+    label: 'admin promotion email',
+  });
 }
 
-module.exports = { sendWelcomeEmail, sendProPendingNotification, sendProApprovedEmail, sendBookingConfirmationEmail, sendOrderConfirmationEmail, sendAdminPromotionEmail };
-
+module.exports = {
+  sendWelcomeEmail,
+  sendProPendingNotification,
+  sendProApprovedEmail,
+  sendBookingConfirmationEmail,
+  sendOrderConfirmationEmail,
+  sendAdminPromotionEmail,
+};
