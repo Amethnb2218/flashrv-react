@@ -9,7 +9,9 @@ import apiFetch from '../../api/client'
 import { resolveMediaUrl } from '../../utils/media'
 import { buildPaydunyaPaymentPayload } from '../../utils/payments'
 
-const ONLINE_BOOKING_PAYMENT_METHODS = new Set(['PAYDUNYA'])
+const DIRECT_MOBILE_METHODS = new Set(['ORANGE_MONEY', 'WAVE', 'FREE_MONEY'])
+const ADVANCE_BOOKING_PAYMENT_METHODS = new Set(['PAYDUNYA', ...DIRECT_MOBILE_METHODS])
+const ORANGE_MONEY_REFERENCE_REGEX = /^MP\d{6}\.\d{4}\.C\d{5}$/i
 
 const PAYMENT_FLOW_OPTIONS = [
   {
@@ -20,7 +22,7 @@ const PAYMENT_FLOW_OPTIONS = [
   },
   {
     id: 'PAY_IN_ADVANCE',
-    name: 'Payer à l’avance',
+    name: 'Payer en avance',
     icon: 'Now',
     description: 'Payez avant votre rendez-vous pour arriver, faire vos soins et repartir',
   },
@@ -28,16 +30,25 @@ const PAYMENT_FLOW_OPTIONS = [
 
 const PAYMENT_METHOD_LABELS = {
   PAYDUNYA: 'PayDunya',
+  ORANGE_MONEY: 'Orange Money',
+  WAVE: 'Wave',
+  FREE_MONEY: 'Free Money',
   PAY_ON_SITE: 'Payer au salon',
 }
 
 const PAYMENT_METHOD_ICONS = {
   PAYDUNYA: 'PD',
+  ORANGE_MONEY: 'OM',
+  WAVE: 'WV',
+  FREE_MONEY: 'FM',
   PAY_ON_SITE: 'Cash',
 }
 
 const PAYMENT_METHOD_DESCRIPTIONS = {
   PAYDUNYA: 'Paiement securise (Orange, Free, Carte bancaire)',
+  ORANGE_MONEY: 'Paiement direct au numero Orange Money du salon',
+  WAVE: 'Paiement direct au numero Wave du salon',
+  FREE_MONEY: 'Paiement direct au numero Free Money du salon',
   PAY_ON_SITE: 'Confirmez la reservation et payez sur place',
 }
 
@@ -115,6 +126,9 @@ function Payment() {
     Array.isArray(bookingState.salon?.paymentMethods) ? bookingState.salon.paymentMethods : []
   )
   const [loadingPaymentMethods, setLoadingPaymentMethods] = useState(false)
+  const [paymentProofReference, setPaymentProofReference] = useState('')
+  const [paymentProofAmount, setPaymentProofAmount] = useState('')
+  const [paymentProofSenderPhone, setPaymentProofSenderPhone] = useState('')
 
   useEffect(() => {
     if (!bookingState.salon || bookingState.services.length === 0) {
@@ -166,9 +180,10 @@ function Payment() {
             name: PAYMENT_METHOD_LABELS[methodKey] || method?.displayName || methodKey,
             icon: PAYMENT_METHOD_ICONS[methodKey] || 'PAY',
             description: PAYMENT_METHOD_DESCRIPTIONS[methodKey] || 'Paiement disponible pour cette reservation',
+            details: method,
           }
         })
-        .filter((method) => ONLINE_BOOKING_PAYMENT_METHODS.has(method.id)),
+        .filter((method) => ADVANCE_BOOKING_PAYMENT_METHODS.has(method.id)),
     [salonPaymentMethods]
   )
 
@@ -183,9 +198,27 @@ function Payment() {
     }
   }, [availableAdvancePaymentMethods, selectedMethod])
 
+  const selectedAdvanceMethod = availableAdvancePaymentMethods.find((method) => method.id === selectedMethod) || null
+  const requiresDirectProof = DIRECT_MOBILE_METHODS.has(String(selectedMethod || '').toUpperCase())
   const resolvedPaymentMethod = paymentChoice === 'PAY_IN_ADVANCE' ? selectedMethod : 'PAY_ON_SITE'
   const amountToPayNow = paymentChoice === 'PAY_IN_ADVANCE' ? bookingState.totalPrice : 0
   const remainingAmountAtSalon = paymentChoice === 'PAY_IN_ADVANCE' ? 0 : bookingState.totalPrice
+
+  useEffect(() => {
+    if (!requiresDirectProof) {
+      setPaymentProofReference('')
+      setPaymentProofAmount('')
+      setPaymentProofSenderPhone('')
+      return
+    }
+
+    if (!paymentProofSenderPhone) {
+      const defaultPhone = String(bookingState.clientPhone || user?.phoneNumber || user?.phone || '').trim()
+      if (defaultPhone) {
+        setPaymentProofSenderPhone(defaultPhone)
+      }
+    }
+  }, [requiresDirectProof, paymentProofSenderPhone, bookingState.clientPhone, user?.phoneNumber, user?.phone])
 
   const buildAppointmentNotes = () => {
     const baseNotes = bookingState.notes?.trim()
@@ -237,14 +270,19 @@ function Payment() {
       clientAddress: clientAddress || null,
     }
 
+    if (paymentMethod !== 'PAY_ON_SITE') {
+      payload.status = 'PENDING_PAYMENT'
+      payload.paymentMethod = paymentMethod
+      payload.skipConfirmationEmail = true
+      payload.skipNotifications = true
+      payload.sendConfirmation = false
+    }
+
     if (paymentMethod === 'PAYDUNYA') {
       payload.status = 'PENDING_PAYMENT'
       payload.paymentMethod = 'PAYDUNYA'
       payload.paymentStatus = 'PENDING'
       payload.requiresOnlinePayment = true
-      payload.skipConfirmationEmail = true
-      payload.skipNotifications = true
-      payload.sendConfirmation = false
     }
 
     if (paymentMethod === 'PAY_ON_SITE') {
@@ -297,6 +335,39 @@ function Payment() {
             amount: bookingState.totalPrice,
             bookingId: appointmentId,
           },
+        })
+
+        handlePaymentSuccess(result?.data || result, appointmentId)
+        return
+      }
+
+      if (requiresDirectProof) {
+        const normalizedAmount = Number(paymentProofAmount)
+        if (!paymentProofReference.trim()) {
+          throw new Error('La reference transaction est obligatoire.')
+        }
+        if (resolvedPaymentMethod === 'ORANGE_MONEY') {
+          const normalizedRef = paymentProofReference.trim().toUpperCase()
+          if (!ORANGE_MONEY_REFERENCE_REGEX.test(normalizedRef)) {
+            throw new Error('Reference Orange Money invalide. Format attendu: MP260313.2207.C03995.')
+          }
+        }
+        if (!paymentProofSenderPhone.trim()) {
+          throw new Error("Le numero de l envoyeur est obligatoire.")
+        }
+        if (!Number.isFinite(normalizedAmount) || normalizedAmount <= 0) {
+          throw new Error('Le montant envoye est invalide.')
+        }
+
+        const proofForm = new FormData()
+        proofForm.append('paymentMethod', resolvedPaymentMethod)
+        proofForm.append('proofReference', paymentProofReference.trim())
+        proofForm.append('payerPhone', paymentProofSenderPhone.trim())
+        proofForm.append('proofAmount', String(normalizedAmount))
+
+        const result = await apiFetch(`/appointments/${appointmentId}/payment-proof`, {
+          method: 'POST',
+          body: proofForm,
         })
 
         handlePaymentSuccess(result?.data || result, appointmentId)
@@ -444,7 +515,7 @@ function Payment() {
                   <div>
                     <p className="font-semibold text-primary-900">Moyens de paiement du salon</p>
                     <p className="text-xs sm:text-sm text-primary-500 mt-1">
-                      Choisissez parmi les moyens ajoutés par le professionnel pour payer avant votre rendez-vous.
+                      Choisissez parmi les moyens de paiement ci-dessous.
                     </p>
                   </div>
 
@@ -481,7 +552,65 @@ function Payment() {
 
                   {!loadingPaymentMethods && availableAdvancePaymentMethods.length === 0 && (
                     <div className="p-3 bg-amber-50 text-amber-700 rounded-xl text-sm">
-                      Aucun moyen de paiement à l’avance n'est configuré par ce salon pour le moment.
+                      Aucun moyen de paiement en avance n'est configure par ce salon pour le moment.
+                    </div>
+                  )}
+
+                  {selectedAdvanceMethod && requiresDirectProof && (
+                    <div className="rounded-xl border border-primary-200 bg-primary-50 p-4 space-y-3">
+                      <p className="text-sm font-semibold text-primary-900">Paiement direct via {selectedAdvanceMethod.name}</p>
+                      {selectedAdvanceMethod.details?.displayName ? (
+                        <p className="text-xs text-primary-600">Compte: {selectedAdvanceMethod.details.displayName}</p>
+                      ) : null}
+                      {selectedAdvanceMethod.details?.phoneNumber ? (
+                        <p className="text-sm text-primary-800 font-semibold">Numero marchand: {selectedAdvanceMethod.details.phoneNumber}</p>
+                      ) : null}
+                      {selectedAdvanceMethod.details?.instructions ? (
+                        <p className="text-xs text-primary-600">{selectedAdvanceMethod.details.instructions}</p>
+                      ) : null}
+                      {selectedAdvanceMethod.details?.qrCodeUrl ? (
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={resolveMediaUrl(selectedAdvanceMethod.details.qrCodeUrl)}
+                            alt={`QR ${selectedAdvanceMethod.name}`}
+                            className="w-24 h-24 rounded-lg border border-primary-200 object-cover bg-white"
+                          />
+                          <p className="text-xs text-primary-600">Scannez le QR ou utilisez les informations du salon pour effectuer votre paiement.</p>
+                        </div>
+                      ) : null}
+                      <div>
+                        <label className="block text-xs font-semibold text-primary-700 mb-1">Reference transaction *</label>
+                        <input
+                          value={paymentProofReference}
+                          onChange={(e) => setPaymentProofReference(e.target.value)}
+                          className="w-full px-3 py-2 border border-primary-200 rounded-lg focus:ring-2 focus:ring-gold-500 outline-none text-sm"
+                          placeholder={selectedMethod === 'ORANGE_MONEY' ? 'Ex: MP260313.2207.C03995' : 'Ex: REF-12345'}
+                        />
+                      </div>
+                      <div className="grid sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-semibold text-primary-700 mb-1">Montant envoye (FCFA) *</label>
+                          <input
+                            type="number"
+                            min="1"
+                            step="1"
+                            inputMode="numeric"
+                            value={paymentProofAmount}
+                            onChange={(e) => setPaymentProofAmount(e.target.value)}
+                            className="w-full px-3 py-2 border border-primary-200 rounded-lg focus:ring-2 focus:ring-gold-500 outline-none text-sm"
+                            placeholder={`Ex: ${Math.round(amountToPayNow)}`}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-primary-700 mb-1">Numero de l envoyeur *</label>
+                          <input
+                            value={paymentProofSenderPhone}
+                            onChange={(e) => setPaymentProofSenderPhone(e.target.value)}
+                            className="w-full px-3 py-2 border border-primary-200 rounded-lg focus:ring-2 focus:ring-gold-500 outline-none text-sm"
+                            placeholder="Ex: 77 123 45 67"
+                          />
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -577,9 +706,9 @@ function Payment() {
                         <div className="flex justify-between items-start gap-3 mb-3">
                           <div>
                             <p className="text-sm font-semibold text-primary-900">
-                              Paiement à l’avance
+                              Paiement en avance
                             </p>
-                            <p className="text-xs text-primary-500 mt-1">Réglez maintenant et vous n'aurez rien à payer au salon</p>
+                            <p className="text-xs text-primary-500 mt-1">Reglez maintenant et vous n'aurez rien a payer au salon</p>
                           </div>
                           <span className="text-2xl font-black text-gold-700 whitespace-nowrap">
                             {amountToPayNow.toLocaleString()} FCFA
@@ -627,7 +756,9 @@ function Payment() {
                     <FiLock className="w-5 h-5 mr-2" />
                     {paymentChoice === 'PAY_ON_SITE'
                       ? 'Confirmer la reservation'
-                      : `Payer maintenant - ${amountToPayNow.toLocaleString()} FCFA`}
+                      : requiresDirectProof
+                        ? `Envoyer la preuve - ${amountToPayNow.toLocaleString()} FCFA`
+                        : `Payer maintenant - ${amountToPayNow.toLocaleString()} FCFA`}
                   </>
                 )}
               </button>

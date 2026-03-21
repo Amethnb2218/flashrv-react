@@ -6,7 +6,32 @@ const { pushNotification, pushChatMessage } = require('../realtime/hub');
 const { sendBookingConfirmationEmail } = require('../services/emailService');
 const { sendPushToUser } = require('../services/pushService');
 const { createBookingNotification } = require('../services/bookingNotificationService');
-const { uploadVoice } = require('../config/cloudinary');
+const { uploadVoice, uploadPaymentProof } = require('../config/cloudinary');
+
+const DIRECT_MOBILE_METHODS = new Set(['ORANGE_MONEY', 'WAVE', 'FREE_MONEY']);
+const ORANGE_MONEY_REFERENCE_REGEX = /^MP\d{6}\.\d{4}\.C\d{5}$/i;
+
+const cleanString = (value, max = 220) => {
+  if (value == null) return null;
+  const normalized = String(value).trim();
+  if (!normalized) return null;
+  return normalized.slice(0, max);
+};
+
+const normalizeAppointmentPaymentMethod = (value) => cleanString(value, 40)?.toUpperCase() || null;
+
+const buildPaymentReference = (prefix = 'APTPAY') =>
+  `${prefix}-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+
+const toFriendlyPaymentMethodLabel = (method) => {
+  const key = String(method || '').toUpperCase();
+  if (key === 'PAYDUNYA') return 'PayDunya';
+  if (key === 'ORANGE_MONEY') return 'Orange Money';
+  if (key === 'WAVE') return 'Wave';
+  if (key === 'FREE_MONEY') return 'Free Money';
+  if (key === 'PAY_ON_SITE') return 'Paiement au salon';
+  return key || 'Paiement';
+};
 
 const canAccessAppointment = (appointment, user) => {
   if (!appointment || !user) return false;
@@ -374,6 +399,203 @@ router.post('/', authenticate, async (req, res, next) => {
     });
   } catch (error) {
     next(error);
+  }
+});
+
+/**
+ * POST /api/appointments/:id/payment-proof
+ * Client submits direct mobile payment proof for a salon booking
+ */
+router.post('/:id/payment-proof', authenticate, uploadPaymentProof.single('proof'), async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const normalizedMethod = normalizeAppointmentPaymentMethod(req.body?.paymentMethod);
+    const payerPhone = cleanString(req.body?.payerPhone, 40);
+    const proofReference = cleanString(req.body?.proofReference, 120);
+    const proofNote = cleanString(req.body?.proofNote, 400);
+    const proofAmount = Number(req.body?.proofAmount);
+
+    if (!normalizedMethod || !DIRECT_MOBILE_METHODS.has(normalizedMethod)) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Choisissez un moyen de paiement mobile valide (Orange Money, Wave, Free Money).',
+      });
+    }
+    if (!proofReference) {
+      return res.status(400).json({ status: 'error', message: 'La reference transaction est obligatoire.' });
+    }
+    if (normalizedMethod === 'ORANGE_MONEY') {
+      const normalizedOmReference = String(proofReference).toUpperCase();
+      if (!ORANGE_MONEY_REFERENCE_REGEX.test(normalizedOmReference)) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'Reference Orange Money invalide. Format attendu: MP260313.2207.C03995.',
+        });
+      }
+    }
+    if (!payerPhone) {
+      return res.status(400).json({ status: 'error', message: 'Le numero de l envoyeur est obligatoire.' });
+    }
+    if (!Number.isFinite(proofAmount) || proofAmount <= 0) {
+      return res.status(400).json({ status: 'error', message: 'Le montant envoye est invalide.' });
+    }
+
+    const appointment = await prisma.appointment.findUnique({
+      where: { id },
+      include: {
+        payment: true,
+        salon: {
+          select: {
+            id: true,
+            name: true,
+            ownerId: true,
+            paymentMethods: {
+              where: { enabled: true },
+              select: {
+                method: true,
+                phoneNumber: true,
+                displayName: true,
+                requiresProof: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!appointment) {
+      return res.status(404).json({ status: 'error', message: 'Reservation introuvable' });
+    }
+    if (appointment.clientId !== req.user.id) {
+      return res.status(403).json({ status: 'error', message: 'Acces interdit' });
+    }
+
+    const activeMethod = (appointment.salon?.paymentMethods || []).find(
+      (item) => String(item.method || '').toUpperCase() === normalizedMethod
+    );
+    if (!activeMethod) {
+      return res.status(400).json({
+        status: 'error',
+        message: `Ce salon n a pas active ${toFriendlyPaymentMethodLabel(normalizedMethod)}.`,
+      });
+    }
+
+    if (
+      String(appointment.payment?.status || '').toUpperCase() === 'COMPLETED' &&
+      String(appointment.payment?.proofStatus || '').toUpperCase() === 'APPROVED'
+    ) {
+      return res.status(409).json({
+        status: 'error',
+        message: 'Le paiement est deja valide pour cette reservation.',
+      });
+    }
+
+    const proofUrl = req.file ? (req.file.path || req.file.secure_url || req.file.url || null) : null;
+    if (req.file && !proofUrl) {
+      return res.status(500).json({ status: 'error', message: 'Impossible de lire la capture envoyee.' });
+    }
+
+    const now = new Date();
+    const normalizedProofReference = normalizedMethod === 'ORANGE_MONEY'
+      ? String(proofReference).toUpperCase()
+      : proofReference;
+    const reference = appointment.payment?.reference || buildPaymentReference('APTPAY');
+    const transactionId = normalizedProofReference;
+
+    const savedPayment = await prisma.$transaction(async (tx) => {
+      const payment = await tx.payment.upsert({
+        where: { appointmentId: id },
+        update: {
+          method: normalizedMethod,
+          manualMethod: normalizedMethod,
+          manualRecipient: activeMethod.phoneNumber || activeMethod.displayName || null,
+          phoneNumber: payerPhone,
+          amount: proofAmount,
+          fees: 0,
+          totalAmount: proofAmount,
+          currency: 'XOF',
+          status: 'PENDING',
+          transactionId,
+          proofImageUrl: proofUrl || appointment.payment?.proofImageUrl || null,
+          proofReference: normalizedProofReference,
+          proofNote: proofNote || appointment.payment?.proofNote || null,
+          proofStatus: 'PENDING',
+          proofSubmittedAt: now,
+          proofReviewedAt: null,
+          proofReviewedBy: null,
+          proofRejectionReason: null,
+          completedAt: null,
+          reference,
+          userId: appointment.clientId,
+        },
+        create: {
+          appointmentId: id,
+          method: normalizedMethod,
+          manualMethod: normalizedMethod,
+          manualRecipient: activeMethod.phoneNumber || activeMethod.displayName || null,
+          phoneNumber: payerPhone,
+          amount: proofAmount,
+          fees: 0,
+          totalAmount: proofAmount,
+          currency: 'XOF',
+          status: 'PENDING',
+          transactionId,
+          reference,
+          proofImageUrl: proofUrl,
+          proofReference: normalizedProofReference,
+          proofNote,
+          proofStatus: 'PENDING',
+          proofSubmittedAt: now,
+          userId: appointment.clientId,
+        },
+      });
+
+      await tx.appointment.update({
+        where: { id },
+        data: { status: 'PENDING_PAYMENT' },
+      });
+
+      return payment;
+    });
+
+    if (appointment.salon?.ownerId) {
+      try {
+        const notification = await prisma.notification.create({
+          data: {
+            userId: appointment.salon.ownerId,
+            type: 'payment',
+            message: `Paiement direct a verifier pour la reservation ${id.slice(-8).toUpperCase()} (${toFriendlyPaymentMethodLabel(normalizedMethod)}).`,
+          },
+        });
+        pushNotification(notification.userId, notification);
+      } catch (e) {
+        console.error('Appointment payment proof notify owner error:', e.message);
+      }
+    }
+
+    try {
+      const notification = await prisma.notification.create({
+        data: {
+          userId: appointment.clientId,
+          type: 'payment',
+          message: `Votre preuve de paiement a ete envoyee chez ${appointment.salon?.name || 'le salon'}. Verification en cours.`,
+        },
+      });
+      pushNotification(notification.userId, notification);
+    } catch (e) {
+      console.error('Appointment payment proof notify client error:', e.message);
+    }
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'Demande de verification de paiement envoyee avec succes.',
+      data: {
+        appointmentId: id,
+        payment: savedPayment,
+      },
+    });
+  } catch (error) {
+    return next(error);
   }
 });
 

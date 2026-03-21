@@ -45,6 +45,12 @@ function PaymentSuccess() {
   }, [location.search, location.state])
 
   const appointmentStatus = String(appointment?.status || '').toUpperCase()
+  const paymentMethod = String(payment?.manualMethod || payment?.method || '').toUpperCase()
+  const proofStatus = String(payment?.proofStatus || '').toUpperCase()
+  const isDirectProofPending =
+    ['ORANGE_MONEY', 'WAVE', 'FREE_MONEY'].includes(paymentMethod) &&
+    proofStatus === 'PENDING' &&
+    appointmentStatus === 'PENDING_PAYMENT'
   const isPaid = String(payment?.status || '').toUpperCase() === 'COMPLETED' || appointmentStatus === 'PAID'
   const isConfirmedOnSite = ['CONFIRMED_ON_SITE', 'CONFIRMED'].includes(appointmentStatus)
   const isReservationConfirmed = isPaid || isConfirmedOnSite
@@ -54,11 +60,15 @@ function PaymentSuccess() {
     : 'bg-gradient-to-r from-gold-500 to-orange-500'
   const heroTitle = isPaid
     ? 'Paiement confirme !'
+    : isDirectProofPending
+      ? 'Paiement a verifier'
     : isConfirmedOnSite
       ? 'Reservation confirmee !'
       : 'Paiement en attente'
   const heroMessage = isPaid
     ? 'Votre reservation est payee et enregistree.'
+    : isDirectProofPending
+      ? 'Votre preuve de paiement a ete envoyee au salon. Verification en cours.'
     : isConfirmedOnSite
       ? 'Votre reservation est bien confirmee. Le paiement se fera directement au salon.'
       : 'Votre reservation est creee, finalisez le paiement pour confirmer.'
