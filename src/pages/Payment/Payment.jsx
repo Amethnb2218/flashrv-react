@@ -20,7 +20,7 @@ const PAYMENT_FLOW_OPTIONS = [
   },
   {
     id: 'PAY_IN_ADVANCE',
-    name: 'Payer a l avance',
+    name: 'Payer à l’avance',
     icon: 'Now',
     description: 'Payez avant votre rendez-vous pour arriver, faire vos soins et repartir',
   },
@@ -444,7 +444,7 @@ function Payment() {
                   <div>
                     <p className="font-semibold text-primary-900">Moyens de paiement du salon</p>
                     <p className="text-xs sm:text-sm text-primary-500 mt-1">
-                      Choisissez parmi les moyens ajoutes par le professionnel pour payer avant votre rendez-vous.
+                      Choisissez parmi les moyens ajoutés par le professionnel pour payer avant votre rendez-vous.
                     </p>
                   </div>
 
@@ -481,7 +481,7 @@ function Payment() {
 
                   {!loadingPaymentMethods && availableAdvancePaymentMethods.length === 0 && (
                     <div className="p-3 bg-amber-50 text-amber-700 rounded-xl text-sm">
-                      Aucun moyen de paiement a l avance n'est configure par ce salon pour le moment.
+                      Aucun moyen de paiement à l’avance n'est configuré par ce salon pour le moment.
                     </div>
                   )}
                 </div>
@@ -577,9 +577,9 @@ function Payment() {
                         <div className="flex justify-between items-start gap-3 mb-3">
                           <div>
                             <p className="text-sm font-semibold text-primary-900">
-                              Paiement a l avance
+                              Paiement à l’avance
                             </p>
-                            <p className="text-xs text-primary-500 mt-1">Reglez maintenant et vous n'aurez rien a payer au salon</p>
+                            <p className="text-xs text-primary-500 mt-1">Réglez maintenant et vous n'aurez rien à payer au salon</p>
                           </div>
                           <span className="text-2xl font-black text-gold-700 whitespace-nowrap">
                             {amountToPayNow.toLocaleString()} FCFA
