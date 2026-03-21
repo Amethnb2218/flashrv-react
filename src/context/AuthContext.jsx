@@ -127,7 +127,7 @@ export function AuthProvider({ children }) {
     return true
   }
 
-  const hydrateProAccountState = async (user) => {
+  const hydrateProAccountState = async (user, tokenOverride = null) => {
     const normalizedUser = normalizeUserShape(user)
 
     if (!isProUser(normalizedUser)) {
@@ -137,7 +137,9 @@ export function AuthProvider({ children }) {
     try {
       const response = await fetch(`${API_BASE}/salons/me`, {
         method: 'GET',
-        headers: authHeaders({}, 'GET'),
+        headers: tokenOverride
+          ? buildAuthHeaders({ Authorization: `Bearer ${tokenOverride}` }, 'GET')
+          : authHeaders({}, 'GET'),
         credentials: 'include',
         cache: 'no-store',
       })
@@ -210,16 +212,16 @@ export function AuthProvider({ children }) {
 
   const persistAuthenticatedUser = async (apiUser, apiToken = null, apiCsrfToken = null) => {
     const restoredUser = restorePendingDeletionIfNeeded(apiUser)
-    const hydratedUser = await hydrateProAccountState(restoredUser)
-    const normalizedUser = normalizeUserShape(hydratedUser)
-
-    writeStoredUser(normalizedUser)
     if (apiToken) {
       writeAuthToken(apiToken)
     }
     if (apiCsrfToken) {
       writeCsrfToken(apiCsrfToken)
     }
+    const hydratedUser = await hydrateProAccountState(restoredUser, apiToken)
+    const normalizedUser = normalizeUserShape(hydratedUser)
+
+    writeStoredUser(normalizedUser)
     const activeToken = apiToken || readAuthToken()
 
     dispatch({
