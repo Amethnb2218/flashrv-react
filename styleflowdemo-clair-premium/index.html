@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jolof'Era Edition Claire</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="page-shell">
+      <section class="info-panel">
+        <p class="eyebrow">Jolof'Era Edition Claire</p>
+        <h1>Version 4. Plus lumineuse, plus chic, plus premium.</h1>
+        <p class="lede">
+          Une direction plus claire et plus elegante, avec des animations plus
+          douces, des textes en francais et un rendu plus publicitaire.
+        </p>
+        <div class="controls">
+          <button id="playButton" class="primary">Pause</button>
+          <button id="restartButton">Rejouer</button>
+          <button id="exportButton">Exporter en WebM</button>
+        </div>
+        <p id="statusText" class="status">
+          Apercu en lecture. Cette version mise sur la lumiere, le raffinement et la marque.
+        </p>
+        <div class="compare-box">
+          <span>Comparer les 4 versions</span>
+          <a href="../styleflowdemo-export/index.html">Version 1</a>
+          <a href="../styleflowdemo-luxe/index.html">Version 2</a>
+          <a href="../styleflowdemo-highend/index.html">Version 3</a>
+        </div>
+      </section>
+
+      <section class="stage-shell">
+        <canvas id="demoCanvas" width="1080" height="1920"></canvas>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

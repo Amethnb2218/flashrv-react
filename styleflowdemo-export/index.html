@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jolof'Era Demo Reel</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <div class="info-panel">
+        <p class="eyebrow">Jolof'Era Demo Reel</p>
+        <h1>Video promo verticale avec motion design</h1>
+        <p class="lede">
+          Montage premium base sur tes captures: reservation salon, achat boutique,
+          onboarding pro et dashboard marchand.
+        </p>
+        <div class="controls">
+          <button id="playButton" class="primary">Pause</button>
+          <button id="restartButton">Rejouer</button>
+          <button id="exportButton">Exporter en WebM</button>
+        </div>
+        <p id="statusText" class="status">
+          Apercu en lecture. Clique sur "Exporter en WebM" pour generer la video.
+        </p>
+        <p class="hint">
+          Ouvre cette demo avec `open-demo.ps1` pour passer par le serveur local et
+          permettre l'export WebM.
+        </p>
+      </div>
+
+      <div class="stage-shell">
+        <canvas id="demoCanvas" width="1080" height="1920"></canvas>
+      </div>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

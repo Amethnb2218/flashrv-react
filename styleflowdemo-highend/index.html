@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jolof'Era Director's Cut</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="page-shell">
+      <section class="info-panel">
+        <p class="eyebrow">Jolof'Era Director's Cut</p>
+        <h1>Version 3. Une vraie pub digitale haut niveau.</h1>
+        <p class="lede">
+          Direction plus premium, animations plus creatives, transitions plus
+          publicitaires et storytelling plus marque.
+        </p>
+        <div class="controls">
+          <button id="playButton" class="primary">Pause</button>
+          <button id="restartButton">Rejouer</button>
+          <button id="exportButton">Exporter en WebM</button>
+        </div>
+        <p id="statusText" class="status">
+          Apercu en lecture. Cette version pousse le rendu campagne premium.
+        </p>
+        <div class="compare-box">
+          <span>Comparer les 3 versions</span>
+          <a href="../styleflowdemo-export/index.html">Version 1</a>
+          <a href="../styleflowdemo-luxe/index.html">Version 2</a>
+        </div>
+      </section>
+
+      <section class="stage-shell">
+        <canvas id="demoCanvas" width="1080" height="1920"></canvas>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jolof'Era Luxe Cut</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <section class="info-panel">
+        <p class="eyebrow">Jolof'Era Luxe Cut</p>
+        <h1>Version pub luxe plus rapide, plus forte, plus premium.</h1>
+        <p class="lede">
+          Une deuxieme direction artistique pour comparer: slogans plus impactants,
+          rythme plus nerveux et rendu plus editorial.
+        </p>
+        <div class="controls">
+          <button id="playButton" class="primary">Pause</button>
+          <button id="restartButton">Rejouer</button>
+          <button id="exportButton">Exporter en WebM</button>
+        </div>
+        <p id="statusText" class="status">
+          Apercu en lecture. Cette version pousse plus fort le cote pub premium.
+        </p>
+        <div class="compare-box">
+          <span>Comparer avec la premiere version</span>
+          <a href="../styleflowdemo-export/index.html">Ouvrir la version premium soft</a>
+        </div>
+      </section>
+
+      <section class="stage-shell">
+        <canvas id="demoCanvas" width="1080" height="1920"></canvas>
+      </section>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
