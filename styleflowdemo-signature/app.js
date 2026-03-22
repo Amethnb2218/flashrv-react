@@ -9,6 +9,7 @@ const statusText = document.getElementById("statusText");
 const WIDTH = canvas.width;
 const HEIGHT = canvas.height;
 const FPS = 30;
+const BRAND_LOGO_PATH = "../public/brand/logo-full.png";
 
 const scenes = [
   {
@@ -195,6 +196,30 @@ function preloadImage(name) {
   });
 }
 
+function preloadStaticImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error(`Impossible de charger ${src}`));
+    img.src = src;
+  });
+}
+
+function drawBrandLogo(x, y, maxWidth, maxHeight, alpha = 1) {
+  const logo = assets.__brandLogo;
+  if (!logo?.width || !logo?.height) {
+    return 0;
+  }
+  const scale = Math.min(maxWidth / logo.width, maxHeight / logo.height);
+  const width = logo.width * scale;
+  const height = logo.height * scale;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.drawImage(logo, x, y + (maxHeight - height) / 2, width, height);
+  ctx.restore();
+  return width;
+}
+
 function getWrappedLines(text, maxWidth) {
   const words = text.split(" ");
   const lines = [];
@@ -313,26 +338,13 @@ function drawTopBar(sceneIndex, time) {
   fillRoundedRect(52, 44, 976, 128, 40, "rgba(255,255,255,0.78)");
   strokeRoundedRect(52, 44, 976, 128, 40, "rgba(102,74,31,0.14)");
 
-  fillRoundedRect(84, 74, 84, 84, 24, "#141414");
-  ctx.fillStyle = "#f8f0df";
-  ctx.font = "900 54px 'Palatino Linotype', Georgia, serif";
-  ctx.fillText("F", 104, 136);
-  ctx.fillStyle = "#c8962d";
-  ctx.font = "900 32px 'Palatino Linotype', Georgia, serif";
-  ctx.fillText("/", 134, 110);
-
-  ctx.fillStyle = "#201811";
-  ctx.font = "700 42px 'Palatino Linotype', Georgia, serif";
-  ctx.fillText("Style", 188, 122);
-  ctx.fillStyle = "#c8962d";
-  ctx.font = "700 44px 'Palatino Linotype', Georgia, serif";
-  ctx.fillText("Flow", 312, 122);
+  fillRoundedRect(82, 66, 382, 86, 28, "rgba(255,249,240,0.96)");
+  strokeRoundedRect(82, 66, 382, 86, 28, "rgba(200,150,45,0.16)", 1.5);
+  drawBrandLogo(96, 73, 350, 72, 1);
 
   ctx.fillStyle = "rgba(79,59,29,0.82)";
-  ctx.font = "700 15px 'Segoe UI Variable Text', sans-serif";
-  ctx.fillText("RESERVEZ. BRILLEZ.", 188, 148);
   ctx.font = "700 14px 'Segoe UI Variable Text', sans-serif";
-  ctx.fillText(`SCENE ${String(sceneIndex + 1).padStart(2, "0")}`, 188, 164);
+  ctx.fillText(`SCENE ${String(sceneIndex + 1).padStart(2, "0")}`, 486, 118);
 
   fillRoundedRect(790, 112, 192, 8, 4, "rgba(102,74,31,0.11)");
   fillRoundedRect(790, 112, 192 * (playhead / totalDuration), 8, 4, "#c8962d");
@@ -450,7 +462,7 @@ function drawTextPanel(scene, progress) {
 
   ctx.fillStyle = "#c8962d";
   ctx.font = "700 21px 'Segoe UI Variable Text', sans-serif";
-  drawLineReveal(scene.kicker || "STYLEFLOW", x, y, 294, reveal * 1.2, 48, 30);
+  drawLineReveal(scene.kicker || "Jolof'Era", x, y, 294, reveal * 1.2, 48, 30);
 
   ctx.fillStyle = "#201811";
   ctx.font = "700 68px 'Palatino Linotype', Georgia, serif";
@@ -826,10 +838,14 @@ async function exportVideo() {
 }
 
 async function init() {
-  const loadedImages = await Promise.all(imageNames.map((name) => preloadImage(name)));
+  const [loadedImages, brandLogo] = await Promise.all([
+    Promise.all(imageNames.map((name) => preloadImage(name))),
+    preloadStaticImage(BRAND_LOGO_PATH).catch(() => null)
+  ]);
   imageNames.forEach((name, index) => {
     assets[name] = loadedImages[index];
   });
+  assets.__brandLogo = brandLogo;
 
   renderFrame(0);
   requestAnimationFrame(frame);

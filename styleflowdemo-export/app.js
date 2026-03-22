@@ -9,6 +9,7 @@ const statusText = document.getElementById("statusText");
 const WIDTH = canvas.width;
 const HEIGHT = canvas.height;
 const FPS = 30;
+const BRAND_LOGO_PATH = "../public/brand/logo-full.png";
 
 const scenes = [
   {
@@ -178,6 +179,30 @@ function preloadImage(name) {
     img.onerror = reject;
     img.src = `./assets/${name}`;
   });
+}
+
+function preloadStaticImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error(`Impossible de charger ${src}`));
+    img.src = src;
+  });
+}
+
+function drawBrandLogo(x, y, maxWidth, maxHeight, alpha = 1) {
+  const logo = assets.__brandLogo;
+  if (!logo?.width || !logo?.height) {
+    return 0;
+  }
+  const scale = Math.min(maxWidth / logo.width, maxHeight / logo.height);
+  const width = logo.width * scale;
+  const height = logo.height * scale;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.drawImage(logo, x, y + (maxHeight - height) / 2, width, height);
+  ctx.restore();
+  return width;
 }
 
 function line(ctx, x1, y1, x2, y2, strokeStyle, width = 1) {
@@ -562,23 +587,9 @@ function drawGlobalBrand(time) {
   fillRoundedRect(66, 62, 948, 116, 36, "rgba(10,10,10,0.55)");
   strokeRoundedRect(66, 62, 948, 116, 36, "rgba(255,255,255,0.14)");
 
-  fillRoundedRect(90, 82, 70, 70, 20, "#161616");
-  ctx.fillStyle = "#f5f2eb";
-  ctx.font = "900 46px 'Segoe UI Variable Display', sans-serif";
-  ctx.fillText("F", 111, 131);
-  ctx.fillStyle = "#e5b641";
-  ctx.font = "900 28px 'Segoe UI Variable Display', sans-serif";
-  ctx.fillText("/", 137, 109);
-
-  ctx.fillStyle = "#f8f1df";
-  ctx.font = "800 38px 'Segoe UI Variable Display', sans-serif";
-  ctx.fillText("Style", 182, 124);
-  ctx.fillStyle = "#e5b641";
-  ctx.fillText("Flow", 286, 124);
-
-  ctx.fillStyle = "rgba(247, 241, 223, 0.84)";
-  ctx.font = "700 18px 'Segoe UI Variable Display', sans-serif";
-  ctx.fillText("RESERVEZ. BRILLEZ.", 184, 151);
+  fillRoundedRect(88, 78, 370, 84, 28, "rgba(255,249,240,0.98)");
+  strokeRoundedRect(88, 78, 370, 84, 28, "rgba(229,182,65,0.22)", 1.5);
+  drawBrandLogo(102, 84, 340, 72, 1);
 
   ctx.textAlign = "right";
   ctx.fillStyle = "rgba(255,255,255,0.80)";
@@ -726,10 +737,14 @@ function renderVideoBlob() {
 }
 
 async function init() {
-  const loadedImages = await Promise.all(imageNames.map((name) => preloadImage(name)));
+  const [loadedImages, brandLogo] = await Promise.all([
+    Promise.all(imageNames.map((name) => preloadImage(name))),
+    preloadStaticImage(BRAND_LOGO_PATH).catch(() => null)
+  ]);
   imageNames.forEach((name, index) => {
     assets[name] = loadedImages[index];
   });
+  assets.__brandLogo = brandLogo;
 
   renderFrame(0);
   requestAnimationFrame(frame);

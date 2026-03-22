@@ -9,12 +9,13 @@ const statusText = document.getElementById("statusText");
 const WIDTH = canvas.width;
 const HEIGHT = canvas.height;
 const FPS = 30;
+const BRAND_LOGO_PATH = "../public/brand/logo-full.png";
 
 const scenes = [
   {
     type: "intro",
     duration: 2.3,
-    title: "STYLEFLOW",
+    title: "Jolof'Era",
     subtitle: "La reservation, le commerce et la marque dans un seul geste.",
     detail: "Une experience mobile pensee comme une campagne premium."
   },
@@ -86,7 +87,7 @@ const scenes = [
   {
     type: "outro",
     duration: 2.8,
-    title: "STYLEFLOW",
+    title: "Jolof'Era",
     subtitle: "Reservez. Achetez. Rayonnez.",
     detail: "Agence Cut. Une version plus marquee, plus scenarisee, plus memorisable."
   }
@@ -169,6 +170,30 @@ function preloadImage(name) {
   });
 }
 
+function preloadStaticImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error(`Impossible de charger ${src}`));
+    img.src = src;
+  });
+}
+
+function drawBrandLogo(x, y, maxWidth, maxHeight, alpha = 1) {
+  const logo = assets.__brandLogo;
+  if (!logo?.width || !logo?.height) {
+    return 0;
+  }
+  const scale = Math.min(maxWidth / logo.width, maxHeight / logo.height);
+  const width = logo.width * scale;
+  const height = logo.height * scale;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.drawImage(logo, x, y + (maxHeight - height) / 2, width, height);
+  ctx.restore();
+  return width;
+}
+
 function getWrappedLines(text, maxWidth) {
   const words = text.split(" ");
   const lines = [];
@@ -243,24 +268,13 @@ function drawBrandBar(time) {
   fillRoundedRect(56, 54, 968, 118, 38, "rgba(255,255,255,0.64)");
   strokeRoundedRect(56, 54, 968, 118, 38, "rgba(108,82,39,0.14)");
 
-  fillRoundedRect(84, 78, 80, 80, 24, "#141414");
-  ctx.fillStyle = "#f9f1e0";
-  ctx.font = "900 52px 'Palatino Linotype', Georgia, serif";
-  ctx.fillText("F", 104, 136);
-  ctx.fillStyle = "#c89328";
-  ctx.font = "900 30px 'Palatino Linotype', Georgia, serif";
-  ctx.fillText("/", 135, 109);
-
-  ctx.fillStyle = "#201710";
-  ctx.font = "700 38px 'Palatino Linotype', Georgia, serif";
-  ctx.fillText("Style", 188, 125);
-  ctx.fillStyle = "#c89328";
-  ctx.font = "700 40px 'Palatino Linotype', Georgia, serif";
-  ctx.fillText("Flow", 295, 125);
+  fillRoundedRect(82, 72, 382, 86, 28, "rgba(255,249,242,0.96)");
+  strokeRoundedRect(82, 72, 382, 86, 28, "rgba(200,147,40,0.16)", 1.5);
+  drawBrandLogo(96, 79, 350, 72, 1);
 
   ctx.fillStyle = "rgba(79,60,31,0.78)";
   ctx.font = "700 16px 'Segoe UI Variable Text', sans-serif";
-  ctx.fillText("AGENCE CUT", 190, 152);
+  ctx.fillText("AGENCE CUT", 488, 124);
 
   fillRoundedRect(792, 112, 188, 8, 4, "rgba(108,82,39,0.12)");
   fillRoundedRect(792, 112, 188 * (playhead / totalDuration), 8, 4, "#c89328");
@@ -402,7 +416,7 @@ function drawTextPanel(scene, progress) {
 
   ctx.fillStyle = "#c89328";
   ctx.font = "700 20px 'Segoe UI Variable Text', sans-serif";
-  ctx.fillText(scene.kicker || "STYLEFLOW", x, y);
+  ctx.fillText(scene.kicker || "Jolof'Era", x, y);
 
   ctx.fillStyle = "#201710";
   ctx.font = "700 60px 'Palatino Linotype', Georgia, serif";
@@ -731,10 +745,14 @@ async function exportVideo() {
 }
 
 async function init() {
-  const loadedImages = await Promise.all(imageNames.map((name) => preloadImage(name)));
+  const [loadedImages, brandLogo] = await Promise.all([
+    Promise.all(imageNames.map((name) => preloadImage(name))),
+    preloadStaticImage(BRAND_LOGO_PATH).catch(() => null)
+  ]);
   imageNames.forEach((name, index) => {
     assets[name] = loadedImages[index];
   });
+  assets.__brandLogo = brandLogo;
 
   renderFrame(0);
   requestAnimationFrame(frame);
