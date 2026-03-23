@@ -83,10 +83,17 @@
         { "key": "Content-Type", "value": "text/plain" },
         { "key": "Cache-Control", "value": "public, max-age=86400" }
       ]
+    },
+    {
+      "source": "/4c4ea7c6-9a91-49be-8fd0-2ca80a88d1f8.txt",
+      "headers": [
+        { "key": "Content-Type", "value": "text/plain; charset=utf-8" },
+        { "key": "Cache-Control", "value": "public, max-age=86400" }
+      ]
     }
   ],
   "rewrites": [
-    { "source": "/((?!assets|favicon|icons|manifest\\.json|sw\\.js|robots\\.txt|sitemap\\.xml).*)", "destination": "/index.html" }
+    { "source": "/((?!assets|favicon|icons|manifest\\.json|sw\\.js|robots\\.txt|sitemap\\.xml|4c4ea7c6-9a91-49be-8fd0-2ca80a88d1f8\\.txt).*)", "destination": "/index.html" }
   ]
 }
 
