@@ -41,7 +41,7 @@ function App() {
     <Routes>
       <Route path="/" element={<Layout />}>
         {/* Public routes */}
-        <Route index element={<><SEOHead title="Reservation salon coiffure Dakar | Jolof'Era" description="Reservez un salon de coiffure, barbershop ou boutique a Dakar et au Senegal. Comparez les avis, tarifs et disponibilites avec Jolof'Era." canonical="https://www.jolofera.com/" /><Home /></>} />
+        <Route index element={<><SEOHead title="Jolof'Era | Reservation salon coiffure Dakar" description="Reservez un salon de coiffure, barbershop ou boutique a Dakar et au Senegal. Comparez les avis, tarifs et disponibilites avec Jolof'Era." canonical="https://www.jolofera.com/" /><Home /></>} />
         <Route path="login" element={<><SEOHead title="Connexion — Jolof’Era" noindex /><Login /></>} />
         <Route path="register" element={<><SEOHead title="Inscription — Jolof’Era" noindex /><Register /></>} />
         <Route path="forgot-password" element={<><SEOHead title="Mot de passe oublié — Jolof’Era" noindex /><ForgotPassword /></>} />

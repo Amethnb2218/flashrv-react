@@ -5,7 +5,7 @@ const BASE_URL = 'https://www.jolofera.com'
 const SEO_TITLE_MAX = 60
 const SEO_DESC_MIN = 110
 const SEO_DESC_MAX = 158
-const DEFAULT_TITLE = "Reservation salon coiffure Dakar | Jolof'Era"
+const DEFAULT_TITLE = "Jolof'Era | Reservation salon coiffure Dakar"
 const DEFAULT_DESCRIPTION =
   "Reservez un salon de coiffure, barbershop ou boutique a Dakar et au Senegal. Comparez les avis, tarifs et disponibilites en ligne avec Jolof'Era."
 
@@ -79,4 +79,3 @@ export default function SEOHead({ title, description, canonical, noindex = false
 
   return null
 }
-
