@@ -1,6 +1,4 @@
-let inMemoryAuthToken = null
 let inMemoryCsrfToken = null
-const AUTH_TOKEN_STORAGE_KEY = 'flashrv_auth_token'
 const CSRF_TOKEN_STORAGE_KEY = 'flashrv_csrf_token'
 
 const SAFE_HTTP_METHODS = new Set(['GET', 'HEAD', 'OPTIONS'])
@@ -31,23 +29,15 @@ function writeToSessionStorage(key, value) {
 }
 
 export function readAuthToken() {
-  if (!inMemoryAuthToken) {
-    inMemoryAuthToken = readFromSessionStorage(AUTH_TOKEN_STORAGE_KEY)
-  }
-
-  const token = String(inMemoryAuthToken || '').trim()
-  return token || null
+  return null
 }
 
 export function writeAuthToken(token) {
-  const nextToken = String(token || '').trim()
-  inMemoryAuthToken = nextToken || null
-  writeToSessionStorage(AUTH_TOKEN_STORAGE_KEY, inMemoryAuthToken)
+  return String(token || '').trim() || null
 }
 
 export function clearAuthToken() {
-  inMemoryAuthToken = null
-  writeToSessionStorage(AUTH_TOKEN_STORAGE_KEY, null)
+  return null
 }
 
 export function readCsrfToken() {
@@ -72,13 +62,6 @@ export function clearCsrfToken() {
 
 export function buildAuthHeaders(headers = {}, method = 'GET') {
   const normalized = { ...headers }
-
-  if (!normalized.Authorization && !normalized.authorization) {
-    const token = readAuthToken()
-    if (token) {
-      normalized.Authorization = `Bearer ${token}`
-    }
-  }
 
   const normalizedMethod = String(method || 'GET').trim().toUpperCase()
   if (!SAFE_HTTP_METHODS.has(normalizedMethod) && !normalized['X-CSRF-Token'] && !normalized['x-csrf-token']) {

@@ -60,7 +60,7 @@ router.post("/login", loginLimiter, authController.login);
  * @desc    Déconnexion de l'utilisateur
  * @access  Public
  */
-router.post("/logout", authController.logout);
+router.post("/logout", authenticate, authController.logout);
 
 /* ===========================================
    PROTECTED ROUTES (authentification requise)

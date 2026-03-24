@@ -65,6 +65,49 @@ const getBaseUrls = () => {
   };
 };
 
+const getAllowedFrontendOrigins = () => {
+  const candidates = [
+    process.env.BASE_URL,
+    process.env.FRONTEND_URL,
+    process.env.ALLOWED_ORIGINS,
+    'http://localhost:3000',
+  ]
+    .flatMap((value) => String(value || '').split(','))
+    .map((value) => String(value || '').trim())
+    .filter(Boolean);
+
+  return [...new Set(candidates.map((value) => {
+    try {
+      const url = new URL(value);
+      return `${url.protocol}//${url.host}`;
+    } catch (_) {
+      return null;
+    }
+  }).filter(Boolean))];
+};
+
+const sanitizeFrontendReturnUrl = (candidate, fallbackUrl, allowedPaths = []) => {
+  const cleanCandidate = String(candidate || '').trim();
+  if (!cleanCandidate) return fallbackUrl;
+
+  try {
+    const target = cleanCandidate.startsWith('/')
+      ? new URL(cleanCandidate, fallbackUrl)
+      : new URL(cleanCandidate);
+    const allowedOrigins = getAllowedFrontendOrigins();
+    const sameAllowedOrigin = allowedOrigins.includes(`${target.protocol}//${target.host}`);
+    const allowedPath = allowedPaths.length === 0 || allowedPaths.includes(target.pathname);
+
+    if (!sameAllowedOrigin || !allowedPath) {
+      return fallbackUrl;
+    }
+
+    return target.toString();
+  } catch (_) {
+    return fallbackUrl;
+  }
+};
+
 const toOperationalPaydunyaError = (error, phase = 'create') => {
   if (error?.statusCode && error?.expose === true) {
     return error;
@@ -278,8 +321,10 @@ const createPaydunyaPaymentForBooking = async ({
   }
 
   const { frontendBase, backendBase } = getBaseUrls();
-  const resolvedSuccessUrl = successUrl || `${frontendBase}/payment/success?appointmentId=${encodeURIComponent(bookingId)}`;
-  const resolvedCancelUrl = cancelUrl || `${frontendBase}/payment/cancel?appointmentId=${encodeURIComponent(bookingId)}`;
+  const defaultSuccessUrl = `${frontendBase}/payment/success?appointmentId=${encodeURIComponent(bookingId)}`;
+  const defaultCancelUrl = `${frontendBase}/payment/cancel?appointmentId=${encodeURIComponent(bookingId)}`;
+  const resolvedSuccessUrl = sanitizeFrontendReturnUrl(successUrl, defaultSuccessUrl, ['/payment/success']);
+  const resolvedCancelUrl = sanitizeFrontendReturnUrl(cancelUrl, defaultCancelUrl, ['/payment/cancel']);
   const callbackUrl = `${backendBase}/api/paydunya/ipn`;
 
   let invoice;
@@ -360,8 +405,10 @@ const createPaydunyaPaymentForOrder = async ({
   }
 
   const { frontendBase, backendBase } = getBaseUrls();
-  const resolvedSuccessUrl = successUrl || `${frontendBase}/order/payment/success?orderId=${encodeURIComponent(orderId)}`;
-  const resolvedCancelUrl = cancelUrl || `${frontendBase}/order/payment/cancel?orderId=${encodeURIComponent(orderId)}`;
+  const defaultSuccessUrl = `${frontendBase}/order/payment/success?orderId=${encodeURIComponent(orderId)}`;
+  const defaultCancelUrl = `${frontendBase}/order/payment/cancel?orderId=${encodeURIComponent(orderId)}`;
+  const resolvedSuccessUrl = sanitizeFrontendReturnUrl(successUrl, defaultSuccessUrl, ['/order/payment/success']);
+  const resolvedCancelUrl = sanitizeFrontendReturnUrl(cancelUrl, defaultCancelUrl, ['/order/payment/cancel']);
   const callbackUrl = `${backendBase}/api/paydunya/ipn`;
   const itemLabel = (order.items || [])
     .map((entry) => `${entry.product?.name || 'Article'} x${entry.quantity}`)
@@ -696,15 +743,29 @@ router.post('/init', authenticate, async (req, res, next) => {
 router.post('/confirm-on-site', authenticate, async (req, res, next) => {
   try {
     const { bookingId, amount } = req.body;
+    if (!String(bookingId || '').trim()) {
+      return res.status(400).json({ status: 'error', message: 'bookingId requis' });
+    }
+
     const reference = generateReference();
-    const appointment = bookingId
-      ? await prisma.appointment.findUnique({
-          where: { id: bookingId },
-          include: {
-            salon: { select: { name: true } },
-          },
-        })
-      : null;
+    const appointment = await prisma.appointment.findUnique({
+      where: { id: bookingId },
+      include: {
+        salon: { select: { name: true } },
+      },
+    });
+
+    if (!appointment) {
+      return res.status(404).json({ status: 'error', message: 'Reservation introuvable' });
+    }
+
+    if (appointment.clientId !== req.user.id) {
+      return res.status(403).json({ status: 'error', message: 'Acces interdit' });
+    }
+
+    if (['COMPLETED', 'CANCELLED', 'NO_SHOW'].includes(String(appointment.status || '').toUpperCase())) {
+      return res.status(400).json({ status: 'error', message: 'Cette reservation ne peut plus etre confirmee' });
+    }
 
     const payment = await prisma.payment.create({
       data: {
@@ -717,31 +778,27 @@ router.post('/confirm-on-site', authenticate, async (req, res, next) => {
         status: 'ON_SITE',
         reference,
         phoneNumber: null,
-        appointmentId: bookingId || null,
+        appointmentId: appointment.id,
         userId: req.user.id,
       },
     });
 
-    if (bookingId) {
-      await prisma.appointment.update({
-        where: { id: bookingId },
-        data: { status: 'CONFIRMED_ON_SITE' },
-      }).catch(() => {});
+    await prisma.appointment.update({
+      where: { id: appointment.id },
+      data: { status: 'CONFIRMED_ON_SITE' },
+    }).catch(() => {});
 
-      if (appointment?.clientId === req.user.id) {
-        try {
-          const notification = await createBookingNotification({
-            userId: req.user.id,
-            salonName: appointment.salon?.name || 'le salon',
-            date: appointment.date,
-            startTime: appointment.startTime,
-            message: `Reservation confirmee chez ${appointment.salon?.name || 'le salon'} le ${new Date(appointment.date).toLocaleDateString('fr-FR')} a ${appointment.startTime}. Paiement au salon.`,
-          });
-          pushNotification(notification.userId, notification);
-        } catch (error) {
-          console.error('On-site booking notification error:', error.message);
-        }
-      }
+    try {
+      const notification = await createBookingNotification({
+        userId: req.user.id,
+        salonName: appointment.salon?.name || 'le salon',
+        date: appointment.date,
+        startTime: appointment.startTime,
+        message: `Reservation confirmee chez ${appointment.salon?.name || 'le salon'} le ${new Date(appointment.date).toLocaleDateString('fr-FR')} a ${appointment.startTime}. Paiement au salon.`,
+      });
+      pushNotification(notification.userId, notification);
+    } catch (error) {
+      console.error('On-site booking notification error:', error.message);
     }
 
     res.status(200).json({

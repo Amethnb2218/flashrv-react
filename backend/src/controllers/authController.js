@@ -51,7 +51,6 @@ async function register(req, res, next) {
     if (normalizedRole === 'PRO') {
       sendProPendingNotification({ proName: user.name, proEmail: user.email });
     }
-    // Générer un token (mock, à sécuriser en prod)
     const token = generateToken({ userId: user.id, email: user.email, role: user.role });
     const csrfToken = buildCsrfToken(token);
     setTokenCookie(res, token);
@@ -59,7 +58,7 @@ async function register(req, res, next) {
     return res.status(201).json({
       status: 'success',
       message: 'Inscription réussie',
-      data: { user: safeUser, token, csrfToken },
+      data: { user: safeUser, csrfToken },
     });
   } catch (error) {
     return next(error);
@@ -111,7 +110,7 @@ async function login(req, res, next) {
     return res.json({
       status: 'success',
       message: 'Connexion réussie',
-      data: { user: safeUser, token, csrfToken },
+      data: { user: safeUser, csrfToken },
     });
   } catch (error) {
     // Prisma network/runtime errors should not surface as generic 500 auth failures.
@@ -175,6 +174,7 @@ async function verifyPasswordWithLegacyMigration(user, rawPassword) {
   const bcrypt = require('bcryptjs');
   const stored = String(user?.password || '');
   const plain = String(rawPassword || '');
+  const legacyMigrationEnabled = process.env.ALLOW_LEGACY_PASSWORD_MIGRATION === 'true';
 
   if (!stored || !plain) return false;
 
@@ -186,7 +186,11 @@ async function verifyPasswordWithLegacyMigration(user, rawPassword) {
     }
   }
 
-  // Legacy fallback: some old accounts may still have non-bcrypt passwords.
+  if (!legacyMigrationEnabled) {
+    return false;
+  }
+
+  // Legacy fallback: allow one-time migration only when explicitly enabled.
   if (stored !== plain) return false;
 
   try {
@@ -327,7 +331,7 @@ async function googleAuth(req, res, next) {
     // Set token as httpOnly cookie
     setTokenCookie(res, token);
 
-    // Return user info (without sensitive data) + token (comme /register)
+    // Return user info (without sensitive data)
     return res.status(200).json({
       status: "success",
       message: accountLinked
@@ -346,7 +350,6 @@ async function googleAuth(req, res, next) {
           status: user.status,
           phoneNumber: user.phoneNumber,
         },
-        token,
         csrfToken,
         isNewUser,
         accountLinked,

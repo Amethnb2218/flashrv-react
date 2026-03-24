@@ -1,14 +1,14 @@
 const express = require('express');
 const multer = require('multer');
 const rateLimit = require('express-rate-limit');
-const { authenticate } = require('../middleware/auth');
+const { authenticate, optionalAuth } = require('../middleware/auth');
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 6 * 1024 * 1024 } });
 
 const assistantChatLimiter = rateLimit({
   windowMs: 10 * 60 * 1000,
-  max: 60,
+  max: 30,
   standardHeaders: true,
   legacyHeaders: false,
   message: { status: 'error', message: 'Trop de messages assistant. Reessayez dans quelques minutes.' },
@@ -133,7 +133,7 @@ async function callOpenAIResponses({ message, history = [] }) {
   return answer || fallbackAssistantReply(message);
 }
 
-router.post('/chat', assistantChatLimiter, async (req, res, next) => {
+router.post('/chat', optionalAuth, assistantChatLimiter, async (req, res, next) => {
   try {
     const { message, history } = req.body || {};
     const clean = String(message || '').trim();
@@ -142,7 +142,7 @@ router.post('/chat', assistantChatLimiter, async (req, res, next) => {
     }
 
     let answer;
-    if (!OPENAI_API_KEY) {
+    if (!OPENAI_API_KEY || !req.user) {
       answer = fallbackAssistantReply(clean);
     } else {
       answer = await callOpenAIResponses({
@@ -153,7 +153,7 @@ router.post('/chat', assistantChatLimiter, async (req, res, next) => {
 
     return res.status(200).json({
       status: 'success',
-      data: { answer, provider: OPENAI_API_KEY ? 'openai' : 'fallback' },
+      data: { answer, provider: OPENAI_API_KEY && req.user ? 'openai' : 'fallback' },
     });
   } catch (error) {
     return next(error);

@@ -9,14 +9,7 @@ import {
   readAccountDeletionRecord,
 } from '../utils/accountDeletion'
 import { clearProOnboardingDraft, isProUser } from '../utils/proOnboarding'
-import {
-  buildAuthHeaders,
-  clearAuthToken,
-  clearCsrfToken,
-  readAuthToken,
-  writeAuthToken,
-  writeCsrfToken,
-} from '../utils/authToken'
+import { buildAuthHeaders, clearAuthToken, clearCsrfToken, writeCsrfToken } from '../utils/authToken'
 
 const AuthContext = createContext()
 const USER_STORAGE_KEY = 'flashrv_user'
@@ -62,12 +55,10 @@ const clearStoredUser = () => {
 }
 
 const initialUser = readStoredUser()
-const initialToken = readAuthToken()
-
 const initialState = {
   user: initialUser,
-  token: initialToken,
-  isAuthenticated: Boolean(initialUser && initialToken),
+  token: null,
+  isAuthenticated: Boolean(initialUser),
   isLoading: true,
 }
 
@@ -113,21 +104,20 @@ export function AuthProvider({ children }) {
 
   const restoreCachedSession = () => {
     const cachedUser = readStoredUser()
-    const cachedToken = readAuthToken()
 
-    if (!cachedUser || !cachedToken) {
+    if (!cachedUser) {
       return false
     }
 
     dispatch({
       type: 'LOGIN',
-      payload: { user: cachedUser, token: cachedToken }
+      payload: { user: cachedUser, token: null }
     })
 
     return true
   }
 
-  const hydrateProAccountState = async (user, tokenOverride = null) => {
+  const hydrateProAccountState = async (user) => {
     const normalizedUser = normalizeUserShape(user)
 
     if (!isProUser(normalizedUser)) {
@@ -137,9 +127,7 @@ export function AuthProvider({ children }) {
     try {
       const response = await fetch(`${API_BASE}/salons/me`, {
         method: 'GET',
-        headers: tokenOverride
-          ? buildAuthHeaders({ Authorization: `Bearer ${tokenOverride}` }, 'GET')
-          : authHeaders({}, 'GET'),
+        headers: authHeaders({}, 'GET'),
         credentials: 'include',
         cache: 'no-store',
       })
@@ -210,23 +198,19 @@ export function AuthProvider({ children }) {
     return normalizedUser
   }
 
-  const persistAuthenticatedUser = async (apiUser, apiToken = null, apiCsrfToken = null) => {
+  const persistAuthenticatedUser = async (apiUser, apiCsrfToken = null) => {
     const restoredUser = restorePendingDeletionIfNeeded(apiUser)
-    if (apiToken) {
-      writeAuthToken(apiToken)
-    }
     if (apiCsrfToken) {
       writeCsrfToken(apiCsrfToken)
     }
-    const hydratedUser = await hydrateProAccountState(restoredUser, apiToken)
+    const hydratedUser = await hydrateProAccountState(restoredUser)
     const normalizedUser = normalizeUserShape(hydratedUser)
 
     writeStoredUser(normalizedUser)
-    const activeToken = apiToken || readAuthToken()
 
     dispatch({
       type: 'LOGIN',
-      payload: { user: normalizedUser, token: activeToken }
+      payload: { user: normalizedUser, token: null }
     })
 
     subscribeToPush().catch(() => {})
@@ -245,6 +229,13 @@ export function AuthProvider({ children }) {
         })
 
         if (!response.ok) {
+          if (response.status === 401 || response.status === 403) {
+            clearStoredUser()
+            clearAuthToken()
+            clearCsrfToken()
+            dispatch({ type: 'SET_LOADING', payload: false })
+            return
+          }
           if (restoreCachedSession()) {
             return
           }
@@ -267,7 +258,6 @@ export function AuthProvider({ children }) {
 
         await persistAuthenticatedUser(
           apiUser,
-          data?.data?.token || null,
           data?.data?.csrfToken || null
         )
       } catch (error) {
@@ -299,10 +289,9 @@ export function AuthProvider({ children }) {
         throw new Error(data.message || 'Identifiants incorrects');
       }
       const user = data.data?.user;
-      const token = data.data?.token || null;
       const csrfToken = data.data?.csrfToken || null;
       if (user) {
-        return await persistAuthenticatedUser(user, token, csrfToken);
+        return await persistAuthenticatedUser(user, csrfToken);
       } else {
         throw new Error('Utilisateur manquant');
       }
@@ -325,10 +314,9 @@ export function AuthProvider({ children }) {
         throw new Error(data.message || 'Erreur de connexion Google');
       }
       let user = data.data?.user;
-      const token = data.data?.token || null;
       const csrfToken = data.data?.csrfToken || null;
       if (user) {
-        return await persistAuthenticatedUser(user, token, csrfToken);
+        return await persistAuthenticatedUser(user, csrfToken);
       } else {
         throw new Error('Utilisateur Google manquant');
       }
@@ -350,10 +338,9 @@ export function AuthProvider({ children }) {
       throw new Error(data.message || 'Erreur lors de l\'inscription');
     }
     const user = data.data?.user;
-    const token = data.data?.token || null;
     const csrfToken = data.data?.csrfToken || null;
     if (user) {
-      return await persistAuthenticatedUser(user, token, csrfToken);
+      return await persistAuthenticatedUser(user, csrfToken);
     } else {
       throw new Error('Utilisateur manquant');
     }
@@ -394,12 +381,11 @@ export function AuthProvider({ children }) {
         throw new Error(data.message || 'Erreur de connexion Google');
       }
       const user = data.data?.user;
-      const token = data.data?.token || null;
       const csrfToken = data.data?.csrfToken || null;
       if (!user) {
         throw new Error('Utilisateur Google manquant');
       }
-      return await persistAuthenticatedUser(user, token, csrfToken);
+      return await persistAuthenticatedUser(user, csrfToken);
     } catch (error) {
       console.error('Google login error:', error);
       throw error;
@@ -408,8 +394,24 @@ export function AuthProvider({ children }) {
 
 
   // Basic checkAuth implementation
-  const checkAuth = () => {
-    return Boolean(readStoredUser() && readAuthToken())
+  const checkAuth = async () => {
+    if (state.user) return state.user
+
+    try {
+      const response = await fetch(`${API_BASE}/auth/session`, {
+        method: 'GET',
+        headers: authHeaders({}, 'GET'),
+        credentials: 'include',
+        cache: 'no-store',
+      })
+      if (!response.ok) return null
+      const data = await response.json().catch(() => null)
+      const apiUser = data?.data?.user
+      if (!apiUser) return null
+      return await persistAuthenticatedUser(apiUser, data?.data?.csrfToken || null)
+    } catch (_) {
+      return readStoredUser()
+    }
   }
 
   const updateUser = (userData) => {
