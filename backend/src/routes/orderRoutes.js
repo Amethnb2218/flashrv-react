@@ -9,6 +9,7 @@ const { uploadPaymentProof } = require('../config/cloudinary');
 const DIRECT_MOBILE_METHODS = new Set(['ORANGE_MONEY', 'WAVE', 'FREE_MONEY']);
 const ORANGE_MONEY_REFERENCE_REGEX = /^MP\d{6}\.\d{4}\.C\d{5}$/i;
 const ALLOWED_PAYMENT_METHODS = new Set([
+  'PAYTECH',
   'PAYDUNYA',
   'PAY_ON_PICKUP',
   'CASH_ON_DELIVERY',
@@ -31,6 +32,7 @@ const normalizeOrderPaymentMethod = (value) => {
   if (upper === 'PAY_ON_PICKUP' || upper === 'PAYONPICKUP') return 'PAY_ON_PICKUP';
   if (upper === 'CASH_ON_DELIVERY' || upper === 'CASHONDELIVERY') return 'CASH_ON_DELIVERY';
   if (upper === 'PAY_ON_SITE' || upper === 'PAYONSITE') return 'PAY_ON_SITE';
+  if (upper === 'PAYDUNYA') return 'PAYTECH';
   return upper;
 };
 
@@ -39,7 +41,7 @@ const buildPaymentReference = (prefix = 'ORDPAY') =>
 
 const toFriendlyPaymentMethodLabel = (method) => {
   const key = String(method || '').toUpperCase();
-  if (key === 'PAYDUNYA') return 'PayDunya';
+  if (key === 'PAYTECH' || key === 'PAYDUNYA') return 'PayTech';
   if (key === 'ORANGE_MONEY') return 'Orange Money';
   if (key === 'WAVE') return 'Wave';
   if (key === 'FREE_MONEY') return 'Free Money';
@@ -120,7 +122,7 @@ router.post('/', authenticate, async (req, res, next) => {
         message: 'Methode de paiement invalide.',
       });
     }
-    const isPaydunyaFlow = normalizedPaymentMethod === 'PAYDUNYA';
+    const isPaydunyaFlow = normalizedPaymentMethod === 'PAYTECH';
     const isDirectMobilePayment = DIRECT_MOBILE_METHODS.has(normalizedPaymentMethod);
     const requiresClientPayment = isPaydunyaFlow || isDirectMobilePayment;
 

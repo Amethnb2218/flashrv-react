@@ -8,7 +8,7 @@ import { resolveMediaUrl } from '../../utils/media'
 import apiFetch from '../../api/client'
 import { pushSiteNotification } from '../../utils/siteNotifications'
 import { clearCart, deriveDeliveryConfigFromItems, readCart, removeItemFromCart } from '../../utils/cartStore'
-import { buildPaydunyaPaymentPayload } from '../../utils/payments'
+import { buildPaytechPaymentPayload } from '../../utils/payments'
 import { saveOrderPaymentSession } from '../../utils/orderPaymentSession'
 import { filterVisiblePaymentMethods } from '../../utils/paymentMethodVisibility'
 
@@ -16,7 +16,7 @@ const DIRECT_MOBILE_METHODS = new Set(['ORANGE_MONEY', 'WAVE', 'FREE_MONEY'])
 const ORANGE_MONEY_REFERENCE_REGEX = /^MP\d{6}\.\d{4}\.C\d{5}$/i
 
 const PAYMENT_METHOD_LABELS = {
-  PAYDUNYA: 'PayDunya',
+  PAYTECH: 'PayTech',
   ORANGE_MONEY: 'Orange Money',
   WAVE: 'Wave',
   FREE_MONEY: 'Free Money',
@@ -26,7 +26,7 @@ const PAYMENT_METHOD_LABELS = {
 }
 
 const PAYMENT_METHOD_DESCRIPTIONS = {
-  PAYDUNYA: 'Paiement en ligne securise (Orange, Free, Carte bancaire)',
+  PAYTECH: 'Paiement en ligne securise via PayTech',
   ORANGE_MONEY: 'Paiement direct au numero Orange Money du marchand',
   WAVE: 'Paiement direct au numero Wave du marchand',
   FREE_MONEY: 'Paiement direct au numero Free Money du marchand',
@@ -36,7 +36,7 @@ const PAYMENT_METHOD_DESCRIPTIONS = {
 }
 
 const PAYMENT_METHOD_ICONS = {
-  PAYDUNYA: 'PD',
+  PAYTECH: 'PT',
   ORANGE_MONEY: 'OM',
   WAVE: 'WV',
   FREE_MONEY: 'FM',
@@ -159,6 +159,12 @@ function OrderCheckout() {
   }, [salonPaymentMethods])
   const paymentMethods = useMemo(() => {
     const methods = [
+      {
+        id: 'PAYTECH',
+        name: PAYMENT_METHOD_LABELS.PAYTECH,
+        icon: PAYMENT_METHOD_ICONS.PAYTECH,
+        description: PAYMENT_METHOD_DESCRIPTIONS.PAYTECH,
+      },
       ...directPaymentMethods,
       {
         id: 'PAY_ON_PICKUP',
@@ -298,7 +304,7 @@ ${variantNotes.join('\n')}` : '']
         deliveryFee,
       }
 
-      if (selectedPayment === 'PAYDUNYA') {
+      if (selectedPayment === 'PAYTECH') {
         saveOrderPaymentSession(receiptPayload)
         pushSiteNotification({
           userId: user?.id || user?.email,
@@ -307,7 +313,7 @@ ${variantNotes.join('\n')}` : '']
           meta: { orderId: order?.id, salonId: salon.id },
         })
 
-        const paymentBody = buildPaydunyaPaymentPayload({
+        const paymentBody = buildPaytechPaymentPayload({
             bookingId: order?.id,
             amount: grandTotal,
             customerName: form.clientName || user?.name || '',
@@ -338,7 +344,7 @@ ${variantNotes.join('\n')}` : '']
 
         const paymentPayload = paymentResult?.data || paymentResult
         if (!paymentPayload?.invoiceUrl) {
-          throw new Error('Erreur lors de la creation de la facture PayDunya')
+          throw new Error('Erreur lors de la creation de la facture PayTech')
         }
 
         clearCart()
@@ -396,7 +402,7 @@ ${variantNotes.join('\n')}` : '']
       })
       clearCart()
     } catch (e) {
-      if (selectedPayment === 'PAYDUNYA' && createdOrder?.id && receiptPayload) {
+      if (selectedPayment === 'PAYTECH' && createdOrder?.id && receiptPayload) {
         saveOrderPaymentSession(receiptPayload)
         navigate(`/order/payment/cancel?orderId=${encodeURIComponent(createdOrder.id)}`, { replace: true })
         return

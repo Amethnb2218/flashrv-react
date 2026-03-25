@@ -25,7 +25,7 @@ const buildPaymentReference = (prefix = 'APTPAY') =>
 
 const toFriendlyPaymentMethodLabel = (method) => {
   const key = String(method || '').toUpperCase();
-  if (key === 'PAYDUNYA') return 'PayDunya';
+  if (key === 'PAYTECH' || key === 'PAYDUNYA') return 'PayTech';
   if (key === 'ORANGE_MONEY') return 'Orange Money';
   if (key === 'WAVE') return 'Wave';
   if (key === 'FREE_MONEY') return 'Free Money';
@@ -241,10 +241,12 @@ router.post('/', authenticate, async (req, res, next) => {
       : '';
     const combinedNotes = [notes && notes.trim(), extraServicesNote].filter(Boolean).join('\n');
     const requestedStatus = String(status || '').trim().toUpperCase();
-    const normalizedPaymentMethod = String(paymentMethod || '').trim().toUpperCase();
+    const normalizedPaymentMethod = String(paymentMethod || '').trim().toUpperCase() === 'PAYDUNYA'
+      ? 'PAYTECH'
+      : String(paymentMethod || '').trim().toUpperCase();
     const isPaydunyaFlow =
       Boolean(requiresOnlinePayment) ||
-      normalizedPaymentMethod === 'PAYDUNYA' ||
+      normalizedPaymentMethod === 'PAYTECH' ||
       requestedStatus === 'PENDING_PAYMENT';
     const shouldSkipNotifications = skipNotifications === true;
     const shouldSendConfirmationEmail =

@@ -7,11 +7,11 @@ import { useAuth } from '../../context/AuthContext'
 import LoadingSpinner from '../../components/UI/LoadingSpinner'
 import apiFetch from '../../api/client'
 import { resolveMediaUrl } from '../../utils/media'
-import { buildPaydunyaPaymentPayload } from '../../utils/payments'
+import { buildPaytechPaymentPayload } from '../../utils/payments'
 import { filterVisiblePaymentMethods } from '../../utils/paymentMethodVisibility'
 
 const DIRECT_MOBILE_METHODS = new Set(['ORANGE_MONEY', 'WAVE', 'FREE_MONEY'])
-const ADVANCE_BOOKING_PAYMENT_METHODS = new Set(['PAYDUNYA', ...DIRECT_MOBILE_METHODS])
+const ADVANCE_BOOKING_PAYMENT_METHODS = new Set(['PAYTECH', ...DIRECT_MOBILE_METHODS])
 const ORANGE_MONEY_REFERENCE_REGEX = /^MP\d{6}\.\d{4}\.C\d{5}$/i
 
 const PAYMENT_FLOW_OPTIONS = [
@@ -30,7 +30,7 @@ const PAYMENT_FLOW_OPTIONS = [
 ]
 
 const PAYMENT_METHOD_LABELS = {
-  PAYDUNYA: 'PayDunya',
+  PAYTECH: 'PayTech',
   ORANGE_MONEY: 'Orange Money',
   WAVE: 'Wave',
   FREE_MONEY: 'Free Money',
@@ -38,7 +38,7 @@ const PAYMENT_METHOD_LABELS = {
 }
 
 const PAYMENT_METHOD_ICONS = {
-  PAYDUNYA: 'PD',
+  PAYTECH: 'PT',
   ORANGE_MONEY: 'OM',
   WAVE: 'WV',
   FREE_MONEY: 'FM',
@@ -46,7 +46,7 @@ const PAYMENT_METHOD_ICONS = {
 }
 
 const PAYMENT_METHOD_DESCRIPTIONS = {
-  PAYDUNYA: 'Paiement securise (Orange, Free, Carte bancaire)',
+  PAYTECH: 'Paiement securise via PayTech',
   ORANGE_MONEY: 'Paiement direct au numero Orange Money du salon',
   WAVE: 'Paiement direct au numero Wave du salon',
   FREE_MONEY: 'Paiement direct au numero Free Money du salon',
@@ -100,7 +100,7 @@ const getFriendlyPaymentError = (error, { selectedMethod, bookingState, appointm
     }
   }
 
-  if (selectedMethod === 'PAYDUNYA' && appointmentId) {
+  if (selectedMethod === 'PAYTECH' && appointmentId) {
     return {
       message: 'Le serveur est temporairement indisponible. Reessayez dans un instant. Votre réservation a bien été conservée.',
       type: 'pending_online_booking',
@@ -170,23 +170,31 @@ function Payment() {
     }
   }, [bookingState.salon?.id, bookingState.salon?.paymentMethods])
 
-  const availableAdvancePaymentMethods = useMemo(
-    () =>
-      filterVisiblePaymentMethods(salonPaymentMethods)
-        .filter((method) => method?.enabled !== false)
-        .map((method) => {
-          const methodKey = String(method?.method || '').toUpperCase()
-          return {
-            id: methodKey,
-            name: PAYMENT_METHOD_LABELS[methodKey] || method?.displayName || methodKey,
-            icon: PAYMENT_METHOD_ICONS[methodKey] || 'PAY',
-            description: PAYMENT_METHOD_DESCRIPTIONS[methodKey] || 'Paiement disponible pour cette reservation',
-            details: method,
-          }
-        })
-        .filter((method) => ADVANCE_BOOKING_PAYMENT_METHODS.has(method.id)),
-    [salonPaymentMethods]
-  )
+  const availableAdvancePaymentMethods = useMemo(() => {
+    const hostedMethod = {
+      id: 'PAYTECH',
+      name: PAYMENT_METHOD_LABELS.PAYTECH,
+      icon: PAYMENT_METHOD_ICONS.PAYTECH,
+      description: PAYMENT_METHOD_DESCRIPTIONS.PAYTECH,
+      details: null,
+    }
+
+    const directMethods = filterVisiblePaymentMethods(salonPaymentMethods)
+      .filter((method) => method?.enabled !== false)
+      .map((method) => {
+        const methodKey = String(method?.method || '').toUpperCase()
+        return {
+          id: methodKey,
+          name: PAYMENT_METHOD_LABELS[methodKey] || method?.displayName || methodKey,
+          icon: PAYMENT_METHOD_ICONS[methodKey] || 'PAY',
+          description: PAYMENT_METHOD_DESCRIPTIONS[methodKey] || 'Paiement disponible pour cette reservation',
+          details: method,
+        }
+      })
+      .filter((method) => ADVANCE_BOOKING_PAYMENT_METHODS.has(method.id) && method.id !== 'PAYTECH')
+
+    return [hostedMethod, ...directMethods]
+  }, [salonPaymentMethods])
 
   const visiblePaymentFlowOptions = useMemo(
     () => PAYMENT_FLOW_OPTIONS.filter((option) => option.id !== 'PAY_IN_ADVANCE' || availableAdvancePaymentMethods.length > 0),
@@ -290,9 +298,9 @@ function Payment() {
       payload.sendConfirmation = false
     }
 
-    if (paymentMethod === 'PAYDUNYA') {
+    if (paymentMethod === 'PAYTECH') {
       payload.status = 'PENDING_PAYMENT'
-      payload.paymentMethod = 'PAYDUNYA'
+      payload.paymentMethod = 'PAYTECH'
       payload.paymentStatus = 'PENDING'
       payload.requiresOnlinePayment = true
     }
@@ -387,7 +395,7 @@ function Payment() {
       }
 
       const serviceLabel = bookingState.services.map((service) => service.name).filter(Boolean).join(', ')
-      const paymentBody = buildPaydunyaPaymentPayload({
+      const paymentBody = buildPaytechPaymentPayload({
         bookingId: appointmentId,
         amount: amountToPayNow,
         customerName: `${bookingState.clientFirstName || ''} ${bookingState.clientLastName || ''}`.trim() || user?.name || '',
@@ -416,7 +424,7 @@ function Payment() {
 
       const payload = result?.data || result
       if (!payload?.invoiceUrl) {
-        throw new Error('Erreur lors de la creation de facture PayDunya')
+        throw new Error('Erreur lors de la creation de facture PayTech')
       }
 
       setPaymentStatus('pending_confirmation')
@@ -460,7 +468,7 @@ function Payment() {
             <div className="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <FiSmartphone className="w-10 h-10 text-primary-600 animate-pulse" />
             </div>
-            <h3 className="text-xl font-bold text-primary-900 mb-2">Redirection PayDunya</h3>
+            <h3 className="text-xl font-bold text-primary-900 mb-2">Redirection PayTech</h3>
             <p className="text-primary-600 mb-4">Ouverture de la page de paiement securisee...</p>
             <div className="flex items-center justify-center text-sm text-primary-500">
               <LoadingSpinner size="sm" />

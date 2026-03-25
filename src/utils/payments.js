@@ -8,7 +8,7 @@ function buildFallbackEmail({ bookingId, customerPhone }) {
   return `client-${suffix}@flashrv.app`
 }
 
-export function buildPaydunyaPaymentPayload({
+export function buildPaytechPaymentPayload({
   bookingId,
   amount,
   customerName,
@@ -36,8 +36,8 @@ export function buildPaydunyaPaymentPayload({
     ...(isOrderTarget ? { orderId: safeBookingId } : {}),
     amount: numericAmount,
     currency: 'XOF',
-    provider: 'PAYDUNYA',
-    paymentMethod: 'PAYDUNYA',
+    provider: 'PAYTECH',
+    paymentMethod: 'PAYTECH',
     customerName: safeName,
     customerEmail: safeEmail,
     customerPhone: safePhone,
@@ -61,3 +61,5 @@ export function buildPaydunyaPaymentPayload({
     },
   }
 }
+
+export const buildPaydunyaPaymentPayload = buildPaytechPaymentPayload

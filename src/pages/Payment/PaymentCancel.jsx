@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { FiAlertCircle, FiRefreshCw } from 'react-icons/fi'
 import apiFetch, { isRetryableHttpError } from '../../api/client'
-import { buildPaydunyaPaymentPayload } from '../../utils/payments'
+import { buildPaytechPaymentPayload } from '../../utils/payments'
 import { calculateBookingDeposit } from '../../utils/bookingDeposit'
 
 function PaymentCancel() {
@@ -97,7 +97,7 @@ function PaymentCancel() {
         : appointment?.service?.name || 'Reservation'
 
       const result = await createInvoiceWithRetry(
-        buildPaydunyaPaymentPayload({
+        buildPaytechPaymentPayload({
           bookingId: appointment.id,
           amount: depositAmount,
           customerName,
@@ -110,7 +110,7 @@ function PaymentCancel() {
 
       const payload = result?.data || result
       if (!payload?.invoiceUrl) {
-        throw new Error('Erreur lors de la creation de la facture')
+        throw new Error('Erreur lors de la creation de la facture PayTech')
       }
 
       window.location.href = payload.invoiceUrl

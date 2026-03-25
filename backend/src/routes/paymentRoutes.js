@@ -2,6 +2,7 @@ const express = require('express');
 const prisma = require('../lib/prisma');
 const { authenticate, requireApprovedPro } = require('../middleware/auth');
 const { createPaydunyaInvoice, confirmPaydunyaInvoice } = require('../services/paydunyaService');
+const { createPaytechPayment } = require('../services/paytechService');
 // const { initiateWavePayment, checkWavePaymentStatus } = require('../services/paymentService'); // TODO: enable when Wave API key is available
 const { pushNotification } = require('../realtime/hub');
 const { sendBookingConfirmationEmail, sendOrderConfirmationEmail } = require('../services/emailService');
@@ -9,7 +10,7 @@ const { createBookingNotification } = require('../services/bookingNotificationSe
 
 const router = express.Router();
 
-const ALLOWED_PROVIDERS = ['PAYDUNYA', 'PAY_ON_SITE'];
+const ALLOWED_PROVIDERS = ['PAYTECH', 'PAYDUNYA', 'PAY_ON_SITE'];
 const invoiceCreationInFlight = new Map();
 const INFLIGHT_TTL_MS = 25000;
 const ROUTE_TIMEOUT_MS = 28000;
@@ -77,6 +78,25 @@ const toOperationalPaydunyaError = (error, phase = 'create') => {
     : phase === 'verify'
       ? 'Impossible de verifier le paiement PayDunya pour le moment.'
       : 'Impossible d initialiser le paiement PayDunya. Reessayez dans quelques instants.';
+
+  const wrapped = new Error(message);
+  wrapped.statusCode = isConfigIssue ? 503 : 502;
+  wrapped.expose = true;
+  return wrapped;
+};
+
+const toOperationalPaytechError = (error, phase = 'create') => {
+  if (error?.statusCode && error?.expose === true) {
+    return error;
+  }
+
+  const normalizedMessage = String(error?.message || '').trim().toLowerCase();
+  const isConfigIssue = normalizedMessage.includes('paytech') && normalizedMessage.includes('configure');
+  const message = isConfigIssue
+    ? 'PayTech n est pas configure sur le serveur.'
+    : phase === 'verify'
+      ? 'Impossible de verifier le paiement PayTech pour le moment.'
+      : 'Impossible d initialiser le paiement PayTech. Reessayez dans quelques instants.';
 
   const wrapped = new Error(message);
   wrapped.statusCode = isConfigIssue ? 503 : 502;
@@ -401,10 +421,206 @@ const createPaydunyaPaymentForOrder = async ({
   };
 };
 
+const createPaytechPaymentForBooking = async ({
+  bookingId,
+  amount,
+  customerName,
+  customerEmail,
+  successUrl,
+  cancelUrl,
+  user,
+}) => {
+  const booking = await prisma.appointment.findUnique({
+    where: { id: bookingId },
+    include: {
+      salon: { select: { id: true, name: true } },
+      service: { select: { id: true, name: true } },
+      client: { select: { id: true } },
+    },
+  });
+
+  if (!booking) {
+    const err = new Error('Reservation introuvable');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  if (booking.clientId !== user.id) {
+    const err = new Error('Acces interdit');
+    err.statusCode = 403;
+    throw err;
+  }
+
+  if (['COMPLETED', 'CANCELLED', 'NO_SHOW'].includes(String(booking.status || '').toUpperCase())) {
+    const err = new Error('Cette reservation ne peut plus etre payee');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const value = Number(amount);
+  if (!Number.isFinite(value) || value <= 0) {
+    const err = new Error('Montant invalide');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const { frontendBase, backendBase } = getBaseUrls();
+  const resolvedSuccessUrl = successUrl || `${frontendBase}/payment/success?appointmentId=${encodeURIComponent(bookingId)}`;
+  const resolvedCancelUrl = cancelUrl || `${frontendBase}/payment/cancel?appointmentId=${encodeURIComponent(bookingId)}`;
+  const ipnUrl = `${backendBase}/api/paytech/ipn`;
+  const reference = `APT-${String(bookingId || '').trim()}`;
+
+  let checkout;
+  try {
+    checkout = await createPaytechPayment({
+      amount: value,
+      reference,
+      itemName: booking.service?.name || 'Reservation salon',
+      description: `Reservation ${booking.service?.name || 'Salon'} - ${booking.salon?.name || 'JolofEra'}`,
+      successUrl: resolvedSuccessUrl,
+      cancelUrl: resolvedCancelUrl,
+      ipnUrl,
+      customField: {
+        type: 'APPOINTMENT',
+        bookingId,
+        userId: user.id,
+        customerName: customerName || user.name || 'Client JolofEra',
+        customerEmail: customerEmail || user.email || '',
+      },
+    });
+  } catch (error) {
+    throw toOperationalPaytechError(error, 'create');
+  }
+
+  await markAppointmentPendingPayment(bookingId);
+
+  const payment = await upsertPaymentForTarget({
+    appointmentId: bookingId,
+    userId: user.id,
+    amount: value,
+    reference,
+    transactionId: checkout.token,
+    status: 'PENDING',
+  });
+
+  await prisma.payment.update({
+    where: { id: payment.id },
+    data: { method: 'PAYTECH' },
+  }).catch(() => {});
+
+  return {
+    payment: { ...payment, method: 'PAYTECH' },
+    invoiceUrl: checkout.redirectUrl,
+    token: checkout.token,
+  };
+};
+
+const createPaytechPaymentForOrder = async ({
+  orderId,
+  amount,
+  customerName,
+  customerEmail,
+  successUrl,
+  cancelUrl,
+  user,
+}) => {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: {
+      salon: { select: { id: true, name: true } },
+      client: { select: { id: true } },
+      items: { include: { product: { select: { id: true, name: true } } } },
+    },
+  });
+
+  if (!order) {
+    const err = new Error('Commande introuvable');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  if (order.clientId !== user.id) {
+    const err = new Error('Acces interdit');
+    err.statusCode = 403;
+    throw err;
+  }
+
+  if (['DELIVERED', 'CANCELLED'].includes(String(order.status || '').toUpperCase())) {
+    const err = new Error('Cette commande ne peut plus etre payee');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const value = Number(amount);
+  if (!Number.isFinite(value) || value <= 0) {
+    const err = new Error('Montant invalide');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const { frontendBase, backendBase } = getBaseUrls();
+  const resolvedSuccessUrl = successUrl || `${frontendBase}/order/payment/success?orderId=${encodeURIComponent(orderId)}`;
+  const resolvedCancelUrl = cancelUrl || `${frontendBase}/order/payment/cancel?orderId=${encodeURIComponent(orderId)}`;
+  const ipnUrl = `${backendBase}/api/paytech/ipn`;
+  const itemLabel = (order.items || [])
+    .map((entry) => `${entry.product?.name || 'Article'} x${entry.quantity}`)
+    .join(', ');
+  const reference = `ORD-${String(orderId || '').trim()}`;
+
+  let checkout;
+  try {
+    checkout = await createPaytechPayment({
+      amount: value,
+      reference,
+      itemName: itemLabel || 'Commande boutique',
+      description: `Commande ${itemLabel || 'Boutique'} - ${order.salon?.name || 'JolofEra'}`,
+      successUrl: resolvedSuccessUrl,
+      cancelUrl: resolvedCancelUrl,
+      ipnUrl,
+      customField: {
+        type: 'ORDER',
+        orderId,
+        userId: user.id,
+        customerName: customerName || user.name || 'Client JolofEra',
+        customerEmail: customerEmail || user.email || '',
+      },
+    });
+  } catch (error) {
+    throw toOperationalPaytechError(error, 'create');
+  }
+
+  await markOrderPendingPayment(orderId);
+
+  const payment = await upsertPaymentForTarget({
+    orderId,
+    userId: user.id,
+    amount: value,
+    reference,
+    transactionId: checkout.token,
+    status: 'PENDING',
+  });
+
+  await prisma.payment.update({
+    where: { id: payment.id },
+    data: { method: 'PAYTECH' },
+  }).catch(() => {});
+
+  return {
+    payment: { ...payment, method: 'PAYTECH' },
+    invoiceUrl: checkout.redirectUrl,
+    token: checkout.token,
+  };
+};
+
 const verifyPaymentRecord = async (payment) => {
   if (!payment) return null;
 
-  if (String(payment.method || '').toUpperCase() !== 'PAYDUNYA') {
+  const paymentMethod = String(payment.method || '').toUpperCase();
+  if (paymentMethod === 'PAYTECH') {
+    return payment;
+  }
+
+  if (paymentMethod !== 'PAYDUNYA') {
     return payment;
   }
 
@@ -569,7 +785,7 @@ router.post('/create', authenticate, async (req, res, next) => {
       const invoiceResult = await runSingleFlightInvoiceCreation({
         lockKey,
         task: async () => (target.type === 'ORDER'
-          ? createPaydunyaPaymentForOrder({
+          ? createPaytechPaymentForOrder({
               orderId: target.id,
               amount,
               customerName,
@@ -578,7 +794,7 @@ router.post('/create', authenticate, async (req, res, next) => {
               cancelUrl,
               user: req.user,
             })
-          : createPaydunyaPaymentForBooking({
+          : createPaytechPaymentForBooking({
               bookingId: target.id,
               amount,
               customerName,
@@ -594,14 +810,14 @@ router.post('/create', authenticate, async (req, res, next) => {
 
     res.status(200).json({
       status: 'success',
-      message: 'Facture PayDunya creee',
+      message: 'Facture PayTech creee',
       data: {
         paymentId: result.invoiceResult.payment.id,
         bookingId: result.target.type === 'APPOINTMENT' ? result.target.id : null,
         orderId: result.target.type === 'ORDER' ? result.target.id : null,
         invoiceUrl: result.invoiceResult.invoiceUrl,
         token: result.invoiceResult.token,
-        provider: 'PAYDUNYA',
+        provider: 'PAYTECH',
       },
     });
   } catch (error) {
@@ -616,7 +832,9 @@ router.post('/create', authenticate, async (req, res, next) => {
 router.post('/init', authenticate, async (req, res, next) => {
   try {
     const { provider, amount, bookingId, orderId, customerName, customerEmail, successUrl, cancelUrl } = req.body;
-    const normalizedProvider = String(provider || '').toUpperCase();
+    const normalizedProvider = String(provider || '').toUpperCase() === 'PAYDUNYA'
+      ? 'PAYTECH'
+      : String(provider || '').toUpperCase();
 
     if (!ALLOWED_PROVIDERS.includes(normalizedProvider)) {
       return res.status(400).json({
@@ -650,7 +868,7 @@ router.post('/init', authenticate, async (req, res, next) => {
     const result = await withRouteTimeout(runSingleFlightInvoiceCreation({
       lockKey,
       task: async () => (target.type === 'ORDER'
-        ? createPaydunyaPaymentForOrder({
+        ? createPaytechPaymentForOrder({
             orderId: target.id,
             amount,
             customerName,
@@ -659,7 +877,7 @@ router.post('/init', authenticate, async (req, res, next) => {
             cancelUrl,
             user: req.user,
           })
-        : createPaydunyaPaymentForBooking({
+        : createPaytechPaymentForBooking({
             bookingId: target.id,
             amount,
             customerName,
@@ -672,7 +890,7 @@ router.post('/init', authenticate, async (req, res, next) => {
 
     res.status(200).json({
       status: 'success',
-      message: 'Paiement PayDunya initialise',
+      message: 'Paiement PayTech initialise',
       data: {
         paymentId: result.payment.id,
         bookingId: target.type === 'APPOINTMENT' ? target.id : null,
@@ -680,7 +898,7 @@ router.post('/init', authenticate, async (req, res, next) => {
         checkoutUrl: result.invoiceUrl,
         invoiceUrl: result.invoiceUrl,
         token: result.token,
-        provider: 'PAYDUNYA',
+        provider: 'PAYTECH',
         paymentStatus: result.payment.status,
       },
     });

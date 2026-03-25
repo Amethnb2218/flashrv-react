@@ -9,6 +9,7 @@ import toast from 'react-hot-toast'
 import { readOrderPaymentSession } from '../../utils/orderPaymentSession'
 
 const paymentLabels = {
+  PAYTECH: { name: 'PayTech', icon: 'PT' },
   PAYDUNYA: { name: 'PayDunya', icon: 'PD' },
   ORANGE_MONEY: { name: 'Orange Money', icon: 'OM' },
   WAVE: { name: 'Wave', icon: 'WV' },
@@ -192,9 +193,9 @@ function OrderReceipt() {
                 <p className="text-xs text-gold-600 font-medium mt-2 bg-gold-50 px-3 py-1.5 rounded-lg">
                   Preparez le montant exact si possible
                 </p>
-              ) : paymentKey === 'PAYDUNYA' ? (
+              ) : (paymentKey === 'PAYTECH' || paymentKey === 'PAYDUNYA') ? (
                 <p className="text-xs text-emerald-700 font-medium mt-2 bg-emerald-50 px-3 py-1.5 rounded-lg">
-                  Paiement PayDunya initialise pour cette commande
+                  Paiement PayTech initialise pour cette commande
                 </p>
               ) : ['ORANGE_MONEY', 'WAVE', 'FREE_MONEY'].includes(paymentKey) ? (
                 <p className="text-xs text-blue-700 font-medium mt-2 bg-blue-50 px-3 py-1.5 rounded-lg">

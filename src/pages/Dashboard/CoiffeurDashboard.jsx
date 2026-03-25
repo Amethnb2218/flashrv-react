@@ -1096,6 +1096,7 @@ const formatPaymentMethodLabel = (method) => {
   if (key === "ORANGE_MONEY") return "Orange Money";
   if (key === "WAVE") return "Wave";
   if (key === "FREE_MONEY") return "Free Money";
+  if (key === "PAYTECH") return "PayTech";
   if (key === "PAYDUNYA") return "PayDunya";
   if (key === "PAY_ON_PICKUP") return "Paiement au retrait";
   if (key === "CASH_ON_DELIVERY") return "Paiement a la livraison";
@@ -2571,8 +2572,10 @@ active
           ? "À la livraison"
           : paymentMethodKey === "PAY_ON_PICKUP"
             ? "Au retrait"
-            : paymentMethodKey === "PAYDUNYA"
-              ? "PayDunya"
+            : paymentMethodKey === "PAYTECH"
+              ? "PayTech"
+              : paymentMethodKey === "PAYDUNYA"
+                ? "PayDunya"
               : paymentMethodKey === "ORANGE_MONEY"
                 ? "Orange Money"
                 : paymentMethodKey === "WAVE"

@@ -20,6 +20,7 @@ const assistantRoutes = require('./routes/assistantRoutes');
 const productRoutes = require('./routes/productRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const paydunyaRoutes = require('./routes/paydunyaRoutes');
+const paytechRoutes = require('./routes/paytechRoutes');
 
 const rateLimit = require('express-rate-limit');
 
@@ -224,10 +225,9 @@ app.get('/health', async (req, res) => {
     dbMs = Date.now() - start;
   }
 
-  const paydunyaConfigured = Boolean(
-    process.env.PAYDUNYA_MASTER_KEY &&
-    process.env.PAYDUNYA_PRIVATE_KEY &&
-    process.env.PAYDUNYA_TOKEN
+  const paytechConfigured = Boolean(
+    process.env.PAYTECH_API_KEY &&
+    process.env.PAYTECH_API_SECRET
   );
 
   const isProd = process.env.NODE_ENV === 'production';
@@ -240,7 +240,7 @@ app.get('/health', async (req, res) => {
       ? {}
       : {
           environment: process.env.NODE_ENV || 'development',
-          paydunya: { configured: paydunyaConfigured, mode: process.env.PAYDUNYA_MODE || 'not set' },
+          paytech: { configured: paytechConfigured, mode: process.env.PAYTECH_MODE || 'not set' },
         }),
   });
 });
@@ -266,6 +266,7 @@ app.use('/api/assistant', assistantRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/paydunya', paydunyaRoutes);
+app.use('/api/paytech', paytechRoutes);
 
 // ===========================================
 // 404 HANDLER
