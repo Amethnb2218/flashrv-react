@@ -17,6 +17,7 @@ import LoadingSpinner from '../../components/UI/LoadingSpinner'
 import apiFetch from '@/api/client'
 import toast from 'react-hot-toast'
 import { parseProductMeta } from '../../utils/productMeta'
+import { filterVisiblePaymentMethods } from '../../utils/paymentMethodVisibility'
 import {
   addItemToCart,
   deriveDeliveryConfigFromItems,
@@ -1124,11 +1125,11 @@ function SalonDetail() {
                     </div>
 
                     {/* Payment Methods */}
-                    {salon.paymentMethods?.length > 0 && (
+                    {filterVisiblePaymentMethods(salon.paymentMethods).length > 0 && (
                       <div>
                         <h4 className="font-semibold text-primary-900 text-sm mb-2">Paiement accepté</h4>
                         <div className="flex flex-wrap gap-1.5">
-                          {salon.paymentMethods.map((pm) => {
+                          {filterVisiblePaymentMethods(salon.paymentMethods).map((pm) => {
                             const method = pm.method || pm
                             const labels = {
                               PAYDUNYA: { label: 'PayDunya', color: 'bg-indigo-50 text-indigo-700' },

@@ -8,6 +8,7 @@ import LoadingSpinner from '../../components/UI/LoadingSpinner'
 import apiFetch from '../../api/client'
 import { resolveMediaUrl } from '../../utils/media'
 import { buildPaydunyaPaymentPayload } from '../../utils/payments'
+import { filterVisiblePaymentMethods } from '../../utils/paymentMethodVisibility'
 
 const DIRECT_MOBILE_METHODS = new Set(['ORANGE_MONEY', 'WAVE', 'FREE_MONEY'])
 const ADVANCE_BOOKING_PAYMENT_METHODS = new Set(['PAYDUNYA', ...DIRECT_MOBILE_METHODS])
@@ -152,10 +153,10 @@ function Payment() {
         const data = res?.data ?? res
         const payloadSalon = data?.salon ?? data
         if (!mounted) return
-        setSalonPaymentMethods(Array.isArray(payloadSalon?.paymentMethods) ? payloadSalon.paymentMethods : [])
+        setSalonPaymentMethods(filterVisiblePaymentMethods(payloadSalon?.paymentMethods))
       } catch (_) {
         if (!mounted) return
-        setSalonPaymentMethods(Array.isArray(bookingState.salon?.paymentMethods) ? bookingState.salon.paymentMethods : [])
+        setSalonPaymentMethods(filterVisiblePaymentMethods(bookingState.salon?.paymentMethods))
       } finally {
         if (mounted) {
           setLoadingPaymentMethods(false)
@@ -171,7 +172,7 @@ function Payment() {
 
   const availableAdvancePaymentMethods = useMemo(
     () =>
-      (Array.isArray(salonPaymentMethods) ? salonPaymentMethods : [])
+      filterVisiblePaymentMethods(salonPaymentMethods)
         .filter((method) => method?.enabled !== false)
         .map((method) => {
           const methodKey = String(method?.method || '').toUpperCase()
@@ -187,6 +188,11 @@ function Payment() {
     [salonPaymentMethods]
   )
 
+  const visiblePaymentFlowOptions = useMemo(
+    () => PAYMENT_FLOW_OPTIONS.filter((option) => option.id !== 'PAY_IN_ADVANCE' || availableAdvancePaymentMethods.length > 0),
+    [availableAdvancePaymentMethods]
+  )
+
   useEffect(() => {
     if (availableAdvancePaymentMethods.length === 0) {
       setSelectedMethod('')
@@ -197,6 +203,12 @@ function Payment() {
       setSelectedMethod(availableAdvancePaymentMethods[0].id)
     }
   }, [availableAdvancePaymentMethods, selectedMethod])
+
+  useEffect(() => {
+    if (paymentChoice === 'PAY_IN_ADVANCE' && availableAdvancePaymentMethods.length === 0) {
+      setPaymentChoice('PAY_ON_SITE')
+    }
+  }, [paymentChoice, availableAdvancePaymentMethods])
 
   const selectedAdvanceMethod = availableAdvancePaymentMethods.find((method) => method.id === selectedMethod) || null
   const requiresDirectProof = DIRECT_MOBILE_METHODS.has(String(selectedMethod || '').toUpperCase())
@@ -484,7 +496,7 @@ function Payment() {
               <h2 className="text-lg sm:text-xl font-bold text-primary-900 mb-3 sm:mb-6">Mode de paiement</h2>
 
               <div className="space-y-3">
-                {PAYMENT_FLOW_OPTIONS.map((option) => (
+                {visiblePaymentFlowOptions.map((option) => (
                   <motion.button
                     key={option.id}
                     whileHover={{ scale: 1.02 }}

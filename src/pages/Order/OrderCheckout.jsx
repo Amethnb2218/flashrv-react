@@ -10,6 +10,7 @@ import { pushSiteNotification } from '../../utils/siteNotifications'
 import { clearCart, deriveDeliveryConfigFromItems, readCart, removeItemFromCart } from '../../utils/cartStore'
 import { buildPaydunyaPaymentPayload } from '../../utils/payments'
 import { saveOrderPaymentSession } from '../../utils/orderPaymentSession'
+import { filterVisiblePaymentMethods } from '../../utils/paymentMethodVisibility'
 
 const DIRECT_MOBILE_METHODS = new Set(['ORANGE_MONEY', 'WAVE', 'FREE_MONEY'])
 const ORANGE_MONEY_REFERENCE_REGEX = /^MP\d{6}\.\d{4}\.C\d{5}$/i
@@ -124,10 +125,10 @@ function OrderCheckout() {
         const data = res?.data ?? res
         const payloadSalon = data?.salon ?? data
         if (!mounted) return
-        setSalonPaymentMethods(Array.isArray(payloadSalon?.paymentMethods) ? payloadSalon.paymentMethods : [])
+        setSalonPaymentMethods(filterVisiblePaymentMethods(payloadSalon?.paymentMethods))
       } catch (_) {
         if (!mounted) return
-        setSalonPaymentMethods(Array.isArray(salon?.paymentMethods) ? salon.paymentMethods : [])
+        setSalonPaymentMethods(filterVisiblePaymentMethods(salon?.paymentMethods))
       } finally {
         if (mounted) setLoadingPaymentMethods(false)
       }
@@ -142,7 +143,7 @@ function OrderCheckout() {
   const deliveryFee = form.deliveryMode === 'DELIVERY' ? baseDeliveryFee : 0
   const grandTotal = cartTotal + deliveryFee
   const directPaymentMethods = useMemo(() => {
-    return (Array.isArray(salonPaymentMethods) ? salonPaymentMethods : [])
+    return filterVisiblePaymentMethods(salonPaymentMethods)
       .filter((pm) => pm?.enabled !== false)
       .filter((pm) => DIRECT_MOBILE_METHODS.has(String(pm?.method || '').toUpperCase()))
       .map((pm) => {
@@ -158,12 +159,6 @@ function OrderCheckout() {
   }, [salonPaymentMethods])
   const paymentMethods = useMemo(() => {
     const methods = [
-      {
-        id: 'PAYDUNYA',
-        name: PAYMENT_METHOD_LABELS.PAYDUNYA,
-        icon: PAYMENT_METHOD_ICONS.PAYDUNYA,
-        description: PAYMENT_METHOD_DESCRIPTIONS.PAYDUNYA,
-      },
       ...directPaymentMethods,
       {
         id: 'PAY_ON_PICKUP',

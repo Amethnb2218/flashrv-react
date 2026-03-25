@@ -5,6 +5,11 @@ import { useAuth } from "../../context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import { resolveMediaUrl } from "../../utils/media";
+import {
+  filterVisiblePaymentMethods,
+  getVisiblePaymentMethodChoices,
+  hasHiddenElectronicPaymentMethods,
+} from "../../utils/paymentMethodVisibility";
 import { connectRealtime, subscribeRealtime } from "../../utils/realtime";
 import {
 FiCalendar,
@@ -584,13 +589,13 @@ const [savingPaymentMethod, setSavingPaymentMethod] = useState(false);
 const [uploadingPaymentQr, setUploadingPaymentQr] = useState(false);
 const [editingPaymentMethodId, setEditingPaymentMethodId] = useState(null);
 const [newPaymentMethod, setNewPaymentMethod] = useState({
-  method: "ORANGE_MONEY",
+  method: visiblePaymentMethodChoices[0]?.value || "CASH",
   enabled: true,
   displayName: "",
   phoneNumber: "",
   qrCodeUrl: "",
   instructions: "",
-  requiresProof: true,
+  requiresProof: false,
 });
 
 // Team management
@@ -1054,6 +1059,7 @@ const paymentMethodChoices = [
   { value: "CASH_ON_DELIVERY", label: "Paiement a la livraison" },
   { value: "CASH", label: "Especes / Cash" },
 ];
+const visiblePaymentMethodChoices = getVisiblePaymentMethodChoices(paymentMethodChoices);
 const MOBILE_MONEY_PAYMENT_METHODS = new Set(["ORANGE_MONEY", "WAVE", "FREE_MONEY"]);
 const paymentMethodMeta = {
   ORANGE_MONEY: { hint: "Ajoutez le numero Orange Money et/ou le QR marchand." },
@@ -1064,7 +1070,7 @@ const paymentMethodMeta = {
   CASH_ON_DELIVERY: { hint: "Paiement a la livraison." },
   CASH: { hint: "Paiement en especes." },
 };
-const buildDefaultPaymentMethodForm = (method = "ORANGE_MONEY") => ({
+const buildDefaultPaymentMethodForm = (method = visiblePaymentMethodChoices[0]?.value || "CASH") => ({
   method,
   enabled: true,
   displayName: "",
@@ -1102,14 +1108,14 @@ const openPaymentMethodModal = (method = null) => {
     setNewPaymentMethod(mapPaymentMethodToForm(method));
   } else {
     setEditingPaymentMethodId(null);
-    setNewPaymentMethod(buildDefaultPaymentMethodForm());
+    setNewPaymentMethod(buildDefaultPaymentMethodForm(visiblePaymentMethodChoices[0]?.value || "CASH"));
   }
   setShowPaymentMethodModal(true);
 };
 const closePaymentMethodModal = () => {
   setShowPaymentMethodModal(false);
   setEditingPaymentMethodId(null);
-  setNewPaymentMethod(buildDefaultPaymentMethodForm());
+  setNewPaymentMethod(buildDefaultPaymentMethodForm(visiblePaymentMethodChoices[0]?.value || "CASH"));
 };
 const uploadPaymentMethodQr = async (file) => {
   if (!file) return;
@@ -1131,6 +1137,9 @@ const uploadPaymentMethodQr = async (file) => {
     setUploadingPaymentQr(false);
   }
 };
+const visibleConfiguredPaymentMethods = filterVisiblePaymentMethods(paymentMethods);
+const paymentMethodsContainHiddenElectronic = hasHiddenElectronicPaymentMethods(paymentMethods);
+
 const handleSavePaymentMethod = async () => {
   if (savingPaymentMethod) return;
   const normalizedMethod = String(newPaymentMethod.method || "").trim().toUpperCase();
@@ -4384,11 +4393,11 @@ return (
 <div className="p-3 sm:p-5">
 {loadingPaymentMethods ? (
 <p className="text-primary-500 font-semibold">Chargementé</p>
-) : paymentMethods.length === 0 ? (
+) : visibleConfiguredPaymentMethods.length === 0 ? (
 <EmptyState
 icon={<FiCreditCard />}
 title="Aucun moyen de paiement"
-subtitle="Configurez les moyens de paiement acceptés par votre salon."
+subtitle={paymentMethodsContainHiddenElectronic ? "Les moyens de paiement electroniques existants sont temporairement masques." : "Configurez les moyens de paiement acceptés par votre salon."}
 action={
 <Button onClick={openPaymentMethodModal}>
 <FiPlus className="mr-2" /> Ajouter un moyen de paiement
@@ -4402,8 +4411,13 @@ action={
 <FiPlus className="mr-2" /> Ajouter un moyen de paiement
 </Button>
 </div>
+{paymentMethodsContainHiddenElectronic ? (
+<div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+Les moyens de paiement electroniques sont temporairement masques en attendant l integration PayTech.
+</div>
+) : null}
 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-{paymentMethods.map((pm) => (
+{visibleConfiguredPaymentMethods.map((pm) => (
 <div
 key={pm.id}
 className="bg-white border border-primary-100 rounded-3xl p-5 shadow-sm space-y-3"
@@ -4478,7 +4492,7 @@ requiresProof: isMobile ? true : false,
 })
 }
 >
-{paymentMethodChoices.map((opt) => (
+{visiblePaymentMethodChoices.map((opt) => (
 <option key={opt.value} value={opt.value}>{opt.label}</option>
 ))}
 </Select>
