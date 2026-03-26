@@ -11,8 +11,10 @@ const { createBookingNotification } = require('../services/bookingNotificationSe
 const router = express.Router();
 
 const ALLOWED_PROVIDERS = ['DEXPAY', 'PAYTECH', 'PAYDUNYA', 'PAY_ON_SITE'];
-const DEFAULT_DEXPAY_TIMEOUT_MS = 7000;
-const MAX_DEXPAY_TIMEOUT_MS = 9000;
+const DEFAULT_DEXPAY_TIMEOUT_MS = 6000;
+const MAX_DEXPAY_TIMEOUT_MS = 7000;
+const ROUTE_TIMEOUT_BUFFER_MS = 1000;
+const MIN_ROUTE_TIMEOUT_MS = 7000;
 
 const resolveDexPayTimeoutMs = () => {
   try {
@@ -29,7 +31,10 @@ const resolveDexPayTimeoutMs = () => {
   return DEFAULT_DEXPAY_TIMEOUT_MS;
 };
 
-const ROUTE_TIMEOUT_MS = Math.max(10000, resolveDexPayTimeoutMs() + 2500);
+const ROUTE_TIMEOUT_MS = Math.min(
+  8500,
+  Math.max(MIN_ROUTE_TIMEOUT_MS, resolveDexPayTimeoutMs() + ROUTE_TIMEOUT_BUFFER_MS)
+);
 const withRouteTimeout = (promise, label = 'operation') => {
   let timer;
   const timeout = new Promise((_, reject) => {

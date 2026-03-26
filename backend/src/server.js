@@ -5,6 +5,25 @@ const app = require('./app');
 const { initRealtime } = require('./realtime/hub');
 const PORT = process.env.PORT || 4000;
 
+function trimTrailingSlash(value) {
+  return String(value || '').trim().replace(/\/+$/, '');
+}
+
+function getPublicUrls() {
+  const backendBase = trimTrailingSlash(process.env.API_URL || '');
+  const frontendBase = trimTrailingSlash(process.env.FRONTEND_URL || process.env.BASE_URL || '');
+  const localHttpBase = `http://localhost:${PORT}`;
+  const localWsBase = `ws://localhost:${PORT}`;
+
+  return {
+    backendBase: backendBase || localHttpBase,
+    frontendBase: frontendBase || null,
+    realtimeBase: backendBase
+      ? backendBase.replace(/^http/i, 'ws')
+      : localWsBase,
+  };
+}
+
 async function connectDatabase() {
   try {
     await prisma.$connect();
@@ -37,10 +56,13 @@ async function startServer() {
   startReminderCron();
 
   server.listen(PORT, () => {
-    console.log(`FlashRV backend started on http://localhost:${PORT}`);
-    console.log('Realtime WebSocket endpoint: ws://localhost:' + PORT + '/realtime');
+    const urls = getPublicUrls();
+    console.log(`FlashRV backend started on ${urls.backendBase}`);
+    if (urls.frontendBase) {
+      console.log(`Configured frontend URL: ${urls.frontendBase}`);
+    }
+    console.log(`Realtime WebSocket endpoint: ${urls.realtimeBase}/realtime`);
   });
 }
 
 startServer();
-

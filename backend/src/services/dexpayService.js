@@ -1,7 +1,7 @@
 const DexPay = require('@dexchangepay/node');
 
-const DEFAULT_DEXPAY_TIMEOUT_MS = 7000;
-const MAX_DEXPAY_TIMEOUT_MS = 9000;
+const DEFAULT_DEXPAY_TIMEOUT_MS = 6000;
+const MAX_DEXPAY_TIMEOUT_MS = 7000;
 
 let cachedClient = null;
 let cachedConfig = null;
