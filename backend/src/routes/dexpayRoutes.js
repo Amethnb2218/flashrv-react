@@ -3,7 +3,6 @@ const prisma = require('../lib/prisma');
 const {
   createDexPayPayout,
   retrieveDexPayCheckoutByReference,
-  retrieveDexPayPayout,
   getDexPayConfig,
   computePayoutAmount,
 } = require('../services/dexpayService');
@@ -116,23 +115,11 @@ const triggerAutoPayoutForPayment = async (paymentId) => {
   if (normalizeStatus(payment.method) !== 'DEXPAY') return;
   if (normalizeStatus(payment.status) !== 'COMPLETED') return;
 
-  const payoutStatus = normalizeStatus(payment.payoutStatus);
-  if (['PENDING', 'PROCESSING', 'COMPLETED'].includes(payoutStatus) && payment.payoutReference) {
-    return;
-  }
-
   const destination = resolvePayoutDestination(payment);
   const ownerId = payment?.appointment?.salon?.ownerId || payment?.order?.salon?.ownerId || null;
   const salonName = payment?.appointment?.salon?.name || payment?.order?.salon?.name || 'votre espace';
 
   if (destination?.unsupported) {
-    await prisma.payment.update({
-      where: { id: payment.id },
-      data: {
-        payoutStatus: 'UNSUPPORTED',
-        payoutFailureReason: 'FREE_MONEY non supporte automatiquement par DexPay. Configurez Wave ou Orange Money.',
-      },
-    }).catch(() => {});
     await createUserNotification(
       ownerId,
       'payment',
@@ -142,13 +129,6 @@ const triggerAutoPayoutForPayment = async (paymentId) => {
   }
 
   if (!destination?.phoneNumber || !destination?.operator) {
-    await prisma.payment.update({
-      where: { id: payment.id },
-      data: {
-        payoutStatus: 'PENDING_CONFIG',
-        payoutFailureReason: 'Aucun compte Wave ou Orange Money configure pour le reversement DexPay.',
-      },
-    }).catch(() => {});
     await createUserNotification(
       ownerId,
       'payment',
@@ -159,13 +139,6 @@ const triggerAutoPayoutForPayment = async (paymentId) => {
 
   const payoutAmount = computePayoutAmount(payment.amount || payment.totalAmount || 0);
   if (!(payoutAmount > 0)) {
-    await prisma.payment.update({
-      where: { id: payment.id },
-      data: {
-        payoutStatus: 'FAILED',
-        payoutFailureReason: 'Montant de reversement invalide.',
-      },
-    }).catch(() => {});
     return;
   }
 
@@ -183,38 +156,12 @@ const triggerAutoPayoutForPayment = async (paymentId) => {
       },
     });
 
-    await prisma.payment.update({
-      where: { id: payment.id },
-      data: {
-        payoutReference: payout.reference || payout.id,
-        payoutStatus: normalizeStatus(payout.status || 'PENDING'),
-        payoutAmount,
-        payoutFees: Number(payout.fees || 0),
-        payoutDestinationPhone: destination.phoneNumber,
-        payoutOperator: destination.method,
-        payoutTriggeredAt: new Date(),
-        payoutFailureReason: null,
-        ...(normalizeStatus(payout.status) === 'COMPLETED' ? { payoutCompletedAt: new Date() } : {}),
-      },
-    }).catch(() => {});
-
     await createUserNotification(
       ownerId,
       'payment',
       `Paiement recu pour ${salonName}. Reversement DexPay ${normalizeStatus(payout.status) === 'COMPLETED' ? 'effectue' : 'lance'} vers votre compte ${destination.method === 'WAVE' ? 'Wave' : 'Orange Money'}.`
     );
   } catch (error) {
-    await prisma.payment.update({
-      where: { id: payment.id },
-      data: {
-        payoutStatus: 'FAILED',
-        payoutAmount,
-        payoutDestinationPhone: destination.phoneNumber,
-        payoutOperator: destination.method,
-        payoutTriggeredAt: new Date(),
-        payoutFailureReason: error?.message || 'Echec du reversement DexPay.',
-      },
-    }).catch(() => {});
     await createUserNotification(
       ownerId,
       'payment',
@@ -330,47 +277,7 @@ router.post('/webhook', async (req, res) => {
     }
 
     if (eventType === 'payout.completed' || eventType === 'payout.failed') {
-      let payout = null;
-      if (eventData?.id) {
-        payout = await retrieveDexPayPayout(eventData.id).catch(() => null);
-      }
-
-      const payoutReference = String(
-        payout?.reference ||
-        eventData?.reference ||
-        eventData?.id ||
-        ''
-      ).trim();
-
-      if (!payoutReference) {
-        return res.status(200).json(buildWebhookResponse('Reference payout absente, evenement ignore'));
-      }
-
-      const payment = await prisma.payment.findFirst({
-        where: {
-          OR: [
-            { payoutReference },
-            { payoutReference: String(eventData?.id || '').trim() || undefined },
-          ].filter(Boolean),
-        },
-      });
-
-      if (!payment) {
-        return res.status(200).json(buildWebhookResponse('Paiement payout introuvable'));
-      }
-
-      const nextStatus = eventType === 'payout.completed' ? 'COMPLETED' : 'FAILED';
-      await prisma.payment.update({
-        where: { id: payment.id },
-        data: {
-          payoutReference,
-          payoutStatus: nextStatus,
-          payoutFailureReason: nextStatus === 'FAILED' ? String(eventData?.failure_reason || payout?.failure_reason || 'Echec du reversement DexPay').trim() : null,
-          ...(nextStatus === 'COMPLETED' ? { payoutCompletedAt: new Date() } : {}),
-        },
-      }).catch(() => {});
-
-      return res.status(200).json(buildWebhookResponse('Evenement payout traite'));
+      return res.status(200).json(buildWebhookResponse('Evenement payout recu'));
     }
 
     return res.status(200).json(buildWebhookResponse('Evenement ignore'));
