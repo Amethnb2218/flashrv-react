@@ -143,12 +143,6 @@ const getOrCreateDexPayCheckout = async ({
   webhookUrl,
   metadata,
 }) => {
-  const existing = await findReusableDexPayCheckout(reference);
-  const existingStatus = normalizeProviderStatus(existing?.status);
-  if (existing?.paymentUrl && !['FAILED', 'CANCELLED'].includes(existingStatus)) {
-    return existing;
-  }
-
   try {
     return await createDexPayCheckout({
       amount,
@@ -160,10 +154,15 @@ const getOrCreateDexPayCheckout = async ({
       metadata,
     });
   } catch (error) {
-    const recovered = await findReusableDexPayCheckout(reference).catch(() => null);
-    const recoveredStatus = normalizeProviderStatus(recovered?.status);
-    if (recovered?.paymentUrl && !['FAILED', 'CANCELLED'].includes(recoveredStatus)) {
-      return recovered;
+    const transient = ['TIMEOUT', 'NETWORK_ERROR'].includes(String(error?.code || '').trim().toUpperCase())
+      || [408, 502, 503, 504].includes(Number(error?.statusCode || error?.status || 0));
+
+    if (transient) {
+      const recovered = await findReusableDexPayCheckout(reference).catch(() => null);
+      const recoveredStatus = normalizeProviderStatus(recovered?.status);
+      if (recovered?.paymentUrl && !['FAILED', 'CANCELLED'].includes(recoveredStatus)) {
+        return recovered;
+      }
     }
     throw error;
   }
@@ -711,7 +710,15 @@ const verifyPaymentRecord = async (payment) => {
         return updated;
       }
     } catch (error) {
-      throw toOperationalDexPayError(error, 'verify');
+      const operationalError = toOperationalDexPayError(error, 'verify');
+      console.error('DexPay verify fallback:', {
+        paymentId: payment.id,
+        reference: payment.reference || payment.transactionId || null,
+        statusCode: operationalError?.statusCode || error?.statusCode || error?.status || null,
+        code: error?.code || null,
+        message: operationalError?.message || error?.message || 'DexPay verify failed',
+      });
+      return payment;
     }
 
     return payment;
@@ -1104,7 +1111,18 @@ router.get('/verify/:bookingId', authenticate, async (req, res, next) => {
       return res.status(404).json({ status: 'error', message: 'Paiement introuvable' });
     }
 
-    const verified = await verifyPaymentRecord(payment);
+    let verified = payment;
+    try {
+      verified = await withRouteTimeout(verifyPaymentRecord(payment), 'payments/verify');
+    } catch (error) {
+      console.error('Payments verify route fallback:', {
+        bookingId,
+        paymentId: payment.id,
+        statusCode: error?.statusCode || error?.status || null,
+        message: error?.message || 'verify timeout',
+      });
+      verified = payment;
+    }
 
     res.status(200).json({
       status: 'success',

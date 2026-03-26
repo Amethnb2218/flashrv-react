@@ -30,7 +30,7 @@ export async function loadOrderPaymentState(orderId) {
       const verifyResponse = await apiFetch(`/payments/verify/${normalizedOrderId}`)
       verifiedPayment = normalizePaymentResponse(verifyResponse)
     } catch (error) {
-      if (error?.status !== 404) throw error
+      if (![404, 408, 502, 503, 504].includes(Number(error?.status))) throw error
     }
   }
   const resolvedPayment = verifiedPayment || payment || null
