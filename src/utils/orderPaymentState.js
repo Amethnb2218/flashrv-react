@@ -14,16 +14,24 @@ export async function loadOrderPaymentState(orderId) {
     return { order: null, payment: null }
   }
 
-  let verifiedPayment = null
-  try {
-    const verifyResponse = await apiFetch(`/payments/verify/${normalizedOrderId}`)
-    verifiedPayment = normalizePaymentResponse(verifyResponse)
-  } catch (error) {
-    if (error?.status !== 404) throw error
-  }
-
   const orderResponse = await apiFetch(`/orders/${normalizedOrderId}`)
   const order = normalizeOrderResponse(orderResponse)
+
+  const paymentMethod = String(order?.payment?.method || order?.paymentMethod || '').toUpperCase()
+  const orderStatus = String(order?.status || '').toUpperCase()
+  const shouldVerifyHostedPayment =
+    ['DEXPAY', 'PAYTECH', 'PAYDUNYA'].includes(paymentMethod) ||
+    ['PENDING_PAYMENT', 'CONFIRMED'].includes(orderStatus)
+
+  let verifiedPayment = null
+  if (shouldVerifyHostedPayment) {
+    try {
+      const verifyResponse = await apiFetch(`/payments/verify/${normalizedOrderId}`)
+      verifiedPayment = normalizePaymentResponse(verifyResponse)
+    } catch (error) {
+      if (error?.status !== 404) throw error
+    }
+  }
   const payment = verifiedPayment || order?.payment || null
 
   return {
@@ -36,4 +44,3 @@ export async function loadOrderPaymentState(orderId) {
     payment,
   }
 }
-
