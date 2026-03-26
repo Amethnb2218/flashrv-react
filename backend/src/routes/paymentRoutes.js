@@ -2,7 +2,7 @@ const express = require('express');
 const prisma = require('../lib/prisma');
 const { authenticate, requireApprovedPro } = require('../middleware/auth');
 const { createPaydunyaInvoice, confirmPaydunyaInvoice } = require('../services/paydunyaService');
-const { createPaytechPayment } = require('../services/paytechService');
+const { createDexPayCheckout, getDexPayConfig, retrieveDexPayCheckoutByReference } = require('../services/dexpayService');
 // const { initiateWavePayment, checkWavePaymentStatus } = require('../services/paymentService'); // TODO: enable when Wave API key is available
 const { pushNotification } = require('../realtime/hub');
 const { sendBookingConfirmationEmail, sendOrderConfirmationEmail } = require('../services/emailService');
@@ -10,7 +10,7 @@ const { createBookingNotification } = require('../services/bookingNotificationSe
 
 const router = express.Router();
 
-const ALLOWED_PROVIDERS = ['PAYTECH', 'PAYDUNYA', 'PAY_ON_SITE'];
+const ALLOWED_PROVIDERS = ['DEXPAY', 'PAYTECH', 'PAYDUNYA', 'PAY_ON_SITE'];
 const invoiceCreationInFlight = new Map();
 const INFLIGHT_TTL_MS = 25000;
 const ROUTE_TIMEOUT_MS = 28000;
@@ -85,23 +85,29 @@ const toOperationalPaydunyaError = (error, phase = 'create') => {
   return wrapped;
 };
 
-const toOperationalPaytechError = (error, phase = 'create') => {
+const toOperationalDexPayError = (error, phase = 'create') => {
   if (error?.statusCode && error?.expose === true) {
     return error;
   }
 
   const normalizedMessage = String(error?.message || '').trim().toLowerCase();
-  const isConfigIssue = normalizedMessage.includes('paytech') && normalizedMessage.includes('configure');
+  const isConfigIssue = normalizedMessage.includes('dexpay') && normalizedMessage.includes('configure');
   const message = isConfigIssue
-    ? 'PayTech n est pas configure sur le serveur.'
+    ? 'DexPay n est pas configure sur le serveur.'
     : phase === 'verify'
-      ? 'Impossible de verifier le paiement PayTech pour le moment.'
-      : 'Impossible d initialiser le paiement PayTech. Reessayez dans quelques instants.';
+      ? 'Impossible de verifier le paiement DexPay pour le moment.'
+      : 'Impossible d initialiser le paiement DexPay. Reessayez dans quelques instants.';
 
   const wrapped = new Error(message);
   wrapped.statusCode = isConfigIssue ? 503 : 502;
   wrapped.expose = true;
   return wrapped;
+};
+
+const buildDexPayWebhookUrl = (backendBase) => {
+  const token = String(getDexPayConfig().webhookToken || '').trim();
+  if (!token) return `${backendBase}/api/dexpay/webhook`;
+  return `${backendBase}/api/dexpay/webhook?token=${encodeURIComponent(token)}`;
 };
 
 const markAppointmentPendingPayment = async (bookingId) => {
@@ -421,7 +427,7 @@ const createPaydunyaPaymentForOrder = async ({
   };
 };
 
-const createPaytechPaymentForBooking = async ({
+const createDexPayPaymentForBooking = async ({
   bookingId,
   amount,
   customerName,
@@ -467,20 +473,19 @@ const createPaytechPaymentForBooking = async ({
   const { frontendBase, backendBase } = getBaseUrls();
   const resolvedSuccessUrl = successUrl || `${frontendBase}/payment/success?appointmentId=${encodeURIComponent(bookingId)}`;
   const resolvedCancelUrl = cancelUrl || `${frontendBase}/payment/cancel?appointmentId=${encodeURIComponent(bookingId)}`;
-  const ipnUrl = `${backendBase}/api/paytech/ipn`;
+  const webhookUrl = buildDexPayWebhookUrl(backendBase);
   const reference = `APT-${String(bookingId || '').trim()}`;
 
   let checkout;
   try {
-    checkout = await createPaytechPayment({
+    checkout = await createDexPayCheckout({
       amount: value,
       reference,
       itemName: booking.service?.name || 'Reservation salon',
-      description: `Reservation ${booking.service?.name || 'Salon'} - ${booking.salon?.name || 'JolofEra'}`,
       successUrl: resolvedSuccessUrl,
-      cancelUrl: resolvedCancelUrl,
-      ipnUrl,
-      customField: {
+      failureUrl: resolvedCancelUrl,
+      webhookUrl,
+      metadata: {
         type: 'APPOINTMENT',
         bookingId,
         userId: user.id,
@@ -489,7 +494,7 @@ const createPaytechPaymentForBooking = async ({
       },
     });
   } catch (error) {
-    throw toOperationalPaytechError(error, 'create');
+    throw toOperationalDexPayError(error, 'create');
   }
 
   await markAppointmentPendingPayment(bookingId);
@@ -505,17 +510,17 @@ const createPaytechPaymentForBooking = async ({
 
   await prisma.payment.update({
     where: { id: payment.id },
-    data: { method: 'PAYTECH' },
+    data: { method: 'DEXPAY' },
   }).catch(() => {});
 
   return {
-    payment: { ...payment, method: 'PAYTECH' },
-    invoiceUrl: checkout.redirectUrl,
-    token: checkout.token,
+    payment: { ...payment, method: 'DEXPAY' },
+    invoiceUrl: checkout.paymentUrl,
+    token: checkout.reference,
   };
 };
 
-const createPaytechPaymentForOrder = async ({
+const createDexPayPaymentForOrder = async ({
   orderId,
   amount,
   customerName,
@@ -561,7 +566,7 @@ const createPaytechPaymentForOrder = async ({
   const { frontendBase, backendBase } = getBaseUrls();
   const resolvedSuccessUrl = successUrl || `${frontendBase}/order/payment/success?orderId=${encodeURIComponent(orderId)}`;
   const resolvedCancelUrl = cancelUrl || `${frontendBase}/order/payment/cancel?orderId=${encodeURIComponent(orderId)}`;
-  const ipnUrl = `${backendBase}/api/paytech/ipn`;
+  const webhookUrl = buildDexPayWebhookUrl(backendBase);
   const itemLabel = (order.items || [])
     .map((entry) => `${entry.product?.name || 'Article'} x${entry.quantity}`)
     .join(', ');
@@ -569,15 +574,14 @@ const createPaytechPaymentForOrder = async ({
 
   let checkout;
   try {
-    checkout = await createPaytechPayment({
+    checkout = await createDexPayCheckout({
       amount: value,
       reference,
       itemName: itemLabel || 'Commande boutique',
-      description: `Commande ${itemLabel || 'Boutique'} - ${order.salon?.name || 'JolofEra'}`,
       successUrl: resolvedSuccessUrl,
-      cancelUrl: resolvedCancelUrl,
-      ipnUrl,
-      customField: {
+      failureUrl: resolvedCancelUrl,
+      webhookUrl,
+      metadata: {
         type: 'ORDER',
         orderId,
         userId: user.id,
@@ -586,7 +590,7 @@ const createPaytechPaymentForOrder = async ({
       },
     });
   } catch (error) {
-    throw toOperationalPaytechError(error, 'create');
+    throw toOperationalDexPayError(error, 'create');
   }
 
   await markOrderPendingPayment(orderId);
@@ -602,13 +606,13 @@ const createPaytechPaymentForOrder = async ({
 
   await prisma.payment.update({
     where: { id: payment.id },
-    data: { method: 'PAYTECH' },
+    data: { method: 'DEXPAY' },
   }).catch(() => {});
 
   return {
-    payment: { ...payment, method: 'PAYTECH' },
-    invoiceUrl: checkout.redirectUrl,
-    token: checkout.token,
+    payment: { ...payment, method: 'DEXPAY' },
+    invoiceUrl: checkout.paymentUrl,
+    token: checkout.reference,
   };
 };
 
@@ -616,7 +620,32 @@ const verifyPaymentRecord = async (payment) => {
   if (!payment) return null;
 
   const paymentMethod = String(payment.method || '').toUpperCase();
-  if (paymentMethod === 'PAYTECH') {
+  if (paymentMethod === 'DEXPAY' || paymentMethod === 'PAYTECH') {
+    if (String(payment.status || '').toUpperCase() === 'COMPLETED') {
+      return payment;
+    }
+
+    try {
+      const session = await retrieveDexPayCheckoutByReference(payment.reference || payment.transactionId);
+      if (String(session?.status || '').toUpperCase() === 'COMPLETED') {
+        const updated = await prisma.payment.update({
+          where: { id: payment.id },
+          data: {
+            status: 'COMPLETED',
+            completedAt: new Date(),
+            method: 'DEXPAY',
+            transactionId: String(session?.reference || payment.transactionId || '').trim() || payment.transactionId,
+          },
+        });
+        await markAppointmentPaid(updated.appointmentId);
+        await markOrderPaid(updated.orderId);
+        await notifyPaymentCompleted(updated);
+        return updated;
+      }
+    } catch (error) {
+      throw toOperationalDexPayError(error, 'verify');
+    }
+
     return payment;
   }
 
@@ -785,7 +814,7 @@ router.post('/create', authenticate, async (req, res, next) => {
       const invoiceResult = await runSingleFlightInvoiceCreation({
         lockKey,
         task: async () => (target.type === 'ORDER'
-          ? createPaytechPaymentForOrder({
+          ? createDexPayPaymentForOrder({
               orderId: target.id,
               amount,
               customerName,
@@ -794,7 +823,7 @@ router.post('/create', authenticate, async (req, res, next) => {
               cancelUrl,
               user: req.user,
             })
-          : createPaytechPaymentForBooking({
+          : createDexPayPaymentForBooking({
               bookingId: target.id,
               amount,
               customerName,
@@ -810,14 +839,14 @@ router.post('/create', authenticate, async (req, res, next) => {
 
     res.status(200).json({
       status: 'success',
-      message: 'Facture PayTech creee',
+      message: 'Session DexPay creee',
       data: {
         paymentId: result.invoiceResult.payment.id,
         bookingId: result.target.type === 'APPOINTMENT' ? result.target.id : null,
         orderId: result.target.type === 'ORDER' ? result.target.id : null,
         invoiceUrl: result.invoiceResult.invoiceUrl,
         token: result.invoiceResult.token,
-        provider: 'PAYTECH',
+        provider: 'DEXPAY',
       },
     });
   } catch (error) {
@@ -827,14 +856,15 @@ router.post('/create', authenticate, async (req, res, next) => {
 
 /**
  * POST /api/payments/init
- * Compatibilite ancienne API (redirige vers PAYDUNYA)
+ * Compatibilite ancienne API (redirige vers DexPay)
  */
 router.post('/init', authenticate, async (req, res, next) => {
   try {
     const { provider, amount, bookingId, orderId, customerName, customerEmail, successUrl, cancelUrl } = req.body;
-    const normalizedProvider = String(provider || '').toUpperCase() === 'PAYDUNYA'
-      ? 'PAYTECH'
-      : String(provider || '').toUpperCase();
+    const rawProvider = String(provider || '').toUpperCase();
+    const normalizedProvider = ['PAYDUNYA', 'PAYTECH'].includes(rawProvider)
+      ? 'DEXPAY'
+      : rawProvider;
 
     if (!ALLOWED_PROVIDERS.includes(normalizedProvider)) {
       return res.status(400).json({
@@ -868,7 +898,7 @@ router.post('/init', authenticate, async (req, res, next) => {
     const result = await withRouteTimeout(runSingleFlightInvoiceCreation({
       lockKey,
       task: async () => (target.type === 'ORDER'
-        ? createPaytechPaymentForOrder({
+        ? createDexPayPaymentForOrder({
             orderId: target.id,
             amount,
             customerName,
@@ -877,7 +907,7 @@ router.post('/init', authenticate, async (req, res, next) => {
             cancelUrl,
             user: req.user,
           })
-        : createPaytechPaymentForBooking({
+        : createDexPayPaymentForBooking({
             bookingId: target.id,
             amount,
             customerName,
@@ -890,7 +920,7 @@ router.post('/init', authenticate, async (req, res, next) => {
 
     res.status(200).json({
       status: 'success',
-      message: 'Paiement PayTech initialise',
+      message: 'Paiement DexPay initialise',
       data: {
         paymentId: result.payment.id,
         bookingId: target.type === 'APPOINTMENT' ? target.id : null,
@@ -898,7 +928,7 @@ router.post('/init', authenticate, async (req, res, next) => {
         checkoutUrl: result.invoiceUrl,
         invoiceUrl: result.invoiceUrl,
         token: result.token,
-        provider: 'PAYTECH',
+        provider: 'DEXPAY',
         paymentStatus: result.payment.status,
       },
     });

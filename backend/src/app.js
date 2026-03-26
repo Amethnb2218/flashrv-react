@@ -21,6 +21,7 @@ const productRoutes = require('./routes/productRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const paydunyaRoutes = require('./routes/paydunyaRoutes');
 const paytechRoutes = require('./routes/paytechRoutes');
+const dexpayRoutes = require('./routes/dexpayRoutes');
 
 const rateLimit = require('express-rate-limit');
 
@@ -225,9 +226,9 @@ app.get('/health', async (req, res) => {
     dbMs = Date.now() - start;
   }
 
-  const paytechConfigured = Boolean(
-    process.env.PAYTECH_API_KEY &&
-    process.env.PAYTECH_API_SECRET
+  const dexpayConfigured = Boolean(
+    process.env.DEXPAY_API_KEY &&
+    process.env.DEXPAY_API_SECRET
   );
 
   const isProd = process.env.NODE_ENV === 'production';
@@ -240,7 +241,7 @@ app.get('/health', async (req, res) => {
       ? {}
       : {
           environment: process.env.NODE_ENV || 'development',
-          paytech: { configured: paytechConfigured, mode: process.env.PAYTECH_MODE || 'not set' },
+          dexpay: { configured: dexpayConfigured, sandbox: process.env.DEXPAY_SANDBOX || 'not set' },
         }),
   });
 });
@@ -267,6 +268,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/paydunya', paydunyaRoutes);
 app.use('/api/paytech', paytechRoutes);
+app.use('/api/dexpay', dexpayRoutes);
 
 // ===========================================
 // 404 HANDLER

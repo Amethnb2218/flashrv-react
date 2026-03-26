@@ -2,8 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { FiAlertCircle, FiRefreshCw } from 'react-icons/fi'
 import apiFetch, { isRetryableHttpError } from '../../api/client'
-import { buildPaytechPaymentPayload } from '../../utils/payments'
-import { calculateBookingDeposit } from '../../utils/bookingDeposit'
+import { buildDexPayPaymentPayload } from '../../utils/payments'
 
 function PaymentCancel() {
   const location = useLocation()
@@ -17,13 +16,8 @@ function PaymentCancel() {
     return params.get('appointmentId')
   }, [location.search])
   const errorReason = String(location.state?.reason || '').trim()
-  const { depositAmount, hasDeposit } = useMemo(
-    () =>
-      calculateBookingDeposit({
-        services: appointment?.service ? [appointment.service] : [],
-        salon: appointment?.salon || null,
-        totalPrice: appointment?.totalPrice || appointment?.service?.price || 0,
-      }),
+  const amountToPay = useMemo(
+    () => Number(appointment?.totalPrice || appointment?.service?.price || 0),
     [appointment]
   )
 
@@ -83,8 +77,8 @@ function PaymentCancel() {
     setError('')
 
     try {
-      if (!hasDeposit) {
-        throw new Error("Aucun acompte n'est requis pour cette reservation.")
+      if (!(amountToPay > 0)) {
+        throw new Error("Aucun montant de paiement n'est disponible pour cette reservation.")
       }
       const customerName =
         appointment?.client?.name ||
@@ -97,9 +91,9 @@ function PaymentCancel() {
         : appointment?.service?.name || 'Reservation'
 
       const result = await createInvoiceWithRetry(
-        buildPaytechPaymentPayload({
+        buildDexPayPaymentPayload({
           bookingId: appointment.id,
-          amount: depositAmount,
+          amount: amountToPay,
           customerName,
           customerEmail,
           customerPhone,
@@ -110,7 +104,7 @@ function PaymentCancel() {
 
       const payload = result?.data || result
       if (!payload?.invoiceUrl) {
-        throw new Error('Erreur lors de la creation de la facture PayTech')
+        throw new Error('Erreur lors de la creation de la session DexPay')
       }
 
       window.location.href = payload.invoiceUrl
@@ -154,9 +148,7 @@ function PaymentCancel() {
             <p className="text-primary-600 mt-1">
               Montant: {Number(appointment.totalPrice || appointment.service?.price || 0).toLocaleString('fr-FR')} FCFA
             </p>
-            <p className="text-primary-600 mt-1">
-              Acompte: {depositAmount.toLocaleString('fr-FR')} FCFA
-            </p>
+            <p className="text-primary-600 mt-1">Montant a regler: {amountToPay.toLocaleString('fr-FR')} FCFA</p>
           </div>
         )}
 
@@ -175,11 +167,11 @@ function PaymentCancel() {
         <div className="grid sm:grid-cols-2 gap-3">
           <button
             onClick={handleRetry}
-            disabled={loading || !appointment || !hasDeposit}
+            disabled={loading || !appointment || !(amountToPay > 0)}
             className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary-600 text-white font-semibold hover:bg-primary-700 transition disabled:opacity-60"
           >
             <FiRefreshCw className="w-4 h-4" />
-            {loading ? 'Redirection...' : hasDeposit ? 'Reessayer paiement' : 'Aucun paiement requis'}
+            {loading ? 'Redirection...' : amountToPay > 0 ? 'Reessayer paiement' : 'Aucun paiement requis'}
           </button>
           <Link
             to="/dashboard"

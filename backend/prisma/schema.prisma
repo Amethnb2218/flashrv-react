@@ -450,6 +450,15 @@ model Payment {
   proofReviewedBy String?
   proofRejectionReason String?
   completedAt   DateTime? // Date de confirmation du paiement
+  payoutReference String? @unique
+  payoutStatus   String    @default("NONE") // NONE, PENDING, PROCESSING, COMPLETED, FAILED, PENDING_CONFIG, UNSUPPORTED
+  payoutAmount   Float?
+  payoutFees     Float?    @default(0)
+  payoutDestinationPhone String?
+  payoutOperator String?
+  payoutTriggeredAt DateTime?
+  payoutCompletedAt DateTime?
+  payoutFailureReason String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 

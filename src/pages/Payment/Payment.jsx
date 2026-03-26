@@ -7,11 +7,11 @@ import { useAuth } from '../../context/AuthContext'
 import LoadingSpinner from '../../components/UI/LoadingSpinner'
 import apiFetch from '../../api/client'
 import { resolveMediaUrl } from '../../utils/media'
-import { buildPaytechPaymentPayload } from '../../utils/payments'
+import { buildDexPayPaymentPayload } from '../../utils/payments'
 import { filterVisiblePaymentMethods } from '../../utils/paymentMethodVisibility'
 
 const DIRECT_MOBILE_METHODS = new Set(['ORANGE_MONEY', 'WAVE', 'FREE_MONEY'])
-const ADVANCE_BOOKING_PAYMENT_METHODS = new Set(['PAYTECH', ...DIRECT_MOBILE_METHODS])
+const ADVANCE_BOOKING_PAYMENT_METHODS = new Set(['DEXPAY', ...DIRECT_MOBILE_METHODS])
 const ORANGE_MONEY_REFERENCE_REGEX = /^MP\d{6}\.\d{4}\.C\d{5}$/i
 
 const PAYMENT_FLOW_OPTIONS = [
@@ -30,7 +30,7 @@ const PAYMENT_FLOW_OPTIONS = [
 ]
 
 const PAYMENT_METHOD_LABELS = {
-  PAYTECH: 'PayTech',
+  DEXPAY: 'DexPay',
   ORANGE_MONEY: 'Orange Money',
   WAVE: 'Wave',
   FREE_MONEY: 'Free Money',
@@ -38,7 +38,7 @@ const PAYMENT_METHOD_LABELS = {
 }
 
 const PAYMENT_METHOD_ICONS = {
-  PAYTECH: 'PT',
+  DEXPAY: 'DX',
   ORANGE_MONEY: 'OM',
   WAVE: 'WV',
   FREE_MONEY: 'FM',
@@ -46,7 +46,7 @@ const PAYMENT_METHOD_ICONS = {
 }
 
 const PAYMENT_METHOD_DESCRIPTIONS = {
-  PAYTECH: 'Paiement securise via PayTech',
+  DEXPAY: 'Paiement securise via DexPay',
   ORANGE_MONEY: 'Paiement direct au numero Orange Money du salon',
   WAVE: 'Paiement direct au numero Wave du salon',
   FREE_MONEY: 'Paiement direct au numero Free Money du salon',
@@ -100,7 +100,7 @@ const getFriendlyPaymentError = (error, { selectedMethod, bookingState, appointm
     }
   }
 
-  if (selectedMethod === 'PAYTECH' && appointmentId) {
+  if (selectedMethod === 'DEXPAY' && appointmentId) {
     return {
       message: 'Le serveur est temporairement indisponible. Reessayez dans un instant. Votre réservation a bien été conservée.',
       type: 'pending_online_booking',
@@ -172,10 +172,10 @@ function Payment() {
 
   const availableAdvancePaymentMethods = useMemo(() => {
     const hostedMethod = {
-      id: 'PAYTECH',
-      name: PAYMENT_METHOD_LABELS.PAYTECH,
-      icon: PAYMENT_METHOD_ICONS.PAYTECH,
-      description: PAYMENT_METHOD_DESCRIPTIONS.PAYTECH,
+      id: 'DEXPAY',
+      name: PAYMENT_METHOD_LABELS.DEXPAY,
+      icon: PAYMENT_METHOD_ICONS.DEXPAY,
+      description: PAYMENT_METHOD_DESCRIPTIONS.DEXPAY,
       details: null,
     }
 
@@ -191,7 +191,7 @@ function Payment() {
           details: method,
         }
       })
-      .filter((method) => ADVANCE_BOOKING_PAYMENT_METHODS.has(method.id) && method.id !== 'PAYTECH')
+      .filter((method) => ADVANCE_BOOKING_PAYMENT_METHODS.has(method.id) && method.id !== 'DEXPAY')
 
     return [hostedMethod, ...directMethods]
   }, [salonPaymentMethods])
@@ -298,9 +298,9 @@ function Payment() {
       payload.sendConfirmation = false
     }
 
-    if (paymentMethod === 'PAYTECH') {
+    if (paymentMethod === 'DEXPAY') {
       payload.status = 'PENDING_PAYMENT'
-      payload.paymentMethod = 'PAYTECH'
+      payload.paymentMethod = 'DEXPAY'
       payload.paymentStatus = 'PENDING'
       payload.requiresOnlinePayment = true
     }
@@ -395,7 +395,7 @@ function Payment() {
       }
 
       const serviceLabel = bookingState.services.map((service) => service.name).filter(Boolean).join(', ')
-      const paymentBody = buildPaytechPaymentPayload({
+      const paymentBody = buildDexPayPaymentPayload({
         bookingId: appointmentId,
         amount: amountToPayNow,
         customerName: `${bookingState.clientFirstName || ''} ${bookingState.clientLastName || ''}`.trim() || user?.name || '',
@@ -424,7 +424,7 @@ function Payment() {
 
       const payload = result?.data || result
       if (!payload?.invoiceUrl) {
-        throw new Error('Erreur lors de la creation de facture PayTech')
+        throw new Error('Erreur lors de la creation de la session DexPay')
       }
 
       setPaymentStatus('pending_confirmation')
@@ -468,7 +468,7 @@ function Payment() {
             <div className="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <FiSmartphone className="w-10 h-10 text-primary-600 animate-pulse" />
             </div>
-            <h3 className="text-xl font-bold text-primary-900 mb-2">Redirection PayTech</h3>
+            <h3 className="text-xl font-bold text-primary-900 mb-2">Redirection DexPay</h3>
             <p className="text-primary-600 mb-4">Ouverture de la page de paiement securisee...</p>
             <div className="flex items-center justify-center text-sm text-primary-500">
               <LoadingSpinner size="sm" />

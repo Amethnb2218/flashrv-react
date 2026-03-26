@@ -25,7 +25,7 @@ const buildPaymentReference = (prefix = 'APTPAY') =>
 
 const toFriendlyPaymentMethodLabel = (method) => {
   const key = String(method || '').toUpperCase();
-  if (key === 'PAYTECH' || key === 'PAYDUNYA') return 'PayTech';
+  if (key === 'DEXPAY' || key === 'PAYTECH' || key === 'PAYDUNYA') return 'DexPay';
   if (key === 'ORANGE_MONEY') return 'Orange Money';
   if (key === 'WAVE') return 'Wave';
   if (key === 'FREE_MONEY') return 'Free Money';
@@ -241,19 +241,20 @@ router.post('/', authenticate, async (req, res, next) => {
       : '';
     const combinedNotes = [notes && notes.trim(), extraServicesNote].filter(Boolean).join('\n');
     const requestedStatus = String(status || '').trim().toUpperCase();
-    const normalizedPaymentMethod = String(paymentMethod || '').trim().toUpperCase() === 'PAYDUNYA'
-      ? 'PAYTECH'
-      : String(paymentMethod || '').trim().toUpperCase();
-    const isPaydunyaFlow =
+    const rawPaymentMethod = String(paymentMethod || '').trim().toUpperCase();
+    const normalizedPaymentMethod = ['PAYDUNYA', 'PAYTECH'].includes(rawPaymentMethod)
+      ? 'DEXPAY'
+      : rawPaymentMethod;
+    const isDexPayFlow =
       Boolean(requiresOnlinePayment) ||
-      normalizedPaymentMethod === 'PAYTECH' ||
+      normalizedPaymentMethod === 'DEXPAY' ||
       requestedStatus === 'PENDING_PAYMENT';
     const shouldSkipNotifications = skipNotifications === true;
     const shouldSendConfirmationEmail =
       sendConfirmation !== false &&
       skipConfirmationEmail !== true &&
-      !isPaydunyaFlow;
-    const appointmentInitialStatus = isPaydunyaFlow
+      !isDexPayFlow;
+    const appointmentInitialStatus = isDexPayFlow
       ? 'PENDING_PAYMENT'
       : (requestedStatus || 'PENDING');
 
@@ -347,7 +348,7 @@ router.post('/', authenticate, async (req, res, next) => {
           salonName: appointment.salon?.name || 'le salon',
           date: appointmentDate,
           startTime,
-          message: isPaydunyaFlow
+          message: isDexPayFlow
             ? `Reservation creee chez ${appointment.salon?.name || 'le salon'} le ${new Date(appointmentDate).toLocaleDateString('fr-FR')} a ${startTime}. Paiement en attente.`
             : `Reservation enregistree chez ${appointment.salon?.name || 'le salon'} le ${new Date(appointmentDate).toLocaleDateString('fr-FR')} a ${startTime}.`,
         });
@@ -374,7 +375,7 @@ router.post('/', authenticate, async (req, res, next) => {
     if (!shouldSkipNotifications) {
       sendPushToUser(req.user.id, {
         title: 'Reservation creee',
-        body: isPaydunyaFlow
+        body: isDexPayFlow
           ? `RDV chez ${appointment.salon?.name || 'le salon'} le ${new Date(appointmentDate).toLocaleDateString('fr-FR')} a ${startTime}. Paiement en attente.`
           : `RDV chez ${appointment.salon?.name || 'le salon'} le ${new Date(appointmentDate).toLocaleDateString('fr-FR')} a ${startTime}.`,
         url: '/dashboard',
@@ -394,7 +395,7 @@ router.post('/', authenticate, async (req, res, next) => {
       status: 'success',
       message: coiffeurId
         ? 'Appointment booked successfully'
-        : (isPaydunyaFlow
+        : (isDexPayFlow
           ? 'Reservation creee. Paiement requis pour confirmer le rendez-vous.'
           : 'Reservation creee. Le salon vous assignera un(e) coiffeur(se).'),
       data: { appointment },

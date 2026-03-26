@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { FiAlertCircle, FiRefreshCw } from 'react-icons/fi'
 import apiFetch from '../../api/client'
-import { buildPaytechPaymentPayload } from '../../utils/payments'
+import { buildDexPayPaymentPayload } from '../../utils/payments'
 import { readOrderPaymentSession } from '../../utils/orderPaymentSession'
 
 function OrderPaymentCancel() {
@@ -26,7 +26,7 @@ function OrderPaymentCancel() {
     try {
       const result = await apiFetch('/payments/create', {
         method: 'POST',
-        body: buildPaytechPaymentPayload({
+        body: buildDexPayPaymentPayload({
           bookingId: sessionData.order.id,
           amount: sessionData.grandTotal,
           customerName: sessionData.order?.clientName || '',
@@ -44,7 +44,7 @@ function OrderPaymentCancel() {
 
       const payload = result?.data || result
       if (!payload?.invoiceUrl) {
-        throw new Error('Erreur lors de la creation de la facture PayTech')
+        throw new Error('Erreur lors de la creation de la session DexPay')
       }
 
       window.location.href = payload.invoiceUrl
@@ -67,7 +67,7 @@ function OrderPaymentCancel() {
             <FiAlertCircle className="w-14 h-14 mx-auto mb-4" />
             <h1 className="text-2xl font-bold">Paiement interrompu</h1>
             <p className="text-gold-50 mt-2">
-              Votre commande est conservee. Vous pouvez relancer le paiement PayTech.
+              Votre commande est conservee. Vous pouvez relancer le paiement DexPay.
             </p>
           </div>
 
@@ -90,7 +90,7 @@ function OrderPaymentCancel() {
                 className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary-900 text-white font-semibold hover:bg-primary-800 transition disabled:opacity-60"
               >
                 <FiRefreshCw className="w-4 h-4" />
-                {loading ? 'Redirection...' : 'Relancer PayTech'}
+                {loading ? 'Redirection...' : 'Relancer DexPay'}
               </button>
               <Link
                 to="/order/receipt"

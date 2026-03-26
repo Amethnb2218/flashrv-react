@@ -7,7 +7,7 @@ import { formatPrice } from '../../utils/helpers'
 import { resolveMediaUrl } from '../../utils/media'
 import apiFetch from '../../api/client'
 import { clearCart, deriveDeliveryConfigFromItems, readCart, removeItemFromCart } from '../../utils/cartStore'
-import { buildPaytechPaymentPayload } from '../../utils/payments'
+import { buildDexPayPaymentPayload } from '../../utils/payments'
 import { saveOrderPaymentSession } from '../../utils/orderPaymentSession'
 import { filterVisiblePaymentMethods } from '../../utils/paymentMethodVisibility'
 
@@ -15,7 +15,7 @@ const DIRECT_MOBILE_METHODS = new Set(['ORANGE_MONEY', 'WAVE', 'FREE_MONEY'])
 const ORANGE_MONEY_REFERENCE_REGEX = /^MP\d{6}\.\d{4}\.C\d{5}$/i
 
 const PAYMENT_METHOD_LABELS = {
-  PAYTECH: 'PayTech',
+  DEXPAY: 'DexPay',
   ORANGE_MONEY: 'Orange Money',
   WAVE: 'Wave',
   FREE_MONEY: 'Free Money',
@@ -25,7 +25,7 @@ const PAYMENT_METHOD_LABELS = {
 }
 
 const PAYMENT_METHOD_DESCRIPTIONS = {
-  PAYTECH: 'Paiement en ligne securise via PayTech',
+  DEXPAY: 'Paiement en ligne securise via DexPay',
   ORANGE_MONEY: 'Paiement direct au numero Orange Money du marchand',
   WAVE: 'Paiement direct au numero Wave du marchand',
   FREE_MONEY: 'Paiement direct au numero Free Money du marchand',
@@ -35,7 +35,7 @@ const PAYMENT_METHOD_DESCRIPTIONS = {
 }
 
 const PAYMENT_METHOD_ICONS = {
-  PAYTECH: 'PT',
+  DEXPAY: 'DX',
   ORANGE_MONEY: 'OM',
   WAVE: 'WV',
   FREE_MONEY: 'FM',
@@ -159,10 +159,10 @@ function OrderCheckout() {
   const paymentMethods = useMemo(() => {
     const methods = [
       {
-        id: 'PAYTECH',
-        name: PAYMENT_METHOD_LABELS.PAYTECH,
-        icon: PAYMENT_METHOD_ICONS.PAYTECH,
-        description: PAYMENT_METHOD_DESCRIPTIONS.PAYTECH,
+        id: 'DEXPAY',
+        name: PAYMENT_METHOD_LABELS.DEXPAY,
+        icon: PAYMENT_METHOD_ICONS.DEXPAY,
+        description: PAYMENT_METHOD_DESCRIPTIONS.DEXPAY,
       },
       ...directPaymentMethods,
       {
@@ -303,10 +303,10 @@ ${variantNotes.join('\n')}` : '']
         deliveryFee,
       }
 
-      if (selectedPayment === 'PAYTECH') {
+      if (selectedPayment === 'DEXPAY') {
         saveOrderPaymentSession(receiptPayload)
 
-        const paymentBody = buildPaytechPaymentPayload({
+        const paymentBody = buildDexPayPaymentPayload({
             bookingId: order?.id,
             amount: grandTotal,
             customerName: form.clientName || user?.name || '',
@@ -337,7 +337,7 @@ ${variantNotes.join('\n')}` : '']
 
         const paymentPayload = paymentResult?.data || paymentResult
         if (!paymentPayload?.invoiceUrl) {
-          throw new Error('Erreur lors de la creation de la facture PayTech')
+          throw new Error('Erreur lors de la creation de la session DexPay')
         }
 
         window.location.href = paymentPayload.invoiceUrl
@@ -385,7 +385,7 @@ ${variantNotes.join('\n')}` : '']
       })
       clearCart()
     } catch (e) {
-      if (selectedPayment === 'PAYTECH' && createdOrder?.id && receiptPayload) {
+      if (selectedPayment === 'DEXPAY' && createdOrder?.id && receiptPayload) {
         saveOrderPaymentSession(receiptPayload)
         navigate(`/order/payment/cancel?orderId=${encodeURIComponent(createdOrder.id)}`, { replace: true })
         return

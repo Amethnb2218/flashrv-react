@@ -1059,13 +1059,13 @@ const paymentMethodChoices = [
   { value: "CASH_ON_DELIVERY", label: "Paiement a la livraison" },
   { value: "CASH", label: "Especes / Cash" },
 ];
-const visiblePaymentMethodChoices = getVisiblePaymentMethodChoices(paymentMethodChoices);
+const visiblePaymentMethodChoices = getVisiblePaymentMethodChoices(paymentMethodChoices, { scope: "pro" });
 const MOBILE_MONEY_PAYMENT_METHODS = new Set(["ORANGE_MONEY", "WAVE", "FREE_MONEY"]);
 const paymentMethodMeta = {
   ORANGE_MONEY: { hint: "Ajoutez le numero Orange Money et/ou le QR marchand." },
   WAVE: { hint: "Ajoutez le numero Wave et/ou le QR marchand." },
   FREE_MONEY: { hint: "Ajoutez le numero Free Money et/ou le QR marchand." },
-  PAYDUNYA: { hint: "Paiement en ligne via PayDunya." },
+  PAYDUNYA: { hint: "Ancien paiement en ligne masqué." },
   PAY_ON_PICKUP: { hint: "Paiement au retrait en boutique." },
   CASH_ON_DELIVERY: { hint: "Paiement a la livraison." },
   CASH: { hint: "Paiement en especes." },
@@ -1096,8 +1096,7 @@ const formatPaymentMethodLabel = (method) => {
   if (key === "ORANGE_MONEY") return "Orange Money";
   if (key === "WAVE") return "Wave";
   if (key === "FREE_MONEY") return "Free Money";
-  if (key === "PAYTECH") return "PayTech";
-  if (key === "PAYDUNYA") return "PayDunya";
+  if (key === "DEXPAY" || key === "PAYTECH" || key === "PAYDUNYA") return "DexPay";
   if (key === "PAY_ON_PICKUP") return "Paiement au retrait";
   if (key === "CASH_ON_DELIVERY") return "Paiement a la livraison";
   if (key === "CASH") return "Especes / Cash";
@@ -1138,8 +1137,8 @@ const uploadPaymentMethodQr = async (file) => {
     setUploadingPaymentQr(false);
   }
 };
-const visibleConfiguredPaymentMethods = filterVisiblePaymentMethods(paymentMethods);
-const paymentMethodsContainHiddenElectronic = hasHiddenElectronicPaymentMethods(paymentMethods);
+const visibleConfiguredPaymentMethods = filterVisiblePaymentMethods(paymentMethods, { scope: "pro" });
+const paymentMethodsContainHiddenElectronic = hasHiddenElectronicPaymentMethods(paymentMethods, { scope: "pro" });
 
 const handleSavePaymentMethod = async () => {
   if (savingPaymentMethod) return;
@@ -2572,10 +2571,8 @@ active
           ? "À la livraison"
           : paymentMethodKey === "PAY_ON_PICKUP"
             ? "Au retrait"
-            : paymentMethodKey === "PAYTECH"
-              ? "PayTech"
-              : paymentMethodKey === "PAYDUNYA"
-                ? "PayDunya"
+            : paymentMethodKey === "DEXPAY" || paymentMethodKey === "PAYTECH" || paymentMethodKey === "PAYDUNYA"
+              ? "DexPay"
               : paymentMethodKey === "ORANGE_MONEY"
                 ? "Orange Money"
                 : paymentMethodKey === "WAVE"
@@ -4392,7 +4389,7 @@ return (
 {activeTab === "paymentMethods" && (
 <motion.div key="paymentMethods" {...pageAnim}>
 <Card>
-<CardHeader icon={<FiCreditCard />} title="Moyens de paiement du salon" right={null} />
+<CardHeader icon={<FiCreditCard />} title="Versements et paiements hors ligne" right={null} />
 <div className="p-3 sm:p-5">
 {loadingPaymentMethods ? (
 <p className="text-primary-500 font-semibold">Chargementé</p>
@@ -4400,7 +4397,7 @@ return (
 <EmptyState
 icon={<FiCreditCard />}
 title="Aucun moyen de paiement"
-subtitle={paymentMethodsContainHiddenElectronic ? "Les moyens de paiement electroniques existants sont temporairement masques." : "Configurez les moyens de paiement acceptés par votre salon."}
+subtitle={paymentMethodsContainHiddenElectronic ? "Configurez vos comptes de versement DexPay et vos paiements hors ligne." : "Configurez vos comptes de versement DexPay et vos paiements hors ligne."}
 action={
 <Button onClick={openPaymentMethodModal}>
 <FiPlus className="mr-2" /> Ajouter un moyen de paiement
@@ -4416,7 +4413,7 @@ action={
 </div>
 {paymentMethodsContainHiddenElectronic ? (
 <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-Les moyens de paiement electroniques sont temporairement masques en attendant l integration PayTech.
+Les anciens moyens en ligne sont masques. Conservez ici vos comptes Wave ou Orange Money pour recevoir les reversements DexPay.
 </div>
 ) : null}
 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">

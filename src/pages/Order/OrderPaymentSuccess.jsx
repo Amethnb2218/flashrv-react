@@ -26,7 +26,7 @@ function OrderPaymentSuccess() {
         >
           <div className="px-6 py-8 bg-gradient-to-r from-emerald-600 to-green-500 text-white text-center">
             <FiCheckCircle className="w-14 h-14 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold">Paiement PayTech confirme</h1>
+            <h1 className="text-2xl font-bold">Paiement DexPay confirme</h1>
             <p className="text-emerald-50 mt-2">
               Votre commande est enregistree et votre paiement a ete initialise avec succes.
             </p>
