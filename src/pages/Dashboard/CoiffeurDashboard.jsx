@@ -2239,6 +2239,11 @@ const filteredOrders = useMemo(() => {
   });
 }, [orders, orderFilter, orderQuery]);
 
+useEffect(() => {
+  setVisibleOrders(6);
+  setExpandedOrderId(null);
+}, [orderFilter, orderQuery]);
+
 const filteredAppointments = useMemo(() => {
   const query = appointmentQuery.trim().toLowerCase();
   return appointments.filter((a) => {
@@ -2273,6 +2278,36 @@ const orderStatusOptions = [
   { value: "DELIVERED", label: "Livree", tone: "green" },
   { value: "CANCELLED", label: "Annulee", tone: "red" },
 ];
+const orderFilterOptions = [{ value: "all", label: "Toutes" }, ...orderStatusOptions];
+const activeOrderFilterLabel = orderFilterOptions.find((opt) => opt.value === orderFilter)?.label || "Toutes";
+const orderMobileStats = useMemo(() => {
+  const stats = {
+    todo: 0,
+    payment: 0,
+    done: 0,
+  };
+
+  orders.forEach((order) => {
+    const key = String(order.status || "").toUpperCase();
+    if (["PENDING", "CONFIRMED", "PREPARING", "READY"].includes(key)) {
+      stats.todo += 1;
+      return;
+    }
+    if (["PENDING_PAYMENT", "DISPUTED"].includes(key)) {
+      stats.payment += 1;
+      return;
+    }
+    if (["DELIVERED", "CANCELLED"].includes(key)) {
+      stats.done += 1;
+    }
+  });
+
+  return [
+    { key: "todo", label: "A traiter", value: stats.todo, tone: "amber" },
+    { key: "payment", label: "Paiement", value: stats.payment, tone: "blue" },
+    { key: "done", label: "Cloturees", value: stats.done, tone: "green" },
+  ];
+}, [orders]);
 
 const orderStatusFlow = ["PENDING", "CONFIRMED", "PREPARING", "READY", "DELIVERED"];
 const orderNextStatus = {
@@ -2531,23 +2566,89 @@ active
 <Card>
 <CardHeader icon={<FiShoppingCart />} title={`Commandes (${filteredOrders.length})`} subtitle="Gérez vos commandes boutique" />
 <div className="p-3 sm:p-5">
-  <div className="flex flex-wrap gap-2 mb-5">
-    {[{ value: "all", label: "Toutes" }, ...orderStatusOptions].map((opt) => (
-      <button
-        key={opt.value}
-        onClick={() => setOrderFilter(opt.value)}
-        className={cx(
-          "px-3 py-1.5 rounded-xl text-sm font-medium transition",
-          orderFilter === opt.value
-            ? "bg-primary-900 text-white"
-            : "bg-white border border-primary-200 text-primary-600 hover:bg-primary-50"
-        )}
-      >
-        {opt.label}
-      </button>
-    ))}
+  <div className="sm:hidden space-y-3 mb-5">
+    <div className="grid grid-cols-3 gap-2">
+      {orderMobileStats.map((stat) => (
+        <div
+          key={stat.key}
+          className={cx(
+            "rounded-2xl border px-3 py-2.5 bg-white",
+            stat.tone === "amber"
+              ? "border-gold-100 bg-gold-50/70"
+              : stat.tone === "blue"
+                ? "border-blue-100 bg-blue-50/70"
+                : "border-green-100 bg-green-50/70"
+          )}
+        >
+          <p className="text-[11px] font-medium text-primary-500">{stat.label}</p>
+          <p className="mt-1 text-base font-extrabold text-primary-900">{stat.value}</p>
+        </div>
+      ))}
+    </div>
+    <div className="rounded-2xl border border-primary-200 bg-primary-50/80 p-3 space-y-3">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+        <label className="relative">
+          <FiFilter className="absolute left-3 top-1/2 -translate-y-1/2 text-primary-400 w-4 h-4 pointer-events-none" />
+          <select
+            value={orderFilter}
+            onChange={(e) => setOrderFilter(e.target.value)}
+            className="w-full appearance-none rounded-2xl border border-primary-200 bg-white pl-10 pr-9 py-2.5 text-sm font-medium text-primary-800 outline-none focus:ring-2 focus:ring-gold-500"
+          >
+            {orderFilterOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+          <FiChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-primary-400 w-4 h-4 pointer-events-none" />
+        </label>
+        <div className="min-w-[84px] rounded-2xl border border-primary-200 bg-white px-3 py-2 text-center">
+          <p className="text-[10px] font-semibold uppercase tracking-wide text-primary-400">Resultats</p>
+          <p className="text-sm font-extrabold text-primary-900">{filteredOrders.length}</p>
+        </div>
+      </div>
+      <div className="relative">
+        <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-primary-400" />
+        <input
+          value={orderQuery}
+          onChange={(e) => setOrderQuery(e.target.value)}
+          placeholder="Rechercher une commande..."
+          className="w-full pl-11 pr-10 py-2.5 border border-primary-200 rounded-2xl bg-white text-sm focus:ring-2 focus:ring-gold-500 focus:border-transparent outline-none"
+        />
+        {orderQuery ? (
+          <button
+            type="button"
+            onClick={() => setOrderQuery("")}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-primary-400 hover:text-primary-700 transition"
+            aria-label="Effacer la recherche"
+          >
+            <FiX className="w-4 h-4" />
+          </button>
+        ) : null}
+      </div>
+      <div className="flex items-center justify-between text-[11px] text-primary-500">
+        <span>Filtre actif : {activeOrderFilterLabel}</span>
+        {orderQuery ? <span>Recherche active</span> : <span>Vue compacte mobile</span>}
+      </div>
+    </div>
   </div>
-  <div className="mb-5">
+  <div className="hidden sm:block mb-5 space-y-4">
+    <div className="flex flex-wrap gap-2">
+      {orderFilterOptions.map((opt) => (
+        <button
+          key={opt.value}
+          onClick={() => setOrderFilter(opt.value)}
+          className={cx(
+            "px-3 py-1.5 rounded-xl text-sm font-medium transition",
+            orderFilter === opt.value
+              ? "bg-primary-900 text-white"
+              : "bg-white border border-primary-200 text-primary-600 hover:bg-primary-50"
+          )}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
     <div className="relative max-w-md">
       <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-primary-400" />
       <input
@@ -2596,39 +2697,64 @@ active
         const hasReviewablePayment = isDirectMobileOrder && !!order.payment;
         const canReviewProof = hasReviewablePayment && (!proofStatusKey || proofStatusKey === "PENDING");
         const isExpanded = expandedOrderId === order.id;
+        const firstItemLabel = order.items?.[0]?.product?.name || "Article";
+        const extraItemsLabel = itemCount > 1 ? ` +${itemCount - 1}` : "";
 
         return (
           <div
             key={order.id || idx}
-            className="bg-white rounded-xl border border-primary-100 shadow-sm overflow-hidden"
+            className="bg-white rounded-2xl border border-primary-100 shadow-sm overflow-hidden"
           >
             {/* Compact header — always visible */}
             <button
               type="button"
               onClick={() => setExpandedOrderId(isExpanded ? null : order.id)}
-              className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-primary-50 transition"
+              className="w-full text-left px-3.5 sm:px-4 py-3.5 hover:bg-primary-50 transition"
             >
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-xs font-bold text-primary-400">{getOrderRef(order)}</span>
-                  <span className="font-semibold text-primary-900 text-sm truncate">{order.clientName || "Client"}</span>
-                  <span className="text-xs text-primary-500">{itemCount} art.</span>
+              <div className="flex items-start gap-3 w-full">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[11px] font-bold tracking-wide text-primary-400">{getOrderRef(order)}</span>
+                    <span className="text-[11px] text-primary-400 shrink-0">{createdAtLabel}</span>
+                  </div>
+                  <div className="mt-1.5 flex items-start gap-2 justify-between">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-primary-900 text-[15px] leading-tight truncate">
+                        {order.clientName || "Client"}
+                      </p>
+                      <p className="mt-1 text-xs text-primary-500 truncate">
+                        {firstItemLabel}
+                        {extraItemsLabel ? <span className="text-primary-400">{extraItemsLabel}</span> : null}
+                      </p>
+                    </div>
+                    <Badge tone={statusOpt.tone}>{statusOpt.label}</Badge>
+                  </div>
+                  <div className="mt-2.5 flex items-center justify-between gap-3">
+                    <span className="font-bold text-gold-600 text-base">{formatMoney(order.totalPrice)}</span>
+                    <div className="flex items-center gap-2 text-[11px] text-primary-500 shrink-0">
+                      <span className="inline-flex items-center rounded-full bg-primary-100 px-2 py-1 font-medium text-primary-700">
+                        {order.deliveryMode === "DELIVERY" ? "Livraison" : "Retrait"}
+                      </span>
+                      <span>{itemCount} art.</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 mt-1 flex-wrap">
-                  <span className="font-bold text-gold-600 text-sm">{formatMoney(order.totalPrice)}</span>
-                  <Badge tone={order.deliveryMode === "DELIVERY" ? "blue" : "purple"} className="!text-[10px] !px-1.5 !py-0.5">
-                    {order.deliveryMode === "DELIVERY" ? "Livraison" : "Retrait"}
-                  </Badge>
-                  <span className="text-[11px] text-primary-400">{createdAtLabel}</span>
+                <div className="flex flex-col items-center gap-2 shrink-0">
+                  {statusKey !== "DELIVERED" && statusKey !== "CANCELLED" && statusKey !== "DISPUTED" && nextAction && (
+                    <Button
+                      variant="primary"
+                      className="!px-2.5 !py-1.5 !text-xs hidden sm:flex"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleOrderStatus(order.id, nextAction.next);
+                      }}
+                    >
+                      <FiCheck className="mr-1 w-3 h-3" /> {nextAction.label}
+                    </Button>
+                  )}
+                  <FiChevronDown className={`w-4 h-4 text-primary-400 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
                 </div>
               </div>
-              <Badge tone={statusOpt.tone}>{statusOpt.label}</Badge>
-              {statusKey !== "DELIVERED" && statusKey !== "CANCELLED" && statusKey !== "DISPUTED" && nextAction && (
-                <Button variant="primary" className="!px-2.5 !py-1.5 !text-xs hidden sm:flex" onClick={(e) => { e.stopPropagation(); handleOrderStatus(order.id, nextAction.next); }}>
-                  <FiCheck className="mr-1 w-3 h-3" /> {nextAction.label}
-                </Button>
-              )}
-              <FiChevronDown className={`w-4 h-4 text-primary-400 shrink-0 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
             </button>
 
             {/* Expanded details */}
@@ -2642,6 +2768,14 @@ active
                   className="overflow-hidden"
                 >
                   <div className="px-4 pb-4 border-t border-primary-100 pt-3 space-y-3">
+                    <div className="sm:hidden flex flex-wrap gap-2">
+                      <span className="inline-flex items-center rounded-full bg-primary-100 px-2.5 py-1 text-[11px] font-medium text-primary-700">
+                        {paymentLabel}
+                      </span>
+                      <span className="inline-flex items-center rounded-full bg-primary-100 px-2.5 py-1 text-[11px] font-medium text-primary-700">
+                        {order.deliveryMode === "DELIVERY" ? "Adresse de livraison" : "Retrait boutique"}
+                      </span>
+                    </div>
                     {/* Client info */}
                     {(order.clientPhone || (order.deliveryMode === "DELIVERY" && order.deliveryAddress)) && (
                       <div className="text-xs text-primary-500 space-y-0.5">
