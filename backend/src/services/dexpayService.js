@@ -1,4 +1,8 @@
-const DexPay = require('@dexchangepay/node');
+const DexPayModule = require('@dexchangepay/node');
+const DexPay =
+  DexPayModule?.default ||
+  DexPayModule?.DexPay ||
+  DexPayModule;
 
 const DEFAULT_DEXPAY_TIMEOUT_MS = 6000;
 const MAX_DEXPAY_TIMEOUT_MS = 7000;
