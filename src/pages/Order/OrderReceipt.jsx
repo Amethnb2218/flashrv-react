@@ -4,9 +4,9 @@ import { FiCheck, FiShoppingBag, FiMapPin, FiTruck, FiHome, FiCopy, FiArrowRight
 import { formatPrice } from '../../utils/helpers'
 import { resolveMediaUrl } from '../../utils/media'
 import { useEffect, useState } from 'react'
-import apiFetch from '../../api/client'
-import toast from 'react-hot-toast'
 import { readOrderPaymentSession } from '../../utils/orderPaymentSession'
+import apiFetch from '../../api/client'
+import { loadOrderPaymentState } from '../../utils/orderPaymentState'
 
 const paymentLabels = {
   DEXPAY: { name: 'DexPay', icon: 'DX' },
@@ -23,19 +23,69 @@ const paymentLabels = {
 function OrderReceipt() {
   const location = useLocation()
   const navigate = useNavigate()
-  const data = location.state || readOrderPaymentSession()
+  const seedData = location.state || readOrderPaymentSession()
 
   const [copied, setCopied] = useState(false)
-  const [orderStatus, setOrderStatus] = useState(data?.order?.status || 'PENDING')
+  const [receiptData, setReceiptData] = useState(seedData)
+  const [orderStatus, setOrderStatus] = useState(seedData?.order?.status || 'PENDING')
+  const [paymentStatus, setPaymentStatus] = useState(seedData?.order?.payment?.status || '')
   const [cancelling, setCancelling] = useState(false)
+  const [loadingState, setLoadingState] = useState(false)
 
   useEffect(() => {
-    if (!data) navigate('/salons', { replace: true })
-  }, [data, navigate])
+    if (!seedData) navigate('/salons', { replace: true })
+  }, [seedData, navigate])
 
-  if (!data) return null
+  useEffect(() => {
+    let mounted = true
 
-  const { order, salon, paymentMethod, deliveryMode, deliveryAddress, grandTotal, deliveryFee } = data
+    const syncOrderState = async () => {
+      const orderId = seedData?.order?.id
+      if (!orderId) return
+
+      setLoadingState(true)
+      try {
+        const { order, payment } = await loadOrderPaymentState(orderId)
+        if (!mounted || !order) return
+
+        setReceiptData((prev) => ({
+          ...prev,
+          order: {
+            ...(prev?.order || {}),
+            ...order,
+            items: order.items || prev?.order?.items || [],
+            payment: payment || order.payment || prev?.order?.payment || null,
+          },
+          salon: order.salon
+            ? {
+                ...(prev?.salon || {}),
+                ...order.salon,
+              }
+            : (prev?.salon || null),
+          paymentMethod: payment?.method || order.paymentMethod || prev?.paymentMethod || null,
+          deliveryMode: order.deliveryMode || prev?.deliveryMode || 'PICKUP',
+          deliveryAddress: order.deliveryAddress ?? prev?.deliveryAddress ?? '',
+          grandTotal: prev?.grandTotal ?? order.totalPrice ?? 0,
+          deliveryFee: prev?.deliveryFee ?? 0,
+        }))
+        setOrderStatus(order.status || 'PENDING')
+        setPaymentStatus(payment?.status || order.payment?.status || '')
+      } catch (_) {
+        if (!mounted) return
+      } finally {
+        if (mounted) setLoadingState(false)
+      }
+    }
+
+    syncOrderState()
+    return () => {
+      mounted = false
+    }
+  }, [seedData?.order?.id])
+
+  if (!receiptData) return null
+
+  const { order, salon, paymentMethod, deliveryMode, deliveryAddress, grandTotal, deliveryFee } = receiptData
   const items = order?.items || []
   const orderRef = order?.id
     ? `SF-${String(order.id).slice(-8).toUpperCase()}`
@@ -45,6 +95,8 @@ function OrderReceipt() {
   const pm = paymentLabels[paymentKey] || paymentLabels.CASH_ON_DELIVERY
   const isPendingPayment = String(orderStatus || '').toUpperCase() === 'PENDING_PAYMENT'
   const isDisputed = String(orderStatus || '').toUpperCase() === 'DISPUTED'
+  const isDexPayFlow = ['DEXPAY', 'PAYTECH', 'PAYDUNYA'].includes(paymentKey)
+  const isDexPayPending = isDexPayFlow && isPendingPayment && String(paymentStatus || '').toUpperCase() !== 'COMPLETED'
   const canCancel = order?.id && ['PENDING', 'PENDING_PAYMENT', 'DISPUTED', 'CONFIRMED'].includes(String(orderStatus || '').toUpperCase())
 
   const handleCopyRef = () => {
@@ -83,13 +135,20 @@ function OrderReceipt() {
             <FiCheck className="w-10 h-10 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-primary-900">
-            {isDisputed ? 'Commande en litige de paiement' : (isPendingPayment ? 'Commande en attente de validation' : 'Commande confirmee !')}
+            {isDisputed
+              ? 'Commande en litige de paiement'
+              : (isDexPayPending
+                  ? 'Confirmation DexPay en cours'
+                  : (isPendingPayment ? 'Commande en attente de validation' : 'Commande confirmee !'))}
           </h1>
           <p className="text-primary-500 mt-1">
             {isDisputed
               ? 'Le paiement est en cours de verification administrative.'
-              : (isPendingPayment ? 'Votre paiement sera verifie par la boutique.' : 'Merci pour votre achat')}
+              : (isDexPayPending
+                  ? 'Nous attendons la confirmation finale de DexPay pour cette commande.'
+                  : (isPendingPayment ? 'Votre paiement sera verifie par la boutique.' : 'Merci pour votre achat'))}
           </p>
+          {loadingState ? <p className="text-xs text-primary-400 mt-2">Synchronisation du statut...</p> : null}
         </motion.div>
 
         <motion.div
@@ -195,8 +254,14 @@ function OrderReceipt() {
                   Preparez le montant exact si possible
                 </p>
               ) : (paymentKey === 'DEXPAY' || paymentKey === 'PAYTECH' || paymentKey === 'PAYDUNYA') ? (
-                <p className="text-xs text-emerald-700 font-medium mt-2 bg-emerald-50 px-3 py-1.5 rounded-lg">
-                  Paiement DexPay initialise pour cette commande
+                <p className={`text-xs font-medium mt-2 px-3 py-1.5 rounded-lg ${
+                  String(paymentStatus || '').toUpperCase() === 'COMPLETED'
+                    ? 'text-emerald-700 bg-emerald-50'
+                    : 'text-amber-700 bg-amber-50'
+                }`}>
+                  {String(paymentStatus || '').toUpperCase() === 'COMPLETED'
+                    ? 'Paiement DexPay confirme pour cette commande'
+                    : 'Paiement DexPay en cours de confirmation'}
                 </p>
               ) : ['ORANGE_MONEY', 'WAVE', 'FREE_MONEY'].includes(paymentKey) ? (
                 <p className="text-xs text-blue-700 font-medium mt-2 bg-blue-50 px-3 py-1.5 rounded-lg">

@@ -1,18 +1,47 @@
 import { Link, useLocation } from 'react-router-dom'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { FiAlertCircle, FiRefreshCw } from 'react-icons/fi'
 import apiFetch from '../../api/client'
 import { buildDexPayPaymentPayload } from '../../utils/payments'
 import { readOrderPaymentSession } from '../../utils/orderPaymentSession'
+import { loadOrderPaymentState } from '../../utils/orderPaymentState'
 
 function OrderPaymentCancel() {
   const location = useLocation()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [resolvedState, setResolvedState] = useState('idle')
   const sessionData = readOrderPaymentSession()
   const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search])
   const orderId = searchParams.get('orderId') || sessionData?.order?.id || ''
+
+  useEffect(() => {
+    let mounted = true
+
+    const checkActualStatus = async () => {
+      if (!orderId) return
+      try {
+        const { order, payment } = await loadOrderPaymentState(orderId)
+        if (!mounted) return
+        const orderStatus = String(order?.status || '').toUpperCase()
+        const paymentStatus = String(payment?.status || '').toUpperCase()
+        if (orderStatus === 'CONFIRMED' || paymentStatus === 'COMPLETED') {
+          setResolvedState('confirmed')
+          setError('')
+          return
+        }
+      } catch (_) {
+        if (!mounted) return
+      }
+      if (mounted) setResolvedState('cancelled')
+    }
+
+    checkActualStatus()
+    return () => {
+      mounted = false
+    }
+  }, [orderId])
 
   const handleRetry = async () => {
     if (!sessionData?.order?.id) {
@@ -55,6 +84,8 @@ function OrderPaymentCancel() {
     }
   }
 
+  const isConfirmed = resolvedState === 'confirmed'
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gold-50 via-white to-rose-50/20 py-10 px-4">
       <div className="max-w-xl mx-auto">
@@ -65,9 +96,11 @@ function OrderPaymentCancel() {
         >
           <div className="px-6 py-8 bg-gradient-to-r from-gold-500 to-orange-500 text-white text-center">
             <FiAlertCircle className="w-14 h-14 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold">Paiement interrompu</h1>
+            <h1 className="text-2xl font-bold">{isConfirmed ? 'Paiement deja confirme' : 'Paiement interrompu'}</h1>
             <p className="text-gold-50 mt-2">
-              Votre commande est conservee. Vous pouvez relancer le paiement DexPay.
+              {isConfirmed
+                ? 'Le paiement a finalement ete confirme. Vous pouvez consulter le recu de commande.'
+                : 'Votre commande est conservee. Vous pouvez relancer le paiement DexPay.'}
             </p>
           </div>
 
@@ -84,14 +117,24 @@ function OrderPaymentCancel() {
             ) : null}
 
             <div className="grid gap-3 sm:grid-cols-2">
-              <button
-                onClick={handleRetry}
-                disabled={loading}
-                className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary-900 text-white font-semibold hover:bg-primary-800 transition disabled:opacity-60"
-              >
-                <FiRefreshCw className="w-4 h-4" />
-                {loading ? 'Redirection...' : 'Relancer DexPay'}
-              </button>
+              {isConfirmed ? (
+                <Link
+                  to="/order/receipt"
+                  state={sessionData || undefined}
+                  className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary-900 text-white font-semibold hover:bg-primary-800 transition"
+                >
+                  Voir le recu
+                </Link>
+              ) : (
+                <button
+                  onClick={handleRetry}
+                  disabled={loading}
+                  className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary-900 text-white font-semibold hover:bg-primary-800 transition disabled:opacity-60"
+                >
+                  <FiRefreshCw className="w-4 h-4" />
+                  {loading ? 'Redirection...' : 'Relancer DexPay'}
+                </button>
+              )}
               <Link
                 to="/order/receipt"
                 state={sessionData || undefined}
