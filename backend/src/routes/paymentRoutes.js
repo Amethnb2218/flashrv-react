@@ -7,6 +7,7 @@ const { createDexPayCheckout, getDexPayConfig, retrieveDexPayCheckoutByReference
 const { pushNotification } = require('../realtime/hub');
 const { sendBookingConfirmationEmail, sendOrderConfirmationEmail } = require('../services/emailService');
 const { createBookingNotification } = require('../services/bookingNotificationService');
+const { resolvePublicBaseUrl } = require('../utils/publicUrl');
 
 const router = express.Router();
 
@@ -53,8 +54,12 @@ const generateReference = () => {
 };
 
 const getBaseUrls = () => {
-  const frontendBase = (process.env.BASE_URL || process.env.FRONTEND_URL || 'http://localhost:3000').replace(/\/+$/, '');
-  const backendBase = (process.env.API_URL || `http://localhost:${process.env.PORT || 4000}`).replace(/\/+$/, '');
+  const frontendBase =
+    resolvePublicBaseUrl(process.env.BASE_URL, process.env.FRONTEND_URL, process.env.ALLOWED_ORIGINS) ||
+    'http://localhost:3000';
+  const backendBase =
+    resolvePublicBaseUrl(process.env.API_URL) ||
+    `http://localhost:${process.env.PORT || 4000}`;
   return {
     frontendBase,
     backendBase,

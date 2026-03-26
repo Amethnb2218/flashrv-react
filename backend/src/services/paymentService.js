@@ -9,6 +9,14 @@
  */
 
 const axios = require('axios');
+const { resolvePublicBaseUrl } = require('../utils/publicUrl');
+
+const FRONTEND_BASE_URL = resolvePublicBaseUrl(
+  process.env.FRONTEND_URL,
+  process.env.BASE_URL,
+  process.env.ALLOWED_ORIGINS
+) || '';
+const API_BASE_URL = resolvePublicBaseUrl(process.env.API_URL) || 'http://localhost:4000';
 
 // Configuration des API de paiement
 const WAVE_CONFIG = {
@@ -22,9 +30,9 @@ const ORANGE_MONEY_CONFIG = {
   baseUrl: process.env.ORANGE_MONEY_API_URL || 'https://api.orange.com/orange-money-webpay/sn/v1',
   apiKey: process.env.ORANGE_MONEY_API_KEY,
   merchantKey: process.env.ORANGE_MONEY_MERCHANT_KEY,
-  returnUrl: process.env.FRONTEND_URL + '/payment/success',
-  cancelUrl: process.env.FRONTEND_URL + '/payment/cancel',
-  notifyUrl: process.env.API_URL + '/api/payments/webhook/orange-money',
+  returnUrl: FRONTEND_BASE_URL ? `${FRONTEND_BASE_URL}/payment/success` : '',
+  cancelUrl: FRONTEND_BASE_URL ? `${FRONTEND_BASE_URL}/payment/cancel` : '',
+  notifyUrl: `${API_BASE_URL}/api/payments/webhook/orange-money`,
 };
 
 /**
@@ -53,14 +61,14 @@ async function initiateWavePayment({ amount, phoneNumber, reference, description
     }
 
     // Appel API Wave en production
-    const callbackUrl = `${process.env.API_URL || 'http://localhost:4000'}/api/payments/wave/webhook`;
+    const callbackUrl = `${API_BASE_URL}/api/payments/wave/webhook`;
     const response = await axios.post(
       `${WAVE_CONFIG.baseUrl}/checkout/sessions`,
       {
         amount: amount.toString(),
         currency: 'XOF',
-        error_url: `${process.env.FRONTEND_URL || process.env.BASE_URL}/payment/error`,
-        success_url: `${process.env.FRONTEND_URL || process.env.BASE_URL}/payment/success?ref=${reference}`,
+        error_url: `${FRONTEND_BASE_URL}/payment/error`,
+        success_url: `${FRONTEND_BASE_URL}/payment/success?ref=${reference}`,
         client_reference: reference,
         webhook_url: callbackUrl,
       },

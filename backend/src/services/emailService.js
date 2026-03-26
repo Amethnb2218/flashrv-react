@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer');
 const prisma = require('../lib/prisma');
+const { resolvePublicBaseUrl } = require('../utils/publicUrl');
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.gmail.com',
@@ -12,8 +13,13 @@ const transporter = nodemailer.createTransport({
 });
 
 const getFrontendBaseUrl = () => {
-  const raw = String(process.env.FRONTEND_URL || process.env.BASE_URL || 'https://jolofera.com').trim();
-  return raw.replace(/\/+$/, '');
+  return (
+    resolvePublicBaseUrl(
+      process.env.FRONTEND_URL,
+      process.env.BASE_URL,
+      process.env.ALLOWED_ORIGINS
+    ) || 'https://jolofera.com'
+  );
 };
 
 const getFrontendAdminPath = () => {

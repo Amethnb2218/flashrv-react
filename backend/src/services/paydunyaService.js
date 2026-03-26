@@ -1,4 +1,5 @@
 const https = require('https');
+const { resolvePublicBaseUrl } = require('../utils/publicUrl');
 
 const DEFAULT_PAYDUNYA_TIMEOUT_MS = 20000;
 const PAYDUNYA_TEST_BASE_URL = 'https://app.paydunya.com/sandbox-api/v1';
@@ -76,7 +77,11 @@ const ensureConfigured = () => {
     tagline: process.env.PAYDUNYA_STORE_TAGLINE || 'Paiement securise des reservations',
     phone_number: process.env.PAYDUNYA_STORE_PHONE || '',
     postal_address: process.env.PAYDUNYA_STORE_ADDRESS || '',
-    website_url: process.env.BASE_URL || process.env.FRONTEND_URL || '',
+    website_url: resolvePublicBaseUrl(
+      process.env.BASE_URL,
+      process.env.FRONTEND_URL,
+      process.env.ALLOWED_ORIGINS
+    ) || '',
   };
 
   cachedConfig = {

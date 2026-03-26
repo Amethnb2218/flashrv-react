@@ -3,15 +3,16 @@ const http = require('http');
 const prisma = require('./lib/prisma');
 const app = require('./app');
 const { initRealtime } = require('./realtime/hub');
+const { resolvePublicBaseUrl } = require('./utils/publicUrl');
 const PORT = process.env.PORT || 4000;
 
-function trimTrailingSlash(value) {
-  return String(value || '').trim().replace(/\/+$/, '');
-}
-
 function getPublicUrls() {
-  const backendBase = trimTrailingSlash(process.env.API_URL || '');
-  const frontendBase = trimTrailingSlash(process.env.FRONTEND_URL || process.env.BASE_URL || '');
+  const backendBase = resolvePublicBaseUrl(process.env.API_URL);
+  const frontendBase = resolvePublicBaseUrl(
+    process.env.FRONTEND_URL,
+    process.env.BASE_URL,
+    process.env.ALLOWED_ORIGINS
+  );
   const localHttpBase = `http://localhost:${PORT}`;
   const localWsBase = `ws://localhost:${PORT}`;
 
