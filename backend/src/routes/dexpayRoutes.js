@@ -1,21 +1,12 @@
 const express = require('express');
 const prisma = require('../lib/prisma');
-const {
-  createDexPayPayout,
-  retrieveDexPayCheckoutByReference,
-  getDexPayConfig,
-  computePayoutAmount,
-} = require('../services/dexpayService');
+const { retrieveDexPayCheckoutByReference, getDexPayConfig } = require('../services/dexpayService');
 const { pushNotification } = require('../realtime/hub');
 const { sendBookingConfirmationEmail, sendOrderConfirmationEmail } = require('../services/emailService');
 const { commitOrderStockIfNeeded } = require('../utils/orderStock');
+const { triggerAutoPayoutForPayment } = require('../services/dexpayPayoutService');
 
 const router = express.Router();
-
-const PAYOUT_OPERATOR_BY_METHOD = {
-  WAVE: 'wave',
-  ORANGE_MONEY: 'orange_money',
-};
 
 const normalizeStatus = (value) => String(value || '').trim().toUpperCase();
 
@@ -35,140 +26,6 @@ const createUserNotification = async (userId, type, message) => {
   }).catch(() => null);
   if (notification) pushNotification(notification.userId, notification);
   return notification;
-};
-
-const resolvePayoutDestination = (payment) => {
-  const methods =
-    payment?.appointment?.salon?.paymentMethods ||
-    payment?.order?.salon?.paymentMethods ||
-    [];
-
-  const enabled = Array.isArray(methods)
-    ? methods.filter((item) => item?.enabled !== false)
-    : [];
-
-  for (const key of ['WAVE', 'ORANGE_MONEY']) {
-    const match = enabled.find((item) => String(item?.method || '').toUpperCase() === key);
-    if (match?.phoneNumber) {
-      return {
-        method: key,
-        operator: PAYOUT_OPERATOR_BY_METHOD[key],
-        phoneNumber: String(match.phoneNumber || '').trim(),
-        recipientName: String(match.displayName || payment?.appointment?.salon?.name || payment?.order?.salon?.name || '').trim() || null,
-      };
-    }
-  }
-
-  const hasUnsupportedFreeMoney = enabled.some((item) => String(item?.method || '').toUpperCase() === 'FREE_MONEY');
-  if (hasUnsupportedFreeMoney) {
-    return { unsupported: true, reason: 'FREE_MONEY_UNSUPPORTED' };
-  }
-
-  return null;
-};
-
-const triggerAutoPayoutForPayment = async (paymentId) => {
-  const payment = await prisma.payment.findUnique({
-    where: { id: paymentId },
-    include: {
-      appointment: {
-        include: {
-          salon: {
-            select: {
-              id: true,
-              name: true,
-              ownerId: true,
-              paymentMethods: {
-                select: {
-                  method: true,
-                  enabled: true,
-                  displayName: true,
-                  phoneNumber: true,
-                },
-              },
-            },
-          },
-        },
-      },
-      order: {
-        include: {
-          salon: {
-            select: {
-              id: true,
-              name: true,
-              ownerId: true,
-              paymentMethods: {
-                select: {
-                  method: true,
-                  enabled: true,
-                  displayName: true,
-                  phoneNumber: true,
-                },
-              },
-            },
-          },
-        },
-      },
-    },
-  });
-
-  if (!payment) return;
-  if (normalizeStatus(payment.method) !== 'DEXPAY') return;
-  if (normalizeStatus(payment.status) !== 'COMPLETED') return;
-
-  const destination = resolvePayoutDestination(payment);
-  const ownerId = payment?.appointment?.salon?.ownerId || payment?.order?.salon?.ownerId || null;
-  const salonName = payment?.appointment?.salon?.name || payment?.order?.salon?.name || 'votre espace';
-
-  if (destination?.unsupported) {
-    await createUserNotification(
-      ownerId,
-      'payment',
-      `Paiement encaisse pour ${salonName}, mais le reversement automatique n est pas disponible avec Free Money. Configurez Wave ou Orange Money.`
-    );
-    return;
-  }
-
-  if (!destination?.phoneNumber || !destination?.operator) {
-    await createUserNotification(
-      ownerId,
-      'payment',
-      `Paiement encaisse pour ${salonName}, mais aucun compte de versement DexPay n est configure. Ajoutez Wave ou Orange Money dans vos moyens de paiement.`
-    );
-    return;
-  }
-
-  const payoutAmount = computePayoutAmount(payment.amount || payment.totalAmount || 0);
-  if (!(payoutAmount > 0)) {
-    return;
-  }
-
-  try {
-    const payout = await createDexPayPayout({
-      amount: payoutAmount,
-      destinationPhone: destination.phoneNumber,
-      operator: destination.operator,
-      recipientName: destination.recipientName,
-      metadata: {
-        paymentId: payment.id,
-        appointmentId: payment.appointmentId || null,
-        orderId: payment.orderId || null,
-        salonId: payment?.appointment?.salon?.id || payment?.order?.salon?.id || null,
-      },
-    });
-
-    await createUserNotification(
-      ownerId,
-      'payment',
-      `Paiement recu pour ${salonName}. Reversement DexPay ${normalizeStatus(payout.status) === 'COMPLETED' ? 'effectue' : 'lance'} vers votre compte ${destination.method === 'WAVE' ? 'Wave' : 'Orange Money'}.`
-    );
-  } catch (error) {
-    await createUserNotification(
-      ownerId,
-      'payment',
-      `Paiement recu pour ${salonName}, mais le reversement DexPay a echoue. Nous allons devoir le relancer.`
-    );
-  }
 };
 
 router.post('/webhook', async (req, res) => {
@@ -234,8 +91,15 @@ router.post('/webhook', async (req, res) => {
           data: { status: 'PAID' },
         }).catch(() => {});
       }
+
       if (updatedPayment.orderId) {
-        await commitOrderStockIfNeeded(updatedPayment.orderId).catch(() => {});
+        await commitOrderStockIfNeeded(updatedPayment.orderId).catch((error) => {
+          console.error('DexPay webhook order stock commit failed:', {
+            orderId: updatedPayment.orderId,
+            paymentId: updatedPayment.id,
+            message: error?.message || 'Unknown stock commit error',
+          });
+        });
       }
 
       if (updatedPayment.userId) {
@@ -270,7 +134,7 @@ router.post('/webhook', async (req, res) => {
         }).catch(() => {});
       }
 
-      await triggerAutoPayoutForPayment(updatedPayment.id);
+      await triggerAutoPayoutForPayment(updatedPayment.id).catch(() => {});
       return res.status(200).json(buildWebhookResponse('Checkout complete traite'));
     }
 

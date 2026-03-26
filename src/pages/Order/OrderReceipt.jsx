@@ -25,6 +25,8 @@ function OrderReceipt() {
   const location = useLocation()
   const navigate = useNavigate()
   const seedData = location.state || readOrderPaymentSession()
+  const searchParams = new URLSearchParams(location.search)
+  const fallbackOrderId = searchParams.get('orderId') || seedData?.order?.id || ''
 
   const [copied, setCopied] = useState(false)
   const [receiptData, setReceiptData] = useState(seedData)
@@ -34,14 +36,16 @@ function OrderReceipt() {
   const [loadingState, setLoadingState] = useState(false)
 
   useEffect(() => {
-    if (!seedData) navigate('/salons', { replace: true })
-  }, [seedData, navigate])
+    if (!seedData && !fallbackOrderId) {
+      navigate('/dashboard?tab=orders', { replace: true })
+    }
+  }, [fallbackOrderId, navigate, seedData])
 
   useEffect(() => {
     let mounted = true
 
     const syncOrderState = async () => {
-      const orderId = seedData?.order?.id
+      const orderId = fallbackOrderId
       if (!orderId) return
 
       setLoadingState(true)
@@ -82,7 +86,18 @@ function OrderReceipt() {
     return () => {
       mounted = false
     }
-  }, [seedData?.order?.id])
+  }, [fallbackOrderId])
+
+  if (!receiptData && loadingState) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-gold-50/20 py-10 px-4">
+        <div className="max-w-xl mx-auto rounded-3xl border border-primary-100 bg-white p-8 text-center shadow-lg">
+          <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600"></div>
+          <p className="text-primary-600">Chargement du recu...</p>
+        </div>
+      </div>
+    )
+  }
 
   if (!receiptData) return null
 
@@ -96,14 +111,15 @@ function OrderReceipt() {
   const pm = paymentLabels[paymentKey] || paymentLabels.CASH_ON_DELIVERY
   const isPendingPayment = String(orderStatus || '').toUpperCase() === 'PENDING_PAYMENT'
   const isDisputed = String(orderStatus || '').toUpperCase() === 'DISPUTED'
+  const isPaymentCompleted = String(paymentStatus || '').toUpperCase() === 'COMPLETED'
   const isDexPayFlow = ['DEXPAY', 'PAYTECH', 'PAYDUNYA'].includes(paymentKey)
   const isDexPayPending = isDexPayFlow && isPendingPayment && String(paymentStatus || '').toUpperCase() !== 'COMPLETED'
   const isConfirmedOrder = ['CONFIRMED', 'PREPARING', 'READY', 'DELIVERED'].includes(String(orderStatus || '').toUpperCase())
   const canCancel = order?.id && ['PENDING', 'PENDING_PAYMENT', 'DISPUTED', 'CONFIRMED'].includes(String(orderStatus || '').toUpperCase())
-  const receiptTitle = isConfirmedOrder ? 'Recu de commande' : 'Suivi de commande'
+  const receiptTitle = isConfirmedOrder || isPaymentCompleted ? 'Recu de commande' : 'Suivi de commande'
   const headerIconClass = isDisputed
     ? 'bg-red-500 shadow-lg shadow-red-500/30'
-    : isDexPayPending || isPendingPayment
+    : isDexPayPending || (isPendingPayment && !isPaymentCompleted)
       ? 'bg-amber-500 shadow-lg shadow-amber-500/30'
       : 'bg-green-500 shadow-lg shadow-green-500/30'
 
@@ -147,14 +163,14 @@ function OrderReceipt() {
               ? 'Commande en litige de paiement'
               : (isDexPayPending
                   ? 'Confirmation DexPay en cours'
-                  : (isPendingPayment ? 'Commande en attente de validation' : 'Commande confirmee !'))}
+                  : (isPaymentCompleted ? 'Commande payee' : (isPendingPayment ? 'Commande en attente de validation' : 'Commande confirmee !')))}
           </h1>
           <p className="text-primary-500 mt-1">
             {isDisputed
               ? 'Le paiement est en cours de verification administrative.'
               : (isDexPayPending
                   ? 'Nous attendons la confirmation finale de DexPay pour cette commande.'
-                  : (isPendingPayment ? 'Votre paiement sera verifie par la boutique.' : 'Merci pour votre achat'))}
+                  : (isPaymentCompleted ? 'Le paiement est confirme. Le traitement de la commande continue normalement.' : (isPendingPayment ? 'Votre paiement sera verifie par la boutique.' : 'Merci pour votre achat')))}
           </p>
           {loadingState ? <p className="text-xs text-primary-400 mt-2">Synchronisation du statut...</p> : null}
         </motion.div>
@@ -297,7 +313,7 @@ function OrderReceipt() {
             </button>
           )}
           <Link
-            to="/dashboard"
+            to="/dashboard?tab=orders"
             className="flex-1 py-3.5 text-center rounded-xl border border-primary-200 font-semibold text-primary-700 hover:bg-primary-50 transition"
           >
             Mes commandes

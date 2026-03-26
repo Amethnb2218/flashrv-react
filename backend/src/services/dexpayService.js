@@ -45,6 +45,14 @@ const normalizeSandbox = (value) => {
   return ['1', 'true', 'yes', 'on', 'sandbox', 'test'].includes(raw);
 };
 
+const parseBooleanWithDefault = (value, defaultValue = false) => {
+  const raw = String(value ?? '').trim().toLowerCase();
+  if (!raw) return defaultValue;
+  if (['1', 'true', 'yes', 'on'].includes(raw)) return true;
+  if (['0', 'false', 'no', 'off'].includes(raw)) return false;
+  return defaultValue;
+};
+
 const ensureConfigured = () => {
   if (cachedConfig) return cachedConfig;
 
@@ -64,7 +72,7 @@ const ensureConfigured = () => {
     sandbox: normalizeSandbox(process.env.DEXPAY_SANDBOX || process.env.DEXPAY_TEST_MODE),
     timeout: resolveTimeoutMs(),
     webhookToken: String(process.env.DEXPAY_WEBHOOK_TOKEN || '').trim(),
-    clientSupportFee: String(process.env.DEXPAY_CLIENT_SUPPORT_FEE || '').trim().toLowerCase() === 'true',
+    clientSupportFee: parseBooleanWithDefault(process.env.DEXPAY_CLIENT_SUPPORT_FEE, true),
     platformCommissionRate: Math.max(0, Number(process.env.DEXPAY_PLATFORM_COMMISSION_RATE || 0)),
   };
 
@@ -248,11 +256,13 @@ const retrieveDexPayPayout = async (id) => {
   return client.payouts.retrieve(String(id || '').trim());
 };
 
-const computePayoutAmount = (grossAmount) => {
+const computePayoutAmount = (grossAmount, feeAmount = 0) => {
   const amount = Math.max(0, Number(grossAmount || 0));
+  const fees = Math.max(0, Number(feeAmount || 0));
+  const netBeforeCommission = Math.max(0, amount - fees);
   const commissionRate = ensureConfigured().platformCommissionRate;
-  if (!Number.isFinite(commissionRate) || commissionRate <= 0) return amount;
-  const net = amount - (amount * commissionRate) / 100;
+  if (!Number.isFinite(commissionRate) || commissionRate <= 0) return netBeforeCommission;
+  const net = netBeforeCommission - (netBeforeCommission * commissionRate) / 100;
   return Math.max(0, Math.round(net));
 };
 

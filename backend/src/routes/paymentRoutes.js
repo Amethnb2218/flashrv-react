@@ -9,6 +9,7 @@ const { sendBookingConfirmationEmail, sendOrderConfirmationEmail } = require('..
 const { createBookingNotification } = require('../services/bookingNotificationService');
 const { resolvePublicBaseUrl } = require('../utils/publicUrl');
 const { commitOrderStockIfNeeded } = require('../utils/orderStock');
+const { triggerAutoPayoutForPayment } = require('../services/dexpayPayoutService');
 
 const router = express.Router();
 
@@ -241,8 +242,11 @@ const markOrderPendingPayment = async (orderId) => {
 
 const markOrderPaid = async (orderId) => {
   if (!orderId) return;
-  await commitOrderStockIfNeeded(orderId).catch(() => {
-    // noop
+  await commitOrderStockIfNeeded(orderId).catch((error) => {
+    console.error('Order paid stock commit failed:', {
+      orderId,
+      message: error?.message || 'Unknown stock commit error',
+    });
   });
 };
 
@@ -745,6 +749,14 @@ const verifyPaymentRecord = async (payment) => {
   const paymentMethod = String(payment.method || '').toUpperCase();
   if (paymentMethod === 'DEXPAY' || paymentMethod === 'PAYTECH') {
     if (String(payment.status || '').toUpperCase() === 'COMPLETED') {
+      await markAppointmentPaid(payment.appointmentId);
+      await markOrderPaid(payment.orderId);
+      triggerAutoPayoutForPayment(payment.id).catch((error) => {
+        console.error('DexPay payout retry after completed payment failed:', {
+          paymentId: payment.id,
+          message: error?.message || 'DexPay payout retry failed',
+        });
+      });
       return payment;
     }
 
@@ -763,6 +775,12 @@ const verifyPaymentRecord = async (payment) => {
         await markAppointmentPaid(updated.appointmentId);
         await markOrderPaid(updated.orderId);
         await notifyPaymentCompleted(updated);
+        triggerAutoPayoutForPayment(updated.id).catch((error) => {
+          console.error('DexPay payout after verify completion failed:', {
+            paymentId: updated.id,
+            message: error?.message || 'DexPay payout after verify failed',
+          });
+        });
         return updated;
       }
     } catch (error) {

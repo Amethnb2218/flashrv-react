@@ -90,14 +90,14 @@ function OrderPaymentSuccess() {
 
             <div className="grid gap-3 sm:grid-cols-2">
               <button
-                onClick={() => navigate('/order/receipt', { state: sessionData || undefined, replace: true })}
+                onClick={() => navigate(`/order/receipt?orderId=${encodeURIComponent(orderId || sessionData?.order?.id || '')}`, { state: sessionData || undefined, replace: true })}
                 className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary-900 text-white font-semibold hover:bg-primary-800 transition"
               >
                 <FiShoppingBag className="w-4 h-4" />
                 {receiptLabel}
               </button>
               <Link
-                to="/dashboard"
+                to="/dashboard?tab=orders"
                 className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-primary-300 text-primary-700 font-semibold hover:bg-primary-50 transition"
               >
                 Mes commandes

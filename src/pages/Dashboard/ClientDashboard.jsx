@@ -1,11 +1,11 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react' 
 import { Link, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   FiCalendar, FiClock, FiMapPin, FiStar, FiMoreVertical, 
   FiX, FiRefreshCw, FiHeart, FiSettings, FiChevronRight, FiChevronDown, FiTrash2,
-  FiGift, FiAward, FiPercent, FiMessageCircle, FiShoppingBag, FiPackage
-} from 'react-icons/fi'
+  FiGift, FiAward, FiPercent, FiMessageCircle, FiShoppingBag, FiPackage, FiBell 
+} from 'react-icons/fi' 
 import { useAuth } from '../../context/AuthContext'
 import { loyaltyConfig } from '../../data/salons'
 import Modal from '../../components/UI/Modal'
@@ -13,7 +13,15 @@ import apiFetch from '@/api/client'
 import { resolveMediaUrl } from '../../utils/media'
 import AppointmentChatModal from '../../components/Chat/AppointmentChatModal'
 import toast from 'react-hot-toast'
-import { pushSiteNotification } from '../../utils/siteNotifications'
+import {
+  getSiteNotifications,
+  markAllSiteNotificationsRead,
+  markSiteNotificationRead,
+  pushSiteNotification,
+  removeMatchingSiteNotifications,
+  removeSiteNotification,
+  subscribeSiteNotifications,
+} from '../../utils/siteNotifications' 
 
 const CANCELLED_BOOKINGS_STORAGE_KEY = 'flashrv_cancelled_bookings'
 const HIDDEN_HISTORY_BOOKINGS_STORAGE_KEY = 'flashrv_hidden_history_bookings'
@@ -89,6 +97,14 @@ function mergeBookingsWithCancelledCache(bookings, cachedCancelledBookings) {
   return Array.from(merged.values())
 }
 
+function normalizeOrderStatus(value) {
+  return String(value || '').toUpperCase()
+}
+
+function getNotificationMatchKey(notification) {
+  return String(notification?.message || '').trim().toLowerCase()
+}
+
 function ClientDashboard() {
   const { user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -102,10 +118,24 @@ function ClientDashboard() {
   const [loading, setLoading] = useState(true)
   const [orders, setOrders] = useState([])
   const [ordersLoading, setOrdersLoading] = useState(true)
+  const [notifications, setNotifications] = useState([])
+  const [notificationsLoading, setNotificationsLoading] = useState(true)
   const [cancellingOrderId, setCancellingOrderId] = useState(null)
+  const [deletingOrderId, setDeletingOrderId] = useState(null)
   const [expandedBookingId, setExpandedBookingId] = useState(null)
   const [expandedOrderId, setExpandedOrderId] = useState(null)
   const [visibleBookings, setVisibleBookings] = useState(8)
+  const notificationUserKeys = useMemo(
+    () =>
+      Array.from(
+        new Set([user?.id, user?.email, 'anonymous'].filter(Boolean).map((key) => String(key)))
+      ),
+    [user?.email, user?.id]
+  )
+  const unreadNotificationsCount = useMemo(
+    () => notifications.filter((notification) => !notification.isRead).length,
+    [notifications]
+  )
 
   const persistCancelledBooking = (booking) => {
     if (!booking?.id) return
@@ -211,9 +241,72 @@ function ClientDashboard() {
     return () => { mounted = false }
   }, [user])
 
-  const handleCancelOrder = async (orderId) => {
-    setCancellingOrderId(orderId)
-    try {
+  useEffect(() => {
+    if (!user) return
+    let mounted = true
+
+    const loadNotifications = async () => {
+      if (mounted) setNotificationsLoading(true)
+
+      const localMap = new Map()
+      notificationUserKeys.forEach((key) => {
+        getSiteNotifications(key, 50).forEach((notification) => {
+          if (!localMap.has(notification.id)) {
+            localMap.set(notification.id, notification)
+          }
+        })
+      })
+      const localNotifications = Array.from(localMap.values())
+
+      try {
+        const response = await apiFetch('/notifications')
+        const payload = response?.data ?? response
+        const remoteNotifications = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload?.notifications)
+            ? payload.notifications
+            : Array.isArray(response?.data?.notifications)
+              ? response.data.notifications
+              : []
+
+        if (!mounted) return
+
+        const deduped = new Map()
+        ;[...remoteNotifications, ...localNotifications].forEach((notification) => {
+          const id = String(notification?.id || `${notification?.message}-${notification?.createdAt}`)
+          if (!deduped.has(id)) {
+            deduped.set(id, { ...notification, id })
+          }
+        })
+
+        setNotifications(
+          Array.from(deduped.values()).sort(
+            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          )
+        )
+      } catch (_) {
+        if (mounted) {
+          setNotifications(localNotifications)
+        }
+      } finally {
+        if (mounted) setNotificationsLoading(false)
+      }
+    }
+
+    loadNotifications()
+    const interval = setInterval(loadNotifications, 30000)
+    const unsubscribeLocal = subscribeSiteNotifications(loadNotifications)
+
+    return () => {
+      mounted = false
+      clearInterval(interval)
+      unsubscribeLocal?.()
+    }
+  }, [notificationUserKeys, user])
+
+  const handleCancelOrder = async (orderId) => { 
+    setCancellingOrderId(orderId) 
+    try { 
       await apiFetch(`/orders/${orderId}/status`, { method: 'PATCH', body: { status: 'CANCELLED' } })
       setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: 'CANCELLED' } : o))
       toast.success('Commande annulée')
@@ -225,12 +318,68 @@ function ClientDashboard() {
       })
     } catch (e) {
       toast.error(e.message || 'Erreur lors de l\'annulation')
-    } finally {
-      setCancellingOrderId(null)
+    } finally { 
+      setCancellingOrderId(null) 
+    } 
+  } 
+
+  const markNotificationRead = async (notification) => {
+    if (!notification?.id) return
+
+    setNotifications((prev) =>
+      prev.map((entry) =>
+        entry.id === notification.id ? { ...entry, isRead: true } : entry
+      )
+    )
+
+    if (String(notification.id).startsWith('local-')) {
+      notificationUserKeys.forEach((key) => markSiteNotificationRead(notification.id, key))
+      return
+    }
+
+    try {
+      await apiFetch(`/notifications/${notification.id}/read`, { method: 'PATCH' })
+    } catch (_) {
+      // Ignore read sync failures on the dashboard.
     }
   }
 
-  const orderStatusLabels = {
+  const markAllNotificationsRead = async () => {
+    notificationUserKeys.forEach((key) => markAllSiteNotificationsRead(key))
+    setNotifications((prev) => prev.map((notification) => ({ ...notification, isRead: true })))
+
+    try {
+      await apiFetch('/notifications/read-all', { method: 'PATCH' })
+    } catch (_) {
+      // Ignore backend read-all failures.
+    }
+  }
+
+  const deleteNotification = async (notification) => {
+    if (!notification?.id) return
+
+    const previousNotifications = notifications
+    setNotifications((prev) => prev.filter((entry) => entry.id !== notification.id))
+
+    if (String(notification.id).startsWith('local-')) {
+      notificationUserKeys.forEach((key) => removeSiteNotification(notification.id, key))
+      return
+    }
+
+    try {
+      await apiFetch(`/notifications/${notification.id}`, { method: 'DELETE' })
+      const matchKey = getNotificationMatchKey(notification)
+      notificationUserKeys.forEach((key) => {
+        removeMatchingSiteNotifications(key, (localNotification) =>
+          getNotificationMatchKey(localNotification) === matchKey
+        )
+      })
+    } catch (_) {
+      setNotifications(previousNotifications)
+    }
+  }
+
+  const orderStatusLabels = { 
     PENDING: { label: 'En attente', className: 'bg-gold-100 text-yellow-700' },
     PENDING_PAYMENT: { label: 'Validation paiement', className: 'bg-blue-100 text-blue-700' },
     DISPUTED: { label: 'Litige ouvert', className: 'bg-amber-100 text-amber-800' },
@@ -241,7 +390,28 @@ function ClientDashboard() {
     CANCELLED: { label: 'Annulée', className: 'bg-red-100 text-red-700' },
   }
 
-  const now = new Date()
+  const getOrderVisualStatus = (order) => {
+    const status = normalizeOrderStatus(order?.status)
+    const paymentStatus = normalizeOrderStatus(order?.payment?.status)
+
+    if (paymentStatus === 'COMPLETED' && status === 'PENDING_PAYMENT') {
+      return {
+        key: 'CONFIRMED',
+        label: 'Payee',
+        className: 'bg-emerald-100 text-emerald-700',
+      }
+    }
+
+    return {
+      key: status,
+      ...(orderStatusLabels[status] || {
+        label: order?.status || 'Commande',
+        className: 'bg-primary-100 text-primary-700',
+      }),
+    }
+  }
+
+  const now = new Date() 
   const getBookingDateTime = (booking) => {
     const base = new Date(booking.date)
     if (!booking.time || isNaN(base.getTime())) return base
@@ -307,6 +477,21 @@ function ClientDashboard() {
     } finally {
       setShowCancelModal(false)
       setSelectedBooking(null)
+    }
+  }
+
+  const handleDeleteOrder = async (orderId) => {
+    if (!orderId) return
+    setDeletingOrderId(orderId)
+    try {
+      await apiFetch(`/orders/${orderId}`, { method: 'DELETE' })
+      setOrders((prev) => prev.filter((order) => order.id !== orderId))
+      setExpandedOrderId((prev) => (prev === orderId ? null : prev))
+      toast.success('Commande supprimée de votre historique')
+    } catch (e) {
+      toast.error(e.message || 'Impossible de supprimer cette commande')
+    } finally {
+      setDeletingOrderId(null)
     }
   }
 
@@ -558,11 +743,11 @@ function ClientDashboard() {
 
         {/* Tabs */}
         <div className="sm:bg-white sm:rounded-2xl sm:shadow-sm sm:border sm:border-primary-100">
-          <div className="sticky top-14 z-20 bg-white border-b border-primary-200">
-            <div className="flex">
-              <button
-                onClick={() => handleTabChange('upcoming')}
-                className={`flex-1 py-2.5 sm:py-3 text-center text-xs sm:text-sm font-medium transition-colors ${
+          <div className="sticky top-14 z-20 bg-white border-b border-primary-200"> 
+            <div className="flex overflow-x-auto"> 
+              <button 
+                onClick={() => handleTabChange('upcoming')} 
+                className={`min-w-[92px] flex-1 py-2.5 sm:py-3 text-center text-xs sm:text-sm font-medium transition-colors ${ 
                   activeTab === 'upcoming'
                     ? 'text-primary-600 border-b-2 border-primary-600'
                     : 'text-primary-500 hover:text-primary-700'
@@ -570,9 +755,9 @@ function ClientDashboard() {
               >
                 À venir ({upcomingBookings.length})
               </button>
-              <button
-                onClick={() => handleTabChange('past')}
-                className={`flex-1 py-2.5 sm:py-3 text-center text-xs sm:text-sm font-medium transition-colors ${
+              <button 
+                onClick={() => handleTabChange('past')} 
+                className={`min-w-[92px] flex-1 py-2.5 sm:py-3 text-center text-xs sm:text-sm font-medium transition-colors ${ 
                   activeTab === 'past'
                     ? 'text-primary-600 border-b-2 border-primary-600'
                     : 'text-primary-500 hover:text-primary-700'
@@ -580,20 +765,31 @@ function ClientDashboard() {
               >
                 Historique ({pastBookings.length})
               </button>
-              <button
-                onClick={() => handleTabChange('orders')}
-                className={`flex-1 py-2.5 sm:py-3 text-center text-xs sm:text-sm font-medium transition-colors flex items-center justify-center gap-1 ${
+              <button 
+                onClick={() => handleTabChange('orders')} 
+                className={`min-w-[104px] flex-1 py-2.5 sm:py-3 text-center text-xs sm:text-sm font-medium transition-colors flex items-center justify-center gap-1 ${ 
                   activeTab === 'orders'
                     ? 'text-primary-600 border-b-2 border-primary-600'
                     : 'text-primary-500 hover:text-primary-700'
                 }`}
               >
-                <FiShoppingBag className="w-3.5 h-3.5" />
-                Commandes ({orders.length})
-              </button>
-              <button
-                onClick={() => handleTabChange('favorites')}
-                className={`flex-1 py-2.5 sm:py-3 text-center text-xs sm:text-sm font-medium transition-colors flex items-center justify-center gap-1 ${
+                <FiShoppingBag className="w-3.5 h-3.5" /> 
+                Commandes ({orders.length}) 
+              </button> 
+              <button 
+                onClick={() => handleTabChange('notifications')} 
+                className={`min-w-[116px] flex-1 py-2.5 sm:py-3 text-center text-xs sm:text-sm font-medium transition-colors flex items-center justify-center gap-1 ${ 
+                  activeTab === 'notifications' 
+                    ? 'text-primary-600 border-b-2 border-primary-600' 
+                    : 'text-primary-500 hover:text-primary-700' 
+                }`} 
+              > 
+                <FiBell className="w-3.5 h-3.5" /> 
+                Notifications ({notifications.length}) 
+              </button> 
+              <button 
+                onClick={() => handleTabChange('favorites')} 
+                className={`min-w-[96px] flex-1 py-2.5 sm:py-3 text-center text-xs sm:text-sm font-medium transition-colors flex items-center justify-center gap-1 ${ 
                   activeTab === 'favorites'
                     ? 'text-red-600 border-b-2 border-red-500'
                     : 'text-primary-500 hover:text-primary-700'
@@ -645,13 +841,15 @@ function ClientDashboard() {
                     Explorer les boutiques
                   </Link>
                 </div>
-              ) : (
-                <div className="space-y-2">
-                  {orders.map(order => {
-                    const st = orderStatusLabels[order.status] || { label: order.status, className: 'bg-primary-100 text-primary-700' }
-                    const canCancel = ['PENDING', 'PENDING_PAYMENT', 'DISPUTED', 'CONFIRMED'].includes(String(order.status || '').toUpperCase())
-                    const isOrderExpanded = expandedOrderId === order.id
-                    return (
+              ) : ( 
+                <div className="space-y-2"> 
+                  {orders.map(order => { 
+                    const st = getOrderVisualStatus(order) 
+                    const effectiveOrderStatus = st.key 
+                    const canCancel = ['PENDING', 'PENDING_PAYMENT', 'DISPUTED', 'CONFIRMED'].includes(String(order.status || '').toUpperCase()) 
+                    const canDelete = ['CANCELLED', 'DELIVERED'].includes(effectiveOrderStatus) 
+                    const isOrderExpanded = expandedOrderId === order.id 
+                    return ( 
                       <div key={order.id} className="bg-white rounded-xl border border-primary-100 shadow-sm overflow-hidden">
                         <button
                           type="button"
@@ -693,15 +891,20 @@ function ClientDashboard() {
                                   <FiPackage className="w-3.5 h-3.5" />
                                   {order.deliveryMode === 'DELIVERY' ? 'Livraison' : 'Retrait'}
                                 </div>
-                                <div className="flex items-center gap-1">
-                                  {['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'DELIVERED'].map((step, i) => {
-                                    const steps = ['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'DELIVERED']
-                                    const currentIdx = steps.indexOf(order.status)
-                                    const isDone = i <= currentIdx && order.status !== 'CANCELLED'
-                                    return <div key={step} className={`flex-1 h-1 rounded-full ${isDone ? 'bg-green-500' : 'bg-primary-200'}`} />
-                                  })}
-                                </div>
-                                {canCancel && (
+                                <div className="flex items-center gap-1"> 
+                                  {['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'DELIVERED'].map((step, i) => { 
+                                    const steps = ['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'DELIVERED'] 
+                                    const currentIdx = steps.indexOf(effectiveOrderStatus) 
+                                    const isDone = i <= currentIdx && effectiveOrderStatus !== 'CANCELLED' 
+                                    return <div key={step} className={`flex-1 h-1 rounded-full ${isDone ? 'bg-green-500' : 'bg-primary-200'}`} /> 
+                                  })} 
+                                </div> 
+                                {normalizeOrderStatus(order?.payment?.status) === 'COMPLETED' ? ( 
+                                  <div className="rounded-lg bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700"> 
+                                    Paiement confirme. La commande et le reversement DexPay sont en cours de synchronisation. 
+                                  </div> 
+                                ) : null} 
+                                {canCancel && ( 
                                   <button
                                     onClick={() => handleCancelOrder(order.id)}
                                     disabled={cancellingOrderId === order.id}
@@ -710,16 +913,94 @@ function ClientDashboard() {
                                     {cancellingOrderId === order.id ? 'Annulation...' : 'Annuler'}
                                   </button>
                                 )}
+                                {canDelete && (
+                                  <button
+                                    onClick={() => handleDeleteOrder(order.id)}
+                                    disabled={deletingOrderId === order.id}
+                                    className="w-full py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-xs font-medium disabled:opacity-50"
+                                  >
+                                    {deletingOrderId === order.id ? 'Suppression...' : 'Supprimer'}
+                                  </button>
+                                )}
                               </div>
                             </motion.div>
                           )}
                         </AnimatePresence>
                       </div>
                     )
-                  })}
-                </div>
-              )
-            ) : loading ? (
+                  })} 
+                </div> 
+              ) 
+            ) : activeTab === 'notifications' ? ( 
+              notificationsLoading ? ( 
+                <div className="text-center py-12"> 
+                  <div className="w-10 h-10 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin mx-auto mb-4"></div> 
+                  <p className="text-primary-500">Chargement des notifications...</p> 
+                </div> 
+              ) : notifications.length === 0 ? ( 
+                <div className="text-center py-12"> 
+                  <div className="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4"> 
+                    <FiBell className="w-10 h-10 text-primary-400" /> 
+                  </div> 
+                  <h3 className="text-lg font-semibold text-primary-900 mb-2">Aucune notification</h3> 
+                  <p className="text-primary-500">Vos alertes de reservation, commande et paiement apparaitront ici.</p> 
+                </div> 
+              ) : ( 
+                <div className="space-y-3"> 
+                  <div className="flex items-center justify-between gap-3 px-1"> 
+                    <p className="text-sm text-primary-500"> 
+                      {unreadNotificationsCount > 0 
+                        ? `${unreadNotificationsCount} notification${unreadNotificationsCount > 1 ? 's' : ''} non lue${unreadNotificationsCount > 1 ? 's' : ''}` 
+                        : 'Toutes vos notifications sont lues'} 
+                    </p> 
+                    <button 
+                      type="button" 
+                      onClick={markAllNotificationsRead} 
+                      className="text-xs font-medium text-primary-600 hover:text-primary-800 underline" 
+                    > 
+                      Tout marquer lu 
+                    </button> 
+                  </div> 
+                  {notifications.map((notification) => ( 
+                    <div 
+                      key={notification.id} 
+                      className={`rounded-2xl border px-4 py-3 shadow-sm transition ${ 
+                        notification.isRead 
+                          ? 'border-primary-100 bg-white' 
+                          : 'border-gold-200 bg-gold-50/60' 
+                      }`} 
+                    > 
+                      <div className="flex items-start gap-3"> 
+                        <button 
+                          type="button" 
+                          onClick={() => markNotificationRead(notification)} 
+                          className="flex-1 text-left" 
+                        > 
+                          <p className="text-sm font-medium text-primary-900">{notification.message}</p> 
+                          <p className="mt-1 text-xs text-primary-500"> 
+                            {new Date(notification.createdAt).toLocaleString('fr-FR', { 
+                              day: 'numeric', 
+                              month: 'short', 
+                              hour: '2-digit', 
+                              minute: '2-digit', 
+                            })} 
+                          </p> 
+                        </button> 
+                        <button 
+                          type="button" 
+                          onClick={() => deleteNotification(notification)} 
+                          className="inline-flex h-9 w-9 items-center justify-center rounded-full text-primary-400 hover:bg-red-50 hover:text-red-600 transition" 
+                          title="Supprimer" 
+                          aria-label="Supprimer la notification" 
+                        > 
+                          <FiTrash2 className="h-4 w-4" /> 
+                        </button> 
+                      </div> 
+                    </div> 
+                  ))} 
+                </div> 
+              ) 
+            ) : loading ? ( 
               <div className="text-center py-12">
                 <div className="w-10 h-10 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin mx-auto mb-4"></div>
                 <p className="text-primary-500">Chargement des réservations...</p>

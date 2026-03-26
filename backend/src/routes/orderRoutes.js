@@ -844,4 +844,63 @@ router.get('/:id', authenticate, async (req, res, next) => {
   }
 });
 
+/**
+ * DELETE /api/orders/:id
+ * Remove a cancelled order from client history
+ */
+router.delete('/:id', authenticate, async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const order = await prisma.order.findUnique({
+      where: { id },
+      include: {
+        salon: { select: { ownerId: true } },
+        payment: true,
+        items: { select: { id: true } },
+      },
+    });
+
+    if (!order) {
+      return res.status(404).json({ status: 'error', message: 'Commande introuvable' });
+    }
+
+    const isClient = order.clientId === req.user.id;
+    const isAdmin = req.user.role === 'ADMIN' || req.user.role === 'SUPER_ADMIN';
+    if (!isClient && !isAdmin) {
+      return res.status(403).json({ status: 'error', message: 'Acces interdit' });
+    }
+
+    const status = String(order.status || '').toUpperCase();
+    if (!['CANCELLED', 'DELIVERED'].includes(status)) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Seules les commandes annulees ou livrees peuvent etre supprimees.',
+      });
+    }
+
+    await prisma.$transaction(async (tx) => {
+      if (order.payment?.id) {
+        await tx.payment.delete({
+          where: { id: order.payment.id },
+        }).catch(() => {});
+      }
+
+      await tx.orderItem.deleteMany({
+        where: { orderId: id },
+      });
+
+      await tx.order.delete({
+        where: { id },
+      });
+    });
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'Commande supprimee de votre historique.',
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 module.exports = router;

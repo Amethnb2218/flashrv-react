@@ -151,8 +151,8 @@ function Navbar() {
       navigate(proPath)
       return
     }
-    navigate(getDashboardPath())
-  }, [closeDrawer, getDashboardPath, isAuthenticated, navigate, user])
+    navigate('/dashboard?tab=notifications')
+  }, [closeDrawer, isAuthenticated, navigate, user])
 
   const openCart = useCallback(() => {
     closeDrawer()
