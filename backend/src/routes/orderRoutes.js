@@ -5,6 +5,7 @@ const { authenticate } = require('../middleware/auth');
 const { pushNotification } = require('../realtime/hub');
 const { sendOrderConfirmationEmail } = require('../services/emailService');
 const { uploadPaymentProof } = require('../config/cloudinary');
+const { commitOrderStockIfNeeded, isStockCommittedStatus, restoreOrderStockIfNeeded } = require('../utils/orderStock');
 
 const DIRECT_MOBILE_METHODS = new Set(['ORANGE_MONEY', 'WAVE', 'FREE_MONEY']);
 const ORANGE_MONEY_REFERENCE_REGEX = /^MP\d{6}\.\d{4}\.C\d{5}$/i;
@@ -200,12 +201,13 @@ router.post('/', authenticate, async (req, res, next) => {
         },
       });
 
-      // Decrement stock
-      for (const item of orderItems) {
-        await tx.product.update({
-          where: { id: item.productId },
-          data: { stock: { decrement: item.quantity } },
-        });
+      if (!requiresClientPayment) {
+        for (const item of orderItems) {
+          await tx.product.update({
+            where: { id: item.productId },
+            data: { stock: { decrement: item.quantity } },
+          });
+        }
       }
 
       return newOrder;
@@ -620,12 +622,14 @@ router.patch('/:id/payment-proof/review', authenticate, async (req, res, next) =
     const currentOrderStatus = String(order.status || '').toUpperCase();
     const shouldMoveToConfirmed = approve && ['PENDING', 'PENDING_PAYMENT', 'DISPUTED'].includes(currentOrderStatus);
     const shouldMoveToDisputed = !approve && ['PENDING', 'PENDING_PAYMENT', 'DISPUTED'].includes(currentOrderStatus);
-    const updatedOrder = await prisma.order.update({
-      where: { id },
-      data: {
-        status: shouldMoveToConfirmed ? 'CONFIRMED' : (shouldMoveToDisputed ? 'DISPUTED' : order.status),
-      },
-    });
+    const updatedOrder = shouldMoveToConfirmed
+      ? await commitOrderStockIfNeeded(id)
+      : await prisma.order.update({
+          where: { id },
+          data: {
+            status: shouldMoveToDisputed ? 'DISPUTED' : order.status,
+          },
+        });
 
     if (order.clientId) {
       try {
@@ -728,28 +732,38 @@ router.patch('/:id/status', authenticate, async (req, res, next) => {
       return res.status(403).json({ status: 'error', message: 'Accès interdit' });
     }
 
-    // If cancelling, restore stock
+    let updated;
     if (status === 'CANCELLED' && order.status !== 'CANCELLED') {
-      const items = await prisma.orderItem.findMany({ where: { orderId: id } });
-      await prisma.$transaction(
-        items.map((item) =>
-          prisma.product.update({
-            where: { id: item.productId },
-            data: { stock: { increment: item.quantity } },
-          })
-        )
-      );
+      await restoreOrderStockIfNeeded(id);
+      updated = await prisma.order.findUnique({
+        where: { id },
+        include: {
+          items: { include: { product: true } },
+          client: { select: { id: true, name: true, email: true, phoneNumber: true } },
+          salon: { select: { id: true, name: true, ownerId: true } },
+        },
+      });
+    } else if (status === 'CONFIRMED' && !isStockCommittedStatus(order.status)) {
+      await commitOrderStockIfNeeded(id);
+      updated = await prisma.order.findUnique({
+        where: { id },
+        include: {
+          items: { include: { product: true } },
+          client: { select: { id: true, name: true, email: true, phoneNumber: true } },
+          salon: { select: { id: true, name: true, ownerId: true } },
+        },
+      });
+    } else {
+      updated = await prisma.order.update({
+        where: { id },
+        data: { status },
+        include: {
+          items: { include: { product: true } },
+          client: { select: { id: true, name: true, email: true, phoneNumber: true } },
+          salon: { select: { id: true, name: true, ownerId: true } },
+        },
+      });
     }
-
-    const updated = await prisma.order.update({
-      where: { id },
-      data: { status },
-      include: {
-        items: { include: { product: true } },
-        client: { select: { id: true, name: true, email: true, phoneNumber: true } },
-        salon: { select: { id: true, name: true } },
-      },
-    });
 
     // Notify client of status change
     if (updated.clientId) {

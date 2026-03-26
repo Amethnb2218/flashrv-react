@@ -98,7 +98,14 @@ function OrderReceipt() {
   const isDisputed = String(orderStatus || '').toUpperCase() === 'DISPUTED'
   const isDexPayFlow = ['DEXPAY', 'PAYTECH', 'PAYDUNYA'].includes(paymentKey)
   const isDexPayPending = isDexPayFlow && isPendingPayment && String(paymentStatus || '').toUpperCase() !== 'COMPLETED'
+  const isConfirmedOrder = ['CONFIRMED', 'PREPARING', 'READY', 'DELIVERED'].includes(String(orderStatus || '').toUpperCase())
   const canCancel = order?.id && ['PENDING', 'PENDING_PAYMENT', 'DISPUTED', 'CONFIRMED'].includes(String(orderStatus || '').toUpperCase())
+  const receiptTitle = isConfirmedOrder ? 'Recu de commande' : 'Suivi de commande'
+  const headerIconClass = isDisputed
+    ? 'bg-red-500 shadow-lg shadow-red-500/30'
+    : isDexPayPending || isPendingPayment
+      ? 'bg-amber-500 shadow-lg shadow-amber-500/30'
+      : 'bg-green-500 shadow-lg shadow-green-500/30'
 
   const handleCopyRef = () => {
     navigator.clipboard.writeText(orderRef)
@@ -132,7 +139,7 @@ function OrderReceipt() {
           transition={{ type: 'spring', stiffness: 200, damping: 15 }}
           className="flex flex-col items-center mb-5 sm:mb-8"
         >
-          <div className="w-20 h-20 rounded-full bg-green-500 flex items-center justify-center shadow-lg shadow-green-500/30 mb-4">
+          <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-4 ${headerIconClass}`}>
             <FiCheck className="w-10 h-10 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-primary-900">
@@ -161,7 +168,7 @@ function OrderReceipt() {
           <div className="bg-primary-900 text-white p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-primary-400 uppercase tracking-wider">Recu de commande</p>
+                <p className="text-xs text-primary-400 uppercase tracking-wider">{receiptTitle}</p>
                 <p className="text-lg font-bold mt-1">{salon?.name || 'Boutique'}</p>
               </div>
               <div className="text-right">

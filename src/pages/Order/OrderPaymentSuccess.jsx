@@ -66,6 +66,7 @@ function OrderPaymentSuccess() {
   const heading = statusLabel === 'confirmed'
     ? 'Paiement DexPay confirme'
     : 'Confirmation DexPay en cours'
+  const receiptLabel = statusLabel === 'confirmed' ? 'Voir le recu' : 'Voir la commande'
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-gold-50/20 py-10 px-4">
@@ -93,7 +94,7 @@ function OrderPaymentSuccess() {
                 className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary-900 text-white font-semibold hover:bg-primary-800 transition"
               >
                 <FiShoppingBag className="w-4 h-4" />
-                Voir le recu
+                {receiptLabel}
               </button>
               <Link
                 to="/dashboard"

@@ -8,6 +8,7 @@ const { pushNotification } = require('../realtime/hub');
 const { sendBookingConfirmationEmail, sendOrderConfirmationEmail } = require('../services/emailService');
 const { createBookingNotification } = require('../services/bookingNotificationService');
 const { resolvePublicBaseUrl } = require('../utils/publicUrl');
+const { commitOrderStockIfNeeded } = require('../utils/orderStock');
 
 const router = express.Router();
 
@@ -240,10 +241,7 @@ const markOrderPendingPayment = async (orderId) => {
 
 const markOrderPaid = async (orderId) => {
   if (!orderId) return;
-  await prisma.order.update({
-    where: { id: orderId },
-    data: { status: 'CONFIRMED' },
-  }).catch(() => {
+  await commitOrderStockIfNeeded(orderId).catch(() => {
     // noop
   });
 };

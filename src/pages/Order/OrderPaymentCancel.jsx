@@ -112,6 +112,7 @@ function OrderPaymentCancel() {
   }
 
   const isConfirmed = resolvedState === 'confirmed'
+  const receiptLabel = isConfirmed ? 'Voir le recu' : 'Voir la commande'
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gold-50 via-white to-rose-50/20 py-10 px-4">
@@ -150,7 +151,7 @@ function OrderPaymentCancel() {
                   state={sessionData || undefined}
                   className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary-900 text-white font-semibold hover:bg-primary-800 transition"
                 >
-                  Voir le recu
+                  {receiptLabel}
                 </Link>
               ) : (
                 <button
@@ -167,7 +168,7 @@ function OrderPaymentCancel() {
                 state={sessionData || undefined}
                 className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-primary-300 text-primary-700 font-semibold hover:bg-primary-50 transition"
               >
-                Voir le recu
+                {receiptLabel}
               </Link>
             </div>
           </div>

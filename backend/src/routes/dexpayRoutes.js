@@ -8,6 +8,7 @@ const {
 } = require('../services/dexpayService');
 const { pushNotification } = require('../realtime/hub');
 const { sendBookingConfirmationEmail, sendOrderConfirmationEmail } = require('../services/emailService');
+const { commitOrderStockIfNeeded } = require('../utils/orderStock');
 
 const router = express.Router();
 
@@ -234,10 +235,7 @@ router.post('/webhook', async (req, res) => {
         }).catch(() => {});
       }
       if (updatedPayment.orderId) {
-        await prisma.order.update({
-          where: { id: updatedPayment.orderId },
-          data: { status: 'CONFIRMED' },
-        }).catch(() => {});
+        await commitOrderStockIfNeeded(updatedPayment.orderId).catch(() => {});
       }
 
       if (updatedPayment.userId) {
