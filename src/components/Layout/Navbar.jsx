@@ -14,6 +14,7 @@ import {
   markAllSiteNotificationsRead,
   markSiteNotificationRead,
   removeSiteNotification,
+  removeMatchingSiteNotifications,
   subscribeSiteNotifications,
 } from '../../utils/siteNotifications'
 import {
@@ -295,6 +296,7 @@ function Navbar() {
     event.stopPropagation()
 
     const previousNotifications = notifications
+    const semanticKey = getNotificationSemanticKey(notification)
     setNotifications((prev) => prev.filter((n) => n.id !== notification.id))
 
     if (String(notification.id).startsWith('local-')) {
@@ -304,6 +306,11 @@ function Navbar() {
 
     try {
       await apiFetch(`/notifications/${notification.id}`, { method: 'DELETE' })
+      notificationUserKeys.forEach((key) => {
+        removeMatchingSiteNotifications(key, (localNotification) =>
+          getNotificationSemanticKey(localNotification) === semanticKey
+        )
+      })
     } catch (_) {
       setNotifications(previousNotifications)
     }

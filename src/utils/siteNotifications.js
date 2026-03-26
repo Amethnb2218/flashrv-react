@@ -76,6 +76,18 @@ export const removeSiteNotification = (id, userId) => {
   writeAll(next)
 }
 
+export const removeMatchingSiteNotifications = (userId, predicate) => {
+  const key = getUserKey(userId)
+  if (typeof predicate !== 'function') return
+
+  const next = readAll().filter((notification) => {
+    if (String(notification.userId || 'anonymous') !== key) return true
+    return !predicate(notification)
+  })
+
+  writeAll(next)
+}
+
 export const subscribeSiteNotifications = (listener) => {
   if (typeof listener !== 'function') return () => {}
   const handler = () => listener()
