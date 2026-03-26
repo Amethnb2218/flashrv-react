@@ -11,7 +11,6 @@ const { createBookingNotification } = require('../services/bookingNotificationSe
 const router = express.Router();
 
 const ALLOWED_PROVIDERS = ['DEXPAY', 'PAYTECH', 'PAYDUNYA', 'PAY_ON_SITE'];
-const invoiceCreationInFlight = new Map();
 const DEFAULT_DEXPAY_TIMEOUT_MS = 7000;
 const MAX_DEXPAY_TIMEOUT_MS = 9000;
 
@@ -31,12 +30,6 @@ const resolveDexPayTimeoutMs = () => {
 };
 
 const ROUTE_TIMEOUT_MS = Math.max(10000, resolveDexPayTimeoutMs() + 2500);
-const INFLIGHT_TTL_MS = ROUTE_TIMEOUT_MS + 5000;
-
-const buildInvoiceLockKey = ({ type, id, userId }) => {
-  return `${String(type || '').toUpperCase()}:${String(id || '').trim()}:${String(userId || '').trim()}`;
-};
-
 const withRouteTimeout = (promise, label = 'operation') => {
   let timer;
   const timeout = new Promise((_, reject) => {
@@ -48,27 +41,6 @@ const withRouteTimeout = (promise, label = 'operation') => {
     }, ROUTE_TIMEOUT_MS);
   });
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
-};
-
-const runSingleFlightInvoiceCreation = async ({ lockKey, task }) => {
-  const existing = invoiceCreationInFlight.get(lockKey);
-  if (existing && (Date.now() - existing.startedAt) < INFLIGHT_TTL_MS) {
-    return existing.promise;
-  }
-  if (existing) {
-    invoiceCreationInFlight.delete(lockKey);
-  }
-
-  const pending = (async () => {
-    try {
-      return await task();
-    } finally {
-      invoiceCreationInFlight.delete(lockKey);
-    }
-  })();
-
-  invoiceCreationInFlight.set(lockKey, { promise: pending, startedAt: Date.now() });
-  return pending;
 };
 
 const generateReference = () => {
@@ -883,6 +855,11 @@ router.get('/', authenticate, requireApprovedPro, async (req, res, next) => {
 router.post('/create', authenticate, async (req, res, next) => {
   try {
     const { bookingId, orderId, amount, customerName, customerEmail, successUrl, cancelUrl } = req.body;
+    console.info('POST /api/payments/create received', {
+      bookingId: String(bookingId || '').trim() || null,
+      orderId: String(orderId || '').trim() || null,
+      userId: req.user?.id || null,
+    });
 
     if (!bookingId && !orderId) {
       return res.status(400).json({ status: 'error', message: 'bookingId ou orderId requis' });
@@ -901,37 +878,35 @@ router.post('/create', authenticate, async (req, res, next) => {
         throw err;
       }
 
-      const lockKey = buildInvoiceLockKey({
-        type: target.type,
-        id: target.id,
-        userId: req.user.id,
-      });
-
-      const invoiceResult = await runSingleFlightInvoiceCreation({
-        lockKey,
-        task: async () => (target.type === 'ORDER'
-          ? createDexPayPaymentForOrder({
-              orderId: target.id,
-              amount,
-              customerName,
-              customerEmail,
-              successUrl,
-              cancelUrl,
-              user: req.user,
-            })
-          : createDexPayPaymentForBooking({
-              bookingId: target.id,
-              amount,
-              customerName,
-              customerEmail,
-              successUrl,
-              cancelUrl,
-              user: req.user,
-            })),
-      });
+      const invoiceResult = await (target.type === 'ORDER'
+        ? createDexPayPaymentForOrder({
+            orderId: target.id,
+            amount,
+            customerName,
+            customerEmail,
+            successUrl,
+            cancelUrl,
+            user: req.user,
+          })
+        : createDexPayPaymentForBooking({
+            bookingId: target.id,
+            amount,
+            customerName,
+            customerEmail,
+            successUrl,
+            cancelUrl,
+            user: req.user,
+          }));
 
       return { invoiceResult, target };
     })(), 'payments/create');
+
+    console.info('POST /api/payments/create completed', {
+      paymentId: result.invoiceResult?.payment?.id || null,
+      orderId: result.target?.type === 'ORDER' ? result.target.id : null,
+      bookingId: result.target?.type === 'APPOINTMENT' ? result.target.id : null,
+      provider: 'DEXPAY',
+    });
 
     res.status(200).json({
       status: 'success',
@@ -961,6 +936,12 @@ router.post('/init', authenticate, async (req, res, next) => {
     const normalizedProvider = ['PAYDUNYA', 'PAYTECH'].includes(rawProvider)
       ? 'DEXPAY'
       : rawProvider;
+    console.info('POST /api/payments/init received', {
+      provider: normalizedProvider || rawProvider || null,
+      bookingId: String(bookingId || '').trim() || null,
+      orderId: String(orderId || '').trim() || null,
+      userId: req.user?.id || null,
+    });
 
     if (!ALLOWED_PROVIDERS.includes(normalizedProvider)) {
       return res.status(400).json({
@@ -985,34 +966,32 @@ router.post('/init', authenticate, async (req, res, next) => {
       return res.status(404).json({ status: 'error', message: 'Reservation ou commande introuvable' });
     }
 
-    const lockKey = buildInvoiceLockKey({
-      type: target.type,
-      id: target.id,
-      userId: req.user.id,
-    });
+    const result = await withRouteTimeout((target.type === 'ORDER'
+      ? createDexPayPaymentForOrder({
+          orderId: target.id,
+          amount,
+          customerName,
+          customerEmail,
+          successUrl,
+          cancelUrl,
+          user: req.user,
+        })
+      : createDexPayPaymentForBooking({
+          bookingId: target.id,
+          amount,
+          customerName,
+          customerEmail,
+          successUrl,
+          cancelUrl,
+          user: req.user,
+        })), 'payments/init');
 
-    const result = await withRouteTimeout(runSingleFlightInvoiceCreation({
-      lockKey,
-      task: async () => (target.type === 'ORDER'
-        ? createDexPayPaymentForOrder({
-            orderId: target.id,
-            amount,
-            customerName,
-            customerEmail,
-            successUrl,
-            cancelUrl,
-            user: req.user,
-          })
-        : createDexPayPaymentForBooking({
-            bookingId: target.id,
-            amount,
-            customerName,
-            customerEmail,
-            successUrl,
-            cancelUrl,
-            user: req.user,
-          })),
-    }), 'payments/init');
+    console.info('POST /api/payments/init completed', {
+      paymentId: result?.payment?.id || null,
+      orderId: target?.type === 'ORDER' ? target.id : null,
+      bookingId: target?.type === 'APPOINTMENT' ? target.id : null,
+      provider: 'DEXPAY',
+    });
 
     res.status(200).json({
       status: 'success',
