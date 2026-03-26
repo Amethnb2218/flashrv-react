@@ -1,13 +1,14 @@
 const DexPay = require('@dexchangepay/node');
 
-const DEFAULT_DEXPAY_TIMEOUT_MS = 30000;
+const DEFAULT_DEXPAY_TIMEOUT_MS = 15000;
+const MAX_DEXPAY_TIMEOUT_MS = 18000;
 
 let cachedClient = null;
 let cachedConfig = null;
 
 const resolveTimeoutMs = () => {
   const parsed = Number(process.env.DEXPAY_TIMEOUT_MS || process.env.DEXPAY_REQUEST_TIMEOUT_MS);
-  if (Number.isFinite(parsed) && parsed > 0) return parsed;
+  if (Number.isFinite(parsed) && parsed > 0) return Math.min(parsed, MAX_DEXPAY_TIMEOUT_MS);
   return DEFAULT_DEXPAY_TIMEOUT_MS;
 };
 
@@ -59,6 +60,19 @@ const extractApiPayload = (response) => {
   return response;
 };
 
+const normalizeCheckoutSession = (response, fallbackReference = '') => {
+  const session = extractApiPayload(response);
+  if (!session || typeof session !== 'object') return null;
+
+  return {
+    ...session,
+    id: String(session.id || '').trim() || null,
+    reference: String(session.reference || fallbackReference || '').trim(),
+    paymentUrl: String(session.payment_url || session.paymentUrl || '').trim() || null,
+    status: String(session.status || 'PENDING').trim().toUpperCase(),
+  };
+};
+
 const createDexPayCheckout = async ({
   amount,
   reference,
@@ -88,9 +102,8 @@ const createDexPayCheckout = async ({
     client_support_fee: typeof clientSupportFee === 'boolean' ? clientSupportFee : config.clientSupportFee,
   });
 
-  const session = extractApiPayload(response);
-  const paymentUrl = String(session?.payment_url || '').trim();
-  if (!paymentUrl) {
+  const session = normalizeCheckoutSession(response, reference);
+  if (!session?.paymentUrl) {
     const err = new Error('DexPay n a pas retourne de lien de paiement valide.');
     err.statusCode = 502;
     err.expose = true;
@@ -99,15 +112,17 @@ const createDexPayCheckout = async ({
 
   return {
     provider: 'DEXPAY',
-    reference: String(session?.reference || reference || '').trim(),
-    paymentUrl,
-    status: String(session?.status || 'PENDING').trim().toUpperCase(),
+    id: session.id,
+    reference: session.reference,
+    paymentUrl: session.paymentUrl,
+    status: session.status,
   };
 };
 
 const retrieveDexPayCheckoutByReference = async (reference) => {
   const client = getDexPayClient();
-  return client.checkoutSessions.retrieveByReference(String(reference || '').trim());
+  const response = await client.checkoutSessions.retrieveByReference(String(reference || '').trim());
+  return normalizeCheckoutSession(response, reference);
 };
 
 const createDexPayPayout = async ({

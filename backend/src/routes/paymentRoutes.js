@@ -12,15 +12,25 @@ const router = express.Router();
 
 const ALLOWED_PROVIDERS = ['DEXPAY', 'PAYTECH', 'PAYDUNYA', 'PAY_ON_SITE'];
 const invoiceCreationInFlight = new Map();
-const DEFAULT_DEXPAY_TIMEOUT_MS = 30000;
+const DEFAULT_DEXPAY_TIMEOUT_MS = 15000;
+const MAX_DEXPAY_TIMEOUT_MS = 18000;
 
 const resolveDexPayTimeoutMs = () => {
+  try {
+    const configuredTimeout = Number(getDexPayConfig()?.timeout);
+    if (Number.isFinite(configuredTimeout) && configuredTimeout > 0) {
+      return Math.min(configuredTimeout, MAX_DEXPAY_TIMEOUT_MS);
+    }
+  } catch (_) {
+    // DexPay may not be configured yet; fall back to env/default values.
+  }
+
   const parsed = Number(process.env.DEXPAY_TIMEOUT_MS || process.env.DEXPAY_REQUEST_TIMEOUT_MS);
-  if (Number.isFinite(parsed) && parsed > 0) return parsed;
+  if (Number.isFinite(parsed) && parsed > 0) return Math.min(parsed, MAX_DEXPAY_TIMEOUT_MS);
   return DEFAULT_DEXPAY_TIMEOUT_MS;
 };
 
-const ROUTE_TIMEOUT_MS = Math.max(45000, resolveDexPayTimeoutMs() + 8000);
+const ROUTE_TIMEOUT_MS = Math.max(18000, resolveDexPayTimeoutMs() + 4000);
 const INFLIGHT_TTL_MS = ROUTE_TIMEOUT_MS + 5000;
 
 const buildInvoiceLockKey = ({ type, id, userId }) => {
@@ -116,6 +126,67 @@ const buildDexPayWebhookUrl = (backendBase) => {
   const token = String(getDexPayConfig().webhookToken || '').trim();
   if (!token) return `${backendBase}/api/dexpay/webhook`;
   return `${backendBase}/api/dexpay/webhook?token=${encodeURIComponent(token)}`;
+};
+
+const normalizeProviderStatus = (value, fallback = 'PENDING') =>
+  String(value || fallback).trim().toUpperCase();
+
+const isDexPayMissingCheckoutError = (error) => {
+  const status = Number(error?.statusCode || error?.status || 0);
+  if (status === 404) return true;
+  const code = String(error?.code || '').trim().toUpperCase();
+  if (code === 'NOT_FOUND') return true;
+  const message = String(error?.message || '').trim().toLowerCase();
+  return message.includes('not found') || message.includes('introuvable');
+};
+
+const findReusableDexPayCheckout = async (reference) => {
+  const normalizedReference = String(reference || '').trim();
+  if (!normalizedReference) return null;
+
+  try {
+    const existing = await retrieveDexPayCheckoutByReference(normalizedReference);
+    if (!existing?.reference) return null;
+    return existing;
+  } catch (error) {
+    if (isDexPayMissingCheckoutError(error)) return null;
+    throw error;
+  }
+};
+
+const getOrCreateDexPayCheckout = async ({
+  reference,
+  amount,
+  itemName,
+  successUrl,
+  failureUrl,
+  webhookUrl,
+  metadata,
+}) => {
+  const existing = await findReusableDexPayCheckout(reference);
+  const existingStatus = normalizeProviderStatus(existing?.status);
+  if (existing?.paymentUrl && !['FAILED', 'CANCELLED'].includes(existingStatus)) {
+    return existing;
+  }
+
+  try {
+    return await createDexPayCheckout({
+      amount,
+      reference,
+      itemName,
+      successUrl,
+      failureUrl,
+      webhookUrl,
+      metadata,
+    });
+  } catch (error) {
+    const recovered = await findReusableDexPayCheckout(reference).catch(() => null);
+    const recoveredStatus = normalizeProviderStatus(recovered?.status);
+    if (recovered?.paymentUrl && !['FAILED', 'CANCELLED'].includes(recoveredStatus)) {
+      return recovered;
+    }
+    throw error;
+  }
 };
 
 const markAppointmentPendingPayment = async (bookingId) => {
@@ -236,6 +307,7 @@ const upsertPaymentForTarget = async ({
   amount,
   reference,
   transactionId,
+  method = 'PAYDUNYA',
   status = 'PENDING',
 }) => {
   const data = {
@@ -244,7 +316,7 @@ const upsertPaymentForTarget = async ({
     fees: 0,
     totalAmount: amount,
     currency: 'XOF',
-    method: 'PAYDUNYA',
+    method,
     status,
     reference,
     appointmentId: appointmentId || null,
@@ -483,10 +555,21 @@ const createDexPayPaymentForBooking = async ({
   const resolvedCancelUrl = cancelUrl || `${frontendBase}/payment/cancel?appointmentId=${encodeURIComponent(bookingId)}`;
   const webhookUrl = buildDexPayWebhookUrl(backendBase);
   const reference = `APT-${String(bookingId || '').trim()}`;
+  const payment = await upsertPaymentForTarget({
+    appointmentId: bookingId,
+    userId: user.id,
+    amount: value,
+    reference,
+    transactionId: reference,
+    method: 'DEXPAY',
+    status: 'PENDING',
+  });
+
+  await markAppointmentPendingPayment(bookingId);
 
   let checkout;
   try {
-    checkout = await createDexPayCheckout({
+    checkout = await getOrCreateDexPayCheckout({
       amount: value,
       reference,
       itemName: booking.service?.name || 'Reservation salon',
@@ -505,26 +588,19 @@ const createDexPayPaymentForBooking = async ({
     throw toOperationalDexPayError(error, 'create');
   }
 
-  await markAppointmentPendingPayment(bookingId);
-
-  const payment = await upsertPaymentForTarget({
-    appointmentId: bookingId,
-    userId: user.id,
-    amount: value,
-    reference,
-    transactionId: checkout.token,
-    status: 'PENDING',
-  });
-
   await prisma.payment.update({
     where: { id: payment.id },
-    data: { method: 'DEXPAY' },
+    data: {
+      method: 'DEXPAY',
+      transactionId: String(checkout?.id || checkout?.reference || reference).trim() || reference,
+      status: normalizeProviderStatus(checkout?.status),
+    },
   }).catch(() => {});
 
   return {
     payment: { ...payment, method: 'DEXPAY' },
     invoiceUrl: checkout.paymentUrl,
-    token: checkout.reference,
+    token: checkout.reference || reference,
   };
 };
 
@@ -579,10 +655,21 @@ const createDexPayPaymentForOrder = async ({
     .map((entry) => `${entry.product?.name || 'Article'} x${entry.quantity}`)
     .join(', ');
   const reference = `ORD-${String(orderId || '').trim()}`;
+  const payment = await upsertPaymentForTarget({
+    orderId,
+    userId: user.id,
+    amount: value,
+    reference,
+    transactionId: reference,
+    method: 'DEXPAY',
+    status: 'PENDING',
+  });
+
+  await markOrderPendingPayment(orderId);
 
   let checkout;
   try {
-    checkout = await createDexPayCheckout({
+    checkout = await getOrCreateDexPayCheckout({
       amount: value,
       reference,
       itemName: itemLabel || 'Commande boutique',
@@ -601,26 +688,19 @@ const createDexPayPaymentForOrder = async ({
     throw toOperationalDexPayError(error, 'create');
   }
 
-  await markOrderPendingPayment(orderId);
-
-  const payment = await upsertPaymentForTarget({
-    orderId,
-    userId: user.id,
-    amount: value,
-    reference,
-    transactionId: checkout.token,
-    status: 'PENDING',
-  });
-
   await prisma.payment.update({
     where: { id: payment.id },
-    data: { method: 'DEXPAY' },
+    data: {
+      method: 'DEXPAY',
+      transactionId: String(checkout?.id || checkout?.reference || reference).trim() || reference,
+      status: normalizeProviderStatus(checkout?.status),
+    },
   }).catch(() => {});
 
   return {
     payment: { ...payment, method: 'DEXPAY' },
     invoiceUrl: checkout.paymentUrl,
-    token: checkout.reference,
+    token: checkout.reference || reference,
   };
 };
 
