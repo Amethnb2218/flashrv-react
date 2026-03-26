@@ -996,15 +996,18 @@ const normalizeHoliday = (h) => {
   };
 };
 
-const normalizePayment = (p) => {
-  if (!p) return p;
-  const appt = p.appointment || p.booking || p.reservation || {};
-  const client = appt.client || p.client || p.user || {};
-  const service = appt.service || p.service || {};
-  const amount = p.totalAmount ?? p.amount ?? appt.totalPrice ?? service.price ?? 0;
-  const depositPct = appt.depositPercentage ?? service.depositPercentage ?? p.depositPercentage ?? 0;
-  const paymentRaw = String(p.status || p.paymentStatus || "").toUpperCase();
-  const paymentMap = {
+const normalizePayment = (p) => { 
+  if (!p) return p; 
+  const appt = p.appointment || p.booking || p.reservation || {}; 
+  const order = p.order || {};
+  const client = appt.client || p.client || p.user || {}; 
+  const service = appt.service || p.service || {}; 
+  const amount = Number(p.amount ?? appt.totalPrice ?? order.totalPrice ?? service.price ?? 0) || 0; 
+  const feeAmount = Math.max(0, Number(p.fees ?? 0) || 0);
+  const netAmount = Math.max(0, amount - feeAmount);
+  const depositPct = appt.depositPercentage ?? service.depositPercentage ?? p.depositPercentage ?? 0; 
+  const paymentRaw = String(p.status || p.paymentStatus || "").toUpperCase(); 
+  const paymentMap = { 
     PENDING: "pending",
     PENDING_CASH: "pending_cash",
     ON_SITE: "on_site",
@@ -1012,20 +1015,31 @@ const normalizePayment = (p) => {
     FAILED: "failed",
     REFUNDED: "refunded",
   };
-  const paymentKey = paymentMap[paymentRaw] || String(p.status || p.paymentStatus || "").toLowerCase();
-  const baseDepositPaid = p.depositPaid ?? appt.depositPaid;
-  const depositPaid = baseDepositPaid ?? (paymentKey === "paid" || paymentKey === "on_site");
-  return {
-    ...p,
-    appointmentId: appt.id || p.appointmentId,
-    clientName: client.name || client.username || client.email || "Client",
-    serviceName: service.name || appt.serviceName || "Service",
-    amount,
-    depositPct,
-    depositPaid,
-    paymentStatus: paymentKey,
-  };
-};
+  const paymentKey = paymentMap[paymentRaw] || String(p.status || p.paymentStatus || "").toLowerCase(); 
+  const baseDepositPaid = p.depositPaid ?? appt.depositPaid; 
+  const depositPaid = baseDepositPaid ?? (paymentKey === "paid" || paymentKey === "on_site"); 
+  const paymentMethodKey = String(p.method || p.paymentMethod || order.paymentMethod || "").toUpperCase();
+  const paymentMethodLabel = formatPaymentMethodLabel(paymentMethodKey);
+  const serviceName =
+    service.name ||
+    appt.serviceName ||
+    (order.items?.length ? `Commande (${order.items.length} article${order.items.length > 1 ? "s" : ""})` : "Service");
+  return { 
+    ...p, 
+    appointmentId: appt.id || p.appointmentId, 
+    orderId: order.id || p.orderId,
+    clientName: client.name || client.username || client.email || "Client", 
+    serviceName,
+    amount, 
+    feeAmount,
+    netAmount,
+    depositPct, 
+    depositPaid, 
+    paymentMethodKey,
+    paymentMethodLabel,
+    paymentStatus: paymentKey, 
+  }; 
+}; 
 
 const parseSalonPreferences = (prefs) => {
   if (!prefs) return {};
@@ -4263,22 +4277,25 @@ Annuler
 
 {/* ------------------ PAYMENTS ------------------ */}
 {activeTab === "payments" && (
-<motion.div key="payments" {...pageAnim}>
-<Card>
-<CardHeader icon={<FiDollarSign />} title="Paiements" />
-<div className="p-3 sm:p-5">
-{(() => {
-const paymentRows = payments.length ? payments : appointments;
-if (!paymentRows?.length) {
-  return <EmptyState icon={<FiDollarSign />} title="Aucun paiement" />;
-}
-return (
-<>
-  <div className="space-y-2 sm:hidden">
-    {paymentRows.map((r) => {
-      const dep = Math.round((r.amount * (r.depositPct || 0)) / 100);
-      const tone =
-        r.paymentStatus === "paid"
+<motion.div key="payments" {...pageAnim}> 
+<Card> 
+<CardHeader icon={<FiDollarSign />} title="Paiements" /> 
+<div className="p-3 sm:p-5"> 
+{(() => { 
+const paymentRows = payments.length ? payments : appointments; 
+if (!paymentRows?.length) { 
+  return <EmptyState icon={<FiDollarSign />} title="Aucun paiement" />; 
+} 
+return ( 
+<> 
+  <div className="mb-4 rounded-2xl border border-primary-100 bg-primary-50 px-4 py-3 text-sm text-primary-700">
+    Pour DexPay, le client paie d abord sur la plateforme. Si des frais DexPay s appliquent, le montant net reversable au pro peut etre inferieur au montant paye par le client.
+  </div>
+  <div className="space-y-2 sm:hidden"> 
+    {paymentRows.map((r) => { 
+      const dep = Math.round((r.amount * (r.depositPct || 0)) / 100); 
+      const tone = 
+        r.paymentStatus === "paid" 
           ? "green"
           : r.paymentStatus === "deposit_paid"
             ? "blue"
@@ -4294,19 +4311,44 @@ return (
             </div>
             <Badge tone={tone}>{getStatusLabel(r.paymentStatus)}</Badge>
           </div>
+          <div className="mt-2 grid grid-cols-2 gap-2 text-sm"> 
+            <div className="rounded-xl bg-primary-50 px-2.5 py-2"> 
+              <p className="text-[11px] text-primary-500">Client paye</p> 
+              <p className="font-extrabold text-primary-900">{formatMoney(r.amount)}</p> 
+            </div> 
+            <div className="rounded-xl bg-primary-50 px-2.5 py-2"> 
+              <p className="text-[11px] text-primary-500">Acompte</p> 
+              <p className="font-semibold text-primary-800">{formatMoney(dep)} ({r.depositPct || 0}%)</p> 
+            </div> 
+          </div> 
           <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
-            <div className="rounded-xl bg-primary-50 px-2.5 py-2">
-              <p className="text-[11px] text-primary-500">Total</p>
-              <p className="font-extrabold text-primary-900">{formatMoney(r.amount)}</p>
+            <div className="rounded-xl bg-white px-2.5 py-2 ring-1 ring-inset ring-primary-100">
+              <p className="text-[11px] text-primary-500">Frais DexPay</p>
+              <p className="font-semibold text-primary-800">{formatMoney(r.feeAmount || 0)}</p>
             </div>
-            <div className="rounded-xl bg-primary-50 px-2.5 py-2">
-              <p className="text-[11px] text-primary-500">Acompte</p>
-              <p className="font-semibold text-primary-800">{formatMoney(dep)} ({r.depositPct || 0}%)</p>
+            <div className="rounded-xl bg-emerald-50 px-2.5 py-2 ring-1 ring-inset ring-emerald-100">
+              <p className="text-[11px] text-emerald-600">Net reversable</p>
+              <p className="font-bold text-emerald-700">{formatMoney(r.netAmount ?? r.amount)}</p>
             </div>
           </div>
-          <div className="mt-3 flex gap-2">
-            <Button variant="secondary" className="flex-1 px-2.5 py-2 text-xs" onClick={() => generateInvoiceForAppointment(r)}>
-              <FiFileText className="mr-1.5" /> Facture
+          <div className="mt-2 space-y-1">
+            <p className="text-xs text-primary-500">Moyen: <span className="font-semibold text-primary-700">{r.paymentMethodLabel || "Paiement"}</span></p>
+            {r.paymentMethodKey === "DEXPAY" ? (
+              <>
+              <p className="text-xs text-primary-500">
+                {r.feeAmount > 0
+                  ? "Reversement DexPay calcule sur le net apres frais."
+                  : "Les frais DexPay s affichent des qu ils sont synchronises par le serveur."}
+              </p>
+              <p className="text-xs font-medium text-emerald-700">
+                Reversement: suivi automatique DexPay apres confirmation du paiement.
+              </p>
+              </>
+            ) : null}
+          </div>
+          <div className="mt-3 flex gap-2"> 
+            <Button variant="secondary" className="flex-1 px-2.5 py-2 text-xs" onClick={() => generateInvoiceForAppointment(r)}> 
+              <FiFileText className="mr-1.5" /> Facture 
             </Button>
             <Button variant="secondary" className="flex-1 px-2.5 py-2 text-xs" onClick={() => refundAppointmentDeposit(r)}>
               <FiDollarSign className="mr-1.5" /> Rembourser
@@ -4320,13 +4362,15 @@ return (
   <div className="hidden sm:block">
     <DataTable
       emptyLabel="Aucun paiement"
-      columns={[
-        { key: "clientName", label: "Client" },
-        { key: "serviceName", label: "Service" },
-        { key: "amount", label: "Total", render: (r) => <span className="font-extrabold">{formatMoney(r.amount)}</span> },
-        {
-          key: "deposit",
-          label: "Acompte",
+      columns={[ 
+        { key: "clientName", label: "Client" }, 
+        { key: "serviceName", label: "Service" }, 
+        { key: "amount", label: "Client paye", render: (r) => <span className="font-extrabold">{formatMoney(r.amount)}</span> }, 
+        { key: "feeAmount", label: "Frais", render: (r) => <span className="font-semibold text-primary-700">{formatMoney(r.feeAmount || 0)}</span> },
+        { key: "netAmount", label: "Net reversable", render: (r) => <span className="font-extrabold text-emerald-700">{formatMoney(r.netAmount ?? r.amount)}</span> },
+        { 
+          key: "deposit", 
+          label: "Acompte", 
           render: (r) => {
             const dep = Math.round((r.amount * (r.depositPct || 0)) / 100);
             return (
@@ -4336,10 +4380,28 @@ return (
               </div>
             );
           },
+        }, 
+        {
+          key: "paymentMethodLabel",
+          label: "Moyen",
+          render: (r) => <span className="text-sm font-semibold text-primary-700">{r.paymentMethodLabel || "Paiement"}</span>,
         },
         {
-          key: "paymentStatus",
-          label: "Statut",
+          key: "payoutInfo",
+          label: "Reversement",
+          render: (r) => (
+            r.paymentMethodKey === "DEXPAY" ? (
+              <span className="text-xs font-medium text-emerald-700">
+                Auto apres confirmation
+              </span>
+            ) : (
+              <span className="text-xs text-primary-400">—</span>
+            )
+          ),
+        },
+        { 
+          key: "paymentStatus", 
+          label: "Statut", 
           render: (r) => {
             const tone =
               r.paymentStatus === "paid"

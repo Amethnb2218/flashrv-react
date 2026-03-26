@@ -770,6 +770,11 @@ const verifyPaymentRecord = async (payment) => {
             completedAt: new Date(),
             method: 'DEXPAY',
             transactionId: String(session?.reference || payment.transactionId || '').trim() || payment.transactionId,
+            fees: Number(session?.fees || 0) || 0,
+            totalAmount:
+              Number(session?.total_amount || 0) > 0
+                ? Number(session.total_amount)
+                : payment.totalAmount,
           },
         });
         await markAppointmentPaid(updated.appointmentId);
