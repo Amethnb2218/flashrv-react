@@ -17,9 +17,33 @@ import {
   writeAuthToken,
   writeCsrfToken,
 } from '../utils/authToken'
+import { resolveApiBase } from '../utils/apiBase'
 
 const AuthContext = createContext()
 const USER_STORAGE_KEY = 'flashrv_user'
+
+const readStorageValue = (storage, key) => {
+  if (!storage) return null
+  try {
+    const raw = storage.getItem(key)
+    return raw ? JSON.parse(raw) : null
+  } catch (_) {
+    return null
+  }
+}
+
+const writeStorageValue = (storage, key, user) => {
+  if (!storage) return
+  try {
+    if (!user) {
+      storage.removeItem(key)
+      return
+    }
+    storage.setItem(key, JSON.stringify(normalizeUserShape(user)))
+  } catch (_) {
+    // Ignore storage errors to avoid blocking authentication flows.
+  }
+}
 
 const normalizeUserShape = (user) => {
   if (!user || typeof user !== 'object') return user
@@ -33,28 +57,20 @@ const normalizeUserShape = (user) => {
 
 const readStoredUser = () => {
   if (typeof window === 'undefined') return null
+  const fromLocalStorage = readStorageValue(window.localStorage, USER_STORAGE_KEY)
+  if (fromLocalStorage) return normalizeUserShape(fromLocalStorage)
 
-  try {
-    const raw = window.sessionStorage.getItem(USER_STORAGE_KEY)
-    if (!raw) return null
-    return normalizeUserShape(JSON.parse(raw))
-  } catch (_) {
-    return null
+  const fromSessionStorage = readStorageValue(window.sessionStorage, USER_STORAGE_KEY)
+  if (fromSessionStorage) {
+    writeStorageValue(window.localStorage, USER_STORAGE_KEY, fromSessionStorage)
   }
+  return normalizeUserShape(fromSessionStorage)
 }
 
 const writeStoredUser = (user) => {
   if (typeof window === 'undefined') return
-
-  try {
-    if (!user) {
-      window.sessionStorage.removeItem(USER_STORAGE_KEY)
-      return
-    }
-    window.sessionStorage.setItem(USER_STORAGE_KEY, JSON.stringify(normalizeUserShape(user)))
-  } catch (_) {
-    // Ignore storage errors to avoid blocking authentication flows.
-  }
+  writeStorageValue(window.localStorage, USER_STORAGE_KEY, user)
+  writeStorageValue(window.sessionStorage, USER_STORAGE_KEY, user)
 }
 
 const clearStoredUser = () => {
@@ -108,7 +124,7 @@ function authReducer(state, action) {
 
 export function AuthProvider({ children }) {
   const [state, dispatch] = useReducer(authReducer, initialState)
-  const API_BASE = import.meta.env.VITE_API_URL || '/api'
+  const API_BASE = resolveApiBase()
   const authHeaders = (headers = {}, method = 'GET') => buildAuthHeaders(headers, method)
 
   const restoreCachedSession = () => {
