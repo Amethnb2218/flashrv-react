@@ -6,6 +6,30 @@ const MAX_DEXPAY_TIMEOUT_MS = 7000;
 let cachedClient = null;
 let cachedConfig = null;
 
+const redactValue = (value, { keepEnd = 4 } = {}) => {
+  const raw = String(value || '').trim();
+  if (!raw) return null;
+  if (raw.length <= keepEnd) return '*'.repeat(raw.length);
+  return `${'*'.repeat(Math.max(4, raw.length - keepEnd))}${raw.slice(-keepEnd)}`;
+};
+
+const serializeDexPayError = (error) => {
+  const payload = error?.response?.data || error?.data || error?.payload || null;
+  return {
+    name: error?.name || null,
+    statusCode: error?.statusCode || error?.status || null,
+    code: error?.code || null,
+    message: error?.message || 'Unknown DexPay error',
+    responseMessage:
+      error?.response?.data?.message ||
+      error?.response?.data?.error ||
+      error?.data?.message ||
+      null,
+    payload,
+    stack: process.env.NODE_ENV === 'production' ? undefined : error?.stack,
+  };
+};
+
 const resolveTimeoutMs = () => {
   const parsed = Number(process.env.DEXPAY_TIMEOUT_MS || process.env.DEXPAY_REQUEST_TIMEOUT_MS);
   if (Number.isFinite(parsed) && parsed > 0) return Math.min(parsed, MAX_DEXPAY_TIMEOUT_MS);
@@ -46,6 +70,15 @@ const ensureConfigured = () => {
 const getDexPayClient = () => {
   if (cachedClient) return cachedClient;
   const config = ensureConfigured();
+  console.info('DexPay client configuration:', {
+    sandbox: config.sandbox,
+    timeout: config.timeout,
+    apiKeySuffix: redactValue(config.apiKey),
+    apiSecretSuffix: redactValue(config.apiSecret),
+    webhookTokenConfigured: Boolean(config.webhookToken),
+    clientSupportFee: config.clientSupportFee,
+    platformCommissionRate: config.platformCommissionRate,
+  });
   cachedClient = new DexPay({
     apiKey: config.apiKey,
     apiSecret: config.apiSecret,
@@ -91,33 +124,51 @@ const createDexPayCheckout = async ({
   const client = getDexPayClient();
   const config = ensureConfigured();
   const normalizedReference = String(reference || '').trim();
+  const requestPayload = {
+    reference: normalizedReference,
+    item_name: String(itemName || 'Paiement JolofEra').trim().slice(0, 120),
+    amount: numericAmount,
+    currency: 'XOF',
+    success_url: successUrl,
+    failure_url: failureUrl,
+    webhook_url: webhookUrl,
+    metadata,
+    client_support_fee: typeof clientSupportFee === 'boolean' ? clientSupportFee : config.clientSupportFee,
+  };
   const startedAt = Date.now();
   let response;
+  console.info('DexPay checkout create request:', {
+    reference: requestPayload.reference,
+    amount: requestPayload.amount,
+    currency: requestPayload.currency,
+    successUrl: requestPayload.success_url,
+    failureUrl: requestPayload.failure_url,
+    webhookUrl: requestPayload.webhook_url,
+    metadataKeys: Object.keys(metadata || {}),
+    metadataPreview: metadata,
+  });
   try {
-    response = await client.checkoutSessions.create({
-      reference: normalizedReference,
-      item_name: String(itemName || 'Paiement JolofEra').trim().slice(0, 120),
-      amount: numericAmount,
-      currency: 'XOF',
-      success_url: successUrl,
-      failure_url: failureUrl,
-      webhook_url: webhookUrl,
-      metadata,
-      client_support_fee: typeof clientSupportFee === 'boolean' ? clientSupportFee : config.clientSupportFee,
-    });
+    response = await client.checkoutSessions.create(requestPayload);
   } catch (error) {
     const elapsedMs = Date.now() - startedAt;
     console.error('DexPay checkout creation failed:', {
       reference: normalizedReference,
       elapsedMs,
-      statusCode: error?.statusCode || error?.status || null,
-      code: error?.code || null,
-      message: error?.message || 'Unknown DexPay error',
+      requestPayload: {
+        ...requestPayload,
+        metadata: requestPayload.metadata,
+      },
+      error: serializeDexPayError(error),
     });
     throw error;
   }
 
   const session = normalizeCheckoutSession(response, normalizedReference);
+  console.info('DexPay checkout create raw response:', {
+    reference: normalizedReference,
+    elapsedMs: Date.now() - startedAt,
+    response: extractApiPayload(response),
+  });
   if (!session?.paymentUrl) {
     const err = new Error('DexPay n a pas retourne de lien de paiement valide.');
     err.statusCode = 502;
@@ -142,8 +193,24 @@ const createDexPayCheckout = async ({
 
 const retrieveDexPayCheckoutByReference = async (reference) => {
   const client = getDexPayClient();
-  const response = await client.checkoutSessions.retrieveByReference(String(reference || '').trim());
-  return normalizeCheckoutSession(response, reference);
+  const normalizedReference = String(reference || '').trim();
+  const startedAt = Date.now();
+  try {
+    const response = await client.checkoutSessions.retrieveByReference(normalizedReference);
+    console.info('DexPay checkout retrieve response:', {
+      reference: normalizedReference,
+      elapsedMs: Date.now() - startedAt,
+      response: extractApiPayload(response),
+    });
+    return normalizeCheckoutSession(response, reference);
+  } catch (error) {
+    console.error('DexPay checkout retrieve failed:', {
+      reference: normalizedReference,
+      elapsedMs: Date.now() - startedAt,
+      error: serializeDexPayError(error),
+    });
+    throw error;
+  }
 };
 
 const createDexPayPayout = async ({

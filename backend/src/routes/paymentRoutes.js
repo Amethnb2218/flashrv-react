@@ -66,6 +66,19 @@ const getBaseUrls = () => {
   };
 };
 
+const logDexPayContext = (label, context = {}) => {
+  console.info(label, {
+    reference: context.reference || null,
+    bookingId: context.bookingId || null,
+    orderId: context.orderId || null,
+    amount: Number(context.amount || 0) || 0,
+    successUrl: context.successUrl || null,
+    cancelUrl: context.cancelUrl || null,
+    webhookUrl: context.webhookUrl || null,
+    userId: context.userId || null,
+  });
+};
+
 const toOperationalPaydunyaError = (error, phase = 'create') => {
   if (error?.statusCode && error?.expose === true) {
     return error;
@@ -153,6 +166,16 @@ const getOrCreateDexPayCheckout = async ({
   webhookUrl,
   metadata,
 }) => {
+  logDexPayContext('DexPay checkout orchestration:', {
+    reference,
+    amount,
+    successUrl,
+    cancelUrl: failureUrl,
+    webhookUrl,
+    bookingId: metadata?.bookingId || null,
+    orderId: metadata?.orderId || null,
+    userId: metadata?.userId || null,
+  });
   try {
     return await createDexPayCheckout({
       amount,
@@ -166,6 +189,13 @@ const getOrCreateDexPayCheckout = async ({
   } catch (error) {
     const transient = ['TIMEOUT', 'NETWORK_ERROR'].includes(String(error?.code || '').trim().toUpperCase())
       || [408, 502, 503, 504].includes(Number(error?.statusCode || error?.status || 0));
+    console.error('DexPay checkout orchestration failed:', {
+      reference,
+      transient,
+      statusCode: error?.statusCode || error?.status || null,
+      code: error?.code || null,
+      message: error?.message || 'DexPay checkout orchestration failed',
+    });
 
     if (transient) {
       const recovered = await findReusableDexPayCheckout(reference).catch(() => null);
@@ -544,6 +574,15 @@ const createDexPayPaymentForBooking = async ({
   const resolvedCancelUrl = cancelUrl || `${frontendBase}/payment/cancel?appointmentId=${encodeURIComponent(bookingId)}`;
   const webhookUrl = buildDexPayWebhookUrl(backendBase);
   const reference = `APT-${String(bookingId || '').trim()}`;
+  logDexPayContext('Preparing DexPay booking payment:', {
+    reference,
+    bookingId,
+    amount: value,
+    successUrl: resolvedSuccessUrl,
+    cancelUrl: resolvedCancelUrl,
+    webhookUrl,
+    userId: user.id,
+  });
   const payment = await upsertPaymentForTarget({
     appointmentId: bookingId,
     userId: user.id,
@@ -644,6 +683,15 @@ const createDexPayPaymentForOrder = async ({
     .map((entry) => `${entry.product?.name || 'Article'} x${entry.quantity}`)
     .join(', ');
   const reference = `ORD-${String(orderId || '').trim()}`;
+  logDexPayContext('Preparing DexPay order payment:', {
+    reference,
+    orderId,
+    amount: value,
+    successUrl: resolvedSuccessUrl,
+    cancelUrl: resolvedCancelUrl,
+    webhookUrl,
+    userId: user.id,
+  });
   const payment = await upsertPaymentForTarget({
     orderId,
     userId: user.id,
