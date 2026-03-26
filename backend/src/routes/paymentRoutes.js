@@ -12,8 +12,16 @@ const router = express.Router();
 
 const ALLOWED_PROVIDERS = ['DEXPAY', 'PAYTECH', 'PAYDUNYA', 'PAY_ON_SITE'];
 const invoiceCreationInFlight = new Map();
-const INFLIGHT_TTL_MS = 25000;
-const ROUTE_TIMEOUT_MS = 28000;
+const DEFAULT_DEXPAY_TIMEOUT_MS = 30000;
+
+const resolveDexPayTimeoutMs = () => {
+  const parsed = Number(process.env.DEXPAY_TIMEOUT_MS || process.env.DEXPAY_REQUEST_TIMEOUT_MS);
+  if (Number.isFinite(parsed) && parsed > 0) return parsed;
+  return DEFAULT_DEXPAY_TIMEOUT_MS;
+};
+
+const ROUTE_TIMEOUT_MS = Math.max(45000, resolveDexPayTimeoutMs() + 8000);
+const INFLIGHT_TTL_MS = ROUTE_TIMEOUT_MS + 5000;
 
 const buildInvoiceLockKey = ({ type, id, userId }) => {
   return `${String(type || '').toUpperCase()}:${String(id || '').trim()}:${String(userId || '').trim()}`;

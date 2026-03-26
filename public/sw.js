@@ -1,5 +1,5 @@
 // Service Worker - Jolof'Era PWA (cache + push)
-const CACHE_NAME = 'jolofera-v2'
+const CACHE_NAME = 'jolofera-v3'
 const SHELL = ['/', '/brand/logo-icon.png', '/manifest.json']
 
 self.addEventListener('install', (event) => {
@@ -89,4 +89,3 @@ self.addEventListener('notificationclick', (event) => {
     })
   )
 })
-

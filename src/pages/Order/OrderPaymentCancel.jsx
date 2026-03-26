@@ -16,6 +16,34 @@ function OrderPaymentCancel() {
   const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search])
   const orderId = searchParams.get('orderId') || sessionData?.order?.id || ''
 
+  const wait = (delayMs) => new Promise((resolve) => setTimeout(resolve, delayMs))
+
+  const createInvoiceWithRetry = async (paymentPayload) => {
+    const retryDelays = [0, 1500]
+    let lastError = null
+
+    for (let attempt = 0; attempt < retryDelays.length; attempt += 1) {
+      if (retryDelays[attempt] > 0) {
+        await wait(retryDelays[attempt])
+      }
+
+      try {
+        return await apiFetch('/payments/create', {
+          method: 'POST',
+          timeoutMs: 50000,
+          body: paymentPayload,
+        })
+      } catch (err) {
+        lastError = err
+        if (![0, 502, 503, 504, 408].includes(Number(err?.status)) || attempt === retryDelays.length - 1) {
+          throw err
+        }
+      }
+    }
+
+    throw lastError || new Error('Impossible de relancer le paiement')
+  }
+
   useEffect(() => {
     let mounted = true
 
@@ -53,9 +81,8 @@ function OrderPaymentCancel() {
     setError('')
 
     try {
-      const result = await apiFetch('/payments/create', {
-        method: 'POST',
-        body: buildDexPayPaymentPayload({
+      const result = await createInvoiceWithRetry(
+        buildDexPayPaymentPayload({
           bookingId: sessionData.order.id,
           amount: sessionData.grandTotal,
           customerName: sessionData.order?.clientName || '',
@@ -68,8 +95,8 @@ function OrderPaymentCancel() {
           successPath: '/order/payment/success',
           cancelPath: '/order/payment/cancel',
           resourceKey: 'orderId',
-        }),
-      })
+        })
+      )
 
       const payload = result?.data || result
       if (!payload?.invoiceUrl) {

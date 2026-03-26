@@ -406,12 +406,12 @@ function Payment() {
       })
 
       let result
-      const maxRetries = 2
+      const maxRetries = 1
       for (let attempt = 0; attempt <= maxRetries; attempt++) {
         try {
           result = await apiFetch('/payments/create', {
             method: 'POST',
-            timeoutMs: 35000,
+            timeoutMs: 50000,
             body: paymentBody,
           })
           break

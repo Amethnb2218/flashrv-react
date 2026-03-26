@@ -320,11 +320,11 @@ ${variantNotes.join('\n')}` : '']
           })
 
         let paymentResult
-        for (let attempt = 0; attempt <= 2; attempt++) {
+        for (let attempt = 0; attempt <= 1; attempt++) {
           try {
             paymentResult = await apiFetch('/payments/create', {
               method: 'POST',
-              timeoutMs: 35000,
+              timeoutMs: 50000,
               body: paymentBody,
             })
             break
