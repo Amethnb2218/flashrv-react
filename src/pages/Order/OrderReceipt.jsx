@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react'
 import { readOrderPaymentSession } from '../../utils/orderPaymentSession'
 import apiFetch from '../../api/client'
 import { loadOrderPaymentState } from '../../utils/orderPaymentState'
+import toast from 'react-hot-toast'
 
 const paymentLabels = {
   DEXPAY: { name: 'DexPay', icon: 'DX' },

@@ -78,6 +78,37 @@ const weekDays = [
 ["Dimanche", "sunday"],
 ];
 
+const paymentMethodChoices = [
+  { value: "ORANGE_MONEY", label: "Orange Money" },
+  { value: "WAVE", label: "Wave" },
+  { value: "FREE_MONEY", label: "Free Money" },
+  { value: "PAYDUNYA", label: "PayDunya" },
+  { value: "PAY_ON_PICKUP", label: "Paiement au retrait" },
+  { value: "CASH_ON_DELIVERY", label: "Paiement a la livraison" },
+  { value: "CASH", label: "Especes / Cash" },
+];
+const visiblePaymentMethodChoices = getVisiblePaymentMethodChoices(paymentMethodChoices, { scope: "pro" });
+const MOBILE_MONEY_PAYMENT_METHODS = new Set(["ORANGE_MONEY", "WAVE", "FREE_MONEY"]);
+const paymentMethodMeta = {
+  ORANGE_MONEY: { hint: "Ajoutez le numero Orange Money et/ou le QR marchand." },
+  WAVE: { hint: "Ajoutez le numero Wave et/ou le QR marchand." },
+  FREE_MONEY: { hint: "Ajoutez le numero Free Money et/ou le QR marchand." },
+  PAYDUNYA: { hint: "Ancien paiement en ligne masqué." },
+  PAY_ON_PICKUP: { hint: "Paiement au retrait en boutique." },
+  CASH_ON_DELIVERY: { hint: "Paiement a la livraison." },
+  CASH: { hint: "Paiement en especes." },
+};
+const getDefaultVisiblePaymentMethodValue = () => visiblePaymentMethodChoices[0]?.value || "CASH";
+const buildDefaultPaymentMethodForm = (method = getDefaultVisiblePaymentMethodValue()) => ({
+  method,
+  enabled: true,
+  displayName: "",
+  phoneNumber: "",
+  qrCodeUrl: "",
+  instructions: "",
+  requiresProof: MOBILE_MONEY_PAYMENT_METHODS.has(method),
+});
+
 const dayKeyByIndex = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
 const dayKeyToIndex = dayKeyByIndex.reduce((acc, key, idx) => {
   acc[key] = idx;
@@ -588,15 +619,7 @@ const [deletingPaymentMethod, setDeletingPaymentMethod] = useState(false);
 const [savingPaymentMethod, setSavingPaymentMethod] = useState(false);
 const [uploadingPaymentQr, setUploadingPaymentQr] = useState(false);
 const [editingPaymentMethodId, setEditingPaymentMethodId] = useState(null);
-const [newPaymentMethod, setNewPaymentMethod] = useState({
-  method: visiblePaymentMethodChoices[0]?.value || "CASH",
-  enabled: true,
-  displayName: "",
-  phoneNumber: "",
-  qrCodeUrl: "",
-  instructions: "",
-  requiresProof: false,
-});
+const [newPaymentMethod, setNewPaymentMethod] = useState(() => buildDefaultPaymentMethodForm());
 
 // Team management
 const [team, setTeam] = useState([]);
@@ -1050,35 +1073,6 @@ const openingHoursToApi = (openingHours) =>
 /* ----------------------------
 Payment methods (API)
 ----------------------------- */
-const paymentMethodChoices = [
-  { value: "ORANGE_MONEY", label: "Orange Money" },
-  { value: "WAVE", label: "Wave" },
-  { value: "FREE_MONEY", label: "Free Money" },
-  { value: "PAYDUNYA", label: "PayDunya" },
-  { value: "PAY_ON_PICKUP", label: "Paiement au retrait" },
-  { value: "CASH_ON_DELIVERY", label: "Paiement a la livraison" },
-  { value: "CASH", label: "Especes / Cash" },
-];
-const visiblePaymentMethodChoices = getVisiblePaymentMethodChoices(paymentMethodChoices, { scope: "pro" });
-const MOBILE_MONEY_PAYMENT_METHODS = new Set(["ORANGE_MONEY", "WAVE", "FREE_MONEY"]);
-const paymentMethodMeta = {
-  ORANGE_MONEY: { hint: "Ajoutez le numero Orange Money et/ou le QR marchand." },
-  WAVE: { hint: "Ajoutez le numero Wave et/ou le QR marchand." },
-  FREE_MONEY: { hint: "Ajoutez le numero Free Money et/ou le QR marchand." },
-  PAYDUNYA: { hint: "Ancien paiement en ligne masqué." },
-  PAY_ON_PICKUP: { hint: "Paiement au retrait en boutique." },
-  CASH_ON_DELIVERY: { hint: "Paiement a la livraison." },
-  CASH: { hint: "Paiement en especes." },
-};
-const buildDefaultPaymentMethodForm = (method = visiblePaymentMethodChoices[0]?.value || "CASH") => ({
-  method,
-  enabled: true,
-  displayName: "",
-  phoneNumber: "",
-  qrCodeUrl: "",
-  instructions: "",
-  requiresProof: MOBILE_MONEY_PAYMENT_METHODS.has(method),
-});
 const mapPaymentMethodToForm = (method) => {
   const normalizedMethod = String(method?.method || "ORANGE_MONEY").toUpperCase();
   return {
