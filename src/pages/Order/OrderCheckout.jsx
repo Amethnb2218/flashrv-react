@@ -6,7 +6,6 @@ import { useAuth } from '../../context/AuthContext'
 import { formatPrice } from '../../utils/helpers'
 import { resolveMediaUrl } from '../../utils/media'
 import apiFetch from '../../api/client'
-import { pushSiteNotification } from '../../utils/siteNotifications'
 import { clearCart, deriveDeliveryConfigFromItems, readCart, removeItemFromCart } from '../../utils/cartStore'
 import { buildPaytechPaymentPayload } from '../../utils/payments'
 import { saveOrderPaymentSession } from '../../utils/orderPaymentSession'
@@ -306,12 +305,6 @@ ${variantNotes.join('\n')}` : '']
 
       if (selectedPayment === 'PAYTECH') {
         saveOrderPaymentSession(receiptPayload)
-        pushSiteNotification({
-          userId: user?.id || user?.email,
-          type: 'order_pending_payment',
-          message: `Commande en attente de paiement chez ${salon.name}. Ref: ${order?.id || 'N/A'}`,
-          meta: { orderId: order?.id, salonId: salon.id },
-        })
 
         const paymentBody = buildPaytechPaymentPayload({
             bookingId: order?.id,
@@ -386,15 +379,6 @@ ${variantNotes.join('\n')}` : '']
           proofReference: paymentProofReference.trim(),
         }
       }
-
-      pushSiteNotification({
-        userId: user?.id || user?.email,
-        type: requiresDirectProof ? 'order_pending_payment_review' : 'order_confirmation',
-        message: requiresDirectProof
-          ? `Demande de verification de paiement envoyee chez ${salon.name}. Ref: ${order?.id || 'N/A'}`
-          : `Commande confirmee chez ${salon.name}. Ref: ${order?.id || 'N/A'}`,
-        meta: { orderId: order?.id, salonId: salon.id },
-      })
 
       navigate('/order/receipt', {
         state: receiptPayload,
