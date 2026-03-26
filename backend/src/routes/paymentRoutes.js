@@ -12,8 +12,8 @@ const router = express.Router();
 
 const ALLOWED_PROVIDERS = ['DEXPAY', 'PAYTECH', 'PAYDUNYA', 'PAY_ON_SITE'];
 const invoiceCreationInFlight = new Map();
-const DEFAULT_DEXPAY_TIMEOUT_MS = 15000;
-const MAX_DEXPAY_TIMEOUT_MS = 18000;
+const DEFAULT_DEXPAY_TIMEOUT_MS = 7000;
+const MAX_DEXPAY_TIMEOUT_MS = 9000;
 
 const resolveDexPayTimeoutMs = () => {
   try {
@@ -30,7 +30,7 @@ const resolveDexPayTimeoutMs = () => {
   return DEFAULT_DEXPAY_TIMEOUT_MS;
 };
 
-const ROUTE_TIMEOUT_MS = Math.max(18000, resolveDexPayTimeoutMs() + 4000);
+const ROUTE_TIMEOUT_MS = Math.max(10000, resolveDexPayTimeoutMs() + 2500);
 const INFLIGHT_TTL_MS = ROUTE_TIMEOUT_MS + 5000;
 
 const buildInvoiceLockKey = ({ type, id, userId }) => {
@@ -109,15 +109,23 @@ const toOperationalDexPayError = (error, phase = 'create') => {
   }
 
   const normalizedMessage = String(error?.message || '').trim().toLowerCase();
+  const normalizedCode = String(error?.code || '').trim().toUpperCase();
   const isConfigIssue = normalizedMessage.includes('dexpay') && normalizedMessage.includes('configure');
+  const isTransientIssue =
+    normalizedCode === 'TIMEOUT' ||
+    normalizedCode === 'NETWORK_ERROR' ||
+    normalizedMessage.includes('timeout') ||
+    normalizedMessage.includes('network');
   const message = isConfigIssue
     ? 'DexPay n est pas configure sur le serveur.'
+    : isTransientIssue
+      ? 'DexPay met trop de temps a repondre. Reessayez dans un instant.'
     : phase === 'verify'
       ? 'Impossible de verifier le paiement DexPay pour le moment.'
       : 'Impossible d initialiser le paiement DexPay. Reessayez dans quelques instants.';
 
   const wrapped = new Error(message);
-  wrapped.statusCode = isConfigIssue ? 503 : 502;
+  wrapped.statusCode = isConfigIssue || isTransientIssue ? 503 : 502;
   wrapped.expose = true;
   return wrapped;
 };

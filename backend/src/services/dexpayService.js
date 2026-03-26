@@ -1,7 +1,7 @@
 const DexPay = require('@dexchangepay/node');
 
-const DEFAULT_DEXPAY_TIMEOUT_MS = 15000;
-const MAX_DEXPAY_TIMEOUT_MS = 18000;
+const DEFAULT_DEXPAY_TIMEOUT_MS = 7000;
+const MAX_DEXPAY_TIMEOUT_MS = 9000;
 
 let cachedClient = null;
 let cachedConfig = null;
@@ -90,25 +90,46 @@ const createDexPayCheckout = async ({
 
   const client = getDexPayClient();
   const config = ensureConfigured();
-  const response = await client.checkoutSessions.create({
-    reference: String(reference || '').trim(),
-    item_name: String(itemName || 'Paiement JolofEra').trim().slice(0, 120),
-    amount: numericAmount,
-    currency: 'XOF',
-    success_url: successUrl,
-    failure_url: failureUrl,
-    webhook_url: webhookUrl,
-    metadata,
-    client_support_fee: typeof clientSupportFee === 'boolean' ? clientSupportFee : config.clientSupportFee,
-  });
+  const normalizedReference = String(reference || '').trim();
+  const startedAt = Date.now();
+  let response;
+  try {
+    response = await client.checkoutSessions.create({
+      reference: normalizedReference,
+      item_name: String(itemName || 'Paiement JolofEra').trim().slice(0, 120),
+      amount: numericAmount,
+      currency: 'XOF',
+      success_url: successUrl,
+      failure_url: failureUrl,
+      webhook_url: webhookUrl,
+      metadata,
+      client_support_fee: typeof clientSupportFee === 'boolean' ? clientSupportFee : config.clientSupportFee,
+    });
+  } catch (error) {
+    const elapsedMs = Date.now() - startedAt;
+    console.error('DexPay checkout creation failed:', {
+      reference: normalizedReference,
+      elapsedMs,
+      statusCode: error?.statusCode || error?.status || null,
+      code: error?.code || null,
+      message: error?.message || 'Unknown DexPay error',
+    });
+    throw error;
+  }
 
-  const session = normalizeCheckoutSession(response, reference);
+  const session = normalizeCheckoutSession(response, normalizedReference);
   if (!session?.paymentUrl) {
     const err = new Error('DexPay n a pas retourne de lien de paiement valide.');
     err.statusCode = 502;
     err.expose = true;
     throw err;
   }
+
+  console.info('DexPay checkout created:', {
+    reference: session.reference,
+    elapsedMs: Date.now() - startedAt,
+    status: session.status,
+  });
 
   return {
     provider: 'DEXPAY',
