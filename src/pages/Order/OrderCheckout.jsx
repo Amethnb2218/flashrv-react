@@ -340,7 +340,6 @@ ${variantNotes.join('\n')}` : '']
           throw new Error('Erreur lors de la creation de la facture PayTech')
         }
 
-        clearCart()
         window.location.href = paymentPayload.invoiceUrl
         return
       }

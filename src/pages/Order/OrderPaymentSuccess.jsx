@@ -1,7 +1,8 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { FiArrowRight, FiCheckCircle, FiShoppingBag } from 'react-icons/fi'
+import { clearCart } from '../../utils/cartStore'
 import { readOrderPaymentSession } from '../../utils/orderPaymentSession'
 
 function OrderPaymentSuccess() {
@@ -10,6 +11,10 @@ function OrderPaymentSuccess() {
   const sessionData = readOrderPaymentSession()
   const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search])
   const orderId = searchParams.get('orderId') || sessionData?.order?.id || ''
+
+  useEffect(() => {
+    clearCart()
+  }, [])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-gold-50/20 py-10 px-4">
