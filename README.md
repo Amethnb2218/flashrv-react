@@ -174,7 +174,7 @@ The repository is structured for a split deployment model:
 - Backend on a separate Node-compatible host
 - Environment variables managed independently per environment
 
-Review [vercel.json](/c:/Users/HP/Downloads/FlashRV-main/FlashRV-main/frontend/flashrv-react/vercel.json)
+Review [vercel.json](./vercel.json)
 for the frontend routing and security header configuration.
 
 ## Contribution Policy
@@ -188,7 +188,7 @@ If you want to collaborate, request permission from the owner first.
 
 This project is distributed under a proprietary license.
 
-See [LICENSE](/c:/Users/HP/Downloads/FlashRV-main/FlashRV-main/frontend/flashrv-react/LICENSE)
+See [LICENSE](./LICENSE)
 for the full legal terms.
 
 ## Contact
