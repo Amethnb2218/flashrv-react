@@ -2,6 +2,7 @@
   "name": "flashrv-backend",
   "version": "1.0.0",
   "description": "Backend API for FlashRV salon booking platform",
+  "author": "Mouhamed Sall",
   "main": "src/server.js",
   "scripts": {
     "dev": "nodemon src/server.js",
@@ -23,8 +24,7 @@
     "express",
     "prisma"
   ],
-  "author": "",
-  "license": "ISC",
+  "license": "UNLICENSED",
   "dependencies": {
     "@dexchangepay/node": "^1.0.1",
     "@prisma/client": "^5.22.0",

@@ -2,6 +2,9 @@
   "name": "style-flow-react",
   "private": true,
   "version": "1.0.0",
+  "description": "Frontend for the Jolof'Era / FlashRV marketplace and booking platform",
+  "author": "Mouhamed Sall",
+  "license": "UNLICENSED",
   "type": "module",
   "scripts": {
     "dev": "vite",
