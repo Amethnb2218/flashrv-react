@@ -13,6 +13,7 @@ import { filterVisiblePaymentMethods } from '../../utils/paymentMethodVisibility
 
 const DIRECT_MOBILE_METHODS = new Set(['ORANGE_MONEY', 'WAVE', 'FREE_MONEY'])
 const ORANGE_MONEY_REFERENCE_REGEX = /^MP\d{6}\.\d{4}\.C\d{5}$/i
+const DEXPAY_MIN_ORDER_AMOUNT = 1200
 
 const PAYMENT_METHOD_LABELS = {
   DEXPAY: 'DexPay',
@@ -141,6 +142,7 @@ function OrderCheckout() {
   const cartTotal = cart.reduce((sum, c) => sum + c.product.price * c.quantity, 0)
   const deliveryFee = form.deliveryMode === 'DELIVERY' ? baseDeliveryFee : 0
   const grandTotal = cartTotal + deliveryFee
+  const isDexPayEligible = grandTotal >= DEXPAY_MIN_ORDER_AMOUNT
   const directPaymentMethods = useMemo(() => {
     return filterVisiblePaymentMethods(salonPaymentMethods)
       .filter((pm) => pm?.enabled !== false)
@@ -162,7 +164,10 @@ function OrderCheckout() {
         id: 'DEXPAY',
         name: PAYMENT_METHOD_LABELS.DEXPAY,
         icon: PAYMENT_METHOD_ICONS.DEXPAY,
-        description: PAYMENT_METHOD_DESCRIPTIONS.DEXPAY,
+        description: isDexPayEligible
+          ? PAYMENT_METHOD_DESCRIPTIONS.DEXPAY
+          : `Disponible a partir de ${formatPrice(DEXPAY_MIN_ORDER_AMOUNT)}`,
+        disabled: !isDexPayEligible,
       },
       ...directPaymentMethods,
       {
@@ -179,9 +184,15 @@ function OrderCheckout() {
       },
     ]
     return methods
-  }, [directPaymentMethods])
+  }, [directPaymentMethods, isDexPayEligible, grandTotal])
   const selectedDirectMethod = directPaymentMethods.find((m) => m.id === selectedPayment) || null
   const requiresDirectProof = DIRECT_MOBILE_METHODS.has(String(selectedPayment || '').toUpperCase())
+
+  useEffect(() => {
+    if (selectedPayment === 'DEXPAY' && !isDexPayEligible) {
+      setSelectedPayment(null)
+    }
+  }, [selectedPayment, isDexPayEligible])
 
   useEffect(() => {
     if (!requiresDirectProof) {
@@ -219,6 +230,7 @@ function OrderCheckout() {
     }
     if (currentStep === 2) {
       if (selectedPayment == null) return false
+      if (selectedPayment === 'DEXPAY' && !isDexPayEligible) return false
       if (requiresDirectProof) {
         if (!paymentProofReference.trim()) return false
         if (!paymentProofSenderPhone.trim()) return false
@@ -248,6 +260,10 @@ function OrderCheckout() {
     let createdOrder = null
     let receiptPayload = null
     try {
+      if (selectedPayment === 'DEXPAY' && !isDexPayEligible) {
+        throw new Error(`Le paiement DexPay est disponible a partir de ${formatPrice(DEXPAY_MIN_ORDER_AMOUNT)}.`)
+      }
+
       const variantNotes = cart
         .map((c) => {
           const parts = []
@@ -278,6 +294,7 @@ ${variantNotes.join('\n')}` : '']
           clientName: form.clientName || undefined,
           notes: mergedNotes || undefined,
           paymentMethod: selectedPayment,
+          checkoutAmount: grandTotal,
         }
       })
       const order = res?.data?.order || res?.order || res?.data || res
@@ -622,21 +639,26 @@ ${variantNotes.join('\n')}` : '']
                   <button
                     key={method.id}
                     onClick={() => {
+                      if (method.disabled) return
                       if (method.id === 'PAY_ON_PICKUP' && form.deliveryMode === 'DELIVERY') return
                       setSelectedPayment(method.id)
                     }}
-                    disabled={method.id === 'PAY_ON_PICKUP' && form.deliveryMode === 'DELIVERY'}
+                    disabled={Boolean(method.disabled) || (method.id === 'PAY_ON_PICKUP' && form.deliveryMode === 'DELIVERY')}
                     className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 text-left transition-all ${
                       selectedPayment === method.id
                         ? 'border-primary-900 bg-primary-50 shadow-sm'
-                        : 'border-primary-200 hover:border-primary-300'
+                        : method.disabled
+                          ? 'border-primary-100 bg-primary-50 text-primary-400 cursor-not-allowed'
+                          : 'border-primary-200 hover:border-primary-300'
                     }`}
                   >
                     <span className="text-xs font-semibold text-primary-700 bg-primary-100 rounded-full px-2.5 py-1">{method.icon}</span>
                     <div className="flex-1">
                       <p className="font-semibold text-primary-900">{method.name}</p>
-                      <p className={`text-sm ${method.id === 'PAY_ON_PICKUP' && form.deliveryMode === 'DELIVERY' ? 'text-primary-400' : 'text-primary-500'}`}>
-                        {method.id === 'PAY_ON_PICKUP' && form.deliveryMode === 'DELIVERY'
+                      <p className={`text-sm ${method.disabled || (method.id === 'PAY_ON_PICKUP' && form.deliveryMode === 'DELIVERY') ? 'text-primary-400' : 'text-primary-500'}`}>
+                        {method.disabled
+                          ? method.description
+                          : method.id === 'PAY_ON_PICKUP' && form.deliveryMode === 'DELIVERY'
                           ? 'Indisponible pour les commandes en livraison'
                           : method.description}
                       </p>
@@ -728,6 +750,11 @@ ${variantNotes.join('\n')}` : '']
                   <span>Total à payer</span>
                   <span className="text-gold-600">{formatPrice(grandTotal)}</span>
                 </div>
+                {!isDexPayEligible ? (
+                  <p className="text-xs text-gold-700 bg-gold-50 border border-gold-100 rounded-lg px-3 py-2">
+                    Le paiement DexPay est disponible a partir de {formatPrice(DEXPAY_MIN_ORDER_AMOUNT)} pour eviter un blocage du reversement pro.
+                  </p>
+                ) : null}
               </div>
             </div>
           </motion.div>

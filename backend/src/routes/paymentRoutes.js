@@ -14,6 +14,7 @@ const { triggerAutoPayoutForPayment } = require('../services/dexpayPayoutService
 const router = express.Router();
 
 const ALLOWED_PROVIDERS = ['DEXPAY', 'PAYTECH', 'PAYDUNYA', 'PAY_ON_SITE'];
+const DEXPAY_MIN_ORDER_AMOUNT = 1200;
 const DEFAULT_DEXPAY_TIMEOUT_MS = 6000;
 const MAX_DEXPAY_TIMEOUT_MS = 7000;
 const ROUTE_TIMEOUT_BUFFER_MS = 1000;
@@ -568,6 +569,12 @@ const createDexPayPaymentForBooking = async ({
   if (!Number.isFinite(value) || value <= 0) {
     const err = new Error('Montant invalide');
     err.statusCode = 400;
+    throw err;
+  }
+  if (value < DEXPAY_MIN_ORDER_AMOUNT) {
+    const err = new Error(`Le paiement DexPay est disponible a partir de ${DEXPAY_MIN_ORDER_AMOUNT} FCFA pour une commande.`);
+    err.statusCode = 400;
+    err.expose = true;
     throw err;
   }
 

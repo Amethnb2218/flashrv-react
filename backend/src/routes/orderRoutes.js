@@ -19,6 +19,7 @@ const ALLOWED_PAYMENT_METHODS = new Set([
   'CASH',
   ...DIRECT_MOBILE_METHODS,
 ]);
+const DEXPAY_MIN_ORDER_AMOUNT = 1200;
 
 const cleanString = (value, max = 220) => {
   if (value == null) return null;
@@ -69,6 +70,7 @@ router.post('/', authenticate, async (req, res, next) => {
       clientPhone,
       clientName,
       paymentMethod,
+      checkoutAmount,
     } = req.body;
 
     if (!salonId || !Array.isArray(items) || items.length === 0) {
@@ -174,6 +176,19 @@ router.post('/', authenticate, async (req, res, next) => {
         quantity: qty,
         unitPrice: product.price,
       });
+    }
+
+    if (isDexPayFlow) {
+      const submittedCheckoutAmount = Number(checkoutAmount);
+      const effectiveCheckoutAmount = Number.isFinite(submittedCheckoutAmount) && submittedCheckoutAmount > 0
+        ? submittedCheckoutAmount
+        : totalPrice;
+      if (effectiveCheckoutAmount < DEXPAY_MIN_ORDER_AMOUNT) {
+        return res.status(400).json({
+          status: 'error',
+          message: `Le paiement DexPay est disponible a partir de ${DEXPAY_MIN_ORDER_AMOUNT} FCFA pour cette commande.`,
+        });
+      }
     }
 
     // Create order + items + decrement stock in a transaction
