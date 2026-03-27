@@ -13,6 +13,7 @@ import { filterVisiblePaymentMethods } from '../../utils/paymentMethodVisibility
 const DIRECT_MOBILE_METHODS = new Set(['ORANGE_MONEY', 'WAVE', 'FREE_MONEY'])
 const ADVANCE_BOOKING_PAYMENT_METHODS = new Set(['DEXPAY', ...DIRECT_MOBILE_METHODS])
 const ORANGE_MONEY_REFERENCE_REGEX = /^MP\d{6}\.\d{4}\.C\d{5}$/i
+const DEXPAY_MIN_BOOKING_AMOUNT = 1200
 
 const PAYMENT_FLOW_OPTIONS = [
   {
@@ -175,8 +176,11 @@ function Payment() {
       id: 'DEXPAY',
       name: PAYMENT_METHOD_LABELS.DEXPAY,
       icon: PAYMENT_METHOD_ICONS.DEXPAY,
-      description: PAYMENT_METHOD_DESCRIPTIONS.DEXPAY,
+      description: isDexPayEligible
+        ? PAYMENT_METHOD_DESCRIPTIONS.DEXPAY
+        : `Disponible a partir de ${DEXPAY_MIN_BOOKING_AMOUNT.toLocaleString()} FCFA`,
       details: null,
+      disabled: !isDexPayEligible,
     }
 
     const directMethods = filterVisiblePaymentMethods(salonPaymentMethods)
@@ -194,7 +198,7 @@ function Payment() {
       .filter((method) => ADVANCE_BOOKING_PAYMENT_METHODS.has(method.id) && method.id !== 'DEXPAY')
 
     return [hostedMethod, ...directMethods]
-  }, [salonPaymentMethods])
+  }, [salonPaymentMethods, isDexPayEligible])
 
   const visiblePaymentFlowOptions = useMemo(
     () => PAYMENT_FLOW_OPTIONS.filter((option) => option.id !== 'PAY_IN_ADVANCE' || availableAdvancePaymentMethods.length > 0),
@@ -218,11 +222,19 @@ function Payment() {
     }
   }, [paymentChoice, availableAdvancePaymentMethods])
 
+  useEffect(() => {
+    if (selectedMethod === 'DEXPAY' && !isDexPayEligible) {
+      const nextAvailable = availableAdvancePaymentMethods.find((method) => method.id !== 'DEXPAY')
+      setSelectedMethod(nextAvailable?.id || '')
+    }
+  }, [selectedMethod, isDexPayEligible, availableAdvancePaymentMethods])
+
   const selectedAdvanceMethod = availableAdvancePaymentMethods.find((method) => method.id === selectedMethod) || null
   const requiresDirectProof = DIRECT_MOBILE_METHODS.has(String(selectedMethod || '').toUpperCase())
   const resolvedPaymentMethod = paymentChoice === 'PAY_IN_ADVANCE' ? selectedMethod : 'PAY_ON_SITE'
   const amountToPayNow = paymentChoice === 'PAY_IN_ADVANCE' ? bookingState.totalPrice : 0
   const remainingAmountAtSalon = paymentChoice === 'PAY_IN_ADVANCE' ? 0 : bookingState.totalPrice
+  const isDexPayEligible = Number(bookingState.totalPrice || 0) >= DEXPAY_MIN_BOOKING_AMOUNT
 
   useEffect(() => {
     if (!requiresDirectProof) {
@@ -337,6 +349,10 @@ function Payment() {
   const handlePayment = async () => {
     if (!resolvedPaymentMethod) {
       setError('Veuillez choisir un mode de paiement')
+      return
+    }
+    if (resolvedPaymentMethod === 'DEXPAY' && !isDexPayEligible) {
+      setError(`Le paiement DexPay est disponible a partir de ${DEXPAY_MIN_BOOKING_AMOUNT.toLocaleString()} FCFA pour une reservation.`)
       return
     }
 
@@ -545,11 +561,17 @@ function Payment() {
                         key={method.id}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        onClick={() => setSelectedMethod(method.id)}
+                        onClick={() => {
+                          if (method.disabled) return
+                          setSelectedMethod(method.id)
+                        }}
+                        disabled={Boolean(method.disabled)}
                         className={`w-full flex items-center p-3 sm:p-4 border-2 rounded-xl transition-all ${
                           selectedMethod === method.id
                             ? 'border-primary-600 bg-primary-50'
-                            : 'border-primary-200 hover:border-primary-300'
+                            : method.disabled
+                              ? 'border-primary-100 bg-primary-50 opacity-70 cursor-not-allowed'
+                              : 'border-primary-200 hover:border-primary-300'
                         }`}
                       >
                         <span className="text-sm sm:text-base mr-3 px-2 py-1 rounded-full bg-primary-100 font-semibold text-primary-700">
@@ -575,6 +597,12 @@ function Payment() {
                       Aucun moyen de paiement en avance n'est configure par ce salon pour le moment.
                     </div>
                   )}
+
+                  {!isDexPayEligible ? (
+                    <div className="p-3 bg-gold-50 text-gold-700 rounded-xl text-sm border border-gold-100">
+                      DexPay est disponible a partir de {DEXPAY_MIN_BOOKING_AMOUNT.toLocaleString()} FCFA pour eviter un blocage du reversement au pro.
+                    </div>
+                  ) : null}
 
                   {selectedAdvanceMethod && requiresDirectProof && (
                     <div className="rounded-xl border border-primary-200 bg-primary-50 p-4 space-y-3">

@@ -15,6 +15,7 @@ const router = express.Router();
 
 const ALLOWED_PROVIDERS = ['DEXPAY', 'PAYTECH', 'PAYDUNYA', 'PAY_ON_SITE'];
 const DEXPAY_MIN_ORDER_AMOUNT = 1200;
+const DEXPAY_MIN_BOOKING_AMOUNT = 1200;
 const DEFAULT_DEXPAY_TIMEOUT_MS = 6000;
 const MAX_DEXPAY_TIMEOUT_MS = 7000;
 const ROUTE_TIMEOUT_BUFFER_MS = 1000;
@@ -571,8 +572,8 @@ const createDexPayPaymentForBooking = async ({
     err.statusCode = 400;
     throw err;
   }
-  if (value < DEXPAY_MIN_ORDER_AMOUNT) {
-    const err = new Error(`Le paiement DexPay est disponible a partir de ${DEXPAY_MIN_ORDER_AMOUNT} FCFA pour une commande.`);
+  if (value < DEXPAY_MIN_BOOKING_AMOUNT) {
+    const err = new Error(`Le paiement DexPay est disponible a partir de ${DEXPAY_MIN_BOOKING_AMOUNT} FCFA pour une reservation.`);
     err.statusCode = 400;
     err.expose = true;
     throw err;
