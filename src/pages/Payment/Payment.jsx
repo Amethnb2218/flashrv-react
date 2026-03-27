@@ -131,6 +131,7 @@ function Payment() {
   const [paymentProofReference, setPaymentProofReference] = useState('')
   const [paymentProofAmount, setPaymentProofAmount] = useState('')
   const [paymentProofSenderPhone, setPaymentProofSenderPhone] = useState('')
+  const isDexPayEligible = Number(bookingState.totalPrice || 0) >= DEXPAY_MIN_BOOKING_AMOUNT
 
   useEffect(() => {
     if (!bookingState.salon || bookingState.services.length === 0) {
@@ -234,7 +235,6 @@ function Payment() {
   const resolvedPaymentMethod = paymentChoice === 'PAY_IN_ADVANCE' ? selectedMethod : 'PAY_ON_SITE'
   const amountToPayNow = paymentChoice === 'PAY_IN_ADVANCE' ? bookingState.totalPrice : 0
   const remainingAmountAtSalon = paymentChoice === 'PAY_IN_ADVANCE' ? 0 : bookingState.totalPrice
-  const isDexPayEligible = Number(bookingState.totalPrice || 0) >= DEXPAY_MIN_BOOKING_AMOUNT
 
   useEffect(() => {
     if (!requiresDirectProof) {
