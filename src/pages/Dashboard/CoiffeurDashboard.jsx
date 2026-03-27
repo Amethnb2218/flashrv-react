@@ -996,6 +996,63 @@ const normalizeHoliday = (h) => {
   };
 };
 
+const resolveDexPayPayoutMeta = (paymentMethodKey, payment) => {
+  if (paymentMethodKey !== "DEXPAY") {
+    return {
+      payoutStatusKey: "",
+      payoutLabel: "",
+      payoutTone: "gray",
+      payoutMessage: "",
+    };
+  }
+
+  const rawStatus = String(payment?.manualMethod || "").toUpperCase();
+  const payoutNote = String(payment?.proofNote || "").trim();
+  const mapping = {
+    AUTO_PAYOUT_PENDING: {
+      label: "Reversement lance",
+      tone: "blue",
+    },
+    AUTO_PAYOUT_COMPLETED: {
+      label: "Reversement effectue",
+      tone: "green",
+    },
+    AUTO_PAYOUT_BLOCKED_MINIMUM: {
+      label: "En attente du minimum DexPay",
+      tone: "amber",
+    },
+    AUTO_PAYOUT_BLOCKED_KYC: {
+      label: "KYC DexPay en attente",
+      tone: "amber",
+    },
+    AUTO_PAYOUT_BLOCKED_CONFIG: {
+      label: "Compte de versement manquant",
+      tone: "red",
+    },
+    AUTO_PAYOUT_FAILED: {
+      label: "Reversement a relancer",
+      tone: "red",
+    },
+  };
+
+  const matched = mapping[rawStatus];
+  if (matched) {
+    return {
+      payoutStatusKey: rawStatus,
+      payoutLabel: matched.label,
+      payoutTone: matched.tone,
+      payoutMessage: payoutNote,
+    };
+  }
+
+  return {
+    payoutStatusKey: "AUTO_PAYOUT_PROCESSING",
+    payoutLabel: "Traitement DexPay",
+    payoutTone: "blue",
+    payoutMessage: payoutNote || "Paiement client confirme. Reversement DexPay en cours de traitement.",
+  };
+};
+
 const normalizePayment = (p) => { 
   if (!p) return p; 
   const appt = p.appointment || p.booking || p.reservation || {}; 
@@ -1020,6 +1077,7 @@ const normalizePayment = (p) => {
   const depositPaid = baseDepositPaid ?? (paymentKey === "paid" || paymentKey === "on_site"); 
   const paymentMethodKey = String(p.method || p.paymentMethod || order.paymentMethod || "").toUpperCase();
   const paymentMethodLabel = formatPaymentMethodLabel(paymentMethodKey);
+  const dexPayPayoutMeta = resolveDexPayPayoutMeta(paymentMethodKey, p);
   const serviceName =
     service.name ||
     appt.serviceName ||
@@ -1037,6 +1095,10 @@ const normalizePayment = (p) => {
     depositPaid, 
     paymentMethodKey,
     paymentMethodLabel,
+    payoutStatusKey: dexPayPayoutMeta.payoutStatusKey,
+    payoutLabel: dexPayPayoutMeta.payoutLabel,
+    payoutTone: dexPayPayoutMeta.payoutTone,
+    payoutMessage: dexPayPayoutMeta.payoutMessage,
     paymentStatus: paymentKey, 
   }; 
 }; 
@@ -4474,9 +4536,15 @@ return (
                   ? "Reversement DexPay calcule sur le net apres frais."
                   : "Les frais DexPay s affichent des qu ils sont synchronises par le serveur."}
               </p>
-              <p className="text-xs font-medium text-emerald-700">
-                Reversement: suivi automatique DexPay apres confirmation du paiement.
-              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs text-primary-500">Reversement :</span>
+                <Badge tone={r.payoutTone || "blue"}>{r.payoutLabel || "Traitement DexPay"}</Badge>
+              </div>
+              {r.payoutMessage ? (
+                <p className="text-xs text-primary-600">
+                  {r.payoutMessage}
+                </p>
+              ) : null}
               </>
             ) : null}
           </div>
@@ -4525,9 +4593,12 @@ return (
           label: "Reversement",
           render: (r) => (
             r.paymentMethodKey === "DEXPAY" ? (
-              <span className="text-xs font-medium text-emerald-700">
-                Auto apres confirmation
-              </span>
+              <div className="space-y-1">
+                <Badge tone={r.payoutTone || "blue"}>{r.payoutLabel || "Traitement DexPay"}</Badge>
+                {r.payoutMessage ? (
+                  <p className="max-w-[260px] text-[11px] leading-4 text-primary-500">{r.payoutMessage}</p>
+                ) : null}
+              </div>
             ) : (
               <span className="text-xs text-primary-400">—</span>
             )

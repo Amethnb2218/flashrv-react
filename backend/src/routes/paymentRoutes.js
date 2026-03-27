@@ -928,6 +928,27 @@ router.get('/', authenticate, requireApprovedPro, async (req, res, next) => {
       },
       orderBy: { createdAt: 'desc' },
     });
+    const retryableDexPayPayment = payments.find((payment) => {
+      const paymentMethod = String(payment?.method || '').trim().toUpperCase();
+      const paymentStatus = String(payment?.status || '').trim().toUpperCase();
+      const payoutStatus = String(payment?.manualMethod || '').trim().toUpperCase();
+      return (
+        paymentMethod === 'DEXPAY' &&
+        paymentStatus === 'COMPLETED' &&
+        payoutStatus !== 'AUTO_PAYOUT_COMPLETED' &&
+        payoutStatus !== 'AUTO_PAYOUT_PENDING'
+      );
+    });
+    if (retryableDexPayPayment?.id) {
+      setTimeout(() => {
+        triggerAutoPayoutForPayment(retryableDexPayPayment.id).catch((error) => {
+          console.error('DexPay payout retry from payments list failed:', {
+            paymentId: retryableDexPayPayment.id,
+            message: error?.message || 'Unknown DexPay retry error',
+          });
+        });
+      }, 0);
+    }
     res.status(200).json(payments);
   } catch (error) {
     next(error);

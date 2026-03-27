@@ -7,10 +7,29 @@ const PAYOUT_OPERATOR_BY_METHOD = {
   ORANGE_MONEY: 'orange_money',
 };
 
-const normalizeStatus = (value) => String(value || '').trim().toUpperCase();
+const AUTO_PAYOUT_STATUS = {
+  PENDING: 'AUTO_PAYOUT_PENDING',
+  COMPLETED: 'AUTO_PAYOUT_COMPLETED',
+  BLOCKED_MINIMUM: 'AUTO_PAYOUT_BLOCKED_MINIMUM',
+  BLOCKED_KYC: 'AUTO_PAYOUT_BLOCKED_KYC',
+  BLOCKED_CONFIG: 'AUTO_PAYOUT_BLOCKED_CONFIG',
+  FAILED: 'AUTO_PAYOUT_FAILED',
+};
 
+const DEFAULT_MIN_PAYOUT_XOF = 1000;
+
+const normalizeStatus = (value) => String(value || '').trim().toUpperCase();
+const normalizeAutoPayoutStatus = (value) => {
+  const normalized = normalizeStatus(value);
+  return normalized.startsWith('AUTO_PAYOUT_') ? normalized : '';
+};
 const buildPayoutReferenceToken = (payment) =>
   String(payment?.reference || payment?.transactionId || payment?.id || '').trim();
+const getDexPayMinimumPayoutAmount = () => {
+  const parsed = Number(process.env.DEXPAY_MIN_PAYOUT_XOF || DEFAULT_MIN_PAYOUT_XOF);
+  return Number.isFinite(parsed) && parsed > 0 ? Math.round(parsed) : DEFAULT_MIN_PAYOUT_XOF;
+};
+const formatXofAmount = (value) => `${Math.max(0, Math.round(Number(value || 0)))} XOF`;
 
 const isInsufficientBalanceError = (error) => {
   const haystack = [
@@ -30,6 +49,44 @@ const isInsufficientBalanceError = (error) => {
     haystack.includes('solde') ||
     haystack.includes('fonds')
   );
+};
+
+const isKycBlockingError = (error) => {
+  const haystack = [
+    error?.message,
+    error?.response?.data?.message,
+    error?.response?.data?.error,
+    error?.data?.message,
+    error?.failure_reason,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+
+  return (
+    haystack.includes('kyc') ||
+    haystack.includes('verification') ||
+    haystack.includes('vérification') ||
+    haystack.includes('identity') ||
+    haystack.includes('identit') ||
+    haystack.includes('verify your account') ||
+    haystack.includes('account verification')
+  );
+};
+
+const isMinimumPayoutError = (error) => {
+  const haystack = [
+    error?.message,
+    error?.response?.data?.message,
+    error?.response?.data?.error,
+    error?.data?.message,
+    error?.failure_reason,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+
+  return haystack.includes('minimum') || haystack.includes('min amount') || haystack.includes('montant minimum');
 };
 
 const estimateFallbackPayoutAmount = (initialAmount) => {
@@ -76,6 +133,26 @@ const createUserNotification = async (userId, type, message) => {
   return notification;
 };
 
+const persistAutoPayoutState = async (paymentIds, { status, destination, note, externalReference }) => {
+  const ids = Array.isArray(paymentIds) ? paymentIds.filter(Boolean) : [];
+  if (!ids.length) return;
+
+  const destinationValue =
+    destination?.method && destination?.phoneNumber
+      ? `${destination.method}:${destination.phoneNumber}`
+      : destination?.method || destination?.phoneNumber || null;
+
+  await prisma.payment.updateMany({
+    where: { id: { in: ids } },
+    data: {
+      manualMethod: status || null,
+      manualRecipient: destinationValue,
+      proofReference: externalReference || null,
+      proofNote: note || null,
+    },
+  }).catch(() => {});
+};
+
 const resolvePayoutDestination = (payment) => {
   const methods =
     payment?.appointment?.salon?.paymentMethods ||
@@ -112,23 +189,6 @@ const resolvePayoutDestination = (payment) => {
   }
 
   return null;
-};
-
-const hasRecordedSuccessfulPayout = async (ownerId, payment) => {
-  if (!ownerId) return false;
-  const payoutToken = buildPayoutReferenceToken(payment);
-  if (!payoutToken) return false;
-
-  const existing = await prisma.notification.findFirst({
-    where: {
-      userId: ownerId,
-      type: { in: ['payout_success', 'payout_pending'] },
-      message: { contains: payoutToken },
-    },
-    select: { id: true },
-  }).catch(() => null);
-
-  return Boolean(existing?.id);
 };
 
 const triggerAutoPayoutForPayment = async (paymentId) => {
@@ -181,15 +241,19 @@ const triggerAutoPayoutForPayment = async (paymentId) => {
   if (normalizeStatus(payment.status) !== 'COMPLETED') return null;
 
   const ownerId = payment?.appointment?.salon?.ownerId || payment?.order?.salon?.ownerId || null;
+  const salonId = payment?.appointment?.salon?.id || payment?.order?.salon?.id || null;
   const salonName = payment?.appointment?.salon?.name || payment?.order?.salon?.name || 'votre espace';
-  const payoutToken = buildPayoutReferenceToken(payment);
 
-  if (await hasRecordedSuccessfulPayout(ownerId, payment)) {
-    return { skipped: true, reason: 'PAYOUT_ALREADY_RECORDED' };
+  if (!ownerId || !salonId) {
+    return { skipped: true, reason: 'MISSING_SALON_CONTEXT' };
   }
 
   const destination = resolvePayoutDestination(payment);
   if (destination?.unsupported) {
+    await persistAutoPayoutState([payment.id], {
+      status: AUTO_PAYOUT_STATUS.BLOCKED_CONFIG,
+      note: 'Reversement DexPay impossible tant que Free Money est seul moyen configure. Ajoutez Wave ou Orange Money.',
+    });
     await createUserNotification(
       ownerId,
       'payment',
@@ -199,6 +263,10 @@ const triggerAutoPayoutForPayment = async (paymentId) => {
   }
 
   if (!destination?.phoneNumber || !destination?.operator) {
+    await persistAutoPayoutState([payment.id], {
+      status: AUTO_PAYOUT_STATUS.BLOCKED_CONFIG,
+      note: 'Aucun compte Wave ou Orange Money configure pour recevoir les reversements DexPay.',
+    });
     await createUserNotification(
       ownerId,
       'payment',
@@ -207,12 +275,54 @@ const triggerAutoPayoutForPayment = async (paymentId) => {
     return { skipped: true, reason: 'MISSING_DESTINATION' };
   }
 
-  const payoutAmount = computePayoutAmount(
-    payment.amount || payment.totalAmount || 0,
-    payment.fees || 0
-  );
-  if (!(payoutAmount > 0)) {
-    return { skipped: true, reason: 'ZERO_PAYOUT_AMOUNT' };
+  const payoutCandidates = await prisma.payment.findMany({
+    where: {
+      status: 'COMPLETED',
+      method: 'DEXPAY',
+      OR: [
+        { appointment: { salonId } },
+        { order: { salonId } },
+      ],
+    },
+    orderBy: { completedAt: 'asc' },
+  });
+
+  const eligiblePayments = payoutCandidates
+    .filter((row) => ![AUTO_PAYOUT_STATUS.COMPLETED, AUTO_PAYOUT_STATUS.PENDING].includes(normalizeAutoPayoutStatus(row.manualMethod)))
+    .map((row) => ({
+      ...row,
+      payoutAmount: computePayoutAmount(row.amount || row.totalAmount || 0, row.fees || 0),
+      payoutToken: buildPayoutReferenceToken(row),
+    }))
+    .filter((row) => row.payoutAmount > 0);
+
+  if (!eligiblePayments.length) {
+    return { skipped: true, reason: 'NO_ELIGIBLE_PAYOUTS' };
+  }
+
+  const totalPayoutAmount = eligiblePayments.reduce((sum, row) => sum + row.payoutAmount, 0);
+  const minimumPayoutAmount = getDexPayMinimumPayoutAmount();
+  const candidateIds = eligiblePayments.map((row) => row.id);
+  const notePrefix = `${eligiblePayments.length} paiement${eligiblePayments.length > 1 ? 's' : ''} DexPay`;
+
+  if (totalPayoutAmount < minimumPayoutAmount) {
+    const note = `${notePrefix} en attente. Net cumule ${formatXofAmount(totalPayoutAmount)} inferieur au minimum DexPay de ${formatXofAmount(minimumPayoutAmount)}.`;
+    await persistAutoPayoutState(candidateIds, {
+      status: AUTO_PAYOUT_STATUS.BLOCKED_MINIMUM,
+      destination,
+      note,
+    });
+    await createUserNotification(
+      ownerId,
+      'payout_pending',
+      `Reversement DexPay en attente pour ${salonName}: ${formatXofAmount(totalPayoutAmount)} disponibles, minimum ${formatXofAmount(minimumPayoutAmount)} requis.`
+    );
+    return {
+      skipped: true,
+      reason: 'MINIMUM_NOT_REACHED',
+      payoutAmount: totalPayoutAmount,
+      minimumPayoutAmount,
+    };
   }
 
   try {
@@ -222,24 +332,25 @@ const triggerAutoPayoutForPayment = async (paymentId) => {
       recipientName: destination.recipientName,
       metadata: {
         paymentId: payment.id,
-        reference: payoutToken || null,
+        paymentIds: candidateIds,
+        reference: buildPayoutReferenceToken(payment) || null,
         appointmentId: payment.appointmentId || null,
         orderId: payment.orderId || null,
-        salonId: payment?.appointment?.salon?.id || payment?.order?.salon?.id || null,
+        salonId,
       },
     };
 
     let payout;
     try {
       payout = await createDexPayPayout({
-        amount: payoutAmount,
+        amount: totalPayoutAmount,
         ...payoutPayload,
       });
     } catch (error) {
       const fallbackAmount =
-        payment.fees > 0 || !isInsufficientBalanceError(error)
+        eligiblePayments.some((row) => Number(row.fees || 0) > 0) || !isInsufficientBalanceError(error)
           ? null
-          : estimateFallbackPayoutAmount(payoutAmount);
+          : estimateFallbackPayoutAmount(totalPayoutAmount);
 
       if (!(fallbackAmount > 0)) {
         throw error;
@@ -247,8 +358,8 @@ const triggerAutoPayoutForPayment = async (paymentId) => {
 
       console.warn('DexPay payout retrying with fallback net amount:', {
         paymentId: payment.id,
-        reference: payoutToken || null,
-        requestedAmount: payoutAmount,
+        reference: buildPayoutReferenceToken(payment) || null,
+        requestedAmount: totalPayoutAmount,
         fallbackAmount,
       });
 
@@ -260,17 +371,46 @@ const triggerAutoPayoutForPayment = async (paymentId) => {
 
     const payoutStatus = normalizeStatus(payout.status);
     const payoutLabel = destination.method === 'WAVE' ? 'Wave' : 'Orange Money';
+    const externalReference = String(payout?.id || payout?.reference || '').trim() || null;
+    const payoutNote = `${notePrefix} regroupes. Montant lance: ${formatXofAmount(totalPayoutAmount)} vers ${payoutLabel}.`;
+
+    await persistAutoPayoutState(candidateIds, {
+      status: payoutStatus === 'COMPLETED' ? AUTO_PAYOUT_STATUS.COMPLETED : AUTO_PAYOUT_STATUS.PENDING,
+      destination,
+      note: payoutNote,
+      externalReference,
+    });
+
     await createUserNotification(
       ownerId,
       payoutStatus === 'COMPLETED' ? 'payout_success' : 'payout_pending',
-      `Reversement DexPay ${payoutStatus === 'COMPLETED' ? 'effectue' : 'lance'} pour ${salonName} (${payoutToken || payment.id}) vers votre compte ${payoutLabel}.`
+      `Reversement DexPay ${payoutStatus === 'COMPLETED' ? 'effectue' : 'lance'} pour ${salonName}: ${formatXofAmount(totalPayoutAmount)} vers votre compte ${payoutLabel}.`
     );
 
     return payout;
   } catch (error) {
+    const blockStatus = isKycBlockingError(error)
+      ? AUTO_PAYOUT_STATUS.BLOCKED_KYC
+      : isMinimumPayoutError(error)
+        ? AUTO_PAYOUT_STATUS.BLOCKED_MINIMUM
+        : AUTO_PAYOUT_STATUS.FAILED;
+    const payoutLabel = destination.method === 'WAVE' ? 'Wave' : 'Orange Money';
+    const blockMessage =
+      blockStatus === AUTO_PAYOUT_STATUS.BLOCKED_KYC
+        ? `Reversement DexPay en attente pour ${salonName}: verification KYC DexPay non finalisee.`
+        : blockStatus === AUTO_PAYOUT_STATUS.BLOCKED_MINIMUM
+          ? `Reversement DexPay en attente pour ${salonName}: minimum DexPay de ${formatXofAmount(getDexPayMinimumPayoutAmount())} non atteint.`
+          : `Paiement recu pour ${salonName}, mais le reversement DexPay a echoue et doit etre relance.`;
+
+    await persistAutoPayoutState(candidateIds, {
+      status: blockStatus,
+      destination,
+      note: blockMessage,
+    });
+
     console.error('DexPay auto payout failed:', {
       paymentId: payment.id,
-      reference: payoutToken || null,
+      reference: buildPayoutReferenceToken(payment) || null,
       salonName,
       operator: destination.operator,
       destinationPhone: destination.phoneNumber,
@@ -282,14 +422,20 @@ const triggerAutoPayoutForPayment = async (paymentId) => {
 
     await createUserNotification(
       ownerId,
-      'payout_failed',
-      `Paiement recu pour ${salonName}, mais le reversement DexPay a echoue (${payoutToken || payment.id}). Nous devons le relancer.`
+      blockStatus === AUTO_PAYOUT_STATUS.BLOCKED_KYC ? 'payout_pending' : 'payout_failed',
+      blockStatus === AUTO_PAYOUT_STATUS.BLOCKED_KYC
+        ? `Reversement DexPay bloque pour ${salonName}: finalisez la verification KYC DexPay pour envoyer les fonds vers ${payoutLabel}.`
+        : blockStatus === AUTO_PAYOUT_STATUS.BLOCKED_MINIMUM
+          ? `Reversement DexPay en attente pour ${salonName}: le minimum DexPay de ${formatXofAmount(getDexPayMinimumPayoutAmount())} n est pas encore atteint.`
+          : `Paiement recu pour ${salonName}, mais le reversement DexPay a echoue. Nous devons le relancer.`
     );
-    throw error;
+
+    return { skipped: true, reason: blockStatus, error: error?.message || 'DexPay payout failed' };
   }
 };
 
 module.exports = {
+  AUTO_PAYOUT_STATUS,
   triggerAutoPayoutForPayment,
   normalizeSenegalPhoneNumber,
 };
