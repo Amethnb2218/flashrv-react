@@ -1,5 +1,5 @@
 /**
- * Service de Paiement - FlashRV'
+ * Service de Paiement - Jolof'Era
  * Intégration Wave, Orange Money et cartes bancaires
  * 
  * IMPORTANT: Pour la production, vous devez:

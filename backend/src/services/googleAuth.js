@@ -69,7 +69,7 @@ async function verifyGoogleToken(idToken) {
 
     const err = new Error(
       invalidAudience
-        ? 'Google token audience mismatch. Verify GOOGLE_CLIENT_ID/GOOGLE_CLIENT_IDS.'
+        ? 'Le jeton Google ne correspond pas au client configure. Verifiez GOOGLE_CLIENT_ID et GOOGLE_CLIENT_IDS.'
         : 'Jeton Google invalide.'
     )
     err.statusCode = 401

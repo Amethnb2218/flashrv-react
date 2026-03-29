@@ -11,7 +11,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
-    "seo:indexnow": "node scripts/indexnow-submit.mjs"
+    "seo:indexnow": "node scripts/indexnow-submit.mjs",
+    "backend:prisma:validate": "npm --prefix backend run db:validate",
+    "backend:prisma:generate": "npm --prefix backend run db:generate"
   },
   "dependencies": {
     "@react-oauth/google": "^0.13.4",

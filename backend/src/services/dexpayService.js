@@ -138,7 +138,7 @@ const createDexPayCheckout = async ({
   const normalizedReference = String(reference || '').trim();
   const requestPayload = {
     reference: normalizedReference,
-    item_name: String(itemName || 'Paiement JolofEra').trim().slice(0, 120),
+    item_name: String(itemName || "Paiement Jolof'Era").trim().slice(0, 120),
     amount: numericAmount,
     currency: 'XOF',
     success_url: successUrl,

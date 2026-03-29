@@ -416,9 +416,9 @@ const createPaydunyaPaymentForBooking = async ({
     invoice = await createPaydunyaInvoice({
       amount: value,
       bookingId,
-      customerName: customerName || user.name || 'Client Jolof’Era',
+      customerName: customerName || user.name || "Client Jolof'Era",
       customerEmail: customerEmail || user.email || '',
-      description: `Reservation ${booking.service?.name || 'Salon'} - ${booking.salon?.name || 'Jolof’Era'}`,
+      description: `Reservation ${booking.service?.name || 'Salon'} - ${booking.salon?.name || "Jolof'Era"}`,
       successUrl: resolvedSuccessUrl,
       cancelUrl: resolvedCancelUrl,
       callbackUrl,
@@ -501,9 +501,9 @@ const createPaydunyaPaymentForOrder = async ({
     invoice = await createPaydunyaInvoice({
       amount: value,
       bookingId: orderId,
-      customerName: customerName || user.name || 'Client Jolof’Era',
+      customerName: customerName || user.name || "Client Jolof'Era",
       customerEmail: customerEmail || user.email || '',
-      description: `Commande ${itemLabel || 'Boutique'} - ${order.salon?.name || 'Jolof’Era'}`,
+      description: `Commande ${itemLabel || 'Boutique'} - ${order.salon?.name || "Jolof'Era"}`,
       successUrl: resolvedSuccessUrl,
       cancelUrl: resolvedCancelUrl,
       callbackUrl,
@@ -618,7 +618,7 @@ const createDexPayPaymentForBooking = async ({
         type: 'APPOINTMENT',
         bookingId,
         userId: user.id,
-        customerName: customerName || user.name || 'Client JolofEra',
+        customerName: customerName || user.name || "Client Jolof'Era",
         customerEmail: customerEmail || user.email || '',
       },
     });
@@ -727,7 +727,7 @@ const createDexPayPaymentForOrder = async ({
         type: 'ORDER',
         orderId,
         userId: user.id,
-        customerName: customerName || user.name || 'Client JolofEra',
+        customerName: customerName || user.name || "Client Jolof'Era",
         customerEmail: customerEmail || user.email || '',
       },
     });

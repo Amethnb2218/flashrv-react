@@ -174,11 +174,11 @@ const createPaytechPayment = async ({
   }
 
   const requestBody = {
-    item_name: String(itemName || description || 'Paiement JolofEra').trim().slice(0, 120),
+    item_name: String(itemName || description || "Paiement Jolof'Era").trim().slice(0, 120),
     item_price: totalAmount,
     currency: 'XOF',
     ref_command: String(reference || '').trim(),
-    command_name: String(description || itemName || 'Paiement JolofEra').trim().slice(0, 180),
+    command_name: String(description || itemName || "Paiement Jolof'Era").trim().slice(0, 180),
     env: config.mode,
     ipn_url: ipnUrl,
     success_url: successUrl,

@@ -9,7 +9,7 @@ if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
   webpush.setVapidDetails(VAPID_MAILTO, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
   console.log('Web Push VAPID configured');
 } else {
-  console.warn('VAPID keys not set â€” Web Push disabled');
+  console.warn('VAPID keys not set - Web Push disabled');
 }
 
 /**
