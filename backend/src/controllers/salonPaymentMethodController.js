@@ -1,7 +1,6 @@
 const prisma = require('../lib/prisma');
 
 const ALLOWED_METHODS = new Set([
-  'PAYDUNYA',
   'WAVE',
   'ORANGE_MONEY',
   'FREE_MONEY',

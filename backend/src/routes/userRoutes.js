@@ -5,6 +5,54 @@ const { authenticate, authorize } = require('../middleware/auth');
 const { cloudinary, cloudinaryFolders, extractCloudinaryPublicId } = require('../config/cloudinary');
 const multer = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const rateLimit = require('express-rate-limit');
+
+const PROFILE_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const USERNAME_RE = /^[A-Za-z0-9._-]{3,40}$/;
+const ALLOWED_AVATAR_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+
+const avatarUploadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { status: 'error', message: 'Trop de tentatives d upload avatar. Reessayez plus tard.' },
+});
+
+const profileUpdateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { status: 'error', message: 'Trop de mises a jour du profil. Reessayez plus tard.' },
+});
+
+const cleanString = (value, max = 160) => {
+  if (value == null) return undefined;
+  const normalized = String(value).trim();
+  if (!normalized) return '';
+  return normalized.slice(0, max);
+};
+
+const normalizeEmail = (value) => {
+  const normalized = cleanString(value, 160);
+  return normalized ? normalized.toLowerCase() : normalized;
+};
+
+const sanitizePictureUrl = (value) => {
+  if (value == null) return undefined;
+  const normalized = String(value).trim();
+  if (!normalized) return null;
+  if (normalized.startsWith('/uploads/')) return normalized;
+
+  try {
+    const url = new URL(normalized);
+    if (url.protocol !== 'https:') return null;
+    return url.toString();
+  } catch (_) {
+    return null;
+  }
+};
 
 const avatarStorage = new CloudinaryStorage({
   cloudinary,
@@ -18,7 +66,9 @@ const uploadAvatar = multer({
   storage: avatarStorage,
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
-    if (!file.mimetype.startsWith('image/')) return cb(new Error('Seules les images sont autorisées'));
+    if (!ALLOWED_AVATAR_MIME_TYPES.has(String(file.mimetype || '').toLowerCase())) {
+      return cb(new Error('Seules les images JPEG, PNG, WebP et GIF sont autorisees'));
+    }
     cb(null, true);
   },
 });
@@ -61,7 +111,7 @@ router.get('/:id', authenticate, async (req, res, next) => {
     const { id } = req.params;
 
     // Users can only view their own profile unless admin
-    if (req.user.id !== id && req.user.role !== 'ADMIN') {
+    if (req.user.id !== id && !['ADMIN', 'SUPER_ADMIN'].includes(req.user.role)) {
       return res.status(403).json({
         status: 'error',
         message: 'You can only view your own profile',
@@ -106,7 +156,7 @@ router.get('/:id', authenticate, async (req, res, next) => {
  * Upload avatar
  * POST /api/users/upload-avatar
  */
-router.post('/upload-avatar', authenticate, uploadAvatar.single('avatar'), async (req, res, next) => {
+router.post('/upload-avatar', authenticate, avatarUploadLimiter, uploadAvatar.single('avatar'), async (req, res, next) => {
   try {
     if (!req.file) {
       return res.status(400).json({ status: 'error', message: 'Aucun fichier envoyé' });
@@ -145,17 +195,35 @@ router.delete('/delete-avatar', authenticate, async (req, res, next) => {
   }
 });
 
-router.put('/update-profile', authenticate, async (req, res, next) => {
+router.put('/update-profile', authenticate, profileUpdateLimiter, async (req, res, next) => {
   try {
     const { name, username, email, phoneNumber, address, picture } = req.body || {};
     const userId = req.user.id;
+    const nextName = cleanString(name, 120);
+    const nextUsername = cleanString(username, 40);
+    const nextEmail = normalizeEmail(email);
+    const nextPhoneNumber = cleanString(phoneNumber, 40);
+    const nextAddress = cleanString(address, 220);
+    const nextPicture = sanitizePictureUrl(picture);
+
+    if (username !== undefined && nextUsername && !USERNAME_RE.test(nextUsername)) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Nom d utilisateur invalide.',
+      });
+    }
 
     if (email !== undefined) {
-      const nextEmail = String(email || '').trim();
       if (!nextEmail) {
         return res.status(400).json({
           status: 'error',
           message: 'Email is required',
+        });
+      }
+      if (!PROFILE_EMAIL_RE.test(nextEmail)) {
+        return res.status(400).json({
+          status: 'error',
+          message: 'Email invalide',
         });
       }
       const existing = await prisma.user.findFirst({
@@ -173,15 +241,22 @@ router.put('/update-profile', authenticate, async (req, res, next) => {
       }
     }
 
+    if (picture !== undefined && nextPicture === null) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'URL d image invalide',
+      });
+    }
+
     const updated = await prisma.user.update({
       where: { id: userId },
       data: {
-        ...(name !== undefined && { name }),
-        ...(username !== undefined && { username }),
-        ...(email !== undefined && { email: String(email || '').trim() }),
-        ...(phoneNumber !== undefined && { phoneNumber }),
-        ...(address !== undefined && { address }),
-        ...(picture !== undefined && { picture }),
+        ...(name !== undefined && { name: nextName }),
+        ...(username !== undefined && { username: nextUsername }),
+        ...(email !== undefined && { email: nextEmail }),
+        ...(phoneNumber !== undefined && { phoneNumber: nextPhoneNumber }),
+        ...(address !== undefined && { address: nextAddress }),
+        ...(picture !== undefined && { picture: nextPicture }),
       },
       select: {
         id: true,

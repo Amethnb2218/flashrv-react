@@ -82,7 +82,6 @@ const paymentMethodChoices = [
   { value: "ORANGE_MONEY", label: "Orange Money" },
   { value: "WAVE", label: "Wave" },
   { value: "FREE_MONEY", label: "Free Money" },
-  { value: "PAYDUNYA", label: "PayDunya" },
   { value: "PAY_ON_PICKUP", label: "Paiement au retrait" },
   { value: "CASH_ON_DELIVERY", label: "Paiement a la livraison" },
   { value: "CASH", label: "Especes / Cash" },
@@ -93,7 +92,6 @@ const paymentMethodMeta = {
   ORANGE_MONEY: { hint: "Ajoutez le numero Orange Money et/ou le QR marchand." },
   WAVE: { hint: "Ajoutez le numero Wave et/ou le QR marchand." },
   FREE_MONEY: { hint: "Ajoutez le numero Free Money et/ou le QR marchand." },
-  PAYDUNYA: { hint: "Ancien paiement en ligne masqué." },
   PAY_ON_PICKUP: { hint: "Paiement au retrait en boutique." },
   CASH_ON_DELIVERY: { hint: "Paiement a la livraison." },
   CASH: { hint: "Paiement en especes." },
@@ -1166,7 +1164,7 @@ const formatPaymentMethodLabel = (method) => {
   if (key === "ORANGE_MONEY") return "Orange Money";
   if (key === "WAVE") return "Wave";
   if (key === "FREE_MONEY") return "Free Money";
-  if (key === "DEXPAY" || key === "PAYTECH" || key === "PAYDUNYA") return "DexPay";
+  if (key === "DEXPAY") return "DexPay";
   if (key === "PAY_ON_PICKUP") return "Paiement au retrait";
   if (key === "CASH_ON_DELIVERY") return "Paiement a la livraison";
   if (key === "CASH") return "Especes / Cash";
@@ -2742,7 +2740,7 @@ active
           ? "À la livraison"
           : paymentMethodKey === "PAY_ON_PICKUP"
             ? "Au retrait"
-            : paymentMethodKey === "DEXPAY" || paymentMethodKey === "PAYTECH" || paymentMethodKey === "PAYDUNYA"
+            : paymentMethodKey === "DEXPAY"
               ? "DexPay"
               : paymentMethodKey === "ORANGE_MONEY"
                 ? "Orange Money"

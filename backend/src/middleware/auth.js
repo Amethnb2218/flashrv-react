@@ -1,6 +1,7 @@
 const { verifyToken } = require('../utils/jwt');
 const { readCsrfHeader, verifyCsrfToken } = require('../utils/csrf');
 const prisma = require('../lib/prisma');
+const { getRequestOrigin, isOriginAllowed } = require('../utils/security');
 
 // ============================================
 // CONSTANTS
@@ -21,6 +22,13 @@ const STATUS = {
 
 const SAFE_HTTP_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 
+function readBearerToken(req) {
+  const authorization = String(req?.headers?.authorization || '').trim();
+  if (!authorization) return '';
+  const match = authorization.match(/^Bearer\s+(.+)$/i);
+  return match ? String(match[1] || '').trim() : '';
+}
+
 /**
  * Authentication middleware - verifies JWT token from cookies
  * Attaches user to req.user if authenticated
@@ -30,11 +38,9 @@ async function authenticate(req, res, next) {
     // Get token from cookie or Authorization header
     let token = req.cookies.token;
     let tokenSource = token ? 'cookie' : null;
-    // ...
-    if (!token && req.headers.authorization) {
-      token = req.headers.authorization.replace('Bearer ', '').trim();
+    if (!token) {
+      token = readBearerToken(req);
       tokenSource = token ? 'header' : null;
-      // ...
     }
     if (!token) {
       return res.status(401).json({
@@ -53,15 +59,22 @@ async function authenticate(req, res, next) {
           code: 'CSRF_INVALID',
         });
       }
+
+      const requestOrigin = getRequestOrigin(req);
+      if (requestOrigin && !isOriginAllowed(requestOrigin, { allowNoOrigin: false })) {
+        return res.status(403).json({
+          status: 'error',
+          message: 'Origin not allowed',
+          code: 'ORIGIN_INVALID',
+        });
+      }
     }
 
     // Verify token
     let decoded;
     try {
       decoded = verifyToken(token);
-      // ...
     } catch (e) {
-      // ...
       return res.status(401).json({
         status: 'error',
         message: 'Invalid or expired token',
@@ -94,21 +107,18 @@ async function authenticate(req, res, next) {
       },
     });
     if (!user) {
-      // ...
       return res.status(401).json({
         status: 'error',
         message: 'User not found',
       });
     }
     if (user.status === STATUS.SUSPENDED) {
-      // ...
       return res.status(403).json({
         status: 'error',
         message: 'Your account has been suspended. Contact support.',
       });
     }
     if (user.status === STATUS.REJECTED) {
-      // ...
       return res.status(403).json({
         status: 'error',
         message: 'Your account has been rejected.',
@@ -134,8 +144,8 @@ async function authenticate(req, res, next) {
 async function optionalAuth(req, res, next) {
   try {
     let token = req.cookies.token;
-    if (!token && req.headers.authorization) {
-      token = req.headers.authorization.replace('Bearer ', '').trim();
+    if (!token) {
+      token = readBearerToken(req);
     }
 
     if (!token) {
@@ -162,7 +172,7 @@ async function optionalAuth(req, res, next) {
       },
     });
 
-    if (user) {
+    if (user && ![STATUS.SUSPENDED, STATUS.REJECTED].includes(String(user.status || '').toUpperCase())) {
       req.authToken = token;
       req.user = user;
     }

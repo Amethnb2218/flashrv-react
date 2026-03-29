@@ -1,7 +1,7 @@
 const express = require('express');
 const prisma = require('../lib/prisma');
 const { authenticate, requireApprovedPro } = require('../middleware/auth');
-const { createPaydunyaInvoice, confirmPaydunyaInvoice } = require('../services/paydunyaService');
+const { confirmPaydunyaInvoice } = require('../services/paydunyaService');
 const { createDexPayCheckout, getDexPayConfig, retrieveDexPayCheckoutByReference } = require('../services/dexpayService');
 // const { initiateWavePayment, checkWavePaymentStatus } = require('../services/paymentService'); // TODO: enable when Wave API key is available
 const { pushNotification } = require('../realtime/hub');
@@ -13,7 +13,7 @@ const { triggerAutoPayoutForPayment } = require('../services/dexpayPayoutService
 
 const router = express.Router();
 
-const ALLOWED_PROVIDERS = ['DEXPAY', 'PAYTECH', 'PAYDUNYA', 'PAY_ON_SITE'];
+const ALLOWED_PROVIDERS = ['DEXPAY', 'PAY_ON_SITE'];
 const DEXPAY_MIN_ORDER_AMOUNT = 1200;
 const DEXPAY_MIN_BOOKING_AMOUNT = 1200;
 const DEFAULT_DEXPAY_TIMEOUT_MS = 6000;
@@ -83,20 +83,18 @@ const logDexPayContext = (label, context = {}) => {
   });
 };
 
-const toOperationalPaydunyaError = (error, phase = 'create') => {
+const toOperationalPaydunyaError = (error) => {
   if (error?.statusCode && error?.expose === true) {
     return error;
   }
 
   const normalizedMessage = String(error?.message || '').trim().toLowerCase();
   const isConfigIssue = normalizedMessage.includes('paydunya') && normalizedMessage.includes('configure');
-  const message = isConfigIssue
-    ? 'PayDunya n est pas configure sur le serveur.'
-    : phase === 'verify'
-      ? 'Impossible de verifier le paiement PayDunya pour le moment.'
-      : 'Impossible d initialiser le paiement PayDunya. Reessayez dans quelques instants.';
-
-  const wrapped = new Error(message);
+  const wrapped = new Error(
+    isConfigIssue
+      ? 'PayDunya n est plus actif sur le serveur.'
+      : 'Impossible de verifier un ancien paiement PayDunya pour le moment.'
+  );
   wrapped.statusCode = isConfigIssue ? 503 : 502;
   wrapped.expose = true;
   return wrapped;
@@ -330,7 +328,7 @@ const upsertPaymentForTarget = async ({
   amount,
   reference,
   transactionId,
-  method = 'PAYDUNYA',
+  method = 'DEXPAY',
   status = 'PENDING',
 }) => {
   const data = {
@@ -361,173 +359,6 @@ const upsertPaymentForTarget = async ({
   }
 
   return prisma.payment.create({ data });
-};
-
-const createPaydunyaPaymentForBooking = async ({
-  bookingId,
-  amount,
-  customerName,
-  customerEmail,
-  successUrl,
-  cancelUrl,
-  user,
-}) => {
-  const booking = await prisma.appointment.findUnique({
-    where: { id: bookingId },
-    include: {
-      salon: { select: { id: true, name: true } },
-      service: { select: { id: true, name: true } },
-      client: { select: { id: true } },
-    },
-  });
-
-  if (!booking) {
-    const err = new Error('Reservation introuvable');
-    err.statusCode = 404;
-    throw err;
-  }
-
-  if (booking.clientId !== user.id) {
-    const err = new Error('Acces interdit');
-    err.statusCode = 403;
-    throw err;
-  }
-
-  if (['COMPLETED', 'CANCELLED', 'NO_SHOW'].includes(String(booking.status || '').toUpperCase())) {
-    const err = new Error('Cette reservation ne peut plus etre payee');
-    err.statusCode = 400;
-    throw err;
-  }
-
-  const value = Number(amount);
-  if (!Number.isFinite(value) || value <= 0) {
-    const err = new Error('Montant invalide');
-    err.statusCode = 400;
-    throw err;
-  }
-
-  const { frontendBase, backendBase } = getBaseUrls();
-  const resolvedSuccessUrl = successUrl || `${frontendBase}/payment/success?appointmentId=${encodeURIComponent(bookingId)}`;
-  const resolvedCancelUrl = cancelUrl || `${frontendBase}/payment/cancel?appointmentId=${encodeURIComponent(bookingId)}`;
-  const callbackUrl = `${backendBase}/api/paydunya/ipn`;
-
-  let invoice;
-  try {
-    invoice = await createPaydunyaInvoice({
-      amount: value,
-      bookingId,
-      customerName: customerName || user.name || "Client Jolof'Era",
-      customerEmail: customerEmail || user.email || '',
-      description: `Reservation ${booking.service?.name || 'Salon'} - ${booking.salon?.name || "Jolof'Era"}`,
-      successUrl: resolvedSuccessUrl,
-      cancelUrl: resolvedCancelUrl,
-      callbackUrl,
-    });
-  } catch (error) {
-    throw toOperationalPaydunyaError(error, 'create');
-  }
-
-  await markAppointmentPendingPayment(bookingId);
-
-  const payment = await upsertPaymentForTarget({
-    appointmentId: bookingId,
-    userId: user.id,
-    amount: value,
-    reference: invoice.token,
-    transactionId: invoice.token,
-    status: 'PENDING',
-  });
-
-  return {
-    payment,
-    invoiceUrl: invoice.invoiceUrl,
-    token: invoice.token,
-  };
-};
-
-const createPaydunyaPaymentForOrder = async ({
-  orderId,
-  amount,
-  customerName,
-  customerEmail,
-  successUrl,
-  cancelUrl,
-  user,
-}) => {
-  const order = await prisma.order.findUnique({
-    where: { id: orderId },
-    include: {
-      salon: { select: { id: true, name: true } },
-      client: { select: { id: true } },
-      items: { include: { product: { select: { id: true, name: true } } } },
-    },
-  });
-
-  if (!order) {
-    const err = new Error('Commande introuvable');
-    err.statusCode = 404;
-    throw err;
-  }
-
-  if (order.clientId !== user.id) {
-    const err = new Error('Acces interdit');
-    err.statusCode = 403;
-    throw err;
-  }
-
-  if (['DELIVERED', 'CANCELLED'].includes(String(order.status || '').toUpperCase())) {
-    const err = new Error('Cette commande ne peut plus etre payee');
-    err.statusCode = 400;
-    throw err;
-  }
-
-  const value = Number(amount);
-  if (!Number.isFinite(value) || value <= 0) {
-    const err = new Error('Montant invalide');
-    err.statusCode = 400;
-    throw err;
-  }
-
-  const { frontendBase, backendBase } = getBaseUrls();
-  const resolvedSuccessUrl = successUrl || `${frontendBase}/order/payment/success?orderId=${encodeURIComponent(orderId)}`;
-  const resolvedCancelUrl = cancelUrl || `${frontendBase}/order/payment/cancel?orderId=${encodeURIComponent(orderId)}`;
-  const callbackUrl = `${backendBase}/api/paydunya/ipn`;
-  const itemLabel = (order.items || [])
-    .map((entry) => `${entry.product?.name || 'Article'} x${entry.quantity}`)
-    .join(', ');
-
-  let invoice;
-  try {
-    invoice = await createPaydunyaInvoice({
-      amount: value,
-      bookingId: orderId,
-      customerName: customerName || user.name || "Client Jolof'Era",
-      customerEmail: customerEmail || user.email || '',
-      description: `Commande ${itemLabel || 'Boutique'} - ${order.salon?.name || "Jolof'Era"}`,
-      successUrl: resolvedSuccessUrl,
-      cancelUrl: resolvedCancelUrl,
-      callbackUrl,
-    });
-  } catch (error) {
-    throw toOperationalPaydunyaError(error, 'create');
-  }
-
-  await markOrderPendingPayment(orderId);
-
-  const payment = await upsertPaymentForTarget({
-    orderId,
-    userId: user.id,
-    amount: value,
-    reference: invoice.token,
-    transactionId: invoice.token,
-    status: 'PENDING',
-  });
-
-  return {
-    payment,
-    invoiceUrl: invoice.invoiceUrl,
-    token: invoice.token,
-  };
 };
 
 const createDexPayPaymentForBooking = async ({
@@ -965,7 +796,7 @@ router.get('/', authenticate, requireApprovedPro, async (req, res, next) => {
 
 /**
  * POST /api/payments/create
- * Cree une facture PayDunya pour une reservation
+ * Cree une session DexPay pour une reservation ou une commande
  */
 router.post('/create', authenticate, async (req, res, next) => {
   try {
@@ -1199,7 +1030,7 @@ router.post('/confirm-on-site', authenticate, async (req, res, next) => {
 
 /**
  * GET /api/payments/verify/:bookingId
- * Verifie un paiement PayDunya d'une reservation
+ * Verifie un paiement heberge pour une reservation ou une commande
  */
 router.get('/verify/:bookingId', authenticate, async (req, res, next) => {
   try {

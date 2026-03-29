@@ -19,37 +19,18 @@ const notificationRoutes = require('./routes/notificationRoutes');
 const assistantRoutes = require('./routes/assistantRoutes');
 const productRoutes = require('./routes/productRoutes');
 const orderRoutes = require('./routes/orderRoutes');
-const paydunyaRoutes = require('./routes/paydunyaRoutes');
-const paytechRoutes = require('./routes/paytechRoutes');
 const dexpayRoutes = require('./routes/dexpayRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
+const { getAllowedOrigins, isOriginAllowed, parseOrigins } = require('./utils/security');
 
 const rateLimit = require('express-rate-limit');
 
 const app = express();
-app.set('trust proxy', 1);
-
-function toOrigin(value) {
-  const raw = String(value || '').trim();
-  if (!raw) return null;
-  try {
-    const url = new URL(raw);
-    return `${url.protocol}//${url.host}`;
-  } catch (_) {
-    return null;
-  }
-}
-
-function parseOrigins(...values) {
-  const parsed = values
-    .flatMap((value) => String(value || '').split(','))
-    .map((item) => toOrigin(item))
-    .filter(Boolean);
-  return [...new Set(parsed)];
-}
+app.disable('x-powered-by');
+app.set('trust proxy', process.env.NODE_ENV === 'production' ? 1 : 'loopback');
 
 function buildCspDirectives() {
-  const extraConnectSources = parseOrigins(
+  const configuredExtraConnectSources = parseOrigins(
     process.env.CSP_CONNECT_SRC,
     process.env.API_URL,
     process.env.FRONTEND_URL,
@@ -69,7 +50,7 @@ function buildCspDirectives() {
     'https://accounts.google.com',
     'ws:',
     'wss:',
-    ...extraConnectSources,
+    ...configuredExtraConnectSources,
   ];
 
   return {
@@ -100,29 +81,26 @@ function buildCspDirectives() {
 // ===========================================
 // CORS CONFIGURATION (must be BEFORE helmet and other middleware)
 // ===========================================
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || process.env.FRONTEND_URL || 'http://localhost:3000').split(',').map(s => s.trim());
-if (process.env.NODE_ENV !== 'production') {
-  ['http://localhost:3000', 'http://127.0.0.1:3000'].forEach(o => {
-    if (!allowedOrigins.includes(o)) allowedOrigins.push(o);
-  });
-}
-
 // Handle preflight OPTIONS requests explicitly
 app.options('*', cors({
   origin: (origin, cb) => {
-    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+    if (isOriginAllowed(origin, { allowNoOrigin: true })) return cb(null, true);
     cb(new Error('Not allowed by CORS'));
   },
   credentials: true,
+  methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'X-XSRF-Token'],
   optionsSuccessStatus: 204,
 }));
 
 app.use(cors({
   origin: (origin, cb) => {
-    if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+    if (isOriginAllowed(origin, { allowNoOrigin: true })) return cb(null, true);
     cb(new Error('Not allowed by CORS'));
   },
   credentials: true,
+  methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'X-XSRF-Token'],
   optionsSuccessStatus: 204,
 }));
 
@@ -151,6 +129,9 @@ app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Permitted-Cross-Domain-Policies', 'none');
   res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(self)');
+  if (req.path.startsWith('/api/auth') || req.path.startsWith('/api/admin') || req.path.startsWith('/api/users')) {
+    res.setHeader('Cache-Control', 'no-store');
+  }
   if (req.path.startsWith('/api/admin') || req.path.startsWith('/admin')) {
     res.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive');
   }
@@ -267,8 +248,6 @@ app.use('/api/push', pushRoutes);
 app.use('/api/assistant', assistantRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
-app.use('/api/paydunya', paydunyaRoutes);
-app.use('/api/paytech', paytechRoutes);
 app.use('/api/dexpay', dexpayRoutes);
 app.use('/api/analytics', analyticsRoutes);
 
@@ -328,6 +307,31 @@ app.use((err, req, res, next) => {
     return res.status(401).json({
       status: 'error',
       message: 'Token expired',
+    });
+  }
+
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({
+      status: 'error',
+      message: 'Charge utile trop volumineuse.',
+    });
+  }
+
+  if (err.type === 'entity.parse.failed') {
+    return res.status(400).json({
+      status: 'error',
+      message: 'JSON invalide.',
+    });
+  }
+
+  if (err.name === 'MulterError') {
+    const message =
+      err.code === 'LIMIT_FILE_SIZE'
+        ? 'Fichier trop volumineux.'
+        : 'Fichier invalide.';
+    return res.status(400).json({
+      status: 'error',
+      message,
     });
   }
 

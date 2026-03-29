@@ -2,16 +2,37 @@ const express = require('express');
 const multer = require('multer');
 const rateLimit = require('express-rate-limit');
 const { authenticate } = require('../middleware/auth');
+const { getRequestOrigin, isOriginAllowed } = require('../utils/security');
 
 const router = express.Router();
+const MAX_CHAT_MESSAGE_LENGTH = 1200;
+const MAX_CHAT_HISTORY_ITEMS = 8;
+const MAX_CHAT_HISTORY_TEXT_LENGTH = 700;
+const MAX_TTS_INPUT_LENGTH = 900;
+const ALLOWED_TTS_VOICES = new Set(['alloy', 'ash', 'ballad', 'coral', 'echo', 'fable', 'onyx', 'nova', 'sage', 'shimmer']);
+const ALLOWED_AUDIO_MIME_TYPES = new Set([
+  'audio/webm',
+  'audio/ogg',
+  'audio/mpeg',
+  'audio/mp3',
+  'audio/wav',
+  'audio/x-wav',
+  'audio/mp4',
+  'audio/m4a',
+  'audio/aac',
+]);
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 6 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (ALLOWED_AUDIO_MIME_TYPES.has(String(file.mimetype || '').toLowerCase())) return cb(null, true);
+    cb(new Error('Format audio non autorise'));
+  },
 });
 
 const assistantChatLimiter = rateLimit({
   windowMs: 10 * 60 * 1000,
-  max: 60,
+  max: 30,
   standardHeaders: true,
   legacyHeaders: false,
   message: { status: 'error', message: 'Trop de messages assistant. Reessayez dans quelques minutes.' },
@@ -80,6 +101,27 @@ function normalize(value) {
 function normalizeLanguage(value) {
   const language = String(value || 'auto').trim().toLowerCase();
   return ['fr', 'wo'].includes(language) ? language : 'auto';
+}
+
+function sanitizeHistory(history) {
+  if (!Array.isArray(history)) return [];
+
+  return history
+    .slice(-MAX_CHAT_HISTORY_ITEMS)
+    .map((entry) => ({
+      role: entry?.role === 'assistant' ? 'assistant' : 'user',
+      text: String(entry?.text || '').trim().slice(0, MAX_CHAT_HISTORY_TEXT_LENGTH),
+    }))
+    .filter((entry) => entry.text);
+}
+
+function ensureAllowedAssistantOrigin(req, res) {
+  const origin = getRequestOrigin(req);
+  if (!origin || !isOriginAllowed(origin, { allowNoOrigin: false })) {
+    res.status(403).json({ status: 'error', message: 'Origin non autorisee.' });
+    return false;
+  }
+  return true;
 }
 
 function looksLikeWolof(message) {
@@ -216,6 +258,8 @@ async function callOpenAIResponses({ message, history = [], preferredLanguage = 
 
 router.post('/chat', assistantChatLimiter, async (req, res, next) => {
   try {
+    if (!ensureAllowedAssistantOrigin(req, res)) return;
+
     const { message, history } = req.body || {};
     const clean = String(message || '').trim();
     const preferredLanguage = normalizeLanguage(req.body?.language);
@@ -223,12 +267,17 @@ router.post('/chat', assistantChatLimiter, async (req, res, next) => {
     if (!clean) {
       return res.status(400).json({ status: 'error', message: 'message is required' });
     }
+    if (clean.length > MAX_CHAT_MESSAGE_LENGTH) {
+      return res.status(400).json({ status: 'error', message: 'Message trop long.' });
+    }
+
+    const safeHistory = sanitizeHistory(history);
 
     const answer = !OPENAI_API_KEY
       ? fallbackAssistantReply(clean, preferredLanguage)
       : await callOpenAIResponses({
           message: clean,
-          history: Array.isArray(history) ? history : [],
+          history: safeHistory,
           preferredLanguage,
         });
 
@@ -247,6 +296,8 @@ router.post('/chat', assistantChatLimiter, async (req, res, next) => {
 
 router.post('/transcribe', authenticate, assistantHeavyLimiter, upload.single('audio'), async (req, res, next) => {
   try {
+    if (!ensureAllowedAssistantOrigin(req, res)) return;
+
     if (!req.file) {
       return res.status(400).json({ status: 'error', message: 'audio file is required' });
     }
@@ -291,11 +342,19 @@ router.post('/transcribe', authenticate, assistantHeavyLimiter, upload.single('a
 
 router.post('/speak', authenticate, assistantHeavyLimiter, async (req, res, next) => {
   try {
+    if (!ensureAllowedAssistantOrigin(req, res)) return;
+
     const text = String(req.body?.text || '').trim();
     const voice = String(req.body?.voice || 'alloy').trim();
 
     if (!text) {
       return res.status(400).json({ status: 'error', message: 'text is required' });
+    }
+    if (text.length > MAX_TTS_INPUT_LENGTH) {
+      return res.status(400).json({ status: 'error', message: 'Texte trop long pour la synthese vocale.' });
+    }
+    if (!ALLOWED_TTS_VOICES.has(voice)) {
+      return res.status(400).json({ status: 'error', message: 'Voix invalide.' });
     }
 
     if (!OPENAI_API_KEY) {

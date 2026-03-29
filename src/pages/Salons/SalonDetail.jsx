@@ -1132,7 +1132,6 @@ function SalonDetail() {
                           {filterVisiblePaymentMethods(salon.paymentMethods).map((pm) => {
                             const method = pm.method || pm
                             const labels = {
-                              PAYDUNYA: { label: 'PayDunya', color: 'bg-indigo-50 text-indigo-700' },
                               WAVE: { label: 'Wave', color: 'bg-blue-50 text-blue-700' },
                               ORANGE_MONEY: { label: 'Orange Money', color: 'bg-orange-50 text-orange-700' },
                               FREE_MONEY: { label: 'Free Money', color: 'bg-green-50 text-green-700' },

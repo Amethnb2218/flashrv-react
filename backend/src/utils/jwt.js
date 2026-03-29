@@ -5,6 +5,10 @@ if (!JWT_SECRET) {
   console.error('FATAL: JWT_SECRET environment variable is required');
   process.exit(1);
 }
+if (process.env.NODE_ENV === 'production' && String(JWT_SECRET).length < 32) {
+  console.error('FATAL: JWT_SECRET must be at least 32 characters in production');
+  process.exit(1);
+}
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
 const COOKIE_SECURE = process.env.COOKIE_SECURE === 'true' || process.env.NODE_ENV === 'production';
 
@@ -34,6 +38,7 @@ const COOKIE_DOMAIN = normalizeCookieDomain(process.env.COOKIE_DOMAIN);
  */
 function generateToken(payload) {
   return jwt.sign(payload, JWT_SECRET, {
+    algorithm: 'HS256',
     expiresIn: JWT_EXPIRES_IN,
   });
 }
@@ -45,7 +50,9 @@ function generateToken(payload) {
  * @throws {Error} If token is invalid or expired
  */
 function verifyToken(token) {
-  return jwt.verify(token, JWT_SECRET);
+  return jwt.verify(token, JWT_SECRET, {
+    algorithms: ['HS256'],
+  });
 }
 
 /**

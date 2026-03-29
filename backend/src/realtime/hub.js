@@ -1,16 +1,8 @@
 const { WebSocketServer } = require('ws');
 const { verifyToken } = require('../utils/jwt');
+const { isOriginAllowed } = require('../utils/security');
 
 const clientsByUser = new Map();
-const wsAllowedOrigins = (process.env.ALLOWED_ORIGINS || process.env.FRONTEND_URL || '')
-  .split(',')
-  .map((item) => String(item || '').trim())
-  .filter(Boolean);
-
-function isOriginAllowed(origin) {
-  if (!origin) return process.env.NODE_ENV !== 'production';
-  return wsAllowedOrigins.includes(origin);
-}
 
 const parseCookies = (rawCookie = '') =>
   String(rawCookie)
@@ -74,7 +66,7 @@ function initRealtime(server) {
   wss.on('connection', (ws, req) => {
     try {
       const origin = String(req.headers.origin || '').trim();
-      if (!isOriginAllowed(origin)) {
+      if (!isOriginAllowed(origin, { allowNoOrigin: process.env.NODE_ENV !== 'production' })) {
         ws.close(1008, 'Origin not allowed');
         return;
       }
