@@ -5,7 +5,7 @@ function sanitizeDigits(value) {
 function buildFallbackEmail({ bookingId, customerPhone }) {
   const digits = sanitizeDigits(customerPhone)
   const suffix = digits || String(bookingId || 'client').replace(/[^a-zA-Z0-9_-]/g, '')
-  return `client-${suffix}@flashrv.app`
+  return `client-${suffix}@jolofera.com`
 }
 
 export function buildDexPayPaymentPayload({
@@ -22,11 +22,11 @@ export function buildDexPayPaymentPayload({
 }) {
   const origin = typeof window !== 'undefined' ? window.location.origin : ''
   const safeBookingId = String(bookingId || '').trim()
-  const safeName = String(customerName || '').trim() || 'Client FlashRV'
+  const safeName = String(customerName || '').trim() || "Client Jolof'Era"
   const safeEmail = String(customerEmail || '').trim() || buildFallbackEmail({ bookingId: safeBookingId, customerPhone })
   const safePhone = String(customerPhone || '').trim()
-  const safeServiceLabel = String(serviceLabel || '').trim() || 'Reservation FlashRV'
-  const safeSalonName = String(salonName || '').trim() || 'FlashRV'
+  const safeServiceLabel = String(serviceLabel || '').trim() || "Reservation Jolof'Era"
+  const safeSalonName = String(salonName || '').trim() || "Jolof'Era"
   const numericAmount = Math.max(1, Number(amount || 0))
   const isOrderTarget = String(resourceKey || '').trim().toLowerCase() === 'orderid'
 

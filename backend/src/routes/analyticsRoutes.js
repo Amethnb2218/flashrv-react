@@ -30,6 +30,10 @@ const hashValue = (value) => {
   return crypto.createHash('sha256').update(normalized).digest('hex');
 };
 
+/**
+ * POST /api/analytics/visit
+ * Enregistre une visite unique par session.
+ */
 router.post('/visit', visitLimiter, optionalAuth, async (req, res) => {
   try {
     const visitorId = cleanString(req.body?.visitorId, 120);

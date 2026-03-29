@@ -230,7 +230,7 @@ const createPaydunyaInvoice = async ({
       description: safeDescription,
       items: {
         item_1: {
-          name: 'Reservation FlashRV',
+          name: "Reservation Jolof'Era",
           quantity: 1,
           unit_price: totalAmount,
           total_price: totalAmount,

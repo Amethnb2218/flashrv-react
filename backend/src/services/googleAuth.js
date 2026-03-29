@@ -38,7 +38,7 @@ async function verifyGoogleToken(idToken) {
 
     const payload = ticket.getPayload();
     if (!payload?.sub || !payload?.email) {
-      const err = new Error('Invalid Google token payload')
+      const err = new Error('Jeton Google invalide.')
       err.statusCode = 401
       err.expose = true
       throw err
@@ -70,7 +70,7 @@ async function verifyGoogleToken(idToken) {
     const err = new Error(
       invalidAudience
         ? 'Google token audience mismatch. Verify GOOGLE_CLIENT_ID/GOOGLE_CLIENT_IDS.'
-        : 'Invalid Google token'
+        : 'Jeton Google invalide.'
     )
     err.statusCode = 401
     err.expose = true

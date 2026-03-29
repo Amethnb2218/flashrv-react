@@ -235,7 +235,7 @@ app.get('/health', async (req, res) => {
   const isProd = process.env.NODE_ENV === 'production';
   res.status(200).json({
     status: 'success',
-    message: 'FlashRV Backend is running',
+    message: "Jolof'Era backend is running",
     timestamp: new Date().toISOString(),
     db: { connected: dbOk, responseMs: dbMs },
     ...(isProd

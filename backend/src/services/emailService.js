@@ -83,22 +83,22 @@ const renderEmailShell = ({ title, accent = '#059669', intro, body, ctaLabel, ct
 async function sendWelcomeEmail({ to, name }) {
   const safeName = escapeHtml(name || 'client');
   const html = renderEmailShell({
-    title: 'Bienvenue',
-    accent: '#7c3aed',
+    title: "Bienvenue sur Jolof'Era",
+    accent: '#0f766e',
     intro: `<p>Bonjour <strong>${safeName}</strong>,</p>`,
     body: `
-      <p>Votre compte Jolof&#39;Era a bien ete cree.</p>
-      <p>Vous pouvez maintenant vous connecter et utiliser la plateforme pour vos reservations, commandes et suivis.</p>
+      <p>Votre compte Jolof&#39;Era a bien ete cree et votre espace est desormais actif.</p>
+      <p>Vous pouvez des maintenant reserver, commander et suivre toutes vos activites depuis votre tableau de bord.</p>
     `,
     ctaLabel: "Acceder a Jolof'Era",
     ctaUrl: getFrontendBaseUrl(),
-    footer: "Si vous n'etes pas a l'origine de cette inscription, vous pouvez simplement ignorer cet email.",
+    footer: "Si vous n'etes pas a l'origine de cette inscription, vous pouvez ignorer cet email en toute securite.",
   });
 
   await deliverEmail({
     to,
     subject: "Bienvenue sur Jolof'Era",
-    text: `Bonjour ${name || 'client'},\n\nVotre compte Jolof'Era a bien ete cree.\nConnectez-vous ici: ${getFrontendBaseUrl()}\n\nSi vous n'etes pas a l'origine de cette inscription, ignorez cet email.`,
+    text: `Bonjour ${name || 'client'},\n\nVotre compte Jolof'Era a bien ete cree et votre espace est actif.\nAccedez a votre espace ici: ${getFrontendBaseUrl()}\n\nSi vous n'etes pas a l'origine de cette inscription, ignorez simplement cet email.`,
     html,
     label: 'welcome email',
   });
@@ -120,9 +120,9 @@ async function sendProPendingNotification({ proName, proEmail }) {
     if (!adminEmails.length) return;
 
     const html = renderEmailShell({
-      title: 'Nouveau PRO en attente',
+      title: 'Nouveau compte PRO a valider',
       accent: '#7c3aed',
-      intro: '<p>Un nouveau professionnel attend votre validation.</p>',
+      intro: '<p>Un nouveau professionnel vient de soumettre son inscription et attend votre validation.</p>',
       body: `
         <div style="background:#f5f3ff;border-radius:12px;padding:16px;margin-top:16px">
           <p style="margin:0 0 8px"><strong>Nom :</strong> ${escapeHtml(proName || '-')}</p>
@@ -131,13 +131,13 @@ async function sendProPendingNotification({ proName, proEmail }) {
       `,
       ctaLabel: 'Ouvrir le backoffice',
       ctaUrl: getFrontendAdminUrl(),
-      footer: "Cet email a ete envoye automatiquement depuis Jolof'Era.",
+      footer: "Connectez-vous au backoffice Jolof'Era pour examiner et traiter cette demande.",
     });
 
     await deliverEmail({
       to: adminEmails,
-      subject: 'Nouveau PRO en attente de validation',
-      text: `Un nouveau professionnel attend votre validation.\n\nNom: ${proName || '-'}\nEmail: ${proEmail || '-'}\n\nBackoffice: ${getFrontendAdminUrl()}`,
+      subject: 'Nouveau compte PRO en attente de validation',
+      text: `Un nouveau professionnel attend votre validation.\n\nNom: ${proName || '-'}\nEmail: ${proEmail || '-'}\n\nAcces backoffice: ${getFrontendAdminUrl()}`,
       html,
       label: 'PRO pending notification',
     });
@@ -154,18 +154,18 @@ async function sendProApprovedEmail({ to, name }) {
     accent: '#059669',
     intro: `<p>Bonjour <strong>${safeName}</strong>,</p>`,
     body: `
-      <p>Votre compte professionnel Jolof&#39;Era a ete approuve.</p>
-      <p>Vous pouvez maintenant acceder a votre dashboard, ajouter vos services et gerer vos reservations ou commandes.</p>
+      <p>Votre compte professionnel Jolof&#39;Era a ete valide avec succes.</p>
+      <p>Vous pouvez maintenant acceder a votre espace PRO, publier vos offres et gerer vos reservations comme vos commandes.</p>
     `,
     ctaLabel: 'Acceder au dashboard PRO',
     ctaUrl: proDashboardUrl,
-    footer: "Merci de faire confiance a Jolof'Era.",
+    footer: "Merci de faire confiance a Jolof'Era pour developper votre activite.",
   });
 
   await deliverEmail({
     to,
     subject: "Votre compte PRO Jolof'Era est approuve",
-    text: `Bonjour ${name || 'partenaire'},\n\nVotre compte professionnel Jolof'Era a ete approuve.\nAccedez a votre dashboard: ${proDashboardUrl}`,
+    text: `Bonjour ${name || 'partenaire'},\n\nVotre compte professionnel Jolof'Era a ete valide avec succes.\nAccedez a votre dashboard PRO: ${proDashboardUrl}`,
     html,
     label: 'PRO approved email',
   });
@@ -184,11 +184,11 @@ async function sendBookingConfirmationEmail({ to, clientName, salonName, date, t
     : '<li>Service reserve</li>';
 
   const html = renderEmailShell({
-    title: 'Reservation confirmee',
+    title: 'Reservation enregistree',
     accent: '#059669',
     intro: `<p>Bonjour <strong>${safeClientName}</strong>,</p>`,
     body: `
-      <p>Votre reservation chez <strong>${safeSalonName}</strong> a bien ete enregistree.</p>
+      <p>Votre reservation chez <strong>${safeSalonName}</strong> a bien ete prise en compte.</p>
       <div style="background:#f0fdf4;border-radius:12px;padding:16px;margin-top:16px">
         <p style="margin:0 0 8px"><strong>Date :</strong> ${escapeHtml(dateStr)}</p>
         <p style="margin:0 0 8px"><strong>Heure :</strong> ${escapeHtml(time || '')}</p>
@@ -196,19 +196,19 @@ async function sendBookingConfirmationEmail({ to, clientName, salonName, date, t
         <ul style="margin:0;padding-left:20px">${serviceItems}</ul>
         <p style="margin:12px 0 0"><strong>Total :</strong> ${formatMoney(totalPrice)} FCFA</p>
       </div>
-      <p style="margin-top:16px">Le salon vous assignera un(e) coiffeur(se) et vous enverra une confirmation avec les details.</p>
+      <p style="margin-top:16px">Le salon traitera votre demande et vous retrouverez le suivi complet depuis votre espace client.</p>
     `,
     ctaLabel: 'Voir mes reservations',
     ctaUrl: `${getFrontendBaseUrl()}/dashboard`,
-    footer: "Merci d'utiliser Jolof'Era.",
+    footer: "Merci d'utiliser Jolof'Era pour vos rendez-vous.",
   });
 
   await deliverEmail({
     to,
-    subject: `Confirmation de votre reservation - ${salonName || "Jolof'Era"}`,
+    subject: `Reservation enregistree - ${salonName || "Jolof'Era"}`,
     text:
       `Bonjour ${clientName || 'client'},\n\n` +
-      `Votre reservation chez ${salonName || 'votre salon'} a bien ete enregistree.\n` +
+      `Votre reservation chez ${salonName || 'votre salon'} a bien ete prise en compte.\n` +
       `Date: ${dateStr}\n` +
       `Heure: ${time || ''}\n` +
       `Total: ${formatMoney(totalPrice)} FCFA\n\n` +
@@ -229,30 +229,30 @@ async function sendOrderConfirmationEmail({ to, clientName, boutiqueName, items,
     : '<li>Articles commandes</li>';
 
   const html = renderEmailShell({
-    title: 'Commande confirmee',
+    title: 'Commande enregistree',
     accent: '#7c3aed',
     intro: `<p>Bonjour <strong>${safeClientName}</strong>,</p>`,
     body: `
-      <p>Votre commande chez <strong>${safeBoutiqueName}</strong> a bien ete enregistree.</p>
+      <p>Votre commande chez <strong>${safeBoutiqueName}</strong> a bien ete prise en charge.</p>
       <div style="background:#f5f3ff;border-radius:12px;padding:16px;margin-top:16px">
         <p style="margin:0 0 8px"><strong>Mode :</strong> ${escapeHtml(modeLabel)}</p>
         <p style="margin:12px 0 6px"><strong>Articles :</strong></p>
         <ul style="margin:0;padding-left:20px">${itemLines}</ul>
         <p style="margin:12px 0 0"><strong>Total :</strong> ${formatMoney(totalPrice)} FCFA</p>
       </div>
-      <p style="margin-top:16px">La boutique traitera votre commande et vous tiendra informe(e) de l'avancement.</p>
+      <p style="margin-top:16px">La boutique preparera votre commande et vous informera de chaque etape de suivi.</p>
     `,
     ctaLabel: 'Voir mes commandes',
     ctaUrl: `${getFrontendBaseUrl()}/dashboard`,
-    footer: "Merci d'utiliser Jolof'Era.",
+    footer: "Merci d'utiliser Jolof'Era pour vos achats.",
   });
 
   await deliverEmail({
     to,
-    subject: `Confirmation de votre commande - ${boutiqueName || "Jolof'Era"}`,
+    subject: `Commande enregistree - ${boutiqueName || "Jolof'Era"}`,
     text:
       `Bonjour ${clientName || 'client'},\n\n` +
-      `Votre commande chez ${boutiqueName || 'votre boutique'} a bien ete enregistree.\n` +
+      `Votre commande chez ${boutiqueName || 'votre boutique'} a bien ete prise en charge.\n` +
       `Mode: ${modeLabel}\n` +
       `Total: ${formatMoney(totalPrice)} FCFA\n\n` +
       `Consultez vos commandes ici: ${getFrontendBaseUrl()}/dashboard`,
@@ -264,24 +264,24 @@ async function sendOrderConfirmationEmail({ to, clientName, boutiqueName, items,
 async function sendAdminPromotionEmail({ to, name }) {
   const safeName = escapeHtml(name || '');
   const html = renderEmailShell({
-    title: 'Promotion administrateur',
+    title: 'Acces administrateur active',
     accent: '#4f46e5',
     intro: `<p>Bonjour${safeName ? ` <strong>${safeName}</strong>` : ''},</p>`,
     body: `
-      <p>Vous avez ete promu(e) administrateur sur Jolof&#39;Era.</p>
-      <p>Vous pouvez maintenant acceder au backoffice pour gerer les comptes, salons, boutiques et utilisateurs.</p>
+      <p>Vos droits administrateur sur Jolof&#39;Era ont ete actives.</p>
+      <p>Vous pouvez maintenant acceder au backoffice pour piloter les comptes, salons, boutiques et utilisateurs.</p>
     `,
     ctaLabel: 'Acceder au dashboard admin',
     ctaUrl: getFrontendAdminUrl(),
-    footer: "Si vous pensez qu'il s'agit d'une erreur, contactez le support.",
+    footer: "Si vous pensez qu'il s'agit d'une erreur, contactez rapidement le support Jolof'Era.",
   });
 
   await deliverEmail({
     to,
-    subject: 'Vous etes maintenant administrateur - Jolof\'Era',
+    subject: "Vos droits administrateur sont actifs - Jolof'Era",
     text:
       `Bonjour ${name || ''},\n\n` +
-      `Vous etes maintenant administrateur sur Jolof'Era.\n` +
+      `Vos droits administrateur sur Jolof'Era sont actifs.\n` +
       `Accedez au backoffice: ${getFrontendAdminUrl()}`,
     html,
     label: 'admin promotion email',

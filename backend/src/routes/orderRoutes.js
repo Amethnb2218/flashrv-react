@@ -236,8 +236,8 @@ router.post('/', authenticate, async (req, res, next) => {
             userId: order.salon.ownerId,
             type: 'order',
             message: requiresClientPayment
-              ? `Nouvelle commande de ${order.clientName || 'un client'} en attente de paiement - ${totalPrice} FCFA`
-              : `Nouvelle commande de ${order.clientName || 'un client'} - ${totalPrice} FCFA`,
+              ? `Nouvelle commande de ${order.clientName || 'un client'} en attente de paiement - ${totalPrice} FCFA.`
+              : `Nouvelle commande de ${order.clientName || 'un client'} - ${totalPrice} FCFA.`,
           },
         });
         pushNotification(notification.userId, notification);
@@ -254,8 +254,8 @@ router.post('/', authenticate, async (req, res, next) => {
             userId: order.clientId,
             type: 'order',
             message: requiresClientPayment
-              ? `Votre commande chez ${order.salon?.name || 'la boutique'} est en attente de paiement.`
-              : `Votre commande chez ${order.salon?.name || 'la boutique'} est confirmee.`,
+              ? `Votre commande chez ${order.salon?.name || 'la boutique'} a bien ete enregistree et attend votre paiement.`
+              : `Votre commande chez ${order.salon?.name || 'la boutique'} a bien ete confirmee.`,
           },
         });
         pushNotification(notification.userId, notification);
@@ -279,8 +279,8 @@ router.post('/', authenticate, async (req, res, next) => {
     res.status(201).json({
       status: 'success',
       message: requiresClientPayment
-        ? 'Commande creee. Paiement requis pour confirmation.'
-        : 'Commande creee avec succes',
+        ? 'Votre commande a ete creee. Finalisez le paiement pour lancer la confirmation.'
+        : 'Votre commande a bien ete enregistree.',
       data: { order },
     });
   } catch (error) {
@@ -533,15 +533,15 @@ router.post('/:id/payment-proof', authenticate, uploadPaymentProof.single('proof
     }
 
     try {
-      const notification = await prisma.notification.create({
-        data: {
-          userId: order.clientId,
-          type: 'order',
-          message: proofUrl
-            ? `Preuve de paiement envoyee. La boutique ${order.salon?.name || ''} va verifier votre paiement.`
-            : `Demande de verification envoyee. La boutique ${order.salon?.name || ''} va verifier votre paiement.`,
-        },
-      });
+        const notification = await prisma.notification.create({
+          data: {
+            userId: order.clientId,
+            type: 'order',
+            message: proofUrl
+            ? `Votre preuve de paiement a bien ete transmise a ${order.salon?.name || 'la boutique'}. Verification en cours.`
+            : `Votre demande de verification a bien ete transmise a ${order.salon?.name || 'la boutique'}. Verification en cours.`,
+          },
+        });
       pushNotification(notification.userId, notification);
     } catch (e) {
       console.error('Order payment proof notify client error:', e.message);
@@ -550,8 +550,8 @@ router.post('/:id/payment-proof', authenticate, uploadPaymentProof.single('proof
     return res.status(200).json({
       status: 'success',
       message: proofUrl
-        ? 'Preuve de paiement envoyee avec succes.'
-        : 'Demande de verification de paiement envoyee avec succes.',
+        ? 'Votre preuve de paiement a bien ete envoyee.'
+        : 'Votre demande de verification de paiement a bien ete envoyee.',
       data: {
         orderId: id,
         payment: savedPayment,
@@ -653,8 +653,8 @@ router.patch('/:id/payment-proof/review', authenticate, async (req, res, next) =
             userId: order.clientId,
             type: 'order',
             message: approve
-              ? `Paiement valide pour votre commande chez ${order.salon?.name || 'la boutique'}.`
-              : `Paiement conteste par ${order.salon?.name || 'la boutique'}. Litige en cours de verification.`,
+              ? `Le paiement de votre commande chez ${order.salon?.name || 'la boutique'} a ete valide.`
+              : `Le paiement de votre commande chez ${order.salon?.name || 'la boutique'} a ete conteste. Une verification complementaire est en cours.`,
           },
         });
         pushNotification(notification.userId, notification);
@@ -676,7 +676,7 @@ router.patch('/:id/payment-proof/review', authenticate, async (req, res, next) =
                 data: {
                   userId: admin.id,
                   type: 'order',
-                  message: `Litige paiement: commande ${id.slice(-8).toUpperCase()} a verifier (${order.salon?.name || 'Boutique'}).`,
+                  message: `Litige paiement a examiner : commande ${id.slice(-8).toUpperCase()} (${order.salon?.name || 'Boutique'}).`,
                 },
               })
             )
@@ -701,7 +701,7 @@ router.patch('/:id/payment-proof/review', authenticate, async (req, res, next) =
 
     return res.status(200).json({
       status: 'success',
-      message: approve ? 'Paiement valide.' : 'Paiement conteste. Litige ouvert.',
+      message: approve ? 'Paiement valide avec succes.' : 'Paiement conteste. Un litige a ete ouvert.',
       data: {
         order: updatedOrder,
         payment: updatedPayment,
@@ -783,12 +783,12 @@ router.patch('/:id/status', authenticate, async (req, res, next) => {
     // Notify client of status change
     if (updated.clientId) {
       const statusLabels = {
-        CONFIRMED: 'confirmée',
+        CONFIRMED: 'confirmee',
         DISPUTED: 'en litige',
-        PREPARING: 'en préparation',
-        READY: 'prête',
-        DELIVERED: 'livrée',
-        CANCELLED: 'annulée',
+        PREPARING: 'en preparation',
+        READY: 'prete',
+        DELIVERED: 'livree',
+        CANCELLED: 'annulee',
       };
       const label = statusLabels[status] || status;
       try {
@@ -796,7 +796,7 @@ router.patch('/:id/status', authenticate, async (req, res, next) => {
           data: {
             userId: updated.clientId,
             type: 'order',
-            message: `Votre commande chez ${updated.salon?.name || 'la boutique'} est ${label}.`,
+            message: `Le statut de votre commande chez ${updated.salon?.name || 'la boutique'} est maintenant ${label}.`,
           },
         });
         pushNotification(notification.userId, notification);

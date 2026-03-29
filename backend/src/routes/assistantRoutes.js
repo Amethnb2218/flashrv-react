@@ -4,7 +4,10 @@ const rateLimit = require('express-rate-limit');
 const { authenticate } = require('../middleware/auth');
 
 const router = express.Router();
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 6 * 1024 * 1024 } });
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 6 * 1024 * 1024 },
+});
 
 const assistantChatLimiter = rateLimit({
   windowMs: 10 * 60 * 1000,
@@ -28,80 +31,158 @@ const CHAT_MODEL = process.env.OPENAI_CHAT_MODEL || 'gpt-4.1-mini';
 const STT_MODEL = process.env.OPENAI_STT_MODEL || 'gpt-4o-mini-transcribe';
 const TTS_MODEL = process.env.OPENAI_TTS_MODEL || 'gpt-4o-mini-tts';
 
+const WOLof_HINTS = [
+  'naka',
+  'salam',
+  'na nga def',
+  'mangi',
+  'maa ngi',
+  'jereje',
+  'waaw',
+  'deedet',
+  'lan',
+  'ana',
+  'ndimbal',
+  'booking def',
+  'sama',
+];
+
 const SITE_CAPABILITIES = `
-Jolof’Era (cÃ´tÃ© client) :
-- Trouver des salons et voir leurs dÃ©tails.
-- RÃ©server un rendez-vous (service, date/heure, confirmation).
+Jolof'Era (cote client) :
+- Trouver des salons et voir leurs details.
+- Reserver un rendez-vous (service, date/heure, confirmation).
 - Payer un acompte puis payer le reste au salon.
-- Consulter son dashboard client (rÃ©servations Ã  venir/historique).
-- Modifier son profil (nom, email, tÃ©lÃ©phone, adresse).
-- Utiliser le chat client <-> salon pendant le suivi de rÃ©servation.
-- Laisser un avis aprÃ¨s prestation.
+- Consulter son dashboard client (reservations a venir/historique).
+- Modifier son profil (nom, email, telephone, adresse).
+- Utiliser le chat client <-> salon pendant le suivi de reservation.
+- Laisser un avis apres prestation.
 `;
 
-const SYSTEM_PROMPT = `
-Tu es l'assistant client de Jolof’Era.
-RÃ¨gles:
-- Tu aides UNIQUEMENT les clients et visiteurs.
-- Tu ne donnes pas de procÃ©dures internes pro/admin.
-- RÃ©ponses courtes, concrÃ¨tes, orientÃ©es action.
-- Si l'utilisateur parle en wolof, rÃ©ponds en wolof simple. Sinon, rÃ©ponds en franÃ§ais.
-- Si tu n'es pas sÃ»r, dis-le clairement et propose l'Ã©tape la plus utile.
-Contexte plateforme:
+const BASE_SYSTEM_PROMPT = `
+Tu es l'assistant client de Jolof'Era.
+Regles :
+- Tu aides uniquement les clients et visiteurs.
+- Tu ne donnes pas de procedures internes pro/admin.
+- Reponses courtes, concretes, orientees action.
+- Si tu n'es pas sur, dis-le clairement et propose l'etape la plus utile.
+Contexte plateforme :
 ${SITE_CAPABILITIES}
 `;
 
-const normalize = (value) =>
-  String(value || '')
+function normalize(value) {
+  return String(value || '')
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .trim();
+}
 
-function fallbackAssistantReply(message) {
+function normalizeLanguage(value) {
+  const language = String(value || 'auto').trim().toLowerCase();
+  return ['fr', 'wo'].includes(language) ? language : 'auto';
+}
+
+function looksLikeWolof(message) {
   const text = normalize(message);
-  if (!text) return 'Je suis lÃ  pour vous guider. Posez votre question.';
+  if (!text) return false;
+  return WOLof_HINTS.some((hint) => text.includes(hint));
+}
+
+function shouldReplyInWolof(message, preferredLanguage = 'auto') {
+  if (preferredLanguage === 'wo') return true;
+  if (preferredLanguage === 'fr') return false;
+  return looksLikeWolof(message);
+}
+
+function buildSystemPrompt(preferredLanguage = 'auto') {
+  const languageInstruction =
+    preferredLanguage === 'wo'
+      ? '- Reponds en wolof simple, naturel et tres clair.'
+      : preferredLanguage === 'fr'
+        ? '- Reponds en francais clair et simple.'
+        : "- Si l'utilisateur parle en wolof, reponds en wolof simple. Sinon, reponds en francais.";
+
+  return `${BASE_SYSTEM_PROMPT}\n${languageInstruction}`;
+}
+
+function fallbackAssistantReply(message, preferredLanguage = 'auto') {
+  const text = normalize(message);
+  const replyInWolof = shouldReplyInWolof(message, preferredLanguage);
+
+  if (!text) {
+    return replyInWolof
+      ? 'Maa ngi fi ngir dimbali la. Laajal ma sa laaj.'
+      : 'Je suis la pour vous guider. Posez votre question.';
+  }
+
   if (text.includes('naka') || text.includes('salam') || text.includes('na nga def')) {
-    return 'Mangi fi rek. Maa ngi lay dimbali ci reservation, salons ak compte client.';
+    return replyInWolof
+      ? 'Mangi fi rek. Maa ngi lay dimbali ci reservation, salons ak compte client.'
+      : 'Je vais bien. Je peux vous aider pour les salons, les reservations et votre compte client.';
   }
+
   if (text.includes('reserv') || text.includes('rdv') || text.includes('book')) {
-    return 'Pour rÃ©server: allez sur Salons, ouvrez un salon, cliquez sur RÃ©server, choisissez service puis crÃ©neau.';
+    return replyInWolof
+      ? 'Ngir reserver, demal ci Salons, ubbi salon bi, bessel "Reserver", tanno service ak waxtu.'
+      : 'Pour reserver : allez sur Salons, ouvrez un salon, cliquez sur Reserver, choisissez le service puis le creneau.';
   }
-  if (text.includes('paiement') || text.includes('acompte')) {
-    return "Le paiement se fait en deux parties: acompte en ligne puis reste Ã  payer au salon.";
+
+  if (text.includes('paiement') || text.includes('acompte') || text.includes('wave') || text.includes('orange')) {
+    return replyInWolof
+      ? 'Paiement bi dafay ame nyaar wall : acompte ci ligne, te li ci des nga fey ko ci salon bi.'
+      : 'Le paiement se fait en deux parties : acompte en ligne puis reste a payer au salon.';
   }
-  if (text.includes('profil') || text.includes('email') || text.includes('telephone')) {
-    return 'Pour modifier vos infos: ouvrez Profil, mettez Ã  jour les champs puis cliquez sur Enregistrer.';
+
+  if (text.includes('profil') || text.includes('email') || text.includes('telephone') || text.includes('compte')) {
+    return replyInWolof
+      ? 'Ngir soppi say infos, demal ci Profil, soppi li nga begg, te bessel Enregistrer.'
+      : 'Pour modifier vos infos : ouvrez Profil, mettez a jour les champs puis cliquez sur Enregistrer.';
   }
+
   if (text.includes('dashboard') || text.includes('historique')) {
-    return 'Votre dashboard client affiche vos rendez-vous Ã  venir et votre historique.';
+    return replyInWolof
+      ? 'Dashboard client bi dafay won rendez-vous yi nga am ak historique bi.'
+      : 'Votre dashboard client affiche vos rendez-vous a venir et votre historique.';
   }
-  return 'Je peux vous aider pour rÃ©server, payer, suivre vos rendez-vous et gÃ©rer votre profil.';
+
+  return replyInWolof
+    ? 'Man naa la dimbali ci reservation, paiement, suivi rendez-vous ak gestion profil.'
+    : 'Je peux vous aider pour reserver, payer, suivre vos rendez-vous et gerer votre profil.';
 }
 
 function extractResponseText(data) {
-  if (typeof data?.output_text === 'string' && data.output_text.trim()) return data.output_text.trim();
+  if (typeof data?.output_text === 'string' && data.output_text.trim()) {
+    return data.output_text.trim();
+  }
+
   const output = Array.isArray(data?.output) ? data.output : [];
   const parts = [];
+
   for (const item of output) {
     const content = Array.isArray(item?.content) ? item.content : [];
-    for (const c of content) {
-      if (typeof c?.text === 'string') parts.push(c.text);
-      if (typeof c?.output_text === 'string') parts.push(c.output_text);
+    for (const piece of content) {
+      if (typeof piece?.text === 'string') parts.push(piece.text);
+      if (typeof piece?.output_text === 'string') parts.push(piece.output_text);
     }
   }
+
   return parts.join('\n').trim();
 }
 
-async function callOpenAIResponses({ message, history = [] }) {
+async function callOpenAIResponses({ message, history = [], preferredLanguage = 'auto' }) {
   const input = [
     {
       role: 'system',
-      content: [{ type: 'input_text', text: SYSTEM_PROMPT }],
+      content: [{ type: 'input_text', text: buildSystemPrompt(preferredLanguage) }],
     },
-    ...history.slice(-8).map((h) => ({
-      role: h.role === 'assistant' ? 'assistant' : 'user',
-      content: [{ type: h.role === 'assistant' ? 'output_text' : 'input_text', text: String(h.text || '') }],
+    ...history.slice(-8).map((entry) => ({
+      role: entry.role === 'assistant' ? 'assistant' : 'user',
+      content: [
+        {
+          type: entry.role === 'assistant' ? 'output_text' : 'input_text',
+          text: String(entry.text || ''),
+        },
+      ],
     })),
     {
       role: 'user',
@@ -130,30 +211,34 @@ async function callOpenAIResponses({ message, history = [] }) {
 
   const data = await response.json();
   const answer = extractResponseText(data);
-  return answer || fallbackAssistantReply(message);
+  return answer || fallbackAssistantReply(message, preferredLanguage);
 }
 
 router.post('/chat', assistantChatLimiter, async (req, res, next) => {
   try {
     const { message, history } = req.body || {};
     const clean = String(message || '').trim();
+    const preferredLanguage = normalizeLanguage(req.body?.language);
+
     if (!clean) {
       return res.status(400).json({ status: 'error', message: 'message is required' });
     }
 
-    let answer;
-    if (!OPENAI_API_KEY) {
-      answer = fallbackAssistantReply(clean);
-    } else {
-      answer = await callOpenAIResponses({
-        message: clean,
-        history: Array.isArray(history) ? history : [],
-      });
-    }
+    const answer = !OPENAI_API_KEY
+      ? fallbackAssistantReply(clean, preferredLanguage)
+      : await callOpenAIResponses({
+          message: clean,
+          history: Array.isArray(history) ? history : [],
+          preferredLanguage,
+        });
 
     return res.status(200).json({
       status: 'success',
-      data: { answer, provider: OPENAI_API_KEY ? 'openai' : 'fallback' },
+      data: {
+        answer,
+        language: preferredLanguage,
+        provider: OPENAI_API_KEY ? 'openai' : 'fallback',
+      },
     });
   } catch (error) {
     return next(error);
@@ -165,6 +250,7 @@ router.post('/transcribe', authenticate, assistantHeavyLimiter, upload.single('a
     if (!req.file) {
       return res.status(400).json({ status: 'error', message: 'audio file is required' });
     }
+
     if (!OPENAI_API_KEY) {
       return res.status(200).json({
         status: 'success',
@@ -172,11 +258,15 @@ router.post('/transcribe', authenticate, assistantHeavyLimiter, upload.single('a
       });
     }
 
+    const preferredLanguage = normalizeLanguage(req.body?.language);
     const form = new FormData();
     const fileBlob = new Blob([req.file.buffer], { type: req.file.mimetype || 'audio/webm' });
+
     form.append('file', fileBlob, req.file.originalname || `voice-${Date.now()}.webm`);
     form.append('model', STT_MODEL);
-    form.append('language', 'wo');
+    if (preferredLanguage !== 'auto') {
+      form.append('language', preferredLanguage);
+    }
 
     const response = await fetch(`${OPENAI_BASE_URL}/audio/transcriptions`, {
       method: 'POST',
@@ -203,9 +293,11 @@ router.post('/speak', authenticate, assistantHeavyLimiter, async (req, res, next
   try {
     const text = String(req.body?.text || '').trim();
     const voice = String(req.body?.voice || 'alloy').trim();
+
     if (!text) {
       return res.status(400).json({ status: 'error', message: 'text is required' });
     }
+
     if (!OPENAI_API_KEY) {
       return res.status(200).json({
         status: 'success',
@@ -228,8 +320,8 @@ router.post('/speak', authenticate, assistantHeavyLimiter, async (req, res, next
     });
 
     if (!response.ok) {
-      const t = await response.text();
-      throw new Error(`OpenAI TTS error: ${response.status} ${t}`);
+      const raw = await response.text();
+      throw new Error(`OpenAI TTS error: ${response.status} ${raw}`);
     }
 
     const buffer = Buffer.from(await response.arrayBuffer());
@@ -243,4 +335,3 @@ router.post('/speak', authenticate, assistantHeavyLimiter, async (req, res, next
 });
 
 module.exports = router;
-

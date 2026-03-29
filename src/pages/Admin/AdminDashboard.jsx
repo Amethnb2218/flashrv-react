@@ -474,7 +474,7 @@ export default function AdminDashboard() {
         {/* Header */}
         <header className="sticky top-0 z-20 flex flex-col gap-2 py-5 sm:py-8 mb-6 sm:mb-8 bg-white rounded-2xl shadow-md border border-primary-200 px-4 sm:px-6">
           <div className="flex items-center justify-between gap-2">
-            <h1 className="text-xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-[#1E293B] font-poppins">Dashboard Style • Flow</h1>
+            <h1 className="text-xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-[#1E293B] font-poppins">Dashboard Jolof'Era</h1>
             <div className="flex items-center gap-3">
               {/* Notification bell */}
               <div className="relative" ref={notifRef}>
@@ -579,7 +579,7 @@ export default function AdminDashboard() {
               )}
             </div>
           </div>
-          <p className="text-sm sm:text-base text-[#64748B] font-normal mt-2 ml-1">Plateforme de gestion intelligente et monitoring temps réel</p>
+          <p className="text-sm sm:text-base text-[#64748B] font-normal mt-2 ml-1">Pilotage centralise des operations, comptes et paiements Jolof'Era</p>
         </header>
 
         {/* Stats Cards */}
@@ -659,7 +659,7 @@ export default function AdminDashboard() {
             onApprove={user => handleAction(user.id, 'approve')}
             onReject={user => handleAction(user.id, 'reject')}
             onRestrict={user => handleRestrict(user.id, { canCreateService: false, canBook: false, isPublic: false })}
-            onDelete={isSuperAdmin ? handleDeletePro : undefined}
+            onDelete={handleDeletePro}
           />
         )}
         {activeTab === 'all' && (
@@ -670,7 +670,7 @@ export default function AdminDashboard() {
             onApprove={user => handleAction(user.id, 'approve')}
             onReject={user => handleAction(user.id, 'reject')}
             onRestrict={user => handleRestrict(user.id, { canCreateService: false, canBook: false, isPublic: false })}
-            onDelete={isSuperAdmin ? handleDeletePro : undefined}
+            onDelete={handleDeletePro}
           />
         )}
         {activeTab === 'clients' && (

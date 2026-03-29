@@ -326,7 +326,7 @@ router.post('/', authenticate, async (req, res, next) => {
           data: {
             userId: appointment.salon.ownerId,
             type: 'booking',
-            message: `Nouvelle réservation de ${fullName} le ${new Date(appointmentDate).toLocaleDateString('fr-FR')} à ${startTime}.`,
+            message: `Nouvelle reservation de ${fullName} pour le ${new Date(appointmentDate).toLocaleDateString('fr-FR')} a ${startTime}.`,
           },
         });
         pushNotification(notification.userId, notification);
@@ -349,8 +349,8 @@ router.post('/', authenticate, async (req, res, next) => {
           date: appointmentDate,
           startTime,
           message: isDexPayFlow
-            ? `Reservation creee chez ${appointment.salon?.name || 'le salon'} le ${new Date(appointmentDate).toLocaleDateString('fr-FR')} a ${startTime}. Paiement en attente.`
-            : `Reservation enregistree chez ${appointment.salon?.name || 'le salon'} le ${new Date(appointmentDate).toLocaleDateString('fr-FR')} a ${startTime}.`,
+            ? `Votre reservation chez ${appointment.salon?.name || 'le salon'} pour le ${new Date(appointmentDate).toLocaleDateString('fr-FR')} a ${startTime} a bien ete enregistree. Paiement en attente.`
+            : `Votre reservation chez ${appointment.salon?.name || 'le salon'} pour le ${new Date(appointmentDate).toLocaleDateString('fr-FR')} a ${startTime} a bien ete enregistree.`,
         });
         pushNotification(notification.userId, notification);
       } catch (e) {
@@ -374,10 +374,10 @@ router.post('/', authenticate, async (req, res, next) => {
     // Push notification to client
     if (!shouldSkipNotifications) {
       sendPushToUser(req.user.id, {
-        title: 'Reservation creee',
+        title: 'Reservation enregistree',
         body: isDexPayFlow
-          ? `RDV chez ${appointment.salon?.name || 'le salon'} le ${new Date(appointmentDate).toLocaleDateString('fr-FR')} a ${startTime}. Paiement en attente.`
-          : `RDV chez ${appointment.salon?.name || 'le salon'} le ${new Date(appointmentDate).toLocaleDateString('fr-FR')} a ${startTime}.`,
+          ? `Votre rendez-vous chez ${appointment.salon?.name || 'le salon'} est prevu le ${new Date(appointmentDate).toLocaleDateString('fr-FR')} a ${startTime}. Paiement en attente.`
+          : `Votre rendez-vous chez ${appointment.salon?.name || 'le salon'} est prevu le ${new Date(appointmentDate).toLocaleDateString('fr-FR')} a ${startTime}.`,
         url: '/dashboard',
       }).catch(() => {});
     }
@@ -385,8 +385,8 @@ router.post('/', authenticate, async (req, res, next) => {
     // Push notification to salon owner
     if (!shouldSkipNotifications && appointment?.salon?.ownerId && appointment.salon.ownerId !== req.user.id) {
       sendPushToUser(appointment.salon.ownerId, {
-        title: '📅 Nouvelle réservation',
-        body: `${fullName} a réservé le ${new Date(appointmentDate).toLocaleDateString('fr-FR')} à ${startTime}.`,
+        title: 'Nouvelle reservation',
+        body: `${fullName} a reserve un creneau pour le ${new Date(appointmentDate).toLocaleDateString('fr-FR')} a ${startTime}.`,
         url: '/pro/dashboard',
       }).catch(() => {});
     }
@@ -394,10 +394,10 @@ router.post('/', authenticate, async (req, res, next) => {
     res.status(201).json({
       status: 'success',
       message: coiffeurId
-        ? 'Appointment booked successfully'
+        ? 'Votre reservation a bien ete enregistree.'
         : (isDexPayFlow
-          ? 'Reservation creee. Paiement requis pour confirmer le rendez-vous.'
-          : 'Reservation creee. Le salon vous assignera un(e) coiffeur(se).'),
+          ? 'Votre reservation a ete creee. Finalisez le paiement pour confirmer le rendez-vous.'
+          : 'Votre reservation a bien ete enregistree. Le salon vous attribuera un(e) coiffeur(se) tres bientot.'),
       data: { appointment },
     });
   } catch (error) {
@@ -567,7 +567,7 @@ router.post('/:id/payment-proof', authenticate, uploadPaymentProof.single('proof
           data: {
             userId: appointment.salon.ownerId,
             type: 'payment',
-            message: `Paiement direct a verifier pour la reservation ${id.slice(-8).toUpperCase()} (${toFriendlyPaymentMethodLabel(normalizedMethod)}).`,
+            message: `Paiement mobile a verifier pour la reservation ${id.slice(-8).toUpperCase()} (${toFriendlyPaymentMethodLabel(normalizedMethod)}).`,
           },
         });
         pushNotification(notification.userId, notification);
@@ -581,7 +581,7 @@ router.post('/:id/payment-proof', authenticate, uploadPaymentProof.single('proof
         data: {
           userId: appointment.clientId,
           type: 'payment',
-          message: `Votre preuve de paiement a ete envoyee chez ${appointment.salon?.name || 'le salon'}. Verification en cours.`,
+          message: `Votre preuve de paiement a bien ete transmise a ${appointment.salon?.name || 'le salon'}. Verification en cours.`,
         },
       });
       pushNotification(notification.userId, notification);
@@ -591,7 +591,7 @@ router.post('/:id/payment-proof', authenticate, uploadPaymentProof.single('proof
 
     return res.status(200).json({
       status: 'success',
-      message: 'Demande de verification de paiement envoyee avec succes.',
+      message: 'Votre demande de verification de paiement a bien ete envoyee.',
       data: {
         appointmentId: id,
         payment: savedPayment,
@@ -994,7 +994,7 @@ router.delete('/:id', authenticate, async (req, res, next) => {
 
     res.status(200).json({
       status: 'success',
-      message: 'Appointment cancelled successfully',
+      message: 'La reservation a ete annulee avec succes.',
     });
   } catch (error) {
     next(error);

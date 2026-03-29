@@ -52,6 +52,31 @@ async function getSiteVisitSummary() {
   }
 }
 
+async function deleteAppointmentsAndPayments(tx, where) {
+  const appointments = await tx.appointment.findMany({
+    where,
+    select: { id: true },
+  });
+  const appointmentIds = appointments.map((appointment) => appointment.id);
+
+  if (appointmentIds.length) {
+    await tx.payment.deleteMany({ where: { appointmentId: { in: appointmentIds } } });
+    await tx.appointment.deleteMany({ where: { id: { in: appointmentIds } } });
+  }
+}
+
+async function deleteOrdersAndPayments(tx, where) {
+  const orders = await tx.order.findMany({
+    where,
+    select: { id: true },
+  });
+  const orderIds = orders.map((order) => order.id);
+
+  if (orderIds.length) {
+    await tx.payment.deleteMany({ where: { orderId: { in: orderIds } } });
+    await tx.order.deleteMany({ where: { id: { in: orderIds } } });
+  }
+}
 // ============================================
 // SUPER_ADMIN ROUTES - Restriction PRO/ADMIN
 // ============================================
@@ -733,9 +758,9 @@ router.patch('/pro/:id/reactivate', authenticate, requireAdmin, async (req, res)
 /**
  * DELETE /admin/pro/:id
  * Delete a PRO account and its salon
- * Access: SUPER_ADMIN only
+ * Access: ADMIN, SUPER_ADMIN
  */
-router.delete('/pro/:id', authenticate, requireSuperAdmin, async (req, res) => {
+router.delete('/pro/:id', authenticate, requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -755,15 +780,8 @@ router.delete('/pro/:id', authenticate, requireSuperAdmin, async (req, res) => {
       const salon = await tx.salon.findFirst({ where: { ownerId: id }, select: { id: true } });
       if (salon) {
         const salonId = salon.id;
-        const apptIds = await tx.appointment.findMany({
-          where: { salonId },
-          select: { id: true },
-        });
-        const appointmentIds = apptIds.map((a) => a.id);
-        if (appointmentIds.length) {
-          await tx.payment.deleteMany({ where: { appointmentId: { in: appointmentIds } } });
-        }
-        await tx.appointment.deleteMany({ where: { salonId } });
+        await deleteAppointmentsAndPayments(tx, { salonId });
+        await deleteOrdersAndPayments(tx, { salonId });
         await tx.review.deleteMany({ where: { salonId } });
         await tx.openingHour.deleteMany({ where: { salonId } });
         await tx.galleryImage.deleteMany({ where: { salonId } });
@@ -786,6 +804,16 @@ router.delete('/pro/:id', authenticate, requireSuperAdmin, async (req, res) => {
         }
         await tx.service.deleteMany({ where: { salonId } });
 
+        const productIds = await tx.product.findMany({
+          where: { salonId },
+          select: { id: true },
+        });
+        const productIdList = productIds.map((product) => product.id);
+        if (productIdList.length) {
+          await tx.productImage.deleteMany({ where: { productId: { in: productIdList } } });
+        }
+        await tx.product.deleteMany({ where: { salonId } });
+
         const coiffeurIds = await tx.coiffeur.findMany({
           where: { salonId },
           select: { id: true },
@@ -798,6 +826,12 @@ router.delete('/pro/:id', authenticate, requireSuperAdmin, async (req, res) => {
 
         await tx.salon.delete({ where: { id: salonId } });
       }
+
+      await deleteAppointmentsAndPayments(tx, { clientId: id });
+      await deleteOrdersAndPayments(tx, { clientId: id });
+      await tx.payment.deleteMany({ where: { userId: id } });
+      await tx.review.deleteMany({ where: { userId: id } });
+      await tx.loyalty.deleteMany({ where: { clientId: id } });
       await tx.user.delete({ where: { id } });
     });
 

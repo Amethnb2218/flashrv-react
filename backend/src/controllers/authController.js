@@ -58,7 +58,7 @@ async function register(req, res, next) {
     const { password: _pw, ...safeUser } = user;
     return res.status(201).json({
       status: 'success',
-      message: 'Inscription réussie',
+      message: 'Votre compte a ete cree avec succes.',
       data: { user: safeUser, token, csrfToken },
     });
   } catch (error) {
@@ -110,7 +110,7 @@ async function login(req, res, next) {
     const { password: _pw, ...safeUser } = user;
     return res.json({
       status: 'success',
-      message: 'Connexion réussie',
+      message: 'Connexion etablie avec succes.',
       data: { user: safeUser, token, csrfToken },
     });
   } catch (error) {
@@ -224,7 +224,7 @@ async function googleAuth(req, res, next) {
     if (!credential) {
       return res.status(400).json({
         status: "error",
-        message: "Google credential is required",
+        message: "Le jeton Google est requis.",
       });
     }
 
@@ -239,7 +239,7 @@ async function googleAuth(req, res, next) {
     if (!googleSub || !email) {
       return res.status(401).json({
         status: "error",
-        message: "Invalid Google token (missing sub/email)",
+        message: "Le jeton Google est invalide. Merci de reessayer.",
       });
     }
 
@@ -331,10 +331,10 @@ async function googleAuth(req, res, next) {
     return res.status(200).json({
       status: "success",
       message: accountLinked
-        ? "Compte lié avec Google avec succès"
+        ? "Votre compte a bien ete associe a Google."
         : isNewUser
-        ? "Account created successfully"
-        : "Logged in successfully",
+        ? "Votre compte a ete cree avec succes."
+        : "Connexion Google reussie.",
       data: {
         user: {
           id: user.id,

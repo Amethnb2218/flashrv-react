@@ -370,7 +370,7 @@ function SalonDetail() {
   const shareProduct = async (product) => {
     const shareUrl = `${window.location.origin}/salon/${id}`
     const payload = {
-      title: `${product?.name || 'Article'} - ${salonData?.name || 'FlashRV'}`,
+      title: `${product?.name || 'Article'} - ${salonData?.name || "Jolof'Era"}`,
       text: `Regardez ${product?.name || 'cet article'} sur ${salonData?.name || 'la boutique'}.`,
       url: shareUrl,
     }

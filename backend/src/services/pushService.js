@@ -23,7 +23,7 @@ async function sendPushToUser(userId, { title, body, url, icon }) {
   if (!subs.length) return;
 
   const payload = JSON.stringify({
-    title: title || 'Jolof’Era',
+    title: title || "Jolof'Era",
     body: body || '',
     url: url || '/',
     icon: icon || '/favicon.svg',

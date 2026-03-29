@@ -58,7 +58,7 @@ async function startServer() {
 
   server.listen(PORT, () => {
     const urls = getPublicUrls();
-    console.log(`FlashRV backend started on ${urls.backendBase}`);
+    console.log(`Jolof'Era backend started on ${urls.backendBase}`);
     if (urls.frontendBase) {
       console.log(`Configured frontend URL: ${urls.frontendBase}`);
     }
