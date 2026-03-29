@@ -33,11 +33,13 @@ import OrderPaymentSuccess from './pages/Order/OrderPaymentSuccess'
 import OrderPaymentCancel from './pages/Order/OrderPaymentCancel'
 import SEOHead from './components/SEO/SEOHead'
 import { ADMIN_PATH_ROUTE_SEGMENT } from './utils/adminPath'
+import SiteVisitTracker from './components/Analytics/SiteVisitTracker'
 
 function App() {
   return (
     <>
     <InstallPrompt />
+    <SiteVisitTracker />
     <Routes>
       <Route path="/" element={<Layout />}>
         {/* Public routes */}

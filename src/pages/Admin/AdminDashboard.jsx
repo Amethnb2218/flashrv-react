@@ -584,7 +584,7 @@ export default function AdminDashboard() {
 
         {/* Stats Cards */}
         {stats && (
-          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8 mb-8 sm:mb-12">
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-8 mb-8 sm:mb-12">
             <StatCard
               icon={FiClock}
               label="En attente"
@@ -608,6 +608,12 @@ export default function AdminDashboard() {
               label="Réservations"
               value={stats.appointments || 0}
               color="purple"
+            />
+            <StatCard
+              icon={FiBarChart2}
+              label="Visites site"
+              value={stats.siteVisits?.total || 0}
+              color="gray"
             />
           </div>
         )}

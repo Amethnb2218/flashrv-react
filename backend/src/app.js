@@ -22,6 +22,7 @@ const orderRoutes = require('./routes/orderRoutes');
 const paydunyaRoutes = require('./routes/paydunyaRoutes');
 const paytechRoutes = require('./routes/paytechRoutes');
 const dexpayRoutes = require('./routes/dexpayRoutes');
+const analyticsRoutes = require('./routes/analyticsRoutes');
 
 const rateLimit = require('express-rate-limit');
 
@@ -269,6 +270,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/paydunya', paydunyaRoutes);
 app.use('/api/paytech', paytechRoutes);
 app.use('/api/dexpay', dexpayRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // ===========================================
 // 404 HANDLER

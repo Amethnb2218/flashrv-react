@@ -15,6 +15,43 @@ const cleanString = (value, max = 240) => {
   return normalized.slice(0, max);
 };
 
+async function getSiteVisitSummary() {
+  const startOfToday = new Date();
+  startOfToday.setUTCHours(0, 0, 0, 0);
+
+  try {
+    const [total, today, uniqueVisitors] = await Promise.all([
+      prisma.siteVisit.count(),
+      prisma.siteVisit.count({
+        where: {
+          createdAt: { gte: startOfToday },
+        },
+      }),
+      prisma.siteVisit.findMany({
+        distinct: ['visitorId'],
+        select: { visitorId: true },
+      }),
+    ]);
+
+    return {
+      total,
+      today,
+      uniqueVisitors: uniqueVisitors.length,
+    };
+  } catch (error) {
+    if (error?.code === 'P2021' || error?.code === 'P2022') {
+      console.warn('[ADMIN_STATS] site_visits table unavailable, returning zeroed visit stats');
+      return {
+        total: 0,
+        today: 0,
+        uniqueVisitors: 0,
+      };
+    }
+
+    throw error;
+  }
+}
+
 // ============================================
 // SUPER_ADMIN ROUTES - Restriction PRO/ADMIN
 // ============================================
@@ -892,6 +929,7 @@ router.get('/stats', authenticate, requireAdmin, async (req, res) => {
       approvedPros,
       totalAppointments,
       totalSalons,
+      siteVisits,
     ] = await Promise.all([
       prisma.user.count({ where: { role: ROLES.CLIENT } }),
       prisma.user.count({ where: { role: ROLES.PRO } }),
@@ -899,9 +937,10 @@ router.get('/stats', authenticate, requireAdmin, async (req, res) => {
       prisma.user.count({ where: { role: ROLES.PRO, status: STATUS.APPROVED } }),
       prisma.appointment.count(),
       prisma.salon.count(),
+      getSiteVisitSummary(),
     ]);
 
-    console.log('[STATS] totalClients:', totalClients, 'totalPros:', totalPros, 'pendingPros:', pendingPros, 'approvedPros:', approvedPros, 'totalAppointments:', totalAppointments, 'totalSalons:', totalSalons);
+    console.log('[STATS] totalClients:', totalClients, 'totalPros:', totalPros, 'pendingPros:', pendingPros, 'approvedPros:', approvedPros, 'totalAppointments:', totalAppointments, 'totalSalons:', totalSalons, 'siteVisits:', siteVisits.total);
     res.status(200).json({
       status: 'success',
       data: {
@@ -913,6 +952,7 @@ router.get('/stats', authenticate, requireAdmin, async (req, res) => {
         },
         appointments: totalAppointments,
         salons: totalSalons,
+        siteVisits,
       },
     });
   } catch (error) {

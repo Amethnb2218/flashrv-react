@@ -212,6 +212,7 @@ model User {
   pushSubscriptions PushSubscription[]
   chatMessages    ChatMessage[]
   feedbacks       Feedback[]
+  siteVisits      SiteVisit[]
   userSettings    UserSettings?
   orders          Order[]        @relation("ClientOrders")
 
@@ -346,6 +347,28 @@ model Feedback {
   user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@map("feedback")
+}
+
+// ============================================
+// SITE VISIT MODEL
+// ============================================
+model SiteVisit {
+  id        String   @id @default(uuid())
+  visitorId String
+  sessionId String   @unique
+  path      String?
+  referrer  String?
+  userAgent String?
+  ipHash    String?
+  createdAt DateTime @default(now())
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([visitorId])
+  @@index([userId])
+  @@map("site_visits")
 }
 
 // ============================================
