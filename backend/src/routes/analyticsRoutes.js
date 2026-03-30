@@ -3,6 +3,7 @@ const express = require('express');
 const rateLimit = require('express-rate-limit');
 const prisma = require('../lib/prisma');
 const { optionalAuth } = require('../middleware/auth');
+const { ensureSiteVisitStorage, isSiteVisitStorageError } = require('../services/siteVisitStorage');
 
 const router = express.Router();
 
@@ -36,6 +37,8 @@ const hashValue = (value) => {
  */
 router.post('/visit', visitLimiter, optionalAuth, async (req, res) => {
   try {
+    await ensureSiteVisitStorage();
+
     const visitorId = cleanString(req.body?.visitorId, 120);
     const sessionId = cleanString(req.body?.sessionId, 120);
     const path = cleanString(req.body?.path, 320);
@@ -85,7 +88,7 @@ router.post('/visit', visitLimiter, optionalAuth, async (req, res) => {
         });
       }
 
-      if (error?.code === 'P2021' || error?.code === 'P2022') {
+      if (isSiteVisitStorageError(error)) {
         return res.status(503).json({
           status: 'error',
           message: 'Le suivi des visites n est pas encore disponible.',

@@ -2,7 +2,6 @@ import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { buildAuthHeaders } from '../../utils/authToken'
 import { resolveApiBase } from '../../utils/apiBase'
-import { ADMIN_PATH } from '../../utils/adminPath'
 
 const API_URL = resolveApiBase()
 const VISITOR_ID_KEY = 'flashrv_site_visitor_id'
@@ -26,10 +25,7 @@ function ensureStorageId(storage, key, prefix) {
 
 function isTrackablePath(pathname) {
   const currentPath = String(pathname || '').trim()
-  if (!currentPath) return false
-  if (currentPath.startsWith(ADMIN_PATH) || currentPath.startsWith('/admin')) return false
-  if (currentPath.startsWith('/pro')) return false
-  return true
+  return Boolean(currentPath)
 }
 
 export default function SiteVisitTracker() {

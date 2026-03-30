@@ -4,6 +4,7 @@ const prisma = require('../lib/prisma');
 const { authenticate, requireAdmin, requireSuperAdmin, ROLES, STATUS } = require('../middleware/auth');
 const { sendProApprovedEmail, sendAdminPromotionEmail } = require('../services/emailService');
 const { pushNotification } = require('../realtime/hub');
+const { ensureSiteVisitStorage, isSiteVisitStorageError } = require('../services/siteVisitStorage');
 
 const router = express.Router();
 const DIRECT_MOBILE_METHODS = new Set(['ORANGE_MONEY', 'WAVE', 'FREE_MONEY']);
@@ -20,6 +21,8 @@ async function getSiteVisitSummary() {
   startOfToday.setUTCHours(0, 0, 0, 0);
 
   try {
+    await ensureSiteVisitStorage();
+
     const [total, today, uniqueVisitors] = await Promise.all([
       prisma.siteVisit.count(),
       prisma.siteVisit.count({
@@ -39,7 +42,7 @@ async function getSiteVisitSummary() {
       uniqueVisitors: uniqueVisitors.length,
     };
   } catch (error) {
-    if (error?.code === 'P2021' || error?.code === 'P2022') {
+    if (isSiteVisitStorageError(error)) {
       console.warn('[ADMIN_STATS] site_visits table unavailable, returning zeroed visit stats');
       return {
         total: 0,

@@ -15,8 +15,9 @@ import AdminsSection from './AdminsSection';
 import StatsSection from './StatsSection';
 import { buildAuthHeaders } from '../../utils/authToken';
 import Modal from '../../components/UI/Modal';
+import { resolveApiBase } from '../../utils/apiBase';
 
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+const API_URL = resolveApiBase();
 
 /** Helper: returns fetch options with auth headers (token + cookie) */
 function authFetchOpts(extra = {}) {
