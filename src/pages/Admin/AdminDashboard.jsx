@@ -248,6 +248,17 @@ export default function AdminDashboard() {
     })
   }
 
+  const handleDeleteAdmin = async (admin) => {
+    if (!admin?.id) return
+    const label = admin?.name || admin?.email || 'cet administrateur'
+    setDeleteDialog({
+      isOpen: true,
+      type: 'admin',
+      item: admin,
+      label,
+    })
+  }
+
   const closeDeleteDialog = () => {
     if (actionLoading) return
     setDeleteDialog({ isOpen: false, type: null, item: null, label: '' })
@@ -257,9 +268,12 @@ export default function AdminDashboard() {
     if (!deleteDialog?.item?.id || !deleteDialog?.type) return
 
     const isPro = deleteDialog.type === 'pro'
+    const isAdmin = deleteDialog.type === 'admin'
     const endpoint = isPro
       ? `${API_URL}/admin/pro/${deleteDialog.item.id}`
-      : `${API_URL}/admin/clients/${deleteDialog.item.id}`
+      : isAdmin
+        ? `${API_URL}/admin/admins/${deleteDialog.item.id}`
+        : `${API_URL}/admin/clients/${deleteDialog.item.id}`
 
     setActionLoading(true)
     try {
@@ -268,20 +282,30 @@ export default function AdminDashboard() {
       if (!res.ok) {
         showToast(payload?.message || (isPro
           ? 'Suppression impossible pour ce compte PRO.'
-          : 'Suppression impossible pour ce compte client.'), 'error')
+          : isAdmin
+            ? 'Suppression impossible pour cet administrateur.'
+            : 'Suppression impossible pour ce compte client.'), 'error')
         return
       }
       if (isPro) {
         fetchData()
+      } else if (isAdmin) {
+        fetchAdmins()
       } else {
         fetchClients()
       }
-      showToast(isPro ? 'Compte PRO supprime avec succes.' : 'Compte client supprime avec succes.')
+      showToast(isPro
+        ? 'Compte PRO supprime avec succes.'
+        : isAdmin
+          ? 'Administrateur retire avec succes. Le compte repasse en client.'
+          : 'Compte client supprime avec succes.')
       setDeleteDialog({ isOpen: false, type: null, item: null, label: '' })
     } catch (e) {
       showToast(isPro
         ? 'Erreur réseau lors de la suppression du compte PRO.'
-        : 'Erreur réseau lors de la suppression du compte client.', 'error')
+        : isAdmin
+          ? 'Erreur réseau lors de la suppression de l administrateur.'
+          : 'Erreur réseau lors de la suppression du compte client.', 'error')
     } finally {
       setActionLoading(false)
     }
@@ -876,7 +900,12 @@ export default function AdminDashboard() {
         {activeTab === 'admins' && isSuperAdmin && (
           <>
             <AddAdminForm onAdminAdded={fetchAdmins} />
-            <AdminsSection admins={admins} loading={false} onRefresh={fetchAdmins} />
+            <AdminsSection
+              admins={admins}
+              loading={false}
+              onRefresh={fetchAdmins}
+              onDelete={handleDeleteAdmin}
+            />
           </>
         )}
       </div>
@@ -890,10 +919,14 @@ export default function AdminDashboard() {
         <div className="p-6">
           <div className="rounded-xl border border-red-100 bg-red-50 p-4 text-red-700">
             <p className="font-semibold">
-              Supprimer définitivement {deleteDialog.label || 'ce compte'} ?
+              {deleteDialog.type === 'admin'
+                ? `Retirer les droits administrateur de ${deleteDialog.label || 'ce compte'} ?`
+                : `Supprimer définitivement ${deleteDialog.label || 'ce compte'} ?`}
             </p>
             <p className="mt-2 text-sm">
-              Cette action est irréversible et supprimera toutes les données liées à ce compte.
+              {deleteDialog.type === 'admin'
+                ? 'Ce compte restera actif mais il sera retire de la liste des administrateurs et repassera en client.'
+                : 'Cette action est irréversible et supprimera toutes les données liées à ce compte.'}
             </p>
           </div>
 
@@ -913,7 +946,11 @@ export default function AdminDashboard() {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 disabled:opacity-50"
             >
               <FiTrash2 className="w-4 h-4" />
-              {actionLoading ? 'Suppression...' : 'Supprimer'}
+              {actionLoading
+                ? 'Suppression...'
+                : deleteDialog.type === 'admin'
+                  ? 'Retirer admin'
+                  : 'Supprimer'}
             </button>
           </div>
         </div>

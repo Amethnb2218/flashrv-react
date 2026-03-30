@@ -60,11 +60,11 @@ export default function AdminsSection({ admins, loading, onRefresh, onDelete, on
           className={`inline-flex items-center gap-1 rounded-lg bg-rose-500 text-white font-semibold hover:bg-rose-600 active:scale-95 transition ${
             compact ? "px-2.5 py-1.5 text-[11px]" : "px-3 py-1.5 text-xs"
           }`}
-          title="Supprimer l admin"
-          aria-label="Supprimer l admin"
+          title="Retirer l admin"
+          aria-label="Retirer l admin"
         >
           <FiX className="w-3.5 h-3.5" />
-          <span className={compact ? "sr-only 2xl:not-sr-only" : ""}>Supprimer</span>
+          <span className={compact ? "sr-only 2xl:not-sr-only" : ""}>Retirer</span>
         </button>
       )}
     </div>
@@ -83,7 +83,7 @@ export default function AdminsSection({ admins, loading, onRefresh, onDelete, on
         },
         {
           key: "delete",
-          label: "Supprimer",
+          label: "Retirer l admin",
           icon: FiX,
           danger: true,
           hidden: !onDelete,
