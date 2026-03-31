@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
-import { FiSearch, FiMapPin, FiCalendar, FiStar, FiArrowRight, FiCheck, FiNavigation, FiShield, FiUsers, FiClock, FiZap, FiMessageSquare, FiAlertTriangle, FiX, FiShoppingBag } from 'react-icons/fi'
+import { FiSearch, FiMapPin, FiCalendar, FiStar, FiArrowRight, FiCheck, FiNavigation, FiShield, FiUsers, FiClock, FiZap, FiMessageSquare, FiAlertTriangle, FiX, FiShoppingBag, FiCamera, FiScissors, FiDroplet, FiFeather, FiEdit3, FiHeart, FiLink, FiAperture, FiLayers } from 'react-icons/fi'
 import { categories } from '../data/salons'
 import SalonCard from '../components/Salon/SalonCard'
 import toast from 'react-hot-toast'
@@ -17,6 +17,18 @@ function Home() {
   const reduceMotion = useReducedMotion()
   const [feedbackModal, setFeedbackModal] = useState({ open: false, type: 'suggestion' })
   const [feedbackModalKey, setFeedbackModalKey] = useState(0)
+  const categoryIcons = {
+    barber: FiScissors,
+    shooting: FiCamera,
+    tresses: FiAperture,
+    tissage: FiLayers,
+    locks: FiLink,
+    soins: FiDroplet,
+    maquillage: FiEdit3,
+    ongles: FiHeart,
+    evenementiel: FiStar,
+    naturel: FiFeather,
+  }
 
   const [salons, setSalons] = useState([])
   const [salonsTotal, setSalonsTotal] = useState(0)
@@ -194,7 +206,7 @@ function Home() {
 
       setIsLocating(false)
       // Redirect to salons page anyway so the user isn't stuck
-      toast('Position non disponible — affichage de tous les salons.', { id: 'geo-fallback', icon: '📍', duration: 3000 })
+      toast('Position non disponible. Affichage de tous les salons.', { id: 'geo-fallback', duration: 3000 })
       navigate('/salons')
     }
 
@@ -453,20 +465,23 @@ function Home() {
             </Link>
           </div>
           <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2">
-            {categories.slice(0, 3).map((cat, idx) => (
-              <Link
-                key={cat.id}
-                to={`/salons?category=${cat.id}`}
-                className="group flex flex-col items-center gap-1 rounded-lg bg-white dark:bg-[#1d1712] p-2.5 border border-primary-100 dark:border-[#46382a] shadow-sm hover:border-gold-200 hover:bg-gold-50 dark:hover:bg-[#292018] transition-all"
-              >
-                {cat.icon && (
-                  <span className="text-xl">{cat.icon}</span>
-                )}
-                <span className="text-xs sm:text-sm font-medium text-primary-700 dark:text-[#cfbca4] group-hover:text-primary-900 dark:group-hover:text-gold-300 text-center leading-tight">
-                  {cat.name}
-                </span>
-              </Link>
-            ))}
+            {categories.slice(0, 3).map((cat) => {
+              const CategoryIcon = categoryIcons[cat.id] || FiShoppingBag
+              return (
+                <Link
+                  key={cat.id}
+                  to={`/salons?category=${cat.id}`}
+                  className="group flex flex-col items-center gap-1 rounded-lg bg-white dark:bg-[#1d1712] p-2.5 border border-primary-100 dark:border-[#46382a] shadow-sm hover:border-gold-200 hover:bg-gold-50 dark:hover:bg-[#292018] transition-all"
+                >
+                  <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-primary-50 dark:bg-[#251d16] text-primary-700 dark:text-gold-300">
+                    <CategoryIcon className="w-4 h-4" />
+                  </span>
+                  <span className="text-xs sm:text-sm font-medium text-primary-700 dark:text-[#cfbca4] group-hover:text-primary-900 dark:group-hover:text-gold-300 text-center leading-tight">
+                    {cat.name}
+                  </span>
+                </Link>
+              )
+            })}
             <Link
               to="/salons"
               className="group flex flex-col items-center justify-center gap-1 rounded-lg bg-gold-50 dark:bg-gold-500/10 p-2.5 border border-gold-100 dark:border-gold-500/30 hover:bg-gold-100 dark:hover:bg-gold-500/20 transition-all"

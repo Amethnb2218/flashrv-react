@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { 
   FiCalendar, FiClock, FiMapPin, FiStar, FiMoreVertical, 
   FiX, FiRefreshCw, FiHeart, FiSettings, FiChevronRight, FiChevronDown, FiTrash2,
-  FiGift, FiAward, FiPercent, FiMessageCircle, FiShoppingBag, FiPackage, FiBell 
+  FiGift, FiAward, FiPercent, FiMessageCircle, FiShoppingBag, FiPackage, FiBell, FiAlertTriangle
 } from 'react-icons/fi' 
 import { useAuth } from '../../context/AuthContext'
 import { loyaltyConfig } from '../../data/salons'
@@ -673,7 +673,7 @@ function ClientDashboard() {
         <div className="flex items-center justify-between mb-4 sm:mb-8">
           <div>
             <h1 className="text-lg sm:text-2xl font-bold text-primary-900">
-              Bonjour, {user?.name?.split(' ')[0]} 👋
+              Bonjour, {user?.name?.split(' ')[0]}
             </h1>
             <p className="text-primary-500 mt-0.5 text-xs sm:text-sm hidden sm:block">
               {loading ? 'Chargement...' : 'Gérez vos réservations et votre compte'}
@@ -1084,7 +1084,7 @@ function ClientDashboard() {
         <div className="p-6">
           <div className="bg-gold-50 border border-gold-200 rounded-xl p-4 mb-4">
             <p className="text-gold-800 font-medium text-sm flex items-center gap-2">
-              <span>⚠️</span>
+              <FiAlertTriangle className="w-4 h-4 flex-shrink-0" />
               Politique d'annulation
             </p>
             <p className="text-gold-700 text-sm mt-2">

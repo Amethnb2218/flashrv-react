@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { FiHome, FiSearch, FiArrowLeft } from 'react-icons/fi'
+import { FiHome, FiSearch, FiArrowLeft, FiScissors } from 'react-icons/fi'
 
 function NotFound() {
   return (
@@ -21,8 +21,9 @@ function NotFound() {
             404
           </h1>
           
-          {/* Scissors animation */}
-          <div className="my-8 text-6xl">✂️</div>
+          <div className="my-8 inline-flex items-center justify-center w-20 h-20 rounded-full bg-white/80 border border-primary-100 shadow-sm">
+            <FiScissors className="w-9 h-9 text-gold-600" />
+          </div>
           
           <h2 className="text-3xl font-bold text-primary-900 mb-4">
             Page introuvable

@@ -85,7 +85,7 @@ export default function ProPending() {
           {/* Tips */}
           <div className="bg-white rounded-xl p-4 text-left mb-6">
             <h3 className="font-medium text-primary-900 mb-3">
-              {status === 'PENDING' ? '💡 En attendant...' : '💡 Que faire ?'}
+              {status === 'PENDING' ? 'En attendant' : 'Que faire ensuite ?'}
             </h3>
             <ul className="space-y-2">
               {config.tips.map((tip, index) => (

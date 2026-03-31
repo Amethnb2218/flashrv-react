@@ -655,16 +655,16 @@ export { neighborhoods }
 
 // Catégories de services
 export const categories = [
-  { id: "barber", name: "Barbershop", icon: "💈", description: "Coupes hommes, dégradés, barbe" },
-  { id: "shooting", name: "Shooting Photo", icon: "📸", description: "Studios photo, portraits, mode" },
-  { id: "tresses", name: "Tresses", icon: "✨", description: "Tresses africaines, box braids, cornrows" },
-  { id: "tissage", name: "Tissage", icon: "💇‍♀️", description: "Tissages, perruques, extensions" },
-  { id: "locks", name: "Locks", icon: "🔗", description: "Locks, twists, freeform" },
-  { id: "soins", name: "Soins", icon: "💆‍♀️", description: "Soins capillaires et traitements" },
-  { id: "maquillage", name: "Maquillage", icon: "💄", description: "Maquillage jour, soirée, mariée" },
-  { id: "ongles", name: "Ongles", icon: "💅", description: "Manucure, pédicure, nail art" },
-  { id: "evenementiel", name: "Événementiel", icon: "👰", description: "Mariages et événements" },
-  { id: "naturel", name: "Naturel", icon: "🌿", description: "Soins bio et naturels" }
+  { id: "barber", name: "Barbershop", description: "Coupes hommes, dégradés, barbe" },
+  { id: "shooting", name: "Shooting Photo", description: "Studios photo, portraits, mode" },
+  { id: "tresses", name: "Tresses", description: "Tresses africaines, box braids, cornrows" },
+  { id: "tissage", name: "Tissage", description: "Tissages, perruques, extensions" },
+  { id: "locks", name: "Locks", description: "Locks, twists, freeform" },
+  { id: "soins", name: "Soins", description: "Soins capillaires et traitements" },
+  { id: "maquillage", name: "Maquillage", description: "Maquillage jour, soirée, mariée" },
+  { id: "ongles", name: "Ongles", description: "Manucure, pédicure, nail art" },
+  { id: "evenementiel", name: "Événementiel", description: "Mariages et événements" },
+  { id: "naturel", name: "Naturel", description: "Soins bio et naturels" }
 ]
 
 // Configuration fidélité

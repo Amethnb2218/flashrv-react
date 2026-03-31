@@ -782,7 +782,7 @@ ${variantNotes.join('\n')}` : '']
 
         {/* Security note */}
         <p className="text-center text-xs text-primary-400 mt-4">
-          🔒 Paiement sécurisé · Vos données sont protégées
+          Paiement sécurisé · Vos données sont protégées
         </p>
       </div>
     </div>
