@@ -560,38 +560,38 @@ function ClientDashboard() {
     const isCompleted = String(booking.status || '').toUpperCase() === 'COMPLETED'
 
     return (
-      <div className="bg-white rounded-xl border border-primary-100 shadow-sm overflow-hidden">
+      <div className="overflow-hidden border border-[#ead7ba] bg-[#fffdf8] shadow-[0_18px_36px_-32px_rgba(95,50,15,0.16)]">
         {/* Compact header row */}
         <button
           type="button"
           onClick={() => setExpandedBookingId(isExpanded ? null : booking.id)}
-          className="w-full text-left px-3 py-2 flex items-center gap-2.5 hover:bg-primary-50 transition"
+          className="w-full text-left px-3 py-2.5 flex items-center gap-2.5 transition hover:bg-[#fff4e8]"
         >
           {getSalonImage(booking.salon) ? (
-            <img src={getSalonImage(booking.salon)} alt={booking.salon?.name} className="w-8 h-8 rounded-lg object-cover shrink-0" />
+            <img src={getSalonImage(booking.salon)} alt={booking.salon?.name} className="h-9 w-9 border border-[#ead7ba] object-cover shrink-0" />
           ) : (
-            <div className="w-8 h-8 rounded-lg bg-primary-100 flex items-center justify-center text-primary-700 font-bold text-xs shrink-0">
+            <div className="flex h-9 w-9 items-center justify-center border border-[#ead7ba] bg-[#fff4e4] text-[#7b4517] font-bold text-xs shrink-0">
               {booking.salon?.name?.charAt(0) || 'S'}
             </div>
           )}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-semibold text-primary-900 text-sm truncate">{booking.salon?.name}</span>
-              <span className="text-xs text-primary-400 truncate">{booking.services?.map(s => s.name).join(', ') || ''}</span>
+              <span className="font-semibold text-[#2a1808] text-sm truncate">{booking.salon?.name}</span>
+              <span className="text-xs text-[#b38a61] truncate">{booking.services?.map(s => s.name).join(', ') || ''}</span>
             </div>
             <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-              <span className="text-xs text-primary-500 flex items-center gap-1">
+              <span className="text-xs text-[#9d6b35] flex items-center gap-1">
                 <FiCalendar className="w-3 h-3" />
                 {new Date(booking.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
               </span>
-              <span className="text-xs text-primary-500 flex items-center gap-1">
+              <span className="text-xs text-[#9d6b35] flex items-center gap-1">
                 <FiClock className="w-3 h-3" /> {booking.time || '—'}
               </span>
-              <span className="font-bold text-gold-600 text-sm">{booking.totalPrice?.toLocaleString()} FCFA</span>
+              <span className="font-bold text-[#c96a0b] text-sm">{booking.totalPrice?.toLocaleString()} FCFA</span>
             </div>
           </div>
           {getStatusBadge(booking.status)}
-          <FiChevronDown className={`w-4 h-4 text-primary-400 shrink-0 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+          <FiChevronDown className={`w-4 h-4 text-[#b38a61] shrink-0 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
         </button>
 
         {/* Expanded details */}
@@ -604,10 +604,10 @@ function ClientDashboard() {
               transition={{ duration: 0.2 }}
               className="overflow-hidden"
             >
-              <div className="px-3 pb-3 border-t border-primary-100 pt-2.5 space-y-2">
+              <div className="px-3 pb-3 border-t border-[#ead7ba] pt-2.5 space-y-2">
                 {/* Location */}
                 {(booking.salon?.address || booking.salon?.city) && (
-                  <p className="text-xs text-primary-500 flex items-center gap-1">
+                  <p className="text-xs text-[#9d6b35] flex items-center gap-1">
                     <FiMapPin className="w-3 h-3" /> {booking.salon.address || booking.salon.city}
                   </p>
                 )}
@@ -616,7 +616,7 @@ function ClientDashboard() {
                 {booking.services?.length > 0 && (
                   <div className="flex flex-wrap gap-1.5">
                     {booking.services.map(service => (
-                      <span key={service.id} className="px-2.5 py-1 bg-primary-50 text-primary-600 rounded-full text-xs">
+                      <span key={service.id} className="px-2.5 py-1 border border-[#ead7ba] bg-[#fff4e4] text-[#7b4517] text-xs">
                         {service.name}
                       </span>
                     ))}
@@ -629,30 +629,30 @@ function ClientDashboard() {
                     <>
                       <button
                         onClick={() => { setSelectedBooking(booking); setShowCancelModal(true) }}
-                        className="px-3 py-1.5 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-xs font-medium"
+                        className="px-3 py-1.5 border border-red-300 text-red-600 hover:bg-red-50 transition-colors text-xs font-medium"
                       >
                         <FiX className="inline w-3 h-3 mr-1" /> Annuler
                       </button>
-                      <button className="px-3 py-1.5 border border-primary-300 text-primary-600 rounded-lg hover:bg-primary-50 transition-colors text-xs font-medium">
+                      <button className="px-3 py-1.5 border border-[#ead7ba] text-[#7b4517] hover:bg-[#fff4e4] transition-colors text-xs font-medium">
                         <FiRefreshCw className="inline w-3 h-3 mr-1" /> Modifier
                       </button>
                     </>
                   )}
                   <button
                     onClick={() => { setChatBooking(booking); setShowChatModal(true) }}
-                    className="px-3 py-1.5 border border-primary-300 text-primary-700 rounded-lg hover:bg-primary-50 transition-colors text-xs font-medium"
+                    className="px-3 py-1.5 border border-[#ead7ba] text-[#7b4517] hover:bg-[#fff4e4] transition-colors text-xs font-medium"
                   >
                     <FiMessageCircle className="inline w-3 h-3 mr-1" /> Chat
                   </button>
                   {isCompleted && (
-                    <button className="px-3 py-1.5 bg-yellow-50 text-yellow-700 rounded-lg hover:bg-gold-100 transition-colors text-xs font-medium">
+                    <button className="px-3 py-1.5 border border-[#ead7ba] bg-[#fff4e4] text-[#9d6b35] hover:bg-[#ffedd3] transition-colors text-xs font-medium">
                       <FiStar className="inline w-3 h-3 mr-1" /> Avis
                     </button>
                   )}
                   {isHistoryBooking && (
                     <button
                       onClick={() => handleDeleteHistoryBooking(booking)}
-                      className="px-3 py-1.5 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-xs font-medium"
+                      className="px-3 py-1.5 border border-red-300 text-red-600 hover:bg-red-50 transition-colors text-xs font-medium"
                     >
                       <FiTrash2 className="inline w-3 h-3 mr-1" /> Supprimer
                     </button>
@@ -670,18 +670,19 @@ function ClientDashboard() {
     <div className="app-page relative min-h-screen pb-28 pt-4 sm:pt-8">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-4 sm:mb-8">
+        <div className="mb-4 flex flex-col gap-4 border border-[#ead7ba] bg-[#fffdf8] p-4 shadow-[0_20px_42px_-34px_rgba(95,50,15,0.16)] sm:mb-8 sm:flex-row sm:items-center sm:justify-between sm:p-5">
           <div>
-            <h1 className="text-lg sm:text-2xl font-bold text-primary-900">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#9d6b35]">Espace client</p>
+            <h1 className="mt-1 text-xl font-bold text-[#2a1808] sm:text-[1.9rem]">
               Bonjour, {user?.name?.split(' ')[0]}
             </h1>
-            <p className="text-primary-500 mt-0.5 text-xs sm:text-sm hidden sm:block">
+            <p className="mt-1 text-sm text-[#9d6b35]">
               {loading ? 'Chargement...' : 'Gérez vos réservations et votre compte'}
             </p>
           </div>
           <Link
             to="/salons"
-            className="btn-primary inline-flex items-center px-3 py-1.5 text-xs font-semibold sm:px-5 sm:py-2.5 sm:text-sm"
+            className="inline-flex items-center justify-center border border-[#7b4517] bg-[#d98718] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#c67612] sm:px-5 sm:py-3"
           >
             <span className="hidden sm:inline">Nouvelle réservation</span>
             <span className="sm:hidden">Réserver</span>
@@ -690,8 +691,8 @@ function ClientDashboard() {
         </div>
 
         {/* Quick stats */}
-        <div className="grid grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-8">
-          <div className="app-panel p-2 text-center sm:p-5 sm:text-left">
+        <div className="mb-4 grid grid-cols-2 gap-3 sm:mb-8 lg:grid-cols-4">
+          <div className="border border-[#ead7ba] bg-[#fffdf8] p-3 shadow-[0_16px_34px_-30px_rgba(95,50,15,0.14)] sm:p-5">
             <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-1 sm:gap-0">
               <div>
                 <p className="text-primary-500 text-[10px] sm:text-sm leading-tight">À venir</p>
@@ -702,7 +703,7 @@ function ClientDashboard() {
               </div>
             </div>
           </div>
-          <div className="app-panel p-2 text-center sm:p-5 sm:text-left">
+          <div className="border border-[#ead7ba] bg-[#fffdf8] p-3 shadow-[0_16px_34px_-30px_rgba(95,50,15,0.14)] sm:p-5">
             <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-1 sm:gap-0">
               <div>
                 <p className="text-primary-500 text-[10px] sm:text-sm leading-tight">Passées</p>
@@ -713,7 +714,7 @@ function ClientDashboard() {
               </div>
             </div>
           </div>
-          <div className="app-panel p-2 text-center sm:p-5 sm:text-left">
+          <div className="border border-[#ead7ba] bg-[#fffdf8] p-3 shadow-[0_16px_34px_-30px_rgba(95,50,15,0.14)] sm:p-5">
             <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-1 sm:gap-0">
               <div>
                 <p className="text-primary-500 text-[10px] sm:text-sm leading-tight">Favoris</p>
@@ -742,15 +743,15 @@ function ClientDashboard() {
         </div>
 
         {/* Tabs */}
-        <div className="sm:app-panel">
-          <div className="app-panel-header sticky top-14 z-20 border-b"> 
+        <div className="border border-[#ead7ba] bg-[#fffdf8] shadow-[0_20px_42px_-34px_rgba(95,50,15,0.16)]">
+          <div className="sticky top-14 z-20 border-b border-[#ead7ba] bg-[#fff8ee]"> 
             <div className="flex overflow-x-auto"> 
               <button 
                 onClick={() => handleTabChange('upcoming')} 
                 className={`app-tab min-w-[92px] flex-1 py-2.5 text-center text-xs font-medium transition-colors sm:py-3 sm:text-sm ${ 
                   activeTab === 'upcoming'
-                    ? 'app-tab-active'
-                    : ''
+                    ? 'border-b-2 border-[#7b4517] bg-[#fffdf8] text-[#5b3411]'
+                    : 'text-[#9d6b35] hover:bg-[#fff4e8]'
                 }`}
               >
                 À venir ({upcomingBookings.length})
@@ -759,8 +760,8 @@ function ClientDashboard() {
                 onClick={() => handleTabChange('past')} 
                 className={`app-tab min-w-[92px] flex-1 py-2.5 text-center text-xs font-medium transition-colors sm:py-3 sm:text-sm ${ 
                   activeTab === 'past'
-                    ? 'app-tab-active'
-                    : ''
+                    ? 'border-b-2 border-[#7b4517] bg-[#fffdf8] text-[#5b3411]'
+                    : 'text-[#9d6b35] hover:bg-[#fff4e8]'
                 }`}
               >
                 Historique ({pastBookings.length})
@@ -769,8 +770,8 @@ function ClientDashboard() {
                 onClick={() => handleTabChange('orders')} 
                 className={`app-tab min-w-[104px] flex-1 py-2.5 text-center text-xs font-medium transition-colors flex items-center justify-center gap-1 sm:py-3 sm:text-sm ${ 
                   activeTab === 'orders'
-                    ? 'app-tab-active'
-                    : ''
+                    ? 'border-b-2 border-[#7b4517] bg-[#fffdf8] text-[#5b3411]'
+                    : 'text-[#9d6b35] hover:bg-[#fff4e8]'
                 }`}
               >
                 <FiShoppingBag className="w-3.5 h-3.5" /> 
@@ -780,8 +781,8 @@ function ClientDashboard() {
                 onClick={() => handleTabChange('notifications')} 
                 className={`app-tab min-w-[116px] flex-1 py-2.5 text-center text-xs font-medium transition-colors flex items-center justify-center gap-1 sm:py-3 sm:text-sm ${ 
                   activeTab === 'notifications' 
-                    ? 'app-tab-active' 
-                    : '' 
+                    ? 'border-b-2 border-[#7b4517] bg-[#fffdf8] text-[#5b3411]' 
+                    : 'text-[#9d6b35] hover:bg-[#fff4e8]' 
                 }`} 
               > 
                 <FiBell className="w-3.5 h-3.5" /> 
@@ -791,8 +792,8 @@ function ClientDashboard() {
                 onClick={() => handleTabChange('favorites')} 
                 className={`app-tab min-w-[96px] flex-1 py-2.5 text-center text-xs font-medium transition-colors flex items-center justify-center gap-1 sm:py-3 sm:text-sm ${ 
                   activeTab === 'favorites'
-                    ? 'app-tab-active'
-                    : ''
+                    ? 'border-b-2 border-[#7b4517] bg-[#fffdf8] text-[#5b3411]'
+                    : 'text-[#9d6b35] hover:bg-[#fff4e8]'
                 }`}
               >
                 <FiHeart className="w-3.5 h-3.5" />

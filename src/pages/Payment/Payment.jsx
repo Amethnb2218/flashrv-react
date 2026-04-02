@@ -7,7 +7,7 @@ import { useAuth } from '../../context/AuthContext'
 import LoadingSpinner from '../../components/UI/LoadingSpinner'
 import apiFetch from '../../api/client'
 import { resolveMediaUrl } from '../../utils/media'
-import { buildDexPayPaymentPayload } from '../../utils/payments'
+import { buildDexPayPaymentPayload, calculateDexPayPlatformFee, calculateDexPayTotal } from '../../utils/payments'
 import { filterVisiblePaymentMethods } from '../../utils/paymentMethodVisibility'
 
 const DIRECT_MOBILE_METHODS = new Set(['ORANGE_MONEY', 'WAVE', 'FREE_MONEY'])
@@ -233,7 +233,11 @@ function Payment() {
   const selectedAdvanceMethod = availableAdvancePaymentMethods.find((method) => method.id === selectedMethod) || null
   const requiresDirectProof = DIRECT_MOBILE_METHODS.has(String(selectedMethod || '').toUpperCase())
   const resolvedPaymentMethod = paymentChoice === 'PAY_IN_ADVANCE' ? selectedMethod : 'PAY_ON_SITE'
-  const amountToPayNow = paymentChoice === 'PAY_IN_ADVANCE' ? bookingState.totalPrice : 0
+  const dexPayFeeAmount = calculateDexPayPlatformFee(bookingState.totalPrice)
+  const dexPayTotalAmount = calculateDexPayTotal(bookingState.totalPrice)
+  const amountToPayNow = paymentChoice === 'PAY_IN_ADVANCE'
+    ? (selectedMethod === 'DEXPAY' ? dexPayTotalAmount : bookingState.totalPrice)
+    : 0
   const remainingAmountAtSalon = paymentChoice === 'PAY_IN_ADVANCE' ? 0 : bookingState.totalPrice
 
   useEffect(() => {
@@ -756,12 +760,28 @@ function Payment() {
                             <p className="text-sm font-semibold text-primary-900">
                               Paiement en avance
                             </p>
-                            <p className="text-xs text-primary-500 mt-1">Reglez maintenant et vous n'aurez rien a payer au salon</p>
+                            <p className="text-xs text-primary-500 mt-1">
+                              {selectedMethod === 'DEXPAY'
+                                ? 'Le total inclut 2% de frais plateforme DexPay.'
+                                : "Reglez maintenant et vous n'aurez rien a payer au salon"}
+                            </p>
                           </div>
                           <span className="text-2xl font-black text-gold-700 whitespace-nowrap">
                             {amountToPayNow.toLocaleString()} FCFA
                           </span>
                         </div>
+                        {selectedMethod === 'DEXPAY' && (
+                          <div className="mb-3 space-y-2 border-t border-gold-100 pt-3">
+                            <div className="flex justify-between items-center text-sm text-primary-600">
+                              <span>Montant reservation</span>
+                              <span className="font-semibold text-primary-900">{bookingState.totalPrice.toLocaleString()} FCFA</span>
+                            </div>
+                            <div className="flex justify-between items-center text-sm text-primary-600">
+                              <span>Frais plateforme DexPay (2%)</span>
+                              <span className="font-semibold text-primary-900">{dexPayFeeAmount.toLocaleString()} FCFA</span>
+                            </div>
+                          </div>
+                        )}
                         <div className="flex justify-between items-center text-sm text-primary-600 pt-3 border-t border-gold-100">
                           <span>Reste a payer au salon</span>
                           <span className="font-semibold text-primary-900">0 FCFA</span>

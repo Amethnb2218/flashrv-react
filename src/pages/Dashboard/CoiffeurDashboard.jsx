@@ -4494,7 +4494,7 @@ if (!paymentRows?.length) {
 return ( 
 <> 
   <div className="mb-4 rounded-2xl border border-primary-100 bg-primary-50 px-4 py-3 text-sm text-primary-700">
-    Pour DexPay, le client paie d abord sur la plateforme. Si des frais DexPay s appliquent, le montant net reversable au pro peut etre inferieur au montant paye par le client.
+    Pour DexPay, le client paie sur la plateforme avec 2% de frais plateforme. Le net reversable au pro est calcule apres deduction de ces frais.
   </div>
   <div className="space-y-2 sm:hidden"> 
     {paymentRows.map((r) => { 
@@ -4528,7 +4528,7 @@ return (
           </div> 
           <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
             <div className="rounded-xl bg-white px-2.5 py-2 ring-1 ring-inset ring-primary-100">
-              <p className="text-[11px] text-primary-500">Frais DexPay</p>
+              <p className="text-[11px] text-primary-500">Frais plateforme</p>
               <p className="font-semibold text-primary-800">{formatMoney(r.feeAmount || 0)}</p>
             </div>
             <div className="rounded-xl bg-emerald-50 px-2.5 py-2 ring-1 ring-inset ring-emerald-100">
@@ -4542,8 +4542,8 @@ return (
               <>
               <p className="text-xs text-primary-500">
                 {r.feeAmount > 0
-                  ? "Reversement DexPay calcule sur le net apres frais."
-                  : "Les frais DexPay s affichent des qu ils sont synchronises par le serveur."}
+                  ? "Reversement DexPay calcule apres deduction des frais plateforme."
+                  : "Les frais plateforme s affichent apres creation du paiement DexPay."}
               </p>
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-xs text-primary-500">Reversement :</span>

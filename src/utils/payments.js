@@ -8,6 +8,18 @@ function buildFallbackEmail({ bookingId, customerPhone }) {
   return `client-${suffix}@jolofera.com`
 }
 
+export const DEXPAY_PLATFORM_FEE_RATE = 0.02
+
+export function calculateDexPayPlatformFee(amount) {
+  const baseAmount = Math.max(0, Number(amount || 0))
+  return Math.round(baseAmount * DEXPAY_PLATFORM_FEE_RATE)
+}
+
+export function calculateDexPayTotal(amount) {
+  const baseAmount = Math.max(0, Number(amount || 0))
+  return baseAmount + calculateDexPayPlatformFee(baseAmount)
+}
+
 export function buildDexPayPaymentPayload({
   bookingId,
   amount,
@@ -27,7 +39,9 @@ export function buildDexPayPaymentPayload({
   const safePhone = String(customerPhone || '').trim()
   const safeServiceLabel = String(serviceLabel || '').trim() || "Reservation Jolof'Era"
   const safeSalonName = String(salonName || '').trim() || "Jolof'Era"
-  const numericAmount = Math.max(1, Number(amount || 0))
+  const baseAmount = Math.max(1, Number(amount || 0))
+  const platformFeeAmount = calculateDexPayPlatformFee(baseAmount)
+  const numericAmount = calculateDexPayTotal(baseAmount)
   const isOrderTarget = String(resourceKey || '').trim().toLowerCase() === 'orderid'
 
   return {
@@ -42,6 +56,8 @@ export function buildDexPayPaymentPayload({
     customerEmail: safeEmail,
     customerPhone: safePhone,
     description: `${safeServiceLabel} - ${safeSalonName}`,
+    baseAmount,
+    platformFeeAmount,
     successUrl: origin && successPath
       ? `${origin}${successPath}?${resourceKey}=${encodeURIComponent(safeBookingId)}`
       : origin
@@ -56,6 +72,8 @@ export function buildDexPayPaymentPayload({
       bookingId: safeBookingId,
       salonName: safeSalonName,
       serviceLabel: safeServiceLabel,
+      baseAmount,
+      platformFeeAmount,
       customerPhone: safePhone || null,
       customerEmailProvided: Boolean(String(customerEmail || '').trim()),
     },

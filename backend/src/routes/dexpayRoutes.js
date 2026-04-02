@@ -66,7 +66,6 @@ router.post('/webhook', async (req, res) => {
           completedAt: new Date(),
           method: 'DEXPAY',
           transactionId: String(eventData?.id || eventData?.transaction_id || reference).trim(),
-          fees: Number(session?.fees || 0) || 0,
           totalAmount:
             Number(session?.total_amount || 0) > 0
               ? Number(session.total_amount)

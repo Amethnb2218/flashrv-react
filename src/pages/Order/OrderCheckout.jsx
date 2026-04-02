@@ -7,7 +7,7 @@ import { formatPrice } from '../../utils/helpers'
 import { resolveMediaUrl } from '../../utils/media'
 import apiFetch from '../../api/client'
 import { clearCart, deriveDeliveryConfigFromItems, readCart, removeItemFromCart } from '../../utils/cartStore'
-import { buildDexPayPaymentPayload } from '../../utils/payments'
+import { buildDexPayPaymentPayload, calculateDexPayPlatformFee, calculateDexPayTotal } from '../../utils/payments'
 import { saveOrderPaymentSession } from '../../utils/orderPaymentSession'
 import { filterVisiblePaymentMethods } from '../../utils/paymentMethodVisibility'
 
@@ -142,6 +142,8 @@ function OrderCheckout() {
   const cartTotal = cart.reduce((sum, c) => sum + c.product.price * c.quantity, 0)
   const deliveryFee = form.deliveryMode === 'DELIVERY' ? baseDeliveryFee : 0
   const grandTotal = cartTotal + deliveryFee
+  const dexPayFeeAmount = calculateDexPayPlatformFee(grandTotal)
+  const dexPayTotalAmount = calculateDexPayTotal(grandTotal)
   const isDexPayEligible = grandTotal >= DEXPAY_MIN_ORDER_AMOUNT
   const directPaymentMethods = useMemo(() => {
     return filterVisiblePaymentMethods(salonPaymentMethods)
@@ -746,13 +748,23 @@ ${variantNotes.join('\n')}` : '']
                     <span>{formatPrice(deliveryFee)}</span>
                   </div>
                 )}
+                {selectedPayment === 'DEXPAY' && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-primary-600">Frais plateforme DexPay (2%)</span>
+                    <span>{formatPrice(dexPayFeeAmount)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between font-bold text-lg border-t border-primary-200 pt-2">
                   <span>Total à payer</span>
-                  <span className="text-gold-600">{formatPrice(grandTotal)}</span>
+                  <span className="text-gold-600">{formatPrice(selectedPayment === 'DEXPAY' ? dexPayTotalAmount : grandTotal)}</span>
                 </div>
                 {!isDexPayEligible ? (
                   <p className="text-xs text-gold-700 bg-gold-50 border border-gold-100 rounded-lg px-3 py-2">
                     Le paiement DexPay est disponible a partir de {formatPrice(DEXPAY_MIN_ORDER_AMOUNT)} pour eviter un blocage du reversement pro.
+                  </p>
+                ) : selectedPayment === 'DEXPAY' ? (
+                  <p className="text-xs text-gold-700 bg-gold-50 border border-gold-100 rounded-lg px-3 py-2">
+                    Le total DexPay inclut 2% de frais plateforme.
                   </p>
                 ) : null}
               </div>
@@ -773,7 +785,7 @@ ${variantNotes.join('\n')}` : '']
                 Traitement...
               </span>
             ) : currentStep === 2 ? (
-              `Confirmer la commande (${formatPrice(grandTotal)})`
+              `Confirmer la commande (${formatPrice(selectedPayment === 'DEXPAY' ? dexPayTotalAmount : grandTotal)})`
             ) : (
               'Continuer'
             )}

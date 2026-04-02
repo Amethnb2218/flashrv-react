@@ -16,6 +16,7 @@ const router = express.Router();
 const ALLOWED_PROVIDERS = ['DEXPAY', 'PAY_ON_SITE'];
 const DEXPAY_MIN_ORDER_AMOUNT = 1200;
 const DEXPAY_MIN_BOOKING_AMOUNT = 1200;
+const DEXPAY_PLATFORM_FEE_RATE = 0.02;
 const DEFAULT_DEXPAY_TIMEOUT_MS = 6000;
 const MAX_DEXPAY_TIMEOUT_MS = 7000;
 const ROUTE_TIMEOUT_BUFFER_MS = 1000;
@@ -55,6 +56,16 @@ const withRouteTimeout = (promise, label = 'operation') => {
 
 const generateReference = () => {
   return 'FRV-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+};
+
+const calculateDexPayPlatformFee = (amount) => {
+  const normalized = Math.max(0, Number(amount || 0));
+  return Math.round(normalized * DEXPAY_PLATFORM_FEE_RATE);
+};
+
+const calculateDexPayGrossAmount = (amount) => {
+  const normalized = Math.max(0, Number(amount || 0));
+  return normalized + calculateDexPayPlatformFee(normalized);
 };
 
 const getBaseUrls = () => {
@@ -326,6 +337,8 @@ const upsertPaymentForTarget = async ({
   orderId,
   userId,
   amount,
+  feeAmount = 0,
+  totalAmount = amount,
   reference,
   transactionId,
   method = 'DEXPAY',
@@ -334,8 +347,8 @@ const upsertPaymentForTarget = async ({
   const data = {
     transactionId,
     amount,
-    fees: 0,
-    totalAmount: amount,
+    fees: Math.max(0, Number(feeAmount || 0)),
+    totalAmount: Math.max(0, Number(totalAmount || amount || 0)),
     currency: 'XOF',
     method,
     status,
@@ -403,7 +416,11 @@ const createDexPayPaymentForBooking = async ({
     err.statusCode = 400;
     throw err;
   }
-  if (value < DEXPAY_MIN_BOOKING_AMOUNT) {
+
+  const baseAmount = Number(booking.totalPrice || booking.service?.price || value);
+  const platformFeeAmount = calculateDexPayPlatformFee(baseAmount);
+  const grossAmount = calculateDexPayGrossAmount(baseAmount);
+  if (baseAmount < DEXPAY_MIN_BOOKING_AMOUNT) {
     const err = new Error(`Le paiement DexPay est disponible a partir de ${DEXPAY_MIN_BOOKING_AMOUNT} FCFA pour une reservation.`);
     err.statusCode = 400;
     err.expose = true;
@@ -418,7 +435,7 @@ const createDexPayPaymentForBooking = async ({
   logDexPayContext('Preparing DexPay booking payment:', {
     reference,
     bookingId,
-    amount: value,
+    amount: grossAmount,
     successUrl: resolvedSuccessUrl,
     cancelUrl: resolvedCancelUrl,
     webhookUrl,
@@ -427,7 +444,9 @@ const createDexPayPaymentForBooking = async ({
   const payment = await upsertPaymentForTarget({
     appointmentId: bookingId,
     userId: user.id,
-    amount: value,
+    amount: grossAmount,
+    feeAmount: platformFeeAmount,
+    totalAmount: grossAmount,
     reference,
     transactionId: reference,
     method: 'DEXPAY',
@@ -439,7 +458,7 @@ const createDexPayPaymentForBooking = async ({
   let checkout;
   try {
     checkout = await getOrCreateDexPayCheckout({
-      amount: value,
+      amount: grossAmount,
       reference,
       itemName: booking.service?.name || 'Reservation salon',
       successUrl: resolvedSuccessUrl,
@@ -516,6 +535,16 @@ const createDexPayPaymentForOrder = async ({
     throw err;
   }
 
+  const baseAmount = Number(order.totalPrice || value);
+  const platformFeeAmount = calculateDexPayPlatformFee(baseAmount);
+  const grossAmount = calculateDexPayGrossAmount(baseAmount);
+  if (baseAmount < DEXPAY_MIN_ORDER_AMOUNT) {
+    const err = new Error(`Le paiement DexPay est disponible a partir de ${DEXPAY_MIN_ORDER_AMOUNT} FCFA pour cette commande.`);
+    err.statusCode = 400;
+    err.expose = true;
+    throw err;
+  }
+
   const { frontendBase, backendBase } = getBaseUrls();
   const resolvedSuccessUrl = successUrl || `${frontendBase}/order/payment/success?orderId=${encodeURIComponent(orderId)}`;
   const resolvedCancelUrl = cancelUrl || `${frontendBase}/order/payment/cancel?orderId=${encodeURIComponent(orderId)}`;
@@ -527,7 +556,7 @@ const createDexPayPaymentForOrder = async ({
   logDexPayContext('Preparing DexPay order payment:', {
     reference,
     orderId,
-    amount: value,
+    amount: grossAmount,
     successUrl: resolvedSuccessUrl,
     cancelUrl: resolvedCancelUrl,
     webhookUrl,
@@ -536,7 +565,9 @@ const createDexPayPaymentForOrder = async ({
   const payment = await upsertPaymentForTarget({
     orderId,
     userId: user.id,
-    amount: value,
+    amount: grossAmount,
+    feeAmount: platformFeeAmount,
+    totalAmount: grossAmount,
     reference,
     transactionId: reference,
     method: 'DEXPAY',
@@ -548,7 +579,7 @@ const createDexPayPaymentForOrder = async ({
   let checkout;
   try {
     checkout = await getOrCreateDexPayCheckout({
-      amount: value,
+      amount: grossAmount,
       reference,
       itemName: itemLabel || 'Commande boutique',
       successUrl: resolvedSuccessUrl,
@@ -609,7 +640,6 @@ const verifyPaymentRecord = async (payment) => {
             completedAt: new Date(),
             method: 'DEXPAY',
             transactionId: String(session?.reference || payment.transactionId || '').trim() || payment.transactionId,
-            fees: Number(session?.fees || 0) || 0,
             totalAmount:
               Number(session?.total_amount || 0) > 0
                 ? Number(session.total_amount)
