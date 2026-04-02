@@ -21,6 +21,7 @@ function Salons() {
 
   const [searchParams, setSearchParams] = useSearchParams()
   const [showFilters, setShowFilters] = useState(false)
+  const [showAllBoutiqueHeroCategories, setShowAllBoutiqueHeroCategories] = useState(false)
   const searchInputRef = useRef(null)
   const [filters, setFilters] = useState({
     search: searchParams.get('search') || '',
@@ -322,9 +323,24 @@ function Salons() {
     { id: '', label: 'Tous' },
     ...boutiqueCategoryOptions.map((item) => ({ id: item.id, label: item.label })),
   ]
+  const initialBoutiqueHeroCategoryCount = 4
+  const hiddenBoutiqueHeroCategories = boutiqueHeroCategories.slice(initialBoutiqueHeroCategoryCount)
+  const hasHiddenBoutiqueHeroCategories = hiddenBoutiqueHeroCategories.length > 0
+  const visibleBoutiqueHeroCategories = showAllBoutiqueHeroCategories
+    ? boutiqueHeroCategories
+    : boutiqueHeroCategories.slice(0, initialBoutiqueHeroCategoryCount)
   const resultsGridClass = isBoutiqueMode
     ? 'grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5'
     : 'grid gap-5 md:grid-cols-2 xl:grid-cols-3'
+
+  useEffect(() => {
+    if (
+      hasHiddenBoutiqueHeroCategories &&
+      hiddenBoutiqueHeroCategories.some((item) => item.id === String(filters.category || ''))
+    ) {
+      setShowAllBoutiqueHeroCategories(true)
+    }
+  }, [filters.category, hasHiddenBoutiqueHeroCategories, hiddenBoutiqueHeroCategories])
 
   const pillButton = (active) =>
     `w-full rounded-none px-3 py-2 text-xs font-semibold transition sm:text-sm ${
@@ -367,8 +383,8 @@ function Salons() {
                 </div>
               )}
               {isBoutiqueMode && (
-                <div className="mt-4 flex-1 overflow-hidden border border-[#e7cfaf] bg-[#fff8ee] shadow-[0_18px_40px_-34px_rgba(95,50,15,0.18)]">
-                  <div className="aspect-[4/3] min-h-[260px] w-full overflow-hidden bg-[#fff4e4] sm:min-h-[320px] xl:h-full xl:aspect-auto">
+                <div className="mt-4 overflow-hidden border border-[#e7cfaf] bg-[#fff8ee] shadow-[0_18px_40px_-34px_rgba(95,50,15,0.18)]">
+                  <div className="aspect-[4/3] min-h-[260px] max-h-[420px] w-full overflow-hidden bg-[#fff4e4] sm:min-h-[320px]">
                     <img
                       src="https://i.pinimg.com/1200x/53/10/56/53105638f1c5e2b776f6249062d7900e.jpg"
                       alt="Boutique de vente de maillots et vetements"
@@ -455,7 +471,7 @@ function Salons() {
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-2">
-                        {boutiqueHeroCategories.map((item) => {
+                        {visibleBoutiqueHeroCategories.map((item) => {
                           const isActive = String(filters.category || '') === item.id
                           return (
                             <button
@@ -473,6 +489,15 @@ function Salons() {
                           )
                         })}
                       </div>
+                      {hasHiddenBoutiqueHeroCategories && (
+                        <button
+                          type="button"
+                          onClick={() => setShowAllBoutiqueHeroCategories((prev) => !prev)}
+                          className="mt-3 inline-flex items-center justify-center border border-[#e7cfaf] bg-[#fff8ee] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#4f3821] transition hover:bg-[#fff0de] sm:text-sm dark:border-[#7a5932] dark:bg-[#2b1b0f] dark:text-[#fff4e3] dark:hover:bg-[#352214]"
+                        >
+                          {showAllBoutiqueHeroCategories ? 'Voir moins' : 'Voir plus'}
+                        </button>
+                      )}
                     </div>
                   </div>
                 ) : (

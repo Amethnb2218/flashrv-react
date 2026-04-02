@@ -282,54 +282,54 @@ function Home() {
       {/* Hero */}
       <section className="relative overflow-hidden border-b border-[#ead7ba] bg-[radial-gradient(circle_at_82%_20%,rgba(231,133,20,0.08),transparent_42%),linear-gradient(180deg,#fffdf8_0%,#fff4e3_100%)] dark:border-[#62462a] dark:bg-[radial-gradient(circle_at_18%_16%,rgba(255,203,69,0.12),transparent_28%),linear-gradient(180deg,rgba(42,28,15,0.98)_0%,rgba(27,18,11,1)_100%)]">
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-7 pb-9 md:pb-11">
-          <div className="grid items-stretch gap-8 xl:grid-cols-[minmax(0,1fr)_520px] xl:gap-10">
+          <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_500px] xl:gap-8">
             <motion.div
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: reduceMotion ? 0 : 0.6 }}
               className="relative z-10"
             >
-              <p className="text-xs font-semibold uppercase tracking-[0.26em] text-[#9d4f0d] dark:text-[#f0c77d]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#9d4f0d] dark:text-[#f0c77d] sm:text-xs">
                 Réservation, shopping, confirmation
               </p>
-              <h1 className="mt-3 max-w-[16ch] text-[2.15rem] font-bold leading-[0.95] text-[#2a1808] sm:text-[2.75rem] lg:text-[3.35rem] dark:text-[#fff4e3]">
+              <h1 className="mt-2.5 max-w-[14ch] text-[1.9rem] font-bold leading-[0.94] text-[#2a1808] sm:text-[2.4rem] lg:text-[2.9rem] xl:text-[3.1rem] dark:text-[#fff4e3]">
                 Salons ou Boutiques : gérez tout en quelques clics.
               </h1>
               <p className="hidden">
                 Trouvez une adresse vérifiée près de chez vous, comparez les soins et confirmez votre créneau dans un seul mouvement, sans appels ni attente.
               </p>
               {heroStats.length > 0 && (
-                <div className="mt-5 grid gap-2 sm:grid-cols-2 xl:max-w-[34rem] xl:grid-cols-4">
+                <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:max-w-[32rem] xl:grid-cols-4">
                   {heroStats.map((item) => (
                     <div
                       key={item.label}
-                      className="rounded-none border border-[#ead7ba] bg-[#fff8ee] px-3 py-2.5 shadow-[0_18px_34px_-28px_rgba(157,79,13,0.12)] dark:border-[#7a5932] dark:bg-[#2b1b0f]"
+                      className="rounded-none border border-[#ead7ba] bg-[#fff8ee] px-3 py-2 shadow-[0_18px_34px_-28px_rgba(157,79,13,0.12)] dark:border-[#7a5932] dark:bg-[#2b1b0f]"
                     >
-                      <p className="text-2xl font-bold text-primary-900 dark:text-white">{item.value}</p>
-                      <p className="mt-1 text-base uppercase tracking-[0.1em] text-primary-800 dark:text-white/72">{item.label}</p>
+                      <p className="text-[1.4rem] font-bold leading-none text-primary-900 dark:text-white sm:text-[1.55rem]">{item.value}</p>
+                      <p className="mt-1 text-[0.88rem] uppercase tracking-[0.08em] text-primary-800 dark:text-white/72 sm:text-[0.92rem]">{item.label}</p>
                     </div>
                   ))}
                 </div>
               )}
 
-              <form onSubmit={handleSearch} className="mt-6 max-w-[38rem] rounded-none border border-[#ead7ba] bg-[#fff8ee] p-4 text-[#2a1808] shadow-[0_24px_48px_-36px_rgba(157,79,13,0.24)] dark:border-[#f0c77d] dark:bg-[#2b1b0f] dark:text-[#fff4e3]">
-                <div className="flex flex-col gap-2 border-b border-[#ead7ba] pb-3 sm:flex-row sm:items-start sm:justify-between dark:border-[#62462a]">
+              <form onSubmit={handleSearch} className="mt-4 max-w-[36rem] rounded-none border border-[#ead7ba] bg-[#fff8ee] p-3 sm:p-3.5 text-[#2a1808] shadow-[0_24px_48px_-36px_rgba(157,79,13,0.24)] dark:border-[#f0c77d] dark:bg-[#2b1b0f] dark:text-[#fff4e3]">
+                <div className="flex flex-col gap-2 border-b border-[#ead7ba] pb-2.5 sm:flex-row sm:items-start sm:justify-between dark:border-[#62462a]">
                   <div>
-                    <p className="text-[1.2rem] font-semibold text-[#2a1808] dark:text-[#fff4e3]">Recherchez un salon, une boutique ou un produit</p>
+                    <p className="text-[1.05rem] font-semibold text-[#2a1808] dark:text-[#fff4e3] sm:text-[1.12rem]">Recherchez un salon, une boutique ou un produit</p>
                     <p className="hidden">
                       Suggestions instantanées, géolocalisation et raccourcis utiles dans la même carte.
                     </p>
-                    <p className="mt-1 max-w-[30rem] text-base leading-7 text-primary-700 dark:text-[#f0c77d]">
+                    <p className="mt-1 max-w-[28rem] text-[0.98rem] leading-7 text-primary-700 dark:text-[#f0c77d] sm:text-[1rem]">
                       Quartier, prestation, marque ou accessoire: la même recherche pour réserver un rendez-vous ou trouver une boutique.
                     </p>
                   </div>
-                  <div className="inline-flex items-center gap-1.5 self-start rounded-none border border-[#ead7ba] bg-[#fff8ee] px-2.5 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-[#9d4f0d] dark:border-[#f0c77d] dark:bg-[#2b1b0f] dark:text-[#ffd978]">
+                  <div className="inline-flex items-center gap-1.5 self-start rounded-none border border-[#ead7ba] bg-[#fff8ee] px-2 py-1.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-[#9d4f0d] dark:border-[#f0c77d] dark:bg-[#2b1b0f] dark:text-[#ffd978] sm:text-xs">
                     <FiZap className="h-3.5 w-3.5 text-[#c96a0b] dark:text-[#ffd978]" />
                     Parcours unifié
                   </div>
                 </div>
 
-                <div className="mt-3 grid gap-2 md:grid-cols-[minmax(0,1fr)_180px]">
+                <div className="mt-2.5 grid gap-2 md:grid-cols-[minmax(0,1fr)_170px]">
                   <div className="flex-1 relative">
                     <FiMapPin className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary-500 dark:text-[#f0c77d]" />
                     <input
@@ -343,7 +343,7 @@ function Home() {
                       aria-expanded={showSuggestions && heroSuggestions.length > 0}
                       aria-controls="home-suggestions"
                       placeholder="Quartier, ville, salon, boutique, produit..."
-                      className="w-full rounded-none border border-[#ead7ba] bg-[#fff8ee] py-4 pl-12 pr-4 text-[1.08rem] text-primary-900 outline-none transition-all placeholder:text-primary-500 focus:border-[#d97706] focus:ring-2 focus:ring-[#f5a133]/20 dark:border-[#f0c77d] dark:bg-[#2b1b0f] dark:text-[#fff4e3] dark:placeholder:text-[#d6b081] dark:focus:border-[#ffd978] dark:focus:ring-[#ffd978]/10"
+                      className="w-full rounded-none border border-[#ead7ba] bg-[#fff8ee] py-3.5 pl-12 pr-4 text-base text-primary-900 outline-none transition-all placeholder:text-primary-500 focus:border-[#d97706] focus:ring-2 focus:ring-[#f5a133]/20 dark:border-[#f0c77d] dark:bg-[#2b1b0f] dark:text-[#fff4e3] dark:placeholder:text-[#d6b081] dark:focus:border-[#ffd978] dark:focus:ring-[#ffd978]/10"
                     />
                     <AnimatePresence>
                       {showSuggestions && heroSuggestions.length > 0 && (
@@ -385,26 +385,26 @@ function Home() {
                   </div>
                   <button
                     type="submit"
-                    className="flex min-h-[56px] items-center justify-center gap-2 rounded-none border border-[#ead7ba] bg-[#fff8ee] px-4 py-3 text-[1.08rem] font-semibold text-primary-900 transition-all hover:-translate-y-0.5 hover:border-[#d9b17c] hover:bg-[#fff2df] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d97706] focus-visible:ring-offset-2 dark:border-[#f0c77d] dark:bg-[#2b1b0f] dark:text-[#fff4e3] dark:hover:bg-[#3a2615] dark:focus-visible:ring-[#ffd978] dark:focus-visible:ring-offset-[#2b1b0f]"
+                    className="flex min-h-[52px] items-center justify-center gap-2 rounded-none border border-[#ead7ba] bg-[#fff8ee] px-4 py-3 text-base font-semibold text-primary-900 transition-all hover:-translate-y-0.5 hover:border-[#d9b17c] hover:bg-[#fff2df] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d97706] focus-visible:ring-offset-2 dark:border-[#f0c77d] dark:bg-[#2b1b0f] dark:text-[#fff4e3] dark:hover:bg-[#3a2615] dark:focus-visible:ring-[#ffd978] dark:focus-visible:ring-offset-[#2b1b0f]"
                   >
                     <FiSearch className="w-5 h-5" />
                     <span>Rechercher</span>
                     <FiArrowRight className="w-4 h-4" />
                   </button>
                 </div>
-                <div className="mt-2 grid grid-cols-1 gap-1.5 text-sm text-primary-900 md:grid-cols-3 dark:text-[#fff4e3]">
-                  <span className="inline-flex min-h-[34px] items-center gap-1 border border-[#ead7ba] bg-[#fff8ee] px-2.5 py-1.5 dark:border-[#f0c77d] dark:bg-[#2b1b0f]">
+                <div className="mt-2 grid grid-cols-1 gap-1.5 text-[0.92rem] text-primary-900 md:grid-cols-3 dark:text-[#fff4e3]">
+                  <span className="inline-flex min-h-[32px] items-center gap-1 border border-[#ead7ba] bg-[#fff8ee] px-2.5 py-1.5 dark:border-[#f0c77d] dark:bg-[#2b1b0f]">
                     <FiCheck className="h-3 w-3 text-primary-800 dark:text-[#ffd978]" />
                     Suggestions par salon, boutique ou marque
                   </span>
-                  <span className="inline-flex min-h-[34px] items-center gap-1 border border-[#ead7ba] bg-[#fff8ee] px-2.5 py-1.5 dark:border-[#f0c77d] dark:bg-[#2b1b0f]">
+                  <span className="inline-flex min-h-[32px] items-center gap-1 border border-[#ead7ba] bg-[#fff8ee] px-2.5 py-1.5 dark:border-[#f0c77d] dark:bg-[#2b1b0f]">
                     <FiShield className="h-3 w-3 text-primary-800 dark:text-[#ffd978]" />
                     Réservation et achats centralisés
                   </span>
                   <button
                     type="button"
                     onClick={() => handleQuickFilter({ sortBy: 'rating' })}
-                    className="inline-flex min-h-[34px] items-center gap-1 border border-[#ead7ba] bg-[#fff8ee] px-2.5 py-1.5 text-left transition-all hover:-translate-y-0.5 hover:border-[#d9b17c] hover:bg-[#fff2df] dark:border-[#f0c77d] dark:bg-[#2b1b0f] dark:text-[#fff4e3] dark:hover:bg-[#3a2615]"
+                    className="inline-flex min-h-[32px] items-center gap-1 border border-[#ead7ba] bg-[#fff8ee] px-2.5 py-1.5 text-left transition-all hover:-translate-y-0.5 hover:border-[#d9b17c] hover:bg-[#fff2df] dark:border-[#f0c77d] dark:bg-[#2b1b0f] dark:text-[#fff4e3] dark:hover:bg-[#3a2615]"
                   >
                     <FiStar className="h-3 w-3 text-primary-800 dark:text-[#ffd978]" />
                     Adresses les mieux notées
