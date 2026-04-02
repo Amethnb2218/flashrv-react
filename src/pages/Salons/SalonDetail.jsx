@@ -716,8 +716,8 @@ function SalonDetail() {
 
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 relative z-10 pb-12">
         {/* Compact info strip */}
-        <div className="flex items-center gap-2 py-3 overflow-x-auto scrollbar-hide text-xs">
-          <span className="shrink-0 inline-flex items-center gap-1 text-primary-600">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 border border-[#ead7ba] bg-[#fffdf8] px-3 py-2.5 text-[11px] shadow-[0_14px_34px_-30px_rgba(95,50,15,0.16)] sm:text-xs">
+          <span className="shrink-0 inline-flex items-center gap-1 text-[#9d6b35]">
             <FiMapPin className="w-3 h-3" /> {[salon.address, salon.city].filter(Boolean).join(', ') || 'Localisation'}
           </span>
           <span className="text-primary-300">•</span>
@@ -750,16 +750,16 @@ function SalonDetail() {
           <div className="lg:col-span-2 space-y-0">
 
             {/* Tabs — sticky on scroll */}
-            <div className="bg-white rounded-t-2xl shadow-sm border border-primary-100 overflow-hidden sticky top-16 z-20">
-              <div className="flex border-b border-primary-100">
+            <div className="sticky top-16 z-20 overflow-hidden border border-[#e7cfaf] bg-[#fff8ee] shadow-[0_18px_40px_-34px_rgba(95,50,15,0.18)]">
+              <div className="flex border-b border-[#e7cfaf] bg-[#fffdf8]">
                 {(isBoutique ? ['articles', 'avis', 'infos'] : ['services', 'avis', 'infos']).map(tab => (
                   <button
                     key={tab}
                     onClick={() => (tab === 'articles' ? openArticlesTab() : setActiveTab(tab))}
-                    className={`flex-1 py-3 text-center text-sm font-semibold transition-colors relative ${
+                    className={`relative flex-1 py-3 text-center text-sm font-semibold transition-colors ${
                       activeTab === tab
-                        ? 'text-primary-900'
-                        : 'text-primary-400 hover:text-primary-600'
+                        ? 'bg-[#fff8ee] text-[#5b3411]'
+                        : 'text-[#9f7c56] hover:bg-[#fff4e8] hover:text-[#7b4a1f]'
                     }`}
                   >
                     {tab === 'services' && 'Services'}
@@ -767,21 +767,21 @@ function SalonDetail() {
                     {tab === 'avis' && `Avis (${salonReviews.length})`}
                     {tab === 'infos' && 'Infos'}
                     {activeTab === tab && (
-                      <span className="absolute bottom-0 left-1/4 right-1/4 h-0.5 bg-primary-900 rounded-full" />
+                      <span className="absolute bottom-0 left-[22%] right-[22%] h-0.5 bg-[#7b4517]" />
                     )}
                   </button>
                 ))}
               </div>
             </div>
 
-            <div className="bg-white rounded-b-2xl shadow-sm border border-x border-b border-primary-100 overflow-hidden">
+            <div className="overflow-hidden border border-t-0 border-[#e7cfaf] bg-[#fffdf8] shadow-[0_18px_40px_-34px_rgba(95,50,15,0.18)]">
               <div className="p-3 sm:p-5">
                 {/* Services Tab */}
                 {activeTab === 'services' && (
                   <div className="space-y-6">
                     {Object.entries(servicesByCategory).map(([category, categoryServices]) => (
                       <div key={category}>
-                        <h3 className="font-semibold text-lg text-primary-900 mb-3">{category}</h3>
+                        <h3 className="mb-3 text-lg font-semibold text-[#5b3411]">{category}</h3>
                         <div className="space-y-3">
                           {categoryServices.map((service) => {
                             const serviceImages = getServiceImages(service)
@@ -791,28 +791,28 @@ function SalonDetail() {
                                 key={service.id}
                                 type="button"
                                 onClick={() => openService(service)}
-                                className="w-full text-left flex items-center justify-between gap-4 p-4 bg-white border border-primary-100 rounded-2xl hover:shadow-md hover:-translate-y-0.5 transition-all group"
+                                className="group flex w-full items-center justify-between gap-4 border border-[#ead7ba] bg-[#fff8ee] p-4 text-left transition-all hover:-translate-y-0.5 hover:border-[#d9b17c] hover:bg-[#fff3e3] hover:shadow-[0_18px_36px_-30px_rgba(95,50,15,0.22)]"
                               >
                                 <div className="flex items-center gap-4">
                                   {preview ? (
                                     <img
                                       src={preview}
                                       alt={service.name}
-                                      className="w-16 h-16 rounded-2xl object-cover border border-white shadow-sm"
+                                      className="h-16 w-16 border border-[#ead7ba] object-cover shadow-sm"
                                       loading="lazy"
                                     />
                                   ) : (
-                                    <div className="w-16 h-16 rounded-2xl bg-primary-50 border border-dashed border-primary-200 flex items-center justify-center text-xs text-primary-400">
+                                    <div className="flex h-16 w-16 items-center justify-center border border-dashed border-[#e7cfaf] bg-[#fff4e4] text-xs text-[#b38a61]">
                                       Photo
                                     </div>
                                   )}
                                   <div>
-                                    <h4 className="font-medium text-primary-900">{service.name}</h4>
-                                    <p className="text-sm text-primary-500">{formatDuration(service.duration)}</p>
+                                    <h4 className="font-medium text-[#2a1808]">{service.name}</h4>
+                                    <p className="text-sm text-[#9d6b35]">{formatDuration(service.duration)}</p>
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-3">
-                                  <span className="font-semibold text-primary-600">{formatPrice(service.price)}</span>
+                                  <span className="font-semibold text-[#c96a0b]">{formatPrice(service.price)}</span>
                                   <span className="text-xs text-primary-400 group-hover:text-primary-600">Voir détails</span>
                                 </div>
                               </button>
@@ -835,7 +835,7 @@ function SalonDetail() {
                         <p className="text-primary-500">Aucun article disponible pour le moment.</p>
                       </div>
                     ) : (
-                      <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
                         {boutiqueProducts.filter(p => p.isActive !== false).map(product => {
                           const img = resolveMediaUrl(product.imageUrl || product.image)
                           const inCartItems = getCartItemForProduct(product.id)
@@ -854,10 +854,10 @@ function SalonDetail() {
                               tabIndex={0}
                               onClick={() => openProductDetail(product)}
                               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openProductDetail(product) } }}
-                              className="group cursor-pointer overflow-hidden rounded-[24px] border border-[#eadfce] bg-[linear-gradient(180deg,#fffdfa_0%,#f8f1e5_100%)] shadow-[0_20px_45px_-38px_rgba(62,46,31,0.55)] transition-all hover:-translate-y-1 hover:shadow-[0_28px_52px_-34px_rgba(62,46,31,0.35)]"
+                              className="group cursor-pointer overflow-hidden border border-[#ead7ba] bg-[#fffdf8] shadow-[0_20px_42px_-36px_rgba(95,50,15,0.18)] transition-all hover:-translate-y-1 hover:border-[#d8b184] hover:shadow-[0_26px_48px_-34px_rgba(95,50,15,0.24)]"
                             >
                               {/* Image + badges overlay */}
-                              <div className="relative w-full aspect-square bg-[linear-gradient(180deg,#f7f0e4_0%,#f0e3d1_100%)]">
+                              <div className="relative w-full aspect-[4/4.15] bg-[linear-gradient(180deg,#fbf4e8_0%,#f4e7d4_100%)]">
                                 {img ? (
                                   <img src={img} alt={product.name} className="w-full h-full object-cover" loading="lazy" />
                                 ) : (
@@ -875,7 +875,7 @@ function SalonDetail() {
                                 {/* Heart */}
                                 <button
                                   onClick={(e) => { e.stopPropagation(); toggleProductLike(product.id) }}
-                                  className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/88 shadow-sm backdrop-blur"
+                                  className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center border border-[#ead7ba] bg-white/90 shadow-sm backdrop-blur"
                                 >
                                   <FiHeart className={`w-3.5 h-3.5 ${isProductLiked(product.id) ? 'text-red-500 fill-current' : 'text-primary-500'}`} />
                                 </button>
@@ -887,40 +887,40 @@ function SalonDetail() {
                                 )}
                               </div>
                               {/* Info */}
-                              <div className="space-y-2.5 p-3">
+                              <div className="space-y-3 border-t border-[#ead7ba] p-3.5">
                                 <div className="flex items-start justify-between gap-2">
                                   <div className="min-w-0">
-                                    <h4 className="line-clamp-2 text-sm font-semibold leading-tight text-primary-900">{product.name}</h4>
-                                    {product.category && <p className="mt-1 line-clamp-1 text-[10px] uppercase tracking-[0.18em] text-primary-400">{product.category}</p>}
+                                    <h4 className="line-clamp-2 text-[0.98rem] font-semibold leading-tight text-[#2a1808]">{product.name}</h4>
+                                    {product.category && <p className="mt-1 line-clamp-1 text-[10px] uppercase tracking-[0.18em] text-[#b38a61]">{product.category}</p>}
                                   </div>
                                   {needsVariant && (
-                                    <span className="inline-flex shrink-0 items-center rounded-full bg-[#efe2cf] px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-primary-800">
+                                    <span className="inline-flex shrink-0 items-center border border-[#ead7ba] bg-[#fff4e4] px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-[#7b4517]">
                                       Options
                                     </span>
                                   )}
                                 </div>
 
-                                <div className="rounded-[18px] border border-white/70 bg-white/70 px-3 py-2 shadow-[0_14px_30px_-26px_rgba(62,46,31,0.45)]">
+                                <div className="border border-[#ead7ba] bg-[#fff8ee] px-3 py-2.5 shadow-[0_14px_30px_-26px_rgba(95,50,15,0.12)]">
                                   <div className="flex items-end justify-between gap-2">
                                     <div>
-                                      <span className="text-lg font-extrabold text-primary-900">{formatPrice(product.price)}</span>
-                                      <p className="mt-0.5 text-[10px] text-primary-500">
+                                      <span className="text-lg font-extrabold text-[#5b3411]">{formatPrice(product.price)}</span>
+                                      <p className="mt-0.5 text-[10px] text-[#9d6b35]">
                                         {deliveryMeta?.isDeliverable ? 'Livraison possible' : 'Retrait boutique'}
                                       </p>
                                     </div>
                                     {product.stock > 0 ? (
                                       inCartTotal > 0 ? (
-                                        <div className="inline-flex items-center rounded-full border border-[#eadfce] bg-[#fff9f0] p-1 shadow-sm" onClick={(e) => e.stopPropagation()}>
+                                        <div className="inline-flex items-center border border-[#ead7ba] bg-[#fffdf8] p-1 shadow-sm" onClick={(e) => e.stopPropagation()}>
                                           <button
                                             onClick={(e) => { e.stopPropagation(); removeFromCart(product.id) }}
-                                            className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-primary-700 transition hover:bg-primary-50"
+                                            className="flex h-7 w-7 items-center justify-center border border-[#ead7ba] bg-white text-[#7b4517] transition hover:bg-[#fff4e4]"
                                           >
                                             <FiMinus className="w-3 h-3" />
                                           </button>
-                                          <span className="min-w-[22px] px-2 text-center text-xs font-bold text-primary-900">{inCartTotal}</span>
+                                          <span className="min-w-[22px] px-2 text-center text-xs font-bold text-[#5b3411]">{inCartTotal}</span>
                                           <button
                                             onClick={(e) => { e.stopPropagation(); if (needsVariant) { openProductDetail(product) } else { addToCart(product) } }}
-                                            className="flex h-7 w-7 items-center justify-center rounded-full bg-[#17110c] text-white transition hover:bg-[#2a2118]"
+                                            className="flex h-7 w-7 items-center justify-center bg-[#7b4517] text-white transition hover:bg-[#5f340f]"
                                           >
                                             <FiPlus className="w-3 h-3" />
                                           </button>
@@ -928,25 +928,25 @@ function SalonDetail() {
                                       ) : (
                                         <button
                                           onClick={(e) => { e.stopPropagation(); if (needsVariant) { openProductDetail(product) } else { addToCart(product) } }}
-                                          className="inline-flex items-center gap-1.5 rounded-full bg-[#17110c] px-3 py-2 text-[11px] font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[#2a2118]"
+                                          className="inline-flex items-center gap-1.5 bg-[#7b4517] px-3 py-2 text-[11px] font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[#5f340f]"
                                         >
                                           <span>{needsVariant ? 'Choisir' : 'Ajouter'}</span>
                                           <FiPlus className="w-3.5 h-3.5" />
                                         </button>
                                       )
                                     ) : (
-                                      <span className="rounded-full bg-red-50 px-2.5 py-1 text-[10px] font-semibold text-red-500">Rupture</span>
+                                      <span className="bg-red-50 px-2.5 py-1 text-[10px] font-semibold text-red-500">Rupture</span>
                                     )}
                                   </div>
                                 </div>
 
                                 {deliveryMeta?.isDeliverable && (
-                                  <p className="flex items-center gap-1 text-[10px] text-primary-400">
+                                  <p className="flex items-center gap-1 text-[10px] text-[#9d6b35]">
                                     <FiBox className="w-2.5 h-2.5" /> Livraison dispo
                                   </p>
                                 )}
                                 {needsVariant && product.stock > 0 && (
-                                  <p className="text-[10px] text-primary-500">
+                                  <p className="text-[10px] text-[#b38a61]">
                                     Ouvrez la fiche pour choisir taille ou couleur.
                                   </p>
                                 )}
@@ -1220,19 +1220,19 @@ function SalonDetail() {
 
           {/* Sidebar — desktop only */}
           <div className="hidden lg:block space-y-6">
-            <div className="bg-white rounded-2xl shadow-sm p-5 sticky top-24 border border-primary-100">
+            <div className="sticky top-24 border border-[#e7cfaf] bg-[#fff8ee] p-5 shadow-[0_18px_40px_-34px_rgba(95,50,15,0.18)]">
               {isBoutique ? (
                 <>
-                  <p className="text-2xl font-extrabold text-primary-900 mb-1">{boutiqueProducts.length} article{boutiqueProducts.length > 1 ? 's' : ''}</p>
-                  <p className="text-xs text-primary-500 mb-4">{ratingHint}</p>
+                  <p className="mb-1 text-2xl font-extrabold text-[#5b3411]">{boutiqueProducts.length} article{boutiqueProducts.length > 1 ? 's' : ''}</p>
+                  <p className="mb-4 text-xs text-[#9f7c56]">{ratingHint}</p>
                   {cartCount > 0 && (
-                    <div className="mb-4 p-3 bg-gold-50 border border-gold-100 rounded-xl text-sm">
-                      <div className="flex justify-between font-semibold mb-1">
+                    <div className="mb-4 border border-[#ead7ba] bg-[#fff4e4] p-3 text-sm">
+                      <div className="mb-1 flex justify-between font-semibold text-[#5b3411]">
                         <span>Panier ({cartCount})</span>
-                        <span className="text-gold-600">{formatPrice(cartTotal)}</span>
+                        <span className="text-[#c96a0b]">{formatPrice(cartTotal)}</span>
                       </div>
                       {cart.map((c, idx) => (
-                        <div key={`${c.product.id}-${c.selectedSize}-${c.selectedColor}-${idx}`} className="flex justify-between text-xs text-primary-600 py-0.5">
+                        <div key={`${c.product.id}-${c.selectedSize}-${c.selectedColor}-${idx}`} className="flex justify-between py-0.5 text-xs text-[#7a6148]">
                           <span>{c.product.name} × {c.quantity}</span>
                           <span>{formatPrice(c.product.price * c.quantity)}</span>
                         </div>
@@ -1241,7 +1241,7 @@ function SalonDetail() {
                   )}
                   <button
                     onClick={() => cartCount > 0 ? setShowCartModal(true) : openArticlesTab()}
-                    className="w-full mb-3 rounded-xl bg-primary-900 text-white font-semibold py-3 hover:bg-primary-800 transition"
+                    className="mb-3 w-full border border-[#7b4517] bg-[#7b4517] py-3 font-semibold text-white transition hover:bg-[#5f340f]"
                   >
                     {cartCount > 0 ? `Commander (${formatPrice(cartTotal)})` : 'Voir les articles'}
                   </button>
@@ -1249,11 +1249,11 @@ function SalonDetail() {
               ) : (
                 <>
                   <p className="text-xs text-primary-500">À partir de</p>
-                  <p className="text-2xl font-extrabold text-primary-900 mb-1">{priceText}</p>
-                  <p className="text-xs text-primary-500 mb-4">{services.length} service{services.length > 1 ? 's' : ''}</p>
+                  <p className="mb-1 text-2xl font-extrabold text-[#5b3411]">{priceText}</p>
+                  <p className="mb-4 text-xs text-[#9f7c56]">{services.length} service{services.length > 1 ? 's' : ''}</p>
                   <button
                     onClick={handleBookNow}
-                    className="w-full mb-3 rounded-xl bg-primary-900 text-white font-semibold py-3 hover:bg-primary-800 transition"
+                    className="mb-3 w-full border border-[#7b4517] bg-[#7b4517] py-3 font-semibold text-white transition hover:bg-[#5f340f]"
                   >
                     Réserver maintenant
                   </button>
@@ -1264,26 +1264,26 @@ function SalonDetail() {
                   href={`https://wa.me/${(salon.whatsapp || salon.phone).replace(/[^0-9]/g, '')}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-green-500 hover:bg-green-600 text-white font-medium rounded-xl transition-colors text-sm"
+                  className="flex w-full items-center justify-center gap-2 border border-[#2fb95b] bg-[#2cc55d] py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#24af50]"
                 >
                   WhatsApp
                 </a>
               )}
-              <div className="mt-4 pt-4 border-t border-primary-100 space-y-2 text-sm">
+              <div className="mt-4 space-y-2 border-t border-[#ead7ba] pt-4 text-sm">
                 {salon.phone && (
-                  <a href={`tel:${salon.phone}`} className="flex items-center gap-2 text-primary-600 hover:text-primary-900"><FiPhone className="w-4 h-4" /> {salon.phone}</a>
+                  <a href={`tel:${salon.phone}`} className="flex items-center gap-2 text-[#9d6b35] hover:text-[#5b3411]"><FiPhone className="w-4 h-4" /> {salon.phone}</a>
                 )}
                 {salon.email && (
-                  <a href={`mailto:${salon.email}`} className="flex items-center gap-2 text-primary-600 hover:text-primary-900"><FiMail className="w-4 h-4" /> {salon.email}</a>
+                  <a href={`mailto:${salon.email}`} className="flex items-center gap-2 text-[#9d6b35] hover:text-[#5b3411]"><FiMail className="w-4 h-4" /> {salon.email}</a>
                 )}
               </div>
               {Object.keys(openingHoursMap).length > 0 && (
-                <div className="mt-4 pt-4 border-t border-primary-100">
-                  <h4 className="font-medium text-primary-900 mb-2 text-sm flex items-center gap-1"><FiClock className="w-4 h-4" /> Horaires</h4>
+                <div className="mt-4 border-t border-[#ead7ba] pt-4">
+                  <h4 className="mb-2 flex items-center gap-1 text-sm font-medium text-[#5b3411]"><FiClock className="w-4 h-4" /> Horaires</h4>
                   <div className="space-y-1 text-sm">
                     {Object.entries(openingHoursMap).map(([day, hours]) => (
                       <div key={day} className="flex justify-between">
-                        <span className="text-primary-600">{getDayName(day)}</span>
+                        <span className="text-[#9d6b35]">{getDayName(day)}</span>
                         <span className={hours ? 'text-primary-900' : 'text-red-500'}>{hours ? `${hours.open} - ${hours.close}` : 'Fermé'}</span>
                       </div>
                     ))}
