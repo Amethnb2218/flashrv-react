@@ -724,14 +724,15 @@ function HeroShowcase() {
         </div>
       </div>
 
-      <div className="pointer-events-none mt-2.5 flex flex-wrap gap-1.5 sm:mt-3 sm:gap-2">
+      <div className="mt-2.5 flex flex-wrap gap-1.5 sm:mt-3 sm:gap-2">
         {heroShowcaseItems.map((item, index) => (
-          <span
+          <Link
             key={item.id}
+            to={item.to || '/salons'}
             className={`inline-flex items-center gap-2 border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] transition-colors ${
               index === activeIndex
                 ? 'border-[#d3a96f] bg-[#fff1de] text-[#9d4f0d] dark:border-[#f0c77d] dark:bg-[#352214] dark:text-[#fff0c9]'
-                : 'border-[#ead7ba] bg-[#fff8ee] text-[#8d6b46] dark:border-[#7a5932] dark:bg-[#2b1b0f] dark:text-[#d9b88c]'
+                : 'border-[#ead7ba] bg-[#fff8ee] text-[#8d6b46] hover:border-[#d8b184] hover:bg-[#fff1de] dark:border-[#7a5932] dark:bg-[#2b1b0f] dark:text-[#d9b88c] dark:hover:bg-[#352214]'
             }`}
           >
             <span
@@ -742,7 +743,7 @@ function HeroShowcase() {
               }`}
             />
             {item.title}
-          </span>
+          </Link>
         ))}
       </div>
     </div>
@@ -795,9 +796,14 @@ function HeroShowcaseTile({ item, large = false }) {
           <span className="inline-flex items-center border border-white/35 bg-white/12 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-white backdrop-blur-sm">
             {item.kind}
           </span>
-          <h3 className={`mt-3 font-bold leading-tight text-white ${large ? 'text-[1.15rem] sm:text-[1.35rem] lg:text-[1.65rem]' : 'text-sm sm:text-base lg:text-lg'}`}>
+          <Link
+            to={item.to || '/salons'}
+            className={`mt-3 inline-block font-bold leading-tight text-white transition-opacity hover:opacity-80 ${
+              large ? 'text-[1.15rem] sm:text-[1.35rem] lg:text-[1.65rem]' : 'text-sm sm:text-base lg:text-lg'
+            }`}
+          >
             {item.title}
-          </h3>
+          </Link>
           <p className={`mt-1 text-white/80 ${large ? 'text-[12px] sm:text-sm' : 'text-[11px] sm:text-[12px] lg:text-[13px]'}`}>
             {item.query}
           </p>
