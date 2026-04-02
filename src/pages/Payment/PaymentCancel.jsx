@@ -120,16 +120,16 @@ function PaymentCancel() {
 
   if (initialLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-primary-50">
+      <div className="app-page min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-gold-50/30 py-12 px-4">
-      <div className="max-w-xl mx-auto bg-white rounded-3xl shadow-xl p-6 sm:p-8">
-        <div className="w-16 h-16 bg-gold-100 rounded-full flex items-center justify-center mx-auto mb-4">
+    <div className="app-page min-h-screen px-4 py-12">
+      <div className="app-panel mx-auto max-w-xl p-6 sm:p-8">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#fff2df]">
           <FiAlertCircle className="w-8 h-8 text-gold-600" />
         </div>
         <h1 className="text-2xl font-bold text-center text-primary-900 mb-2">
@@ -140,7 +140,7 @@ function PaymentCancel() {
         </p>
 
         {appointment && (
-          <div className="bg-primary-50 rounded-2xl p-4 mb-5 text-sm">
+          <div className="app-panel-muted mb-5 p-4 text-sm">
             <p className="text-primary-800 font-semibold">{appointment.salon?.name || 'Salon'}</p>
             <p className="text-primary-600 mt-1">
               {appointment.date ? new Date(appointment.date).toLocaleDateString('fr-FR') : '-'} a {appointment.startTime || '-'}
@@ -153,13 +153,13 @@ function PaymentCancel() {
         )}
 
         {!error && errorReason && (
-          <div className="mb-4 p-3 bg-gold-50 text-gold-700 rounded-xl text-sm">
+          <div className="mb-4 border border-[#e7cfaf] bg-[#fff1d8] p-3 text-sm text-[#9d4f0d]">
             {errorReason}
           </div>
         )}
 
         {error && (
-          <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-xl text-sm">
+          <div className="mb-4 border border-[#e7cfaf] bg-[#fff0ea] p-3 text-sm text-[#9d4f0d]">
             {error}
           </div>
         )}
@@ -168,14 +168,14 @@ function PaymentCancel() {
           <button
             onClick={handleRetry}
             disabled={loading || !appointment || !(amountToPay > 0)}
-            className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary-600 text-white font-semibold hover:bg-primary-700 transition disabled:opacity-60"
+            className="btn-primary inline-flex items-center justify-center gap-2 px-4 py-3 font-semibold disabled:opacity-60"
           >
             <FiRefreshCw className="w-4 h-4" />
             {loading ? 'Redirection...' : amountToPay > 0 ? 'Reessayer paiement' : 'Aucun paiement requis'}
           </button>
           <Link
             to="/dashboard"
-            className="inline-flex items-center justify-center px-4 py-3 rounded-xl border border-primary-300 text-primary-700 font-semibold hover:bg-primary-50 transition"
+            className="btn-secondary inline-flex items-center justify-center px-4 py-3 font-semibold"
           >
             Mes reservations
           </Link>

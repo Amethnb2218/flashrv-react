@@ -21,7 +21,7 @@ function Modal({ isOpen, onClose, title, children, size = 'md' }) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-gradient-to-br from-black/60 via-blue-900/40 to-fuchsia-900/30 backdrop-blur-2xl z-50"
+            className="fixed inset-0 z-50 bg-black/45 backdrop-blur-md"
           />
 
           {/* Modal */}
@@ -31,18 +31,16 @@ function Modal({ isOpen, onClose, title, children, size = 'md' }) {
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             className={`fixed inset-0 z-50 flex items-end sm:items-center justify-center ${size === 'mobile-full' ? 'p-0 sm:p-4' : 'p-4'}`}
           >
-            <div className={`relative bg-gradient-to-br from-white/90 via-blue-50/80 to-fuchsia-100/60 shadow-2xl border border-white/30 backdrop-blur-2xl w-full ${sizes[size]} overflow-hidden animate-fade-in ${size === 'mobile-full' ? 'max-h-[85vh] sm:max-h-[90vh] rounded-t-2xl sm:rounded-2xl' : 'max-h-[90vh] rounded-2xl'}`} style={{ boxShadow: '0 8px 32px 0 #3b82f633, 0 0 24px 2px #a21caf22' }}>
-              {/* Glow mesh effect */}
-              <div className="absolute -inset-2 z-0 rounded-2xl blur-2xl opacity-40 pointer-events-none bg-gradient-to-br from-blue-400/20 via-gold-200/10 to-fuchsia-400/10" />
+            <div className={`relative w-full overflow-hidden border border-[var(--line)] bg-[var(--surface-strong)] shadow-[var(--shadow-card)] ${sizes[size]} animate-fade-in ${size === 'mobile-full' ? 'max-h-[85vh] sm:max-h-[90vh] rounded-t-none sm:rounded-none' : 'max-h-[90vh] rounded-none'}`}>
               {/* Header */}
               {title && (
-                <div className="relative flex items-center justify-between px-6 py-4 border-b border-primary-100 z-10">
-                  <h3 className="font-semibold text-lg text-primary-900 drop-shadow-glow">{title}</h3>
+                <div className="relative z-10 flex items-center justify-between border-b border-[var(--line)] bg-[#fff2df] px-6 py-4">
+                  <h3 className="text-lg font-semibold text-[var(--text)]">{title}</h3>
                   <button
                     onClick={onClose}
-                    className="p-2 hover:bg-blue-100 rounded-full transition-colors drop-shadow-glow"
+                    className="p-2 transition-colors hover:bg-[#fff8ee]"
                   >
-                    <FiX className="w-5 h-5 text-blue-500" />
+                    <FiX className="w-5 h-5 text-[#7a6148]" />
                   </button>
                 </div>
               )}
@@ -60,4 +58,3 @@ function Modal({ isOpen, onClose, title, children, size = 'md' }) {
 }
 
 export default Modal
-

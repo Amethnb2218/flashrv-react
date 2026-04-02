@@ -40,7 +40,7 @@ export default function AddAdminForm({ onAdminAdded }) {
   }
 
   return (
-    <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 mb-4">
+    <div className="app-panel-muted mb-4 p-4">
       <h3 className="text-sm font-semibold text-indigo-800 mb-3 flex items-center gap-2">
         <FiUserPlus className="w-4 h-4" />
         Ajouter un administrateur
@@ -52,7 +52,7 @@ export default function AddAdminForm({ onAdminAdded }) {
           placeholder="Email de l'utilisateur à promouvoir"
           value={email}
           onChange={e => setEmail(e.target.value)}
-          className="flex-1 border border-indigo-200 bg-white text-primary-800 placeholder:text-primary-400 px-4 py-2.5 rounded-xl focus:ring-2 focus:ring-indigo-200 focus:border-indigo-400 text-sm transition"
+          className="app-input flex-1 px-4 py-2.5 text-sm transition"
         />
         <button
           type="submit"

@@ -421,11 +421,11 @@ ${variantNotes.join('\n')}` : '']
     }
   }
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-gold-50/20 py-6">
+    <div className="app-page min-h-screen py-6">
       <div className="max-w-3xl mx-auto px-4">
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
-          <button onClick={() => currentStep > 0 ? setCurrentStep(currentStep - 1) : navigate(-1)} className="w-10 h-10 rounded-xl border border-primary-200 flex items-center justify-center hover:bg-primary-50 transition">
+          <button onClick={() => currentStep > 0 ? setCurrentStep(currentStep - 1) : navigate(-1)} className="flex h-10 w-10 items-center justify-center border border-[var(--line)] bg-[#fff8ee] transition hover:bg-[#fff2df]">
             <FiChevronLeft className="w-5 h-5" />
           </button>
           <div>
@@ -456,27 +456,27 @@ ${variantNotes.join('\n')}` : '']
         </div>
 
         {error && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">{error}</div>
+          <div className="mb-4 border border-[#e7cfaf] bg-[#fff0ea] p-4 text-sm text-[#9d4f0d]">{error}</div>
         )}
 
         {/* Step 1: Récapitulatif */}
         {currentStep === 0 && (
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
-            <div className="bg-white rounded-2xl border border-primary-100 shadow-sm overflow-hidden">
-              <div className="p-5 border-b border-primary-100">
+            <div className="app-panel overflow-hidden">
+              <div className="app-panel-header border-b p-5">
                 <h2 className="text-lg font-bold text-primary-900 flex items-center gap-2">
                   <FiShoppingBag className="w-5 h-5" /> Récapitulatif de la commande
                 </h2>
               </div>
-              <div className="divide-y divide-primary-50">
+              <div className="divide-y divide-[var(--line)]">
                 {cart.map((c, idx) => {
                   const img = resolveMediaUrl(c.product.imageUrl || c.product.image)
                   return (
                     <div key={c.product.id || idx} className="flex items-center gap-4 p-4">
                       {img ? (
-                        <img src={img} alt={c.product.name} className="w-16 h-16 rounded-xl object-cover bg-primary-50" />
+                        <img src={img} alt={c.product.name} className="h-16 w-16 object-cover bg-[#fff8ee]" />
                       ) : (
-                        <div className="w-16 h-16 rounded-xl bg-primary-100 flex items-center justify-center text-primary-400 text-xs">Photo</div>
+                        <div className="flex h-16 w-16 items-center justify-center bg-[#fff2df] text-xs text-[#8f7761]">Photo</div>
                       )}
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold text-primary-900 truncate">{c.product.name}</h3>
@@ -500,7 +500,7 @@ ${variantNotes.join('\n')}` : '']
                   )
                 })}
               </div>
-              <div className="p-5 bg-primary-50 space-y-2">
+              <div className="app-panel-muted space-y-2 p-5">
                 <div className="flex justify-between text-sm">
                   <span className="text-primary-600">Sous-total</span>
                   <span className="font-medium">{formatPrice(cartTotal)}</span>
@@ -521,7 +521,7 @@ ${variantNotes.join('\n')}` : '']
         {/* Step 2: Livraison */}
         {currentStep === 1 && (
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
-            <div className="bg-white rounded-2xl border border-primary-100 shadow-sm p-5 space-y-5">
+            <div className="app-panel space-y-5 p-5">
               <h2 className="text-lg font-bold text-primary-900 flex items-center gap-2">
                 <FiTruck className="w-5 h-5" /> Mode de livraison
               </h2>
@@ -531,8 +531,8 @@ ${variantNotes.join('\n')}` : '']
                   onClick={() => setForm(f => ({ ...f, deliveryMode: 'PICKUP' }))}
                   className={`p-4 rounded-xl border-2 text-left transition-all ${
                     form.deliveryMode === 'PICKUP'
-                      ? 'border-primary-900 bg-primary-50'
-                      : 'border-primary-200 hover:border-primary-300'
+                      ? 'border-[#2a1808] bg-[#fff2df]'
+                      : 'border-[#e7cfaf] hover:border-[#d9b17c]'
                   }`}
                 >
                   <FiHome className="w-6 h-6 mb-2" />
@@ -547,10 +547,10 @@ ${variantNotes.join('\n')}` : '']
                   disabled={forcePickup}
                   className={`p-4 rounded-xl border-2 text-left transition-all ${
                     form.deliveryMode === 'DELIVERY'
-                      ? 'border-primary-900 bg-primary-50'
-                      : forcePickup
-                        ? 'border-primary-100 bg-primary-50 text-primary-400 cursor-not-allowed'
-                        : 'border-primary-200 hover:border-primary-300'
+                        ? 'border-[#2a1808] bg-[#fff2df]'
+                        : forcePickup
+                        ? 'border-[#ead7ba] bg-[#fff8ee] text-[#8f7761] cursor-not-allowed'
+                        : 'border-[#e7cfaf] hover:border-[#d9b17c]'
                   }`}
                 >
                   <FiTruck className="w-6 h-6 mb-2" />
@@ -580,7 +580,7 @@ ${variantNotes.join('\n')}` : '']
                   <input
                     value={form.clientName}
                     onChange={e => setForm(f => ({ ...f, clientName: e.target.value }))}
-                    className="w-full px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-gold-500 outline-none"
+                  className="app-input"
                     placeholder="Votre nom"
                   />
                 </div>
@@ -592,7 +592,7 @@ ${variantNotes.join('\n')}` : '']
                   <input
                     value={form.clientPhone}
                     onChange={e => setForm(f => ({ ...f, clientPhone: e.target.value }))}
-                    className="w-full px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-gold-500 outline-none"
+                  className="app-input"
                     placeholder="77 123 45 67"
                   />
                 </div>
@@ -605,7 +605,7 @@ ${variantNotes.join('\n')}` : '']
                     <input
                       value={form.deliveryAddress}
                       onChange={e => setForm(f => ({ ...f, deliveryAddress: e.target.value }))}
-                      className="w-full px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-gold-500 outline-none"
+                      className="app-input"
                       placeholder="Quartier, rue, bâtiment..."
                     />
                   </div>
@@ -619,7 +619,7 @@ ${variantNotes.join('\n')}` : '']
                     value={form.notes}
                     onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
                     rows={2}
-                    className="w-full px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-gold-500 outline-none"
+                    className="app-input"
                     placeholder="Informations complémentaires..."
                   />
                 </div>
@@ -631,7 +631,7 @@ ${variantNotes.join('\n')}` : '']
         {/* Step 3: Paiement */}
         {currentStep === 2 && (
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-4">
-            <div className="bg-white rounded-2xl border border-primary-100 shadow-sm p-5 space-y-5">
+            <div className="app-panel space-y-5 p-5">
               <h2 className="text-lg font-bold text-primary-900">Choisissez votre méthode de paiement</h2>
 
               <div className="space-y-3">
@@ -646,13 +646,13 @@ ${variantNotes.join('\n')}` : '']
                     disabled={Boolean(method.disabled) || (method.id === 'PAY_ON_PICKUP' && form.deliveryMode === 'DELIVERY')}
                     className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 text-left transition-all ${
                       selectedPayment === method.id
-                        ? 'border-primary-900 bg-primary-50 shadow-sm'
+                        ? 'border-[#2a1808] bg-[#fff2df] shadow-sm'
                         : method.disabled
-                          ? 'border-primary-100 bg-primary-50 text-primary-400 cursor-not-allowed'
-                          : 'border-primary-200 hover:border-primary-300'
+                          ? 'border-[#ead7ba] bg-[#fff8ee] text-[#8f7761] cursor-not-allowed'
+                          : 'border-[#e7cfaf] hover:border-[#d9b17c]'
                     }`}
                   >
-                    <span className="text-xs font-semibold text-primary-700 bg-primary-100 rounded-full px-2.5 py-1">{method.icon}</span>
+                    <span className="app-badge px-2.5 py-1 text-xs font-semibold">{method.icon}</span>
                     <div className="flex-1">
                       <p className="font-semibold text-primary-900">{method.name}</p>
                       <p className={`text-sm ${method.disabled || (method.id === 'PAY_ON_PICKUP' && form.deliveryMode === 'DELIVERY') ? 'text-primary-400' : 'text-primary-500'}`}>
@@ -664,7 +664,7 @@ ${variantNotes.join('\n')}` : '']
                       </p>
                     </div>
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                      selectedPayment === method.id ? 'border-primary-900 bg-primary-900' : 'border-primary-300'
+                      selectedPayment === method.id ? 'border-[#2a1808] bg-[#2a1808]' : 'border-[#d6b081]'
                     }`}>
                       {selectedPayment === method.id && <FiCheck className="w-3 h-3 text-white" />}
                     </div>
@@ -677,7 +677,7 @@ ${variantNotes.join('\n')}` : '']
               )}
 
               {selectedDirectMethod && (
-                <div className="rounded-xl border border-primary-200 bg-primary-50 p-4 space-y-3">
+                <div className="app-panel-muted space-y-3 p-4">
                   <p className="text-sm font-semibold text-primary-900">Paiement direct via {selectedDirectMethod.name}</p>
                   {selectedDirectMethod.details?.displayName ? (
                     <p className="text-xs text-primary-600">Compte: {selectedDirectMethod.details.displayName}</p>
@@ -703,7 +703,7 @@ ${variantNotes.join('\n')}` : '']
                     <input
                       value={paymentProofReference}
                       onChange={(e) => setPaymentProofReference(e.target.value)}
-                      className="w-full px-3 py-2 border border-primary-200 rounded-lg focus:ring-2 focus:ring-gold-500 outline-none text-sm"
+                      className="app-input px-3 py-2 text-sm"
                       placeholder={selectedPayment === 'ORANGE_MONEY' ? 'Ex: MP260313.2207.C03995' : 'Ex: REF-12345'}
                     />
                   </div>
@@ -717,7 +717,7 @@ ${variantNotes.join('\n')}` : '']
                         inputMode="numeric"
                         value={paymentProofAmount}
                         onChange={(e) => setPaymentProofAmount(e.target.value)}
-                        className="w-full px-3 py-2 border border-primary-200 rounded-lg focus:ring-2 focus:ring-gold-500 outline-none text-sm"
+                        className="app-input px-3 py-2 text-sm"
                         placeholder={`Ex: ${Math.round(grandTotal)}`}
                       />
                     </div>
@@ -726,7 +726,7 @@ ${variantNotes.join('\n')}` : '']
                       <input
                         value={paymentProofSenderPhone}
                         onChange={(e) => setPaymentProofSenderPhone(e.target.value)}
-                        className="w-full px-3 py-2 border border-primary-200 rounded-lg focus:ring-2 focus:ring-gold-500 outline-none text-sm"
+                        className="app-input px-3 py-2 text-sm"
                         placeholder="Ex: 77 123 45 67"
                       />
                     </div>
@@ -735,7 +735,7 @@ ${variantNotes.join('\n')}` : '']
               )}
 
               {/* Order Summary */}
-              <div className="p-4 bg-primary-50 rounded-xl space-y-2">
+              <div className="app-panel-muted space-y-2 p-4">
                 <div className="flex justify-between text-sm">
                   <span className="text-primary-600">Articles ({cart.reduce((s, c) => s + c.quantity, 0)})</span>
                   <span>{formatPrice(cartTotal)}</span>
@@ -765,7 +765,7 @@ ${variantNotes.join('\n')}` : '']
           <button
             onClick={handleNext}
             disabled={!canProceed() || submitting}
-            className="w-full py-4 rounded-xl bg-gradient-to-r from-primary-900 via-primary-800 to-primary-900 text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn-primary w-full py-4 text-lg font-bold shadow-lg transition-all hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50"
           >
             {submitting ? (
               <span className="flex items-center justify-center gap-2">

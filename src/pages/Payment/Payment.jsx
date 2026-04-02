@@ -470,7 +470,7 @@ function Payment() {
   )
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-gold-50/20 py-8 relative overflow-hidden">
+    <div className="app-page relative min-h-screen overflow-hidden py-8">
       <div className="absolute top-0 right-0 w-96 h-96 bg-gold-100/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
       <div className="absolute bottom-0 left-0 w-80 h-80 bg-gold-100/30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
 
@@ -479,9 +479,9 @@ function Payment() {
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-2xl p-5 sm:p-8 max-w-md w-full text-center"
+            className="app-panel max-w-md w-full p-5 text-center sm:p-8"
           >
-            <div className="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-[#fff2df]">
               <FiSmartphone className="w-10 h-10 text-primary-600 animate-pulse" />
             </div>
             <h3 className="text-xl font-bold text-primary-900 mb-2">Redirection DexPay</h3>
@@ -516,7 +516,7 @@ function Payment() {
 
         <div className="grid md:grid-cols-2 gap-3 sm:gap-8">
           <div>
-            <div className="bg-white rounded-2xl shadow-sm p-3 sm:p-6">
+            <div className="app-panel p-3 sm:p-6">
               <h2 className="text-lg sm:text-xl font-bold text-primary-900 mb-3 sm:mb-6">Mode de paiement</h2>
 
               <div className="space-y-3">
@@ -526,10 +526,10 @@ function Payment() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => setPaymentChoice(option.id)}
-                    className={`w-full flex items-center p-3 sm:p-4 border-2 rounded-xl transition-all ${
+                    className={`w-full flex items-center border-2 p-3 transition-all sm:p-4 ${
                       paymentChoice === option.id
-                        ? 'border-primary-600 bg-primary-50'
-                        : 'border-primary-200 hover:border-primary-300'
+                        ? 'border-[#2a1808] bg-[#fff2df]'
+                        : 'border-[#e7cfaf] hover:border-[#d9b17c]'
                     }`}
                   >
                     <span className="text-sm sm:text-base mr-3 px-2 py-1 rounded-full bg-primary-100 font-semibold text-primary-700">
@@ -540,14 +540,14 @@ function Payment() {
                       <p className="text-xs sm:text-sm text-primary-500">{option.description}</p>
                     </div>
                     {paymentChoice === option.id && (
-                      <FiCheck className="w-5 h-5 text-primary-600" />
+                      <FiCheck className="w-5 h-5 text-[#9d4f0d]" />
                     )}
                   </motion.button>
                 ))}
               </div>
 
               {paymentChoice === 'PAY_IN_ADVANCE' && (
-                <div className="mt-5 space-y-3 border-t border-primary-100 pt-5">
+                <div className="mt-5 space-y-3 border-t border-[var(--line)] pt-5">
                   <div>
                     <p className="font-semibold text-primary-900">Moyens de paiement du salon</p>
                     <p className="text-xs sm:text-sm text-primary-500 mt-1">
@@ -566,15 +566,15 @@ function Payment() {
                           setSelectedMethod(method.id)
                         }}
                         disabled={Boolean(method.disabled)}
-                        className={`w-full flex items-center p-3 sm:p-4 border-2 rounded-xl transition-all ${
+                        className={`w-full flex items-center border-2 p-3 transition-all sm:p-4 ${
                           selectedMethod === method.id
-                            ? 'border-primary-600 bg-primary-50'
+                            ? 'border-[#2a1808] bg-[#fff2df]'
                             : method.disabled
-                              ? 'border-primary-100 bg-primary-50 opacity-70 cursor-not-allowed'
-                              : 'border-primary-200 hover:border-primary-300'
+                              ? 'border-[#ead7ba] bg-[#fff8ee] opacity-70 cursor-not-allowed'
+                              : 'border-[#e7cfaf] hover:border-[#d9b17c]'
                         }`}
-                      >
-                        <span className="text-sm sm:text-base mr-3 px-2 py-1 rounded-full bg-primary-100 font-semibold text-primary-700">
+                     >
+                        <span className="app-badge mr-3 px-2 py-1 text-sm font-semibold sm:text-base">
                           {method.icon}
                         </span>
                         <div className="text-left flex-1">
@@ -582,7 +582,7 @@ function Payment() {
                           <p className="text-xs sm:text-sm text-primary-500">{method.description}</p>
                         </div>
                         {selectedMethod === method.id && (
-                          <FiCheck className="w-5 h-5 text-primary-600" />
+                          <FiCheck className="w-5 h-5 text-[#9d4f0d]" />
                         )}
                       </motion.button>
                     ))}
@@ -593,19 +593,19 @@ function Payment() {
                   )}
 
                   {!loadingPaymentMethods && availableAdvancePaymentMethods.length === 0 && (
-                    <div className="p-3 bg-amber-50 text-amber-700 rounded-xl text-sm">
+                    <div className="border border-[#e7cfaf] bg-[#fff2df] p-3 text-sm text-[#9d4f0d]">
                       Aucun moyen de paiement en avance n'est configure par ce salon pour le moment.
                     </div>
                   )}
 
                   {!isDexPayEligible ? (
-                    <div className="p-3 bg-gold-50 text-gold-700 rounded-xl text-sm border border-gold-100">
+                    <div className="border border-[#e7cfaf] bg-[#fff1d8] p-3 text-sm text-[#9d4f0d]">
                       DexPay est disponible a partir de {DEXPAY_MIN_BOOKING_AMOUNT.toLocaleString()} FCFA pour eviter un blocage du reversement au pro.
                     </div>
                   ) : null}
 
                   {selectedAdvanceMethod && requiresDirectProof && (
-                    <div className="rounded-xl border border-primary-200 bg-primary-50 p-4 space-y-3">
+                    <div className="app-panel-muted space-y-3 p-4">
                       <p className="text-sm font-semibold text-primary-900">Paiement direct via {selectedAdvanceMethod.name}</p>
                       {selectedAdvanceMethod.details?.displayName ? (
                         <p className="text-xs text-primary-600">Compte: {selectedAdvanceMethod.details.displayName}</p>
@@ -621,7 +621,7 @@ function Payment() {
                           <img
                             src={resolveMediaUrl(selectedAdvanceMethod.details.qrCodeUrl)}
                             alt={`QR ${selectedAdvanceMethod.name}`}
-                            className="w-24 h-24 rounded-lg border border-primary-200 object-cover bg-white"
+                            className="h-24 w-24 border border-[var(--line)] object-cover bg-white"
                           />
                           <p className="text-xs text-primary-600">Scannez le QR ou utilisez les informations du salon pour effectuer votre paiement.</p>
                         </div>
@@ -631,7 +631,7 @@ function Payment() {
                         <input
                           value={paymentProofReference}
                           onChange={(e) => setPaymentProofReference(e.target.value)}
-                          className="w-full px-3 py-2 border border-primary-200 rounded-lg focus:ring-2 focus:ring-gold-500 outline-none text-sm"
+                          className="app-input px-3 py-2 text-sm"
                           placeholder={selectedMethod === 'ORANGE_MONEY' ? 'Ex: MP260313.2207.C03995' : 'Ex: REF-12345'}
                         />
                       </div>
@@ -645,7 +645,7 @@ function Payment() {
                             inputMode="numeric"
                             value={paymentProofAmount}
                             onChange={(e) => setPaymentProofAmount(e.target.value)}
-                            className="w-full px-3 py-2 border border-primary-200 rounded-lg focus:ring-2 focus:ring-gold-500 outline-none text-sm"
+                            className="app-input px-3 py-2 text-sm"
                             placeholder={`Ex: ${Math.round(amountToPayNow)}`}
                           />
                         </div>
@@ -654,7 +654,7 @@ function Payment() {
                           <input
                             value={paymentProofSenderPhone}
                             onChange={(e) => setPaymentProofSenderPhone(e.target.value)}
-                            className="w-full px-3 py-2 border border-primary-200 rounded-lg focus:ring-2 focus:ring-gold-500 outline-none text-sm"
+                            className="app-input px-3 py-2 text-sm"
                             placeholder="Ex: 77 123 45 67"
                           />
                         </div>
@@ -665,7 +665,7 @@ function Payment() {
               )}
 
               {error && (
-                <div className="mt-4 p-3 bg-red-50 text-red-600 rounded-xl text-sm flex items-center">
+                <div className="mt-4 flex items-center border border-[#e7cfaf] bg-[#fff0ea] p-3 text-sm text-[#9d4f0d]">
                   <FiAlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />
                   {error}
                 </div>
@@ -674,10 +674,10 @@ function Payment() {
           </div>
 
           <div>
-            <div className="bg-white rounded-2xl shadow-sm p-3 sm:p-6 md:sticky md:top-24">
+            <div className="app-panel p-3 sm:p-6 md:sticky md:top-24">
               <h2 className="text-lg sm:text-xl font-bold text-primary-900 mb-3 sm:mb-6">Recapitulatif</h2>
 
-              <div className="rounded-2xl sm:rounded-3xl border border-primary-100 overflow-hidden shadow-[0_20px_60px_-45px_rgba(17,24,39,0.45)]">
+              <div className="overflow-hidden border border-[var(--line)] shadow-[0_20px_60px_-45px_rgba(95,50,15,0.28)]">
                 <div className="bg-gradient-to-br from-primary-900 via-primary-800 to-gold-700 px-4 py-4 sm:px-5 sm:py-5 text-white">
                   <div className="flex items-center gap-4">
                     {salonImage ? (
@@ -699,11 +699,11 @@ function Payment() {
                   </div>
                 </div>
 
-                <div className="bg-white px-4 py-4 sm:px-5 sm:py-5">
+                <div className="bg-[var(--surface-strong)] px-4 py-4 sm:px-5 sm:py-5">
                   <div className="pb-4 sm:pb-5 border-b border-primary-100">
                     <div className="flex items-center justify-between mb-3">
                       <h4 className="font-semibold text-primary-900">Services</h4>
-                      <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-primary-100 text-primary-600">
+                      <span className="app-badge px-2.5 py-1 text-xs font-medium">
                         {bookingState.services.length}
                       </span>
                     </div>
@@ -750,7 +750,7 @@ function Payment() {
                     </div>
 
                     {paymentChoice === 'PAY_IN_ADVANCE' ? (
-                      <div className="rounded-2xl bg-gradient-to-br from-gold-50 to-orange-50 border border-gold-100 p-3.5 sm:p-4">
+                      <div className="border border-[#e7cfaf] bg-[#fff1d8] p-3.5 sm:p-4">
                         <div className="flex justify-between items-start gap-3 mb-3">
                           <div>
                             <p className="text-sm font-semibold text-primary-900">
@@ -768,7 +768,7 @@ function Payment() {
                         </div>
                       </div>
                     ) : (
-                      <div className="rounded-2xl bg-primary-50 border border-primary-100 p-3.5 sm:p-4 space-y-3">
+                      <div className="app-panel-muted space-y-3 p-3.5 sm:p-4">
                         <div className="flex justify-between items-center gap-4">
                           <span className="text-lg font-bold text-primary-900">Paiement sur place</span>
                           <span className="text-2xl font-black text-primary-900">
@@ -795,7 +795,7 @@ function Payment() {
               <button
                 onClick={handlePayment}
                 disabled={loading || !resolvedPaymentMethod || paymentStatus === 'pending_confirmation'}
-                className="w-full py-3.5 sm:py-4 px-3 bg-gradient-to-r from-primary-600 to-accent-600 text-white font-semibold text-sm sm:text-base rounded-xl hover:from-primary-700 hover:to-accent-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-center"
+                className="btn-primary flex w-full items-center justify-center px-3 py-3.5 text-center text-sm font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-50 sm:py-4 sm:text-base"
               >
                 {loading ? (
                   <LoadingSpinner size="sm" />

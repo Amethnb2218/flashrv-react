@@ -90,8 +90,8 @@ function OrderReceipt() {
 
   if (!receiptData && loadingState) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-gold-50/20 py-10 px-4">
-        <div className="max-w-xl mx-auto rounded-3xl border border-primary-100 bg-white p-8 text-center shadow-lg">
+      <div className="app-page min-h-screen px-4 py-10">
+        <div className="app-panel mx-auto max-w-xl p-8 text-center shadow-lg">
           <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-primary-200 border-t-primary-600"></div>
           <p className="text-primary-600">Chargement du recu...</p>
         </div>
@@ -147,7 +147,7 @@ function OrderReceipt() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-gold-50/20 py-4 sm:py-8">
+    <div className="app-page min-h-screen py-4 sm:py-8">
       <div className="max-w-2xl mx-auto px-4">
         <motion.div
           initial={{ scale: 0 }}
@@ -179,7 +179,7 @@ function OrderReceipt() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-white rounded-2xl border border-primary-100 shadow-lg overflow-hidden"
+          className="app-panel overflow-hidden shadow-lg"
         >
           <div className="bg-primary-900 text-white p-4 sm:p-6">
             <div className="flex items-center justify-between">
@@ -212,11 +212,11 @@ function OrderReceipt() {
                 const product = c.product || c
                 const img = resolveMediaUrl(product.imageUrl || product.image)
                 return (
-                  <div key={product.id || idx} className="flex items-center gap-3 p-3 bg-primary-50 rounded-xl">
+                  <div key={product.id || idx} className="app-panel-muted flex items-center gap-3 p-3">
                     {img ? (
-                      <img src={img} alt={product.name} className="w-12 h-12 rounded-lg object-cover" />
+                      <img src={img} alt={product.name} className="h-12 w-12 object-cover" />
                     ) : (
-                      <div className="w-12 h-12 rounded-lg bg-primary-200 flex items-center justify-center text-primary-400 text-xs">IMG</div>
+                      <div className="flex h-12 w-12 items-center justify-center bg-[#fff2df] text-xs text-[#8f7761]">IMG</div>
                     )}
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-primary-900 truncate">{product.name}</p>
@@ -233,7 +233,7 @@ function OrderReceipt() {
             </div>
           </div>
 
-          <div className="mx-6 border-t border-dashed border-primary-200" />
+          <div className="mx-6 border-t border-dashed border-[var(--line)]" />
 
           <div className="p-4 sm:p-6 space-y-2">
             <div className="flex justify-between text-sm text-primary-600">
@@ -244,13 +244,13 @@ function OrderReceipt() {
               <span>Frais de livraison</span>
               <span>{deliveryFee > 0 ? formatPrice(deliveryFee) : 'Gratuit'}</span>
             </div>
-            <div className="flex justify-between text-xl font-bold border-t border-primary-200 pt-3 mt-2">
+            <div className="mt-2 flex justify-between border-t border-[var(--line)] pt-3 text-xl font-bold">
               <span>Total</span>
               <span className="text-gold-600">{formatPrice(grandTotal)}</span>
             </div>
           </div>
 
-          <div className="mx-6 border-t border-dashed border-primary-200" />
+          <div className="mx-6 border-t border-dashed border-[var(--line)]" />
 
           <div className="p-4 sm:p-6 grid sm:grid-cols-2 gap-4 sm:gap-6">
             <div>
@@ -270,7 +270,7 @@ function OrderReceipt() {
             <div>
               <h4 className="font-bold text-primary-900 mb-2">Paiement</h4>
               <div className="flex items-center gap-2 text-sm text-primary-600">
-                <span className="text-xs font-semibold text-primary-700 bg-primary-100 rounded-full px-2.5 py-1">{pm.icon}</span>
+                <span className="app-badge px-2.5 py-1 text-xs font-semibold">{pm.icon}</span>
                 <span>{pm.name}</span>
               </div>
               {paymentKey === 'CASH_ON_DELIVERY' ? (
@@ -288,13 +288,13 @@ function OrderReceipt() {
                     : 'Paiement DexPay en cours de confirmation'}
                 </p>
               ) : ['ORANGE_MONEY', 'WAVE', 'FREE_MONEY'].includes(paymentKey) ? (
-                <p className="text-xs text-blue-700 font-medium mt-2 bg-blue-50 px-3 py-1.5 rounded-lg">
+                <p className="mt-2 bg-[#f3eadc] px-3 py-1.5 text-xs font-medium text-[#5f4630]">
                   {isDisputed
                     ? 'Paiement conteste par la boutique. Verification admin en cours.'
                     : 'Preuve de paiement envoyee. Validation en cours par la boutique.'}
                 </p>
               ) : (
-                <p className="text-xs text-blue-600 font-medium mt-2 bg-blue-50 px-3 py-1.5 rounded-lg">
+                <p className="mt-2 bg-[#f3eadc] px-3 py-1.5 text-xs font-medium text-[#5f4630]">
                   Reglement prevu au moment du retrait en boutique
                 </p>
               )}
@@ -307,20 +307,20 @@ function OrderReceipt() {
             <button
               onClick={handleCancelOrder}
               disabled={cancelling}
-              className="flex-1 py-3.5 text-center rounded-xl border border-red-300 text-red-700 font-semibold hover:bg-red-50 transition disabled:opacity-60"
+              className="flex-1 border border-red-300 py-3.5 text-center font-semibold text-red-700 transition hover:bg-red-50 disabled:opacity-60"
             >
               {cancelling ? 'Annulation...' : 'Annuler la commande'}
             </button>
           )}
           <Link
             to="/dashboard?tab=orders"
-            className="flex-1 py-3.5 text-center rounded-xl border border-primary-200 font-semibold text-primary-700 hover:bg-primary-50 transition"
+            className="btn-secondary flex-1 py-3.5 text-center font-semibold"
           >
             Mes commandes
           </Link>
           <Link
             to="/salons?businessType=BOUTIQUE"
-            className="flex-1 py-3.5 text-center rounded-xl bg-primary-900 text-white font-semibold hover:bg-primary-800 transition flex items-center justify-center gap-2"
+            className="btn-primary flex flex-1 items-center justify-center gap-2 py-3.5 text-center font-semibold"
           >
             Continuer mes achats <FiArrowRight className="w-4 h-4" />
           </Link>

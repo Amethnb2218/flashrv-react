@@ -7,7 +7,7 @@ export default function ThemeToggle() {
     return (
         <button
             onClick={toggleTheme}
-            className="group relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-primary-200 bg-white text-primary-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:text-gold-300 dark:hover:bg-slate-700"
+            className="group relative inline-flex h-10 w-10 items-center justify-center rounded-none border border-[#e4cba8] bg-[#fff8ee] text-[#2a1808] shadow-sm transition-all duration-200 hover:bg-[#fff0dc] dark:border-[#f0c77d] dark:bg-[#2b1b0f] dark:text-[#fff4e3] dark:hover:bg-[#352214]"
             aria-label={isDark ? 'Activer le mode clair' : 'Activer le mode sombre'}
             title={isDark ? 'Mode clair' : 'Mode sombre'}
         >

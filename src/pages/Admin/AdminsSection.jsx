@@ -30,7 +30,7 @@ export default function AdminsSection({ admins, loading, onRefresh, onDelete, on
           placeholder="Rechercher un admin..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 bg-white border border-primary-200 rounded-xl text-primary-700 placeholder:text-primary-400 focus:ring-2 focus:ring-blue-100 focus:border-blue-400 font-inter text-sm shadow-sm transition"
+          className="app-input w-full pl-10 pr-4 py-2.5 font-inter text-sm shadow-sm transition"
         />
         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary-300">
           <FiSearch className="w-5 h-5" />
@@ -94,12 +94,12 @@ export default function AdminsSection({ admins, loading, onRefresh, onDelete, on
   );
 
   const AdminCard = ({ row }) => (
-    <div className="group rounded-xl border border-primary-200 bg-white hover:border-primary-300 hover:shadow-md transition-all duration-200 overflow-hidden">
+    <div className="app-panel group overflow-hidden transition-all duration-200 hover:-translate-y-0.5">
       <div className="px-4 pt-4 pb-3 flex items-start gap-3">
         <button
           type="button"
           onClick={() => setSelectedUser(row)}
-          className="w-10 h-10 shrink-0 rounded-full bg-gradient-to-br from-indigo-400 to-sky-500 flex items-center justify-center text-sm text-white font-bold shadow-sm"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#fff2df] text-sm font-bold text-[#9d4f0d] shadow-sm"
         >
           {row.name?.[0]?.toUpperCase() || row.email?.[0]?.toUpperCase()}
         </button>
@@ -128,7 +128,7 @@ export default function AdminsSection({ admins, loading, onRefresh, onDelete, on
         </span>
       </div>
       {(onRestrict || onDelete) && (
-        <div className="px-4 py-2.5 border-t border-primary-100 bg-primary-50/50">
+        <div className="app-panel-header border-t px-4 py-2.5">
           <ActionButtons row={row} />
         </div>
       )}
@@ -143,7 +143,7 @@ export default function AdminsSection({ admins, loading, onRefresh, onDelete, on
       right={
         <button
           onClick={onRefresh}
-          className="bg-blue-600 text-white rounded-xl px-4 py-2 font-semibold shadow-sm hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 transition flex items-center gap-2"
+          className="btn-secondary flex items-center gap-2 px-4 py-2"
         >
           <FiRefreshCw className="w-4 h-4" />
           Actualiser
@@ -151,12 +151,12 @@ export default function AdminsSection({ admins, loading, onRefresh, onDelete, on
       }
     >
       <div className="lg:hidden flex flex-col gap-3">
-        <div className="flex flex-col gap-2 p-3 rounded-xl bg-primary-50 border border-primary-100">
+        <div className="app-panel-muted flex flex-col gap-2 p-3">
           <Toolbar />
           {onRefresh && (
             <button
               onClick={onRefresh}
-              className="self-end flex items-center gap-2 bg-blue-600 text-white rounded-xl px-3 py-2 font-semibold shadow-sm hover:bg-blue-700 transition text-sm"
+              className="btn-secondary self-end flex items-center gap-2 px-3 py-2 text-sm"
             >
               <FiRefreshCw className="w-4 h-4" />
               Actualiser
@@ -165,7 +165,7 @@ export default function AdminsSection({ admins, loading, onRefresh, onDelete, on
         </div>
         {loading ? (
           Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="rounded-2xl border border-primary-200 bg-white p-4 animate-pulse">
+            <div key={i} className="app-panel animate-pulse p-4">
               <div className="flex gap-3 mb-3">
                 <div className="w-11 h-11 rounded-full bg-primary-100" />
                 <div className="flex-1 space-y-2">
@@ -199,7 +199,7 @@ export default function AdminsSection({ admins, loading, onRefresh, onDelete, on
                   className="flex items-center gap-3 hover:opacity-80 transition"
                   title="Voir le profil complet"
                 >
-                  <div className="w-8 h-8 shrink-0 rounded-full bg-gradient-to-br from-indigo-400 to-sky-500 flex items-center justify-center text-xs text-white font-bold">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#fff2df] text-xs font-bold text-[#9d4f0d]">
                     {row.name?.[0]?.toUpperCase() || row.email?.[0]?.toUpperCase()}
                   </div>
                   <div className="text-left min-w-0">
@@ -213,7 +213,7 @@ export default function AdminsSection({ admins, loading, onRefresh, onDelete, on
               key: "createdAt",
               label: "Inscription",
               render: (row) => (
-                <span className="inline-flex items-center gap-1 rounded-full border border-primary-200 bg-primary-50 px-2.5 py-1 text-[11px] font-semibold text-primary-600">
+                <span className="app-badge inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold">
                   <FiCalendar className="w-3 h-3 text-primary-400" />
                   {row.createdAt ? new Date(row.createdAt).toLocaleDateString("fr-FR") : "-"}
                 </span>
@@ -244,10 +244,10 @@ export default function AdminsSection({ admins, loading, onRefresh, onDelete, on
           onClick={() => setSelectedUser(null)}
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl border border-primary-200 max-w-md w-full mx-4 overflow-hidden"
+            className="app-panel max-w-md w-full mx-4 overflow-hidden shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="relative bg-gradient-to-r from-indigo-500 to-sky-500 px-6 pt-6 pb-10">
+            <div className="relative bg-[#2a1808] px-6 pb-10 pt-6 text-[#fff4e3]">
               <button
                 onClick={() => setSelectedUser(null)}
                 className="absolute top-3 right-3 p-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-white transition"
@@ -259,7 +259,7 @@ export default function AdminsSection({ admins, loading, onRefresh, onDelete, on
               </button>
             </div>
             <div className="flex flex-col items-center -mt-8 px-6 pb-6">
-              <div className="w-16 h-16 rounded-full bg-white border-4 border-white shadow-lg flex items-center justify-center text-2xl font-bold text-indigo-600 bg-indigo-50">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full border-4 border-white bg-[#fff2df] text-2xl font-bold text-[#9d4f0d] shadow-lg">
                 {selectedUser.name?.[0]?.toUpperCase() || selectedUser.email?.[0]?.toUpperCase()}
               </div>
               <h3 className="mt-3 text-lg font-bold text-primary-900">

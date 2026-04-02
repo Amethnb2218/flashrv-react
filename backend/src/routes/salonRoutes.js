@@ -354,6 +354,18 @@ router.get('/', optionalAuth, async (req, res, next) => {
             where: { isActive: true },
             select: { id: true, name: true, price: true, duration: true, category: true, imageUrl: true },
           },
+          products: {
+            where: { isActive: true },
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              category: true,
+              price: true,
+              stock: true,
+              imageUrl: true,
+            },
+          },
           coiffeurs: {
             where: { isAvailable: true },
             include: {

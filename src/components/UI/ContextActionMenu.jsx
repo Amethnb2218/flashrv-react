@@ -28,13 +28,13 @@ export default function ContextActionMenu({ items = [], label = "Actions" }) {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={label}
-        className="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-primary-200 bg-white text-primary-600 hover:bg-primary-50 hover:border-primary-300 transition shadow-sm"
+        className="inline-flex h-9 w-9 items-center justify-center border border-[var(--line)] bg-[#fff8ee] text-[#7a6148] transition hover:bg-[#fff2df]"
       >
         <FiMoreHorizontal className="w-4 h-4" />
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 z-30 min-w-[190px] rounded-xl border border-primary-200 bg-white shadow-xl py-1">
+        <div className="absolute right-0 top-full z-30 mt-2 min-w-[190px] border border-[var(--line)] bg-[var(--surface-strong)] py-1 shadow-xl">
           {visibleItems.map((item) => (
             <button
               key={item.key || item.label}
@@ -46,11 +46,11 @@ export default function ContextActionMenu({ items = [], label = "Actions" }) {
               disabled={item.disabled}
               className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition ${
                 item.disabled
-                  ? "text-primary-300 cursor-not-allowed"
-                  : "text-primary-700 hover:bg-primary-50"
+                  ? "cursor-not-allowed text-[#c8ab86]"
+                  : "text-[#5f4630] hover:bg-[#fff2df]"
               } ${item.danger ? "hover:text-red-600" : ""}`}
             >
-              {item.icon ? <item.icon className={`w-4 h-4 ${item.danger ? "text-red-500" : "text-primary-400"}`} /> : null}
+              {item.icon ? <item.icon className={`w-4 h-4 ${item.danger ? "text-red-500" : "text-[#a47e51]"}`} /> : null}
               <span className="font-medium">{item.label}</span>
             </button>
           ))}

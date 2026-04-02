@@ -69,12 +69,12 @@ function OrderPaymentSuccess() {
   const receiptLabel = statusLabel === 'confirmed' ? 'Voir le recu' : 'Voir la commande'
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-gold-50/20 py-10 px-4">
+    <div className="app-page min-h-screen px-4 py-10">
       <div className="max-w-xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-3xl shadow-xl border border-emerald-100 overflow-hidden"
+          className="app-panel overflow-hidden shadow-xl"
         >
           <div className="px-6 py-8 bg-gradient-to-r from-emerald-600 to-green-500 text-white text-center">
             <FiCheckCircle className="w-14 h-14 mx-auto mb-4" />
@@ -83,7 +83,7 @@ function OrderPaymentSuccess() {
           </div>
 
           <div className="p-6 space-y-5">
-            <div className="rounded-2xl bg-primary-50 border border-primary-100 p-4">
+            <div className="app-panel-muted p-4">
               <p className="text-xs uppercase tracking-[0.2em] text-primary-500 mb-1">Commande</p>
               <p className="text-lg font-bold text-primary-900">{orderId || 'Reference en attente'}</p>
             </div>
@@ -91,14 +91,14 @@ function OrderPaymentSuccess() {
             <div className="grid gap-3 sm:grid-cols-2">
               <button
                 onClick={() => navigate(`/order/receipt?orderId=${encodeURIComponent(orderId || sessionData?.order?.id || '')}`, { state: sessionData || undefined, replace: true })}
-                className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary-900 text-white font-semibold hover:bg-primary-800 transition"
+                className="btn-primary inline-flex items-center justify-center gap-2 px-4 py-3 font-semibold"
               >
                 <FiShoppingBag className="w-4 h-4" />
                 {receiptLabel}
               </button>
               <Link
                 to="/dashboard?tab=orders"
-                className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-primary-300 text-primary-700 font-semibold hover:bg-primary-50 transition"
+                className="btn-secondary inline-flex items-center justify-center gap-2 px-4 py-3 font-semibold"
               >
                 Mes commandes
                 <FiArrowRight className="w-4 h-4" />

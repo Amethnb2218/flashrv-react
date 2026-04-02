@@ -44,7 +44,7 @@ export default function StatsSection({ stats }) {
           </div>
           <div className="flex items-center justify-between">
             <span className="text-primary-700 font-medium">Visites aujourd'hui</span>
-            <span className="font-semibold text-blue-700">{siteVisits.today || 0}</span>
+            <span className="font-semibold text-[#9d4f0d]">{siteVisits.today || 0}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-primary-700 font-medium">Visiteurs uniques</span>

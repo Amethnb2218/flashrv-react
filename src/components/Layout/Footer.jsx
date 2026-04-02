@@ -1,117 +1,74 @@
 import { Link } from 'react-router-dom'
-import { FiMail, FiPhone, FiMapPin, FiInstagram, FiFacebook, FiTwitter } from 'react-icons/fi'
 import Logo from '../UI/Logo'
+
+const quickLinks = [
+  { to: '/salons?businessType=SALON', label: 'Trouver un salon' },
+  { to: '/salons?businessType=BOUTIQUE', label: 'Explorer les boutiques' },
+  { to: '/comment-ca-marche', label: 'Comment ça marche' },
+  { to: '/faq', label: 'FAQ' },
+]
+
+const companyLinks = [
+  { to: '/register?role=pro', label: 'Je suis un professionnel' },
+  { to: '/legal/conditions-utilisation', label: "Conditions d'utilisation" },
+  { to: '/legal/confidentialite', label: 'Confidentialité' },
+  { to: '/legal/mentions-legales', label: 'Mentions légales' },
+]
+
+const frequentSearches = [
+  { to: '/salons?salonType=coiffure', label: 'Coiffure' },
+  { to: '/salons?salonType=beaute', label: 'Institut de beauté' },
+  { to: '/salons?type=barber', label: 'Barbier' },
+  { to: '/salons?category=shooting', label: 'Studio photo' },
+]
+
+function FooterColumn({ title, links }) {
+  return (
+    <div>
+      <h4 className="text-sm font-semibold uppercase tracking-[0.16em] text-[#fff4e3]">{title}</h4>
+      <ul className="mt-5 space-y-3 text-sm">
+        {links.map((link) => (
+          <li key={link.to}>
+            <Link
+              to={link.to}
+              className="text-[#f1d3aa] transition-colors hover:text-[#fffaf0]"
+            >
+              {link.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
 
 function Footer() {
   const currentYear = new Date().getFullYear()
 
   return (
-    <footer className="relative overflow-hidden border-t border-primary-400/60 bg-gradient-to-br from-[#ece3d4] via-[#e2d5c1] to-[#d6c6af] dark:border-[#382c22] dark:from-[#1a140f] dark:via-[#15110d] dark:to-[#110d0a]">
-      <div className="absolute -top-24 right-10 h-72 w-72 rounded-full bg-gold-300/18 blur-3xl dark:bg-gold-500/12"></div>
-      <div className="absolute -bottom-24 left-10 h-80 w-80 rounded-full bg-primary-300/18 blur-3xl dark:bg-gold-400/10"></div>
+    <footer className="relative overflow-hidden border-t border-[#4d341c] bg-[#1a120b] text-[#fff4e3]">
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#f0c77d]/35 to-transparent" />
+      <div className="absolute left-[-10%] top-0 h-72 w-72 rounded-full bg-[#f5a133]/[0.08] blur-3xl" />
+      <div className="absolute bottom-[-8rem] right-[-4rem] h-80 w-80 rounded-full bg-[#ffcb45]/[0.08] blur-3xl" />
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-8">
-          <div className="col-span-2 lg:col-span-1 space-y-3">
-            <Logo size="md" showTagline />
-            <p className="text-primary-800 dark:text-[#cfbca4] text-xs leading-relaxed">
-              La plateforme de reservation de salons de coiffure et beaute au Senegal.
+      <div className="page-shell relative py-6 sm:py-8">
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr]">
+          <div className="max-w-sm sm:max-w-none">
+            <Logo size="lg" showTagline variant="light" />
+            <p className="mt-4 text-sm leading-7 text-[#f1d3aa]">
+              Une plateforme pensée pour réserver un salon, comparer les prestations et commander des articles avec une expérience plus claire et plus crédible.
             </p>
-            <div className="flex space-x-2">
-              <a href="#" className="w-8 h-8 rounded-full flex items-center justify-center border border-primary-300/70 bg-[#f7f3ec] dark:bg-[#251d16] dark:border-[#46382a] text-primary-800 dark:text-[#cfbca4] hover:text-primary-900 dark:hover:text-gold-200 hover:bg-[#efe7d8] dark:hover:bg-gold-500/20 transition-all">
-                <FiInstagram className="w-4 h-4" />
-              </a>
-              <a href="#" className="w-8 h-8 rounded-full flex items-center justify-center border border-primary-300/70 bg-[#f7f3ec] dark:bg-[#251d16] dark:border-[#46382a] text-primary-800 dark:text-[#cfbca4] hover:text-primary-900 dark:hover:text-gold-200 hover:bg-[#efe7d8] dark:hover:bg-gold-500/20 transition-all">
-                <FiFacebook className="w-4 h-4" />
-              </a>
-              <a href="#" className="w-8 h-8 rounded-full flex items-center justify-center border border-primary-300/70 bg-[#f7f3ec] dark:bg-[#251d16] dark:border-[#46382a] text-primary-800 dark:text-[#cfbca4] hover:text-primary-900 dark:hover:text-gold-200 hover:bg-[#efe7d8] dark:hover:bg-gold-500/20 transition-all">
-                <FiTwitter className="w-4 h-4" />
-              </a>
-            </div>
+
           </div>
 
-          <div>
-            <h4 className="font-semibold text-sm mb-3 text-primary-900 dark:text-[#f3e8d9]">Liens rapides</h4>
-            <ul className="space-y-1.5 text-sm">
-              <li>
-                <Link to="/salons" className="text-primary-800 dark:text-[#cfbca4] hover:text-primary-900 dark:hover:text-gold-300 transition-colors">
-                  Trouver un salon
-                </Link>
-              </li>
-              <li>
-                <Link to="/register" className="text-primary-800 dark:text-[#cfbca4] hover:text-primary-900 dark:hover:text-gold-300 transition-colors">
-                  Devenir partenaire
-                </Link>
-              </li>
-              <li>
-                <Link to="/comment-ca-marche" className="text-primary-800 dark:text-[#cfbca4] hover:text-primary-900 dark:hover:text-gold-300 transition-colors">
-                  Comment ca marche
-                </Link>
-              </li>
-              <li>
-                <Link to="/faq" className="text-primary-800 dark:text-[#cfbca4] hover:text-primary-900 dark:hover:text-gold-300 transition-colors">
-                  FAQ
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-semibold text-sm mb-3 text-primary-900 dark:text-[#f3e8d9]">Legal</h4>
-            <ul className="space-y-1.5 text-sm">
-              <li>
-                <Link to="/legal/conditions-utilisation" className="text-primary-800 dark:text-[#cfbca4] hover:text-primary-900 dark:hover:text-gold-300 transition-colors">
-                  Conditions d'utilisation
-                </Link>
-              </li>
-              <li>
-                <Link to="/legal/confidentialite" className="text-primary-800 dark:text-[#cfbca4] hover:text-primary-900 dark:hover:text-gold-300 transition-colors">
-                  Politique de confidentialite
-                </Link>
-              </li>
-              <li>
-                <Link to="/legal/mentions-legales" className="text-primary-800 dark:text-[#cfbca4] hover:text-primary-900 dark:hover:text-gold-300 transition-colors">
-                  Mentions legales
-                </Link>
-              </li>
-              <li>
-                <Link to="/legal/cgv" className="text-primary-800 dark:text-[#cfbca4] hover:text-primary-900 dark:hover:text-gold-300 transition-colors">
-                  CGV
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-semibold text-sm mb-3 text-primary-900 dark:text-[#f3e8d9]">Contact</h4>
-            <ul className="space-y-1.5 text-sm">
-              <li className="flex items-center space-x-3 text-primary-800 dark:text-[#cfbca4]">
-                <FiMapPin className="w-4 h-4" />
-                <span>Dakar, Senegal</span>
-              </li>
-              <li>
-                <a href="mailto:contact@jolofera.com" className="flex items-center space-x-3 text-primary-800 dark:text-[#cfbca4] hover:text-primary-900 dark:hover:text-gold-300 transition-colors">
-                  <FiMail className="w-4 h-4" />
-                  <span className="text-sm">contact@jolofera.com</span>
-                </a>
-              </li>
-            </ul>
-            <a
-              href="https://wa.me/221338001234"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-3 inline-flex items-center space-x-1.5 bg-primary-800 hover:bg-primary-900 dark:bg-[#8f6d3f] dark:hover:bg-[#a17c47] text-white dark:text-[#1b130b] px-4 py-1.5 rounded-full text-xs font-medium transition-all shadow-sm"
-            >
-              <FiPhone className="w-4 h-4" />
-              <span>WhatsApp</span>
-            </a>
-          </div>
+          <FooterColumn title="Réserver" links={quickLinks} />
+          <FooterColumn title="Jolof'Era" links={companyLinks} />
+          <FooterColumn title="Recherches" links={frequentSearches} />
         </div>
 
-        <div className="mt-6 pt-4 flex flex-col md:flex-row justify-between items-center border-t border-primary-300/80 dark:border-[#382c22]">
-          <p className="text-primary-800 dark:text-[#ab967c] text-xs">
-            © {currentYear} Jolof’Era. Tous droits reserves.
-          </p>
+        <div className="mt-7 flex flex-col gap-3 border-t border-[#4d341c] pt-4 text-center text-xs text-[#c59d6f] sm:flex-row sm:items-center sm:justify-between sm:text-left">
+          <p>Copyright © {currentYear} Jolof'Era. Tous droits réservés.</p>
+          <p>Produit beauté, réservation et boutique conçu pour une expérience claire sur mobile et desktop.</p>
         </div>
       </div>
     </footer>
@@ -119,4 +76,3 @@ function Footer() {
 }
 
 export default Footer
-

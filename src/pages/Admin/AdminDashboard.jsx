@@ -460,7 +460,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F7FAFC] overflow-x-hidden">
+    <div className="app-page min-h-screen overflow-x-hidden">
       <AnimatePresence>
         {toast.open && (
           <motion.div
@@ -497,9 +497,9 @@ export default function AdminDashboard() {
       </AnimatePresence>
       <div className="max-w-7xl mx-auto px-4">
         {/* Header */}
-        <header className="sticky top-0 z-20 flex flex-col gap-2 py-5 sm:py-8 mb-6 sm:mb-8 bg-white rounded-2xl shadow-md border border-primary-200 px-4 sm:px-6">
+        <header className="app-panel sticky top-0 z-20 mb-6 flex flex-col gap-2 px-4 py-5 sm:mb-8 sm:px-6 sm:py-8">
           <div className="flex items-center justify-between gap-2">
-            <h1 className="text-xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-[#1E293B] font-poppins">Dashboard Jolof'Era</h1>
+            <h1 className="font-poppins text-xl font-extrabold tracking-tight text-[#2a1808] sm:text-3xl md:text-4xl">Dashboard Jolof'Era</h1>
             <div className="flex items-center gap-3">
               {/* Notification bell */}
               <div className="relative" ref={notifRef}>
@@ -592,19 +592,19 @@ export default function AdminDashboard() {
               </div>
               {/* Role badge */}
               {isSuperAdmin && (
-                <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold border border-blue-300">
-                  <FiShield className="w-5 h-5 text-blue-500" />
+                <span className="inline-flex items-center gap-2 border border-[#e7cfaf] bg-[#fff2df] px-4 py-1.5 text-sm font-semibold text-[#9d4f0d]">
+                  <FiShield className="h-5 w-5 text-[#c96a0b]" />
                   Super Admin
                 </span>
               )}
               {!isSuperAdmin && (
-                <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-green-100 text-green-700 rounded-full text-sm font-semibold border border-green-200">
+                <span className="inline-flex items-center gap-2 border border-[#c9ddc9] bg-[#eef7ef] px-4 py-1.5 text-sm font-semibold text-[#335c3f]">
                   Admin
                 </span>
               )}
             </div>
           </div>
-          <p className="text-sm sm:text-base text-[#64748B] font-normal mt-2 ml-1">Pilotage centralise des operations, comptes et paiements Jolof'Era</p>
+          <p className="ml-1 mt-2 text-sm font-normal text-[#7a6148] sm:text-base">Pilotage centralise des operations, comptes et paiements Jolof'Era</p>
         </header>
 
         {/* Stats Cards */}
@@ -644,19 +644,19 @@ export default function AdminDashboard() {
         )}
 
         {/* Tabs */}
-        <div className="bg-white rounded-xl shadow border border-primary-200 mb-6 overflow-hidden">
+        <div className="app-tabbar mb-6 overflow-hidden">
           <div className="relative">
-            <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-white to-transparent z-10 sm:hidden" />
-            <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-white to-transparent z-10 sm:hidden" />
-            <div className="flex border-b border-primary-200 overflow-x-auto scrollbar-hide px-1 sm:px-2">
+            <div className="pointer-events-none absolute bottom-0 left-0 top-0 z-10 w-6 bg-gradient-to-r from-[#fff8ee] to-transparent sm:hidden" />
+            <div className="pointer-events-none absolute bottom-0 right-0 top-0 z-10 w-6 bg-gradient-to-l from-[#fff8ee] to-transparent sm:hidden" />
+            <div className="flex overflow-x-auto border-b border-[var(--line)] px-1 scrollbar-hide sm:px-2">
             {tabs.map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`shrink-0 flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-3 sm:py-4 text-sm sm:text-base font-semibold whitespace-nowrap transition-colors ${
+                className={`app-tab shrink-0 flex items-center gap-1.5 whitespace-nowrap px-3 py-3 text-sm font-semibold transition-colors sm:gap-2 sm:px-6 sm:py-4 sm:text-base ${
                   activeTab === tab.id
-                    ? 'text-blue-700 border-b-2 border-blue-700 bg-blue-50'
-                    : 'text-primary-500 hover:text-blue-700 hover:bg-blue-50'
+                    ? 'app-tab-active'
+                    : ''
                 }`}
               >
                 <tab.icon className="w-5 h-5" />
@@ -664,8 +664,8 @@ export default function AdminDashboard() {
                 {tab.count !== undefined && (
                   <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
                     activeTab === tab.id
-                      ? 'bg-blue-200 text-blue-800'
-                      : 'bg-primary-100 text-primary-600'
+                      ? 'bg-[#fff8ee] text-[#9d4f0d]'
+                      : 'bg-[#fff2df] text-[#7a6148]'
                   }`}>
                     {tab.count}
                   </span>

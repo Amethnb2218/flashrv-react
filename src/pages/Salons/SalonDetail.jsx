@@ -5,7 +5,7 @@ import {
   FiMapPin, FiPhone, FiMail, FiClock, FiStar, FiCheck, 
   FiWifi, FiCoffee, FiChevronLeft, FiChevronRight, FiShare2,
   FiHeart, FiX, FiShoppingCart, FiBox, FiPlus, FiMinus, FiUsers,
-  FiMessageSquare, FiHelpCircle
+  FiMessageSquare
 } from 'react-icons/fi'
 // import { salons, servicesBySalon, coiffeursBySalon, reviews } from '../../data/salons'
 import { formatPrice, formatDuration, formatPriceRange } from '../../utils/helpers'
@@ -587,7 +587,7 @@ function SalonDetail() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-[linear-gradient(180deg,#ffffff_0%,#f7f8fc_45%,#f3f4f6_100%)]">
         <LoadingSpinner />
       </div>
     )
@@ -595,7 +595,7 @@ function SalonDetail() {
 
   if (notFound || !salonData) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-[linear-gradient(180deg,#ffffff_0%,#f7f8fc_45%,#f3f4f6_100%)]">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-primary-900 mb-4">Salon non trouvé</h2>
           <Link to="/salons" className="btn-primary">Retour aux salons</Link>
@@ -620,7 +620,7 @@ function SalonDetail() {
   const activeServiceImages = activeService ? getServiceImages(activeService) : []
 
   return (
-    <div className="min-h-screen bg-primary-50 relative">
+    <div className="min-h-screen bg-[linear-gradient(180deg,#ffffff_0%,#f7f8fc_38%,#f3f4f6_100%)] relative text-[17px]">
       <SEOHead
         title={`${salon.name} — ${salon.zone || 'Dakar'} | Jolof’Era`}
         description={`Réservez chez ${salon.name}${salon.zone ? ` à ${salon.zone}` : ''} sur Jolof’Era. ${salon.businessType === 'BOUTIQUE' ? 'Boutique en ligne' : 'Salon de coiffure et beauté'} au Sénégal.`}
@@ -854,10 +854,10 @@ function SalonDetail() {
                               tabIndex={0}
                               onClick={() => openProductDetail(product)}
                               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openProductDetail(product) } }}
-                              className="bg-white border border-primary-100 rounded-xl overflow-hidden hover:shadow-md transition-shadow cursor-pointer group"
+                              className="group cursor-pointer overflow-hidden rounded-[24px] border border-[#eadfce] bg-[linear-gradient(180deg,#fffdfa_0%,#f8f1e5_100%)] shadow-[0_20px_45px_-38px_rgba(62,46,31,0.55)] transition-all hover:-translate-y-1 hover:shadow-[0_28px_52px_-34px_rgba(62,46,31,0.35)]"
                             >
                               {/* Image + badges overlay */}
-                              <div className="relative w-full aspect-square bg-primary-50">
+                              <div className="relative w-full aspect-square bg-[linear-gradient(180deg,#f7f0e4_0%,#f0e3d1_100%)]">
                                 {img ? (
                                   <img src={img} alt={product.name} className="w-full h-full object-cover" loading="lazy" />
                                 ) : (
@@ -865,62 +865,89 @@ function SalonDetail() {
                                     <FiBox className="w-8 h-8 text-primary-300" />
                                   </div>
                                 )}
+                                <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/25 via-black/5 to-transparent" />
                                 {/* Badges */}
-                                <div className="absolute top-1.5 left-1.5 flex flex-col gap-1">
-                                  {isNew && <span className="bg-green-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">NOUVEAU</span>}
-                                  {isLowStock && <span className="bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">Stock faible</span>}
-                                  {product.stock === 0 && <span className="bg-primary-800 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">Épuisé</span>}
+                                <div className="absolute left-2 top-2 flex flex-col gap-1.5">
+                                  {isNew && <span className="rounded-full bg-emerald-500 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-white shadow-sm">Nouveau</span>}
+                                  {isLowStock && <span className="rounded-full bg-red-500 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-white shadow-sm">Stock faible</span>}
+                                  {product.stock === 0 && <span className="rounded-full bg-primary-800 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-white shadow-sm">Épuisé</span>}
                                 </div>
                                 {/* Heart */}
                                 <button
                                   onClick={(e) => { e.stopPropagation(); toggleProductLike(product.id) }}
-                                  className="absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-white/80 flex items-center justify-center shadow-sm"
+                                  className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/88 shadow-sm backdrop-blur"
                                 >
                                   <FiHeart className={`w-3.5 h-3.5 ${isProductLiked(product.id) ? 'text-red-500 fill-current' : 'text-primary-500'}`} />
                                 </button>
                                 {/* Cart badge */}
                                 {inCartTotal > 0 && (
-                                  <span className="absolute bottom-1.5 right-1.5 bg-gold-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow">{inCartTotal}</span>
+                                  <span className="absolute bottom-2 right-2 flex h-6 min-w-[24px] items-center justify-center rounded-full bg-[#17110c] px-1.5 text-[10px] font-bold text-white shadow">
+                                    {inCartTotal}
+                                  </span>
                                 )}
                               </div>
                               {/* Info */}
-                              <div className="p-2 sm:p-2.5">
-                                <h4 className="font-semibold text-primary-900 text-xs sm:text-sm leading-tight line-clamp-1">{product.name}</h4>
-                                {product.category && <p className="text-[10px] text-primary-400 mt-0.5 line-clamp-1">{product.category}</p>}
-                                <div className="flex items-center justify-between mt-1.5">
-                                  <span className="font-extrabold text-gold-600 text-sm">{formatPrice(product.price)}</span>
-                                  {product.stock > 0 ? (
-                                    inCartTotal > 0 ? (
-                                      <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                                        <button
-                                          onClick={(e) => { e.stopPropagation(); removeFromCart(product.id) }}
-                                          className="w-6 h-6 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center hover:bg-primary-200 transition"
-                                        >
-                                          <FiMinus className="w-3 h-3" />
-                                        </button>
-                                        <span className="text-xs font-bold text-primary-900 min-w-[16px] text-center">{inCartTotal}</span>
-                                        <button
-                                          onClick={(e) => { e.stopPropagation(); if (needsVariant) { openProductDetail(product) } else { addToCart(product) } }}
-                                          className="w-6 h-6 rounded-full bg-primary-900 text-white flex items-center justify-center hover:bg-primary-800 transition"
-                                        >
-                                          <FiPlus className="w-3 h-3" />
-                                        </button>
-                                      </div>
-                                    ) : (
-                                      <button
-                                        onClick={(e) => { e.stopPropagation(); if (needsVariant) { openProductDetail(product) } else { addToCart(product) } }}
-                                        className="w-7 h-7 rounded-full bg-primary-900 text-white flex items-center justify-center hover:bg-primary-800 transition"
-                                      >
-                                        <FiPlus className="w-3.5 h-3.5" />
-                                      </button>
-                                    )
-                                  ) : (
-                                    <span className="text-[10px] text-red-500 font-medium">Rupture</span>
+                              <div className="space-y-2.5 p-3">
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="min-w-0">
+                                    <h4 className="line-clamp-2 text-sm font-semibold leading-tight text-primary-900">{product.name}</h4>
+                                    {product.category && <p className="mt-1 line-clamp-1 text-[10px] uppercase tracking-[0.18em] text-primary-400">{product.category}</p>}
+                                  </div>
+                                  {needsVariant && (
+                                    <span className="inline-flex shrink-0 items-center rounded-full bg-[#efe2cf] px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-primary-800">
+                                      Options
+                                    </span>
                                   )}
                                 </div>
+
+                                <div className="rounded-[18px] border border-white/70 bg-white/70 px-3 py-2 shadow-[0_14px_30px_-26px_rgba(62,46,31,0.45)]">
+                                  <div className="flex items-end justify-between gap-2">
+                                    <div>
+                                      <span className="text-lg font-extrabold text-primary-900">{formatPrice(product.price)}</span>
+                                      <p className="mt-0.5 text-[10px] text-primary-500">
+                                        {deliveryMeta?.isDeliverable ? 'Livraison possible' : 'Retrait boutique'}
+                                      </p>
+                                    </div>
+                                    {product.stock > 0 ? (
+                                      inCartTotal > 0 ? (
+                                        <div className="inline-flex items-center rounded-full border border-[#eadfce] bg-[#fff9f0] p-1 shadow-sm" onClick={(e) => e.stopPropagation()}>
+                                          <button
+                                            onClick={(e) => { e.stopPropagation(); removeFromCart(product.id) }}
+                                            className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-primary-700 transition hover:bg-primary-50"
+                                          >
+                                            <FiMinus className="w-3 h-3" />
+                                          </button>
+                                          <span className="min-w-[22px] px-2 text-center text-xs font-bold text-primary-900">{inCartTotal}</span>
+                                          <button
+                                            onClick={(e) => { e.stopPropagation(); if (needsVariant) { openProductDetail(product) } else { addToCart(product) } }}
+                                            className="flex h-7 w-7 items-center justify-center rounded-full bg-[#17110c] text-white transition hover:bg-[#2a2118]"
+                                          >
+                                            <FiPlus className="w-3 h-3" />
+                                          </button>
+                                        </div>
+                                      ) : (
+                                        <button
+                                          onClick={(e) => { e.stopPropagation(); if (needsVariant) { openProductDetail(product) } else { addToCart(product) } }}
+                                          className="inline-flex items-center gap-1.5 rounded-full bg-[#17110c] px-3 py-2 text-[11px] font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[#2a2118]"
+                                        >
+                                          <span>{needsVariant ? 'Choisir' : 'Ajouter'}</span>
+                                          <FiPlus className="w-3.5 h-3.5" />
+                                        </button>
+                                      )
+                                    ) : (
+                                      <span className="rounded-full bg-red-50 px-2.5 py-1 text-[10px] font-semibold text-red-500">Rupture</span>
+                                    )}
+                                  </div>
+                                </div>
+
                                 {deliveryMeta?.isDeliverable && (
-                                  <p className="text-[10px] text-primary-400 mt-1 flex items-center gap-0.5">
+                                  <p className="flex items-center gap-1 text-[10px] text-primary-400">
                                     <FiBox className="w-2.5 h-2.5" /> Livraison dispo
+                                  </p>
+                                )}
+                                {needsVariant && product.stock > 0 && (
+                                  <p className="text-[10px] text-primary-500">
+                                    Ouvrez la fiche pour choisir taille ou couleur.
                                   </p>
                                 )}
                               </div>
@@ -1429,6 +1456,7 @@ function SalonDetail() {
               const variantChosen = (!sizeRequired || selSize) && (!colorRequired || selColor)
               const inCartItems = getCartItemForProduct(product.id).filter((c) => c.selectedSize === selSize && c.selectedColor === selColor)
               const inCartTotal = inCartItems.reduce((s, c) => s + c.quantity, 0)
+              const selectedVariantParts = [selSize, selColor].filter(Boolean)
 
               const isSizeAvailable = (sizeValue) => {
                 if (variantEntries.length === 0) return true
@@ -1521,23 +1549,42 @@ function SalonDetail() {
                       <p className="text-sm text-primary-600">{product.description}</p>
                     )}
 
-                    <div className="rounded-xl border border-primary-100 bg-primary-50 px-4 py-3 text-sm text-primary-600">
-                      {deliveryMeta?.isDeliverable
-                        ? `Livraison disponible${deliveryMeta?.deliveryFee > 0 ? ` a partir de ${formatPrice(deliveryMeta.deliveryFee)}` : ''}`
-                        : 'Retrait boutique uniquement'}
+                    <div className="rounded-[24px] border border-[#eadfce] bg-[linear-gradient(180deg,#fffaf2_0%,#f7ecdc_100%)] px-4 py-4 text-sm text-primary-700 shadow-[0_22px_40px_-34px_rgba(62,46,31,0.35)]">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary-500">Livraison</p>
+                      <p className="mt-2 font-semibold text-primary-900">
+                        {deliveryMeta?.isDeliverable
+                          ? `Disponible${deliveryMeta?.deliveryFee > 0 ? ` à partir de ${formatPrice(deliveryMeta.deliveryFee)}` : ''}`
+                          : 'Retrait boutique uniquement'}
+                      </p>
                       {deliveryMeta?.isDeliverable && Array.isArray(deliveryMeta?.deliveryZones) && deliveryMeta.deliveryZones.length > 0 ? (
-                        <span className="block mt-1 text-primary-500">Zones: {deliveryMeta.deliveryZones.join(', ')}</span>
+                        <span className="mt-1 block text-xs text-primary-500">Zones: {deliveryMeta.deliveryZones.join(', ')}</span>
                       ) : null}
                     </div>
 
-                    <div className="relative">
+                    <div className="relative rounded-[24px] border border-[#eadfce] bg-white/80 p-3 shadow-[0_18px_36px_-30px_rgba(62,46,31,0.3)]">
+                      <div className="mb-3 flex items-center justify-between gap-3">
+                        <div>
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary-500">Raccourcis</p>
+                          <p className="mt-1 text-sm font-semibold text-primary-900">Gardez l’article à portée</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => buyNow(product, selSize, selColor)}
+                          disabled={product.stock <= 0 || (needsVariant && !variantChosen)}
+                          aria-label="Acheter"
+                          title="Acheter"
+                          className="inline-flex h-11 items-center justify-center rounded-full bg-[#17110c] px-4 text-sm font-semibold text-white transition hover:bg-[#2a2118] disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          Acheter
+                        </button>
+                      </div>
                       <div className="grid grid-cols-2 gap-2">
                         <button
                           type="button"
                           onClick={() => toggleProductLike(product.id)}
                           aria-label={isProductLiked(product.id) ? 'Retirer des favoris' : 'Ajouter aux favoris'}
                           title={isProductLiked(product.id) ? 'Retirer des favoris' : 'Ajouter aux favoris'}
-                          className={`py-2 rounded-xl border transition flex items-center justify-center ${isProductLiked(product.id) ? 'bg-red-50 text-red-600 border-red-200' : 'bg-white text-primary-700 border-primary-200 hover:bg-primary-50'}`}
+                          className={`py-2.5 rounded-2xl border transition flex items-center justify-center ${isProductLiked(product.id) ? 'bg-red-50 text-red-600 border-red-200' : 'bg-white text-primary-700 border-primary-200 hover:bg-primary-50'}`}
                         >
                           <FiHeart className="w-4 h-4" />
                         </button>
@@ -1546,7 +1593,7 @@ function SalonDetail() {
                           onClick={() => shareProduct(product)}
                           aria-label="Partager"
                           title="Partager"
-                          className="py-2 rounded-xl border border-primary-200 bg-white text-primary-700 hover:bg-primary-50 flex items-center justify-center"
+                          className="py-2.5 rounded-2xl border border-primary-200 bg-white text-primary-700 hover:bg-primary-50 flex items-center justify-center"
                         >
                           <FiShare2 className="w-4 h-4" />
                         </button>
@@ -1555,7 +1602,7 @@ function SalonDetail() {
                           onClick={openProductReview}
                           aria-label="Avis"
                           title="Avis"
-                          className="py-2 rounded-xl border border-primary-200 bg-white text-primary-700 hover:bg-primary-50 flex items-center justify-center"
+                          className="py-2.5 rounded-2xl border border-primary-200 bg-white text-primary-700 hover:bg-primary-50 flex items-center justify-center"
                         >
                           <FiMessageSquare className="w-4 h-4" />
                         </button>
@@ -1564,32 +1611,10 @@ function SalonDetail() {
                           onClick={(e) => { if (!salon?.phone) e.preventDefault() }}
                           aria-label="Appeler"
                           title="Appeler"
-                          className="py-2 rounded-xl border border-primary-200 bg-white text-primary-700 hover:bg-primary-50 flex items-center justify-center text-center"
+                          className="py-2.5 rounded-2xl border border-primary-200 bg-white text-primary-700 hover:bg-primary-50 flex items-center justify-center text-center"
                         >
                           <FiPhone className="w-4 h-4" />
                         </a>
-                      </div>
-                      <div className="flex items-center gap-2.5 mt-2.5">
-                        <button
-                          type="button"
-                          onClick={() => buyNow(product, selSize, selColor)}
-                          disabled={product.stock <= 0 || (needsVariant && !variantChosen)}
-                          aria-label="Acheter"
-                          title="Acheter"
-                          className="flex-1 py-3.5 rounded-xl bg-primary-800 text-white hover:bg-primary-900 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                        >
-                          <FiShoppingCart className="w-5 h-5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {/* Aide action */}}
-                          aria-label="Aide"
-                          title="Aide"
-                          className="flex-shrink-0 w-12 h-12 rounded-full border border-primary-200 bg-white text-primary-500 hover:bg-primary-50 shadow-sm flex items-center justify-center gap-0.5 flex-col"
-                        >
-                          <FiHelpCircle className="w-4 h-4" />
-                          <span className="text-[9px] font-medium leading-none">Aide</span>
-                        </button>
                       </div>
                     </div>
 
@@ -1655,40 +1680,71 @@ function SalonDetail() {
                       </div>
                     )}
 
-                    {needsVariant && !variantChosen && (
-                      <p className="text-xs text-gold-700 bg-gold-50 border border-gold-100 rounded-lg px-3 py-2">
-                        Choisissez les options requises avant d'ajouter au panier.
-                      </p>
-                    )}
+                    <div className="rounded-[28px] bg-[linear-gradient(180deg,#17110c_0%,#241b14_100%)] p-4 text-white shadow-[0_32px_60px_-36px_rgba(23,17,12,0.85)]">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-gold-300">Panier</p>
+                          <p className="mt-2 text-lg font-semibold leading-tight">
+                            Composez votre panier avant de confirmer.
+                          </p>
+                        </div>
+                        {inCartTotal > 0 && (
+                          <span className="rounded-full bg-white/12 px-3 py-1 text-xs font-semibold text-white/90">
+                            {inCartTotal} dans le panier
+                          </span>
+                        )}
+                      </div>
 
-                    <div className="pt-2 border-t border-primary-100">
-                      {inCartTotal > 0 ? (
-                        <div className="flex items-center justify-between gap-3">
-                          <div className="flex items-center gap-2">
-                            <button onClick={() => removeFromCart(product.id, selSize, selColor)} className="w-9 h-9 rounded-full bg-primary-100 flex items-center justify-center hover:bg-primary-200">
-                              <FiMinus className="w-4 h-4" />
-                            </button>
-                            <span className="font-semibold min-w-6 text-center">{inCartTotal}</span>
-                            <button onClick={() => addToCart(product, selSize, selColor)} disabled={needsVariant && !variantChosen} className="w-9 h-9 rounded-full bg-gold-100 flex items-center justify-center hover:bg-gold-200 disabled:opacity-50">
-                              <FiPlus className="w-4 h-4" />
+                      {needsVariant && (
+                        <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 px-3 py-3">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/65">
+                            Configuration
+                          </p>
+                          {variantChosen ? (
+                            <div className="mt-2 flex flex-wrap gap-2">
+                              {selectedVariantParts.map((part) => (
+                                <span key={part} className="rounded-full bg-white/12 px-3 py-1 text-xs font-semibold text-white">
+                                  {part}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="mt-2 text-sm text-white/72">
+                              Choisissez les options requises avant d'ajouter au panier.
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="mt-4">
+                        {inCartTotal > 0 ? (
+                          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="inline-flex items-center self-start rounded-full bg-white/10 p-1">
+                              <button onClick={() => removeFromCart(product.id, selSize, selColor)} className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 hover:bg-white/20">
+                                <FiMinus className="w-4 h-4" />
+                              </button>
+                              <span className="min-w-[34px] px-2 text-center text-sm font-semibold">{inCartTotal}</span>
+                              <button onClick={() => addToCart(product, selSize, selColor)} disabled={needsVariant && !variantChosen} className="flex h-10 w-10 items-center justify-center rounded-full bg-gold-400 text-primary-900 hover:bg-gold-300 disabled:opacity-50">
+                                <FiPlus className="w-4 h-4" />
+                              </button>
+                            </div>
+                            <button
+                              onClick={() => { setShowCartModal(true); closeProductDetail() }}
+                              className="rounded-full bg-white px-5 py-3 text-sm font-semibold text-primary-900 transition hover:bg-gold-50"
+                            >
+                              Voir panier
                             </button>
                           </div>
+                        ) : (
                           <button
-                            onClick={() => { setShowCartModal(true); closeProductDetail() }}
-                            className="rounded-xl bg-primary-900 text-white font-semibold px-4 py-2.5 text-sm"
+                            onClick={() => addToCart(product, selSize, selColor)}
+                            disabled={product.stock <= 0 || (needsVariant && !variantChosen)}
+                            className="w-full rounded-[22px] bg-[linear-gradient(90deg,#f3c56c_0%,#f7d995_100%)] px-4 py-4 text-sm font-semibold text-primary-900 transition hover:-translate-y-0.5 hover:shadow-[0_16px_30px_-18px_rgba(243,197,108,0.65)] disabled:cursor-not-allowed disabled:opacity-50"
                           >
-                            Voir panier
+                            Ajouter au panier
                           </button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => addToCart(product, selSize, selColor)}
-                          disabled={product.stock <= 0 || (needsVariant && !variantChosen)}
-                          className="w-full rounded-xl bg-gradient-to-r from-primary-900 via-primary-800 to-primary-900 text-white font-semibold py-3.5 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          Ajouter au panier
-                        </button>
-                      )}
+                        )}
+                      </div>
                     </div>
                   </div>
                 </motion.div>

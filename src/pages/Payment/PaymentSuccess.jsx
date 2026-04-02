@@ -121,7 +121,7 @@ function PaymentSuccess() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-primary-50">
+      <div className="app-page min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-500 border-t-transparent" />
       </div>
     )
@@ -129,12 +129,12 @@ function PaymentSuccess() {
 
   if (!appointment) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-gold-50/30 py-12 flex items-center justify-center relative overflow-hidden">
+      <div className="app-page relative flex min-h-screen items-center justify-center overflow-hidden py-12">
         <div className="absolute top-0 right-0 w-96 h-96 bg-gold-100/40 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
         <div className="absolute bottom-0 left-0 w-80 h-80 bg-gold-100/30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
         <div className="relative z-10 max-w-md mx-auto px-4 text-center">
-          <div className="bg-white rounded-3xl shadow-xl p-8">
-            <div className="w-16 h-16 bg-gold-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="app-panel p-8">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[#fff2df]">
               <FiAlertCircle className="w-8 h-8 text-gold-600" />
             </div>
             <h2 className="text-xl font-bold text-primary-900 mb-2">Reservation introuvable</h2>
@@ -144,13 +144,13 @@ function PaymentSuccess() {
             <div className="flex flex-col gap-3">
               <Link
                 to="/dashboard"
-                className="py-3 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-colors"
+                className="btn-primary py-3 font-semibold"
               >
                 Voir mes reservations
               </Link>
               <Link
                 to="/salons"
-                className="py-3 border border-primary-600 text-primary-600 font-semibold rounded-xl hover:bg-primary-50 transition-colors"
+                className="btn-secondary py-3 font-semibold"
               >
                 Retour aux salons
               </Link>
@@ -176,7 +176,7 @@ function PaymentSuccess() {
   const salonImage = resolveMediaUrl(booking.salon?.image || booking.salon?.gallery?.[0]?.url || '')
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-gold-50/30 py-12 relative overflow-hidden">
+    <div className="app-page relative min-h-screen overflow-hidden py-12">
       <div className="absolute top-0 right-0 w-96 h-96 bg-gold-100/40 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
       <div className="absolute bottom-0 left-0 w-80 h-80 bg-green-100/30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
 
@@ -185,14 +185,14 @@ function PaymentSuccess() {
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3 }}
-          className="bg-white rounded-3xl shadow-xl overflow-hidden"
+          className="app-panel overflow-hidden"
         >
           <div className={`px-6 py-12 text-center ${heroToneClass}`}>
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
-              className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6"
+              className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-white"
             >
               {isReservationConfirmed ? (
                 <FiCheck className="w-10 h-10 text-green-500" />
@@ -214,12 +214,12 @@ function PaymentSuccess() {
               <p className="text-lg sm:text-2xl font-bold text-primary-600 font-mono break-all">{booking.id}</p>
             </div>
 
-            <div className="bg-primary-50 rounded-2xl p-6 mb-8">
-              <div className="flex flex-col sm:flex-row items-start mb-6 pb-6 border-b border-primary-200 gap-3 sm:gap-0">
+            <div className="app-panel-muted mb-8 p-6">
+              <div className="mb-6 flex flex-col items-start gap-3 border-b border-[var(--line)] pb-6 sm:flex-row sm:gap-0">
                 {salonImage ? (
-                  <img src={salonImage} alt={booking.salon.name} className="w-20 h-20 rounded-xl object-cover" />
+                  <img src={salonImage} alt={booking.salon.name} className="h-20 w-20 object-cover" />
                 ) : (
-                  <div className="w-20 h-20 rounded-xl bg-primary-100 flex items-center justify-center text-primary-700 font-bold text-xl">
+                  <div className="flex h-20 w-20 items-center justify-center bg-[#fff2df] text-xl font-bold text-[#9d4f0d]">
                     {booking.salon.name?.charAt(0) || 'S'}
                   </div>
                 )}
@@ -234,8 +234,8 @@ function PaymentSuccess() {
 
               <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
                 <div className="flex items-start">
-                  <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center mr-3">
-                    <FiCalendar className="w-5 h-5 text-primary-600" />
+                  <div className="mr-3 flex h-10 w-10 items-center justify-center bg-[#fff2df]">
+                    <FiCalendar className="w-5 h-5 text-[#9d4f0d]" />
                   </div>
                   <div>
                     <p className="text-sm text-primary-500">Date</p>
@@ -244,8 +244,8 @@ function PaymentSuccess() {
                 </div>
 
                 <div className="flex items-start">
-                  <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center mr-3">
-                    <FiClock className="w-5 h-5 text-primary-600" />
+                  <div className="mr-3 flex h-10 w-10 items-center justify-center bg-[#fff2df]">
+                    <FiClock className="w-5 h-5 text-[#9d4f0d]" />
                   </div>
                   <div>
                     <p className="text-sm text-primary-500">Heure</p>
@@ -254,8 +254,8 @@ function PaymentSuccess() {
                 </div>
 
                 <div className="flex items-start">
-                  <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center mr-3">
-                    <FiUser className="w-5 h-5 text-primary-600" />
+                  <div className="mr-3 flex h-10 w-10 items-center justify-center bg-[#fff2df]">
+                    <FiUser className="w-5 h-5 text-[#9d4f0d]" />
                   </div>
                   <div>
                     <p className="text-sm text-primary-500">Coiffeur(se)</p>
@@ -264,7 +264,7 @@ function PaymentSuccess() {
                 </div>
 
                 <div className="flex items-start">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center mr-3 ${isReservationConfirmed ? 'bg-green-100' : 'bg-gold-100'}`}>
+                  <div className={`mr-3 flex h-10 w-10 items-center justify-center ${isReservationConfirmed ? 'bg-green-100' : 'bg-[#fff1d8]'}`}>
                     {isReservationConfirmed ? <FiCheck className="w-5 h-5 text-green-600" /> : <FiAlertCircle className="w-5 h-5 text-gold-600" />}
                   </div>
                   <div>
@@ -274,7 +274,7 @@ function PaymentSuccess() {
                 </div>
               </div>
 
-              <div className="mt-6 pt-6 border-t border-primary-200">
+              <div className="mt-6 border-t border-[var(--line)] pt-6">
                 <p className="text-sm text-primary-500 mb-3">Services reserves</p>
                 <div className="space-y-2">
                   {booking.services.map((service) => (
@@ -284,7 +284,7 @@ function PaymentSuccess() {
                     </div>
                   ))}
                 </div>
-                <div className="flex justify-between mt-4 pt-4 border-t border-primary-200">
+                <div className="mt-4 flex justify-between border-t border-[var(--line)] pt-4">
                   <span className="font-bold text-primary-900">Total</span>
                   <span className="font-bold text-primary-600 text-xl">{formatPrice(booking.totalPrice)} FCFA</span>
                 </div>
@@ -295,7 +295,7 @@ function PaymentSuccess() {
               {!isReservationConfirmed && (
                 <Link
                   to={`/payment/cancel?appointmentId=${encodeURIComponent(booking.id)}`}
-                  className="flex items-center justify-center px-6 py-3 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-colors"
+                  className="btn-primary flex items-center justify-center px-6 py-3 font-semibold"
                 >
                   <FiRefreshCw className="w-5 h-5 mr-2" />
                   Reessayer le paiement
@@ -303,7 +303,7 @@ function PaymentSuccess() {
               )}
               <Link
                 to="/dashboard"
-                className="flex items-center justify-center px-6 py-3 border border-primary-300 text-primary-700 font-semibold rounded-xl hover:bg-primary-50 transition-colors"
+                className="btn-secondary flex items-center justify-center px-6 py-3 font-semibold"
               >
                 Voir mes reservations
               </Link>

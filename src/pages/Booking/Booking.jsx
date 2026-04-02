@@ -169,7 +169,7 @@ function Booking() {
   }
 
   return (
-    <div className="relative min-h-screen w-full max-w-[100vw] overflow-x-clip bg-gradient-to-br from-primary-50 via-white to-gold-50/20 py-4 sm:py-8">
+    <div className="app-page relative min-h-screen w-full max-w-[100vw] overflow-x-clip py-4 sm:py-8">
       {/* Decorative background elements */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-gold-100/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4 pointer-events-none"></div>
       <div className="absolute bottom-0 left-0 w-80 h-80 bg-gold-100/30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4 pointer-events-none"></div>
@@ -248,7 +248,7 @@ function Booking() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="box-border w-full min-w-0 overflow-x-clip rounded-2xl bg-white p-3 shadow-sm sm:p-6"
+                className="app-panel box-border w-full min-w-0 overflow-x-clip p-3 sm:p-6"
               >
                 {/* Step 1: Services */}
                 {state.step === 1 && (
@@ -278,7 +278,7 @@ function Booking() {
                 {/* Step 2: Date & Time */}
                 {state.step === 2 && (
                   <div className="space-y-3 sm:space-y-4">
-                    <div className="w-full min-w-0 rounded-2xl border border-primary-100 bg-gradient-to-r from-primary-50 to-white px-3 py-3 sm:px-4">
+                    <div className="app-panel-muted w-full min-w-0 px-3 py-3 sm:px-4">
                       <h2 className="text-base font-bold text-primary-900 sm:text-xl">Date et heure</h2>
                       <p className="mt-1 text-xs text-primary-600 sm:text-sm">Choisissez un jour puis un créneau disponible.</p>
                     </div>
@@ -315,7 +315,7 @@ function Booking() {
                     {/* Quick selection feedback */}
                     {state.date && state.time && (
                       <div
-                        className="flex items-center gap-2 rounded-xl border border-green-200 bg-green-50 p-3"
+                        className="flex items-center gap-2 border border-[#c9ddc9] bg-[#eef7ef] p-3"
                       >
                         <FiCheck className="w-4 h-4 text-green-600 flex-shrink-0" />
                         <p className="text-xs font-medium text-green-700">
@@ -333,7 +333,7 @@ function Booking() {
                       Confirmer votre réservation
                     </h2>
 
-                    <div className="bg-white border border-primary-200 rounded-xl p-4 mb-6">
+                    <div className="app-panel mb-6 p-4">
                       <h3 className="font-semibold text-primary-900 mb-4">Vos informations de contact</h3>
                       <p className="text-sm text-primary-500 mb-4">
                         Ces informations seront visibles par le salon pour confirmer le rendez-vous.
@@ -344,34 +344,34 @@ function Booking() {
                           value={state.clientFirstName || ''}
                           onChange={(e) => dispatch({ type: 'SET_CLIENT_DETAILS', payload: { clientFirstName: e.target.value } })}
                           placeholder="Prénom *"
-                          className="w-full px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                          className="app-input"
                         />
                         <input
                           type="text"
                           value={state.clientLastName || ''}
                           onChange={(e) => dispatch({ type: 'SET_CLIENT_DETAILS', payload: { clientLastName: e.target.value } })}
                           placeholder="Nom *"
-                          className="w-full px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                          className="app-input"
                         />
                         <input
                           type="tel"
                           value={state.clientPhone || ''}
                           onChange={(e) => dispatch({ type: 'SET_CLIENT_DETAILS', payload: { clientPhone: e.target.value } })}
                           placeholder="Téléphone *"
-                          className="w-full px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                          className="app-input"
                         />
                         <input
                           type="text"
                           value={state.clientAddress || ''}
                           onChange={(e) => dispatch({ type: 'SET_CLIENT_DETAILS', payload: { clientAddress: e.target.value } })}
                           placeholder="Adresse (optionnel)"
-                          className="w-full px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                          className="app-input"
                         />
                       </div>
                     </div>
                     
                     {/* Info: Coiffeur sera assigné */}
-                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+                    <div className="app-panel-muted mb-6 p-4">
                       <div className="flex items-start">
                         <FiUser className="w-5 h-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
                         <div>
@@ -385,7 +385,7 @@ function Booking() {
                     
                     <div className="space-y-6">
                       {/* Summary */}
-                      <div className="bg-primary-50 rounded-xl p-4 sm:p-6">
+                      <div className="app-panel-muted p-4 sm:p-6">
                         <h3 className="font-semibold text-primary-900 mb-4">Récapitulatif</h3>
                         
                         <div className="space-y-3">
@@ -435,7 +435,7 @@ function Booking() {
                           value={state.notes}
                           onChange={(e) => dispatch({ type: 'SET_NOTES', payload: e.target.value })}
                           rows={3}
-                          className="w-full px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                          className="app-input resize-none"
                           placeholder="Ex: Cheveux très épais, préférence pour un style naturel..."
                         />
                       </div>
@@ -446,10 +446,10 @@ function Booking() {
             </AnimatePresence>
 
             {/* Navigation Buttons — fixed bottom bar on mobile */}
-            <div className="fixed bottom-0 left-0 right-0 z-[70] flex justify-between gap-2 border-t border-primary-200 bg-white/95 p-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur sm:static sm:mt-6 sm:border-0 sm:bg-transparent sm:p-0 sm:pb-0 sm:shadow-none">
+            <div className="fixed bottom-0 left-0 right-0 z-[70] flex justify-between gap-2 border-t border-[var(--line)] bg-[rgba(255,248,238,0.96)] p-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] shadow-[0_-8px_24px_rgba(95,50,15,0.08)] backdrop-blur sm:static sm:mt-6 sm:border-0 sm:bg-transparent sm:p-0 sm:pb-0 sm:shadow-none">
               <button
                 onClick={handleBack}
-                className="flex-1 sm:flex-none px-4 py-3 border border-primary-300 text-primary-700 rounded-xl hover:bg-primary-50 transition-colors flex items-center justify-center text-sm font-medium"
+                className="btn-secondary flex flex-1 items-center justify-center px-4 py-3 text-sm font-medium sm:flex-none"
               >
                 <FiChevronLeft className="w-4 h-4 mr-1" />
                 {state.step === 1 ? 'Annuler' : 'Retour'}
@@ -457,7 +457,7 @@ function Booking() {
               <button
                 onClick={handleNext}
                 disabled={!canProceed()}
-                className="flex-[2] sm:flex-none px-6 py-3 rounded-xl bg-primary-600 text-white transition-colors flex items-center justify-center text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-40 hover:bg-primary-700"
+                className="btn-primary flex flex-[2] items-center justify-center px-6 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-40 sm:flex-none"
               >
                 {state.step === 3 ? 'Passer au paiement' : 'Continuer'}
                 <FiChevronRight className="w-4 h-4 ml-1" />

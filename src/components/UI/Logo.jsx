@@ -1,231 +1,83 @@
-import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
-const BRAND_ASSETS = {
-  full: '/brand/logo-full.png',
-  icon: '/brand/logo-icon-transparent.png',
+function getSizeTokens(size) {
+  const map = {
+    sm: {
+      wrap: 'gap-2',
+      mark: 'text-[1.08rem] tracking-[0em]',
+      tag: 'text-[0.58rem] tracking-[0.24em]',
+      icon: 'h-8 w-8 text-[0.7rem]',
+      shell: 'px-2.5 py-1.5',
+    },
+    md: {
+      wrap: 'gap-2.5',
+      mark: 'text-[1.22rem] tracking-[0em]',
+      tag: 'text-[0.62rem] tracking-[0.26em]',
+      icon: 'h-9 w-9 text-[0.78rem]',
+      shell: 'px-3 py-2',
+    },
+    lg: {
+      wrap: 'gap-3',
+      mark: 'text-[1.2rem] tracking-[0em]',
+      tag: 'text-[0.68rem] tracking-[0.28em]',
+      icon: 'h-10 w-10 text-[0.84rem]',
+      shell: 'px-3 py-1.5',
+    },
+    xl: {
+      wrap: 'gap-3',
+      mark: 'text-[1.32rem] tracking-[0em]',
+      tag: 'text-[0.72rem] tracking-[0.28em]',
+      icon: 'h-11 w-11 text-[0.88rem]',
+      shell: 'px-3 py-1.5',
+    },
+  }
+
+  return map[size] || map.md
 }
 
-const LIGHT_ICON_IMAGE_CLASS =
-  'absolute inset-0 h-full w-full object-contain object-center scale-[3.35] opacity-100 [filter:invert(72%)_sepia(52%)_saturate(1300%)_hue-rotate(357deg)_brightness(102%)_contrast(97%)] dark:hidden'
-const DARK_ICON_IMAGE_CLASS =
-  'absolute inset-0 hidden h-full w-full object-contain object-center scale-[3.35] opacity-100 [filter:invert(72%)_sepia(52%)_saturate(1300%)_hue-rotate(357deg)_brightness(102%)_contrast(97%)] dark:block'
-
-// Logo Jolof'Era
-function Logo({ variant = 'default', size = 'md', showTagline = true, forceIconText = false }) {
-  const sizes = {
-    sm: { logo: 'w-9 h-9', text: 'text-lg', tagline: 'text-[8px]' },
-    md: { logo: 'w-11 h-11', text: 'text-xl', tagline: 'text-[10px]' },
-    lg: { logo: 'w-14 h-14', text: 'text-2xl', tagline: 'text-xs' },
-    xl: { logo: 'w-20 h-20', text: 'text-3xl', tagline: 'text-sm' },
-  }
-
-  const s = sizes[size] || sizes.md
+function Logo({ variant = 'default', size = 'md', showTagline = false }) {
+  const tokens = getSizeTokens(size)
   const isLight = variant === 'light'
-  const fullLogoHeights = {
-    sm: 'h-9',
-    md: 'h-11',
-    lg: 'h-14',
-    xl: 'h-20',
-  }
-  const [fullLogoFailed, setFullLogoFailed] = useState(false)
-  const [iconLogoFailed, setIconLogoFailed] = useState(false)
+  const shellTone = isLight
+    ? 'bg-white/8'
+    : 'border border-[#e9d0ad] bg-[#fff8ee] shadow-[0_18px_34px_-28px_rgba(157,79,13,0.2)] dark:border-[#f0c77d] dark:bg-[#2b1b0f] dark:shadow-none'
+  const wordmarkTone = isLight ? 'text-white' : 'text-[#2b1808] dark:text-[#fff4e3]'
+  const taglineTone = isLight ? 'text-white/72' : 'text-[#9d4f0d] dark:text-[#f0c77d]/80'
 
-  const shouldUseFullLogo = !forceIconText && !fullLogoFailed
   return (
     <Link
       to="/"
-      className="flex items-center space-x-3 group select-none max-w-full bg-transparent active:bg-transparent focus:outline-none focus-visible:outline-none"
+      className={`group inline-flex max-w-full items-center rounded-none ${tokens.shell} ${shellTone} select-none`}
       style={{ WebkitTapHighlightColor: 'transparent' }}
+      aria-label="Jolof'Era"
     >
-      {shouldUseFullLogo ? (
-        <img
-          src={BRAND_ASSETS.full}
-          alt="Jolof'Era"
-          className={`${fullLogoHeights[size] || fullLogoHeights.md} w-auto object-contain transition-all duration-300 group-hover:scale-[1.02]`}
-          onError={() => setFullLogoFailed(true)}
-          loading="eager"
-          decoding="async"
-        />
-      ) : (
-        <>
-      {/* Logo icon */}
-      <div className="relative">
-        {!iconLogoFailed ? (
-          <div className={`${s.logo} relative overflow-hidden rounded-2xl bg-transparent transition-all duration-300 group-hover:scale-110`}>
-            <img
-              src={BRAND_ASSETS.icon}
-              alt="Jolof'Era icon"
-              className={LIGHT_ICON_IMAGE_CLASS}
-              onError={() => setIconLogoFailed(true)}
-              loading="eager"
-              decoding="async"
-            />
-            <img
-              src={BRAND_ASSETS.icon}
-              alt="Jolof'Era icon"
-              className={DARK_ICON_IMAGE_CLASS}
-              onError={() => setIconLogoFailed(true)}
-              loading="eager"
-              decoding="async"
-            />
-          </div>
-        ) : (
-          <svg
-            className={`${s.logo} transition-all duration-300 group-hover:scale-110 group-hover:drop-shadow-[0_0_16px_#facc15] drop-shadow-lg`}
-            viewBox="0 0 48 48"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-label="Logo Jolof'Era"
-          >
-            {/* Black and gold gradients */}
-            <defs>
-              <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#171717" />
-                <stop offset="50%" stopColor="#262626" />
-                <stop offset="100%" stopColor="#404040" />
-              </linearGradient>
-              <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#facc15" />
-                <stop offset="100%" stopColor="#eab308" />
-              </linearGradient>
-              <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur stdDeviation="2" result="coloredBlur" />
-                <feMerge>
-                  <feMergeNode in="coloredBlur" />
-                  <feMergeNode in="SourceGraphic" />
-                </feMerge>
-              </filter>
-            </defs>
-
-            {/* Main rounded square background */}
-            <rect
-              x="2"
-              y="2"
-              width="44"
-              height="44"
-              rx="14"
-              fill="url(#logoGradient)"
-              filter="url(#glow)"
-            />
-
-            {/* Shine effect */}
-            <path
-              d="M10 8C10 5.79086 11.7909 4 14 4H26C28.2091 4 30 5.79086 30 8V10H14C11.7909 10 10 11.7909 10 14V8Z"
-              fill="white"
-              opacity="0.25"
-            />
-
-            {/* Letter J */}
-            <path
-              d="M32 12H21.6V17H26.6V29.2C26.6 31.9 25.1 33.5 22.8 33.5C20.9 33.5 19.5 32.7 18.4 31.3L14.4 34.6C16.5 37.4 19.4 38.8 23 38.8C28.8 38.8 32 35.3 32 29.4V12Z"
-              fill="white"
-            />
-
-            {/* Apostrophe accent */}
-            <path
-              d="M16.6 9.1C18 9.1 19.1 10.2 19.1 11.6C19.1 13 18 14.1 16.6 14.1C15.3 14.1 14.2 13 14.2 11.6C14.2 10.2 15.3 9.1 16.6 9.1ZM18.7 13.8L16.6 19H20.1L22.2 13.8H18.7Z"
-              fill="url(#accentGradient)"
-              filter="url(#glow)"
-            />
-          </svg>
-        )}
-      </div>
-
-      {/* Brand text */}
-      <div className="flex flex-col min-w-0">
+      <span className="min-w-0">
         <span
-          className={`font-extrabold ${s.text} tracking-tight leading-none font-poppins whitespace-nowrap`}
-          style={{ letterSpacing: '-0.01em' }}
+          className={`block whitespace-nowrap normal-case font-display font-bold leading-none ${tokens.mark} ${wordmarkTone}`}
         >
-          <span
-            className={
-              isLight
-                ? 'text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.25)]'
-                : 'text-primary-900 dark:text-slate-100 drop-shadow-[0_1px_4px_rgba(0,0,0,0.24)]'
-            }
-          >
-            Jolof'
-          </span>
-          <span className="text-gold-500 dark:text-gold-300 drop-shadow-[0_0_6px_#fde047]">Era</span>
+          Jolof'Era
         </span>
         {showTagline && (
-          <span
-            className={`${s.tagline} font-semibold tracking-[0.22em] uppercase font-inter transition-all duration-300 whitespace-nowrap
-              ${isLight ? 'text-gold-100/90 drop-shadow-[0_0_8px_#facc15] animate-pulse' : 'text-yellow-700/80 dark:text-gold-300/90 drop-shadow-[0_0_8px_#fde047]'}
-            `}
-            style={{ letterSpacing: '0.22em', textShadow: '0 0 8px #fde047, 0 1px 2px rgba(0,0,0,0.35)' }}
-          >
-            Reservez. Brillez.
+          <span className={`mt-0.5 block text-[10px] font-medium uppercase tracking-[0.16em] ${taglineTone}`}>
+            Beauté · Réservation · Shopping
           </span>
         )}
-      </div>
-        </>
-      )}
+      </span>
     </Link>
   )
 }
 
-// Logo icon seul (favicon, app icon, etc.)
 export function LogoIcon({ size = 40 }) {
-  const [iconLogoFailed, setIconLogoFailed] = useState(false)
-  if (!iconLogoFailed) {
-    return (
-      <div
-        className="relative overflow-hidden rounded-2xl bg-transparent drop-shadow-lg"
-        style={{ width: size, height: size }}
-      >
-        <img
-          src={BRAND_ASSETS.icon}
-          alt="Jolof'Era icon"
-          width={size}
-          height={size}
-          className={LIGHT_ICON_IMAGE_CLASS}
-          onError={() => setIconLogoFailed(true)}
-          loading="eager"
-          decoding="async"
-        />
-        <img
-          src={BRAND_ASSETS.icon}
-          alt="Jolof'Era icon"
-          width={size}
-          height={size}
-          className={DARK_ICON_IMAGE_CLASS}
-          onError={() => setIconLogoFailed(true)}
-          loading="eager"
-          decoding="async"
-        />
-      </div>
-    )
-  }
-
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 48 48"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className="drop-shadow-lg"
+    <span
+      className="inline-flex items-center justify-center rounded-none border border-[#d7b98d] bg-[#2a1808] text-[0.82rem] font-display font-semibold uppercase tracking-[0.14em] text-[#fff4e3] shadow-[0_14px_24px_-18px_rgba(95,50,15,0.35)] dark:border-[#f0c77d] dark:bg-[#2b1b0f] dark:text-[#fff4e3]"
+      style={{ width: size, height: size }}
+      aria-hidden="true"
     >
-      <defs>
-        <linearGradient id="logoGradientIcon" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#171717" />
-          <stop offset="40%" stopColor="#262626" />
-          <stop offset="100%" stopColor="#404040" />
-        </linearGradient>
-        <linearGradient id="accentGradientIcon" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#fcd34d" />
-          <stop offset="100%" stopColor="#fbbf24" />
-        </linearGradient>
-      </defs>
-
-      <rect x="2" y="2" width="44" height="44" rx="14" fill="url(#logoGradientIcon)" />
-      <path d="M10 8C10 5.79086 11.7909 4 14 4H26C28.2091 4 30 5.79086 30 8V10H14C11.7909 10 10 11.7909 10 14V8Z" fill="white" opacity="0.25" />
-      <path d="M32 12H21.6V17H26.6V29.2C26.6 31.9 25.1 33.5 22.8 33.5C20.9 33.5 19.5 32.7 18.4 31.3L14.4 34.6C16.5 37.4 19.4 38.8 23 38.8C28.8 38.8 32 35.3 32 29.4V12Z" fill="white" />
-      <path d="M16.6 9.1C18 9.1 19.1 10.2 19.1 11.6C19.1 13 18 14.1 16.6 14.1C15.3 14.1 14.2 13 14.2 11.6C14.2 10.2 15.3 9.1 16.6 9.1ZM18.7 13.8L16.6 19H20.1L22.2 13.8H18.7Z" fill="url(#accentGradientIcon)" />
-    </svg>
+      JE
+    </span>
   )
 }
 
 export default Logo
+

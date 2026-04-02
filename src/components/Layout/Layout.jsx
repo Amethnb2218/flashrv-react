@@ -17,9 +17,9 @@ function Layout() {
   const showFooter = !noFooterPages.some(page => location.pathname.includes(page))
 
   return (
-   <div className="min-h-screen flex flex-col bg-white dark:bg-[#15110d] transition-colors duration-300">
+   <div className="min-h-screen flex flex-col bg-white text-primary-900 transition-colors duration-300 dark:bg-black dark:text-white">
       <Navbar />
-      <main className="flex-grow pt-[86px] md:pt-14">
+      <main className="flex-grow bg-white pt-[86px] md:pt-14 dark:bg-black">
         <Outlet />
       </main>
       {showFooter && <Footer />}

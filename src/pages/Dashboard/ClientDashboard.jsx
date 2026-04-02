@@ -667,7 +667,7 @@ function ClientDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-gold-50/20 pt-4 sm:pt-8 pb-28 relative">
+    <div className="app-page relative min-h-screen pb-28 pt-4 sm:pt-8">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-4 sm:mb-8">
@@ -681,7 +681,7 @@ function ClientDashboard() {
           </div>
           <Link
             to="/salons"
-            className="inline-flex items-center px-3 py-1.5 sm:px-5 sm:py-2.5 bg-primary-900 hover:bg-primary-800 text-white font-semibold rounded-lg sm:rounded-xl transition-colors text-xs sm:text-sm"
+            className="btn-primary inline-flex items-center px-3 py-1.5 text-xs font-semibold sm:px-5 sm:py-2.5 sm:text-sm"
           >
             <span className="hidden sm:inline">Nouvelle réservation</span>
             <span className="sm:hidden">Réserver</span>
@@ -691,7 +691,7 @@ function ClientDashboard() {
 
         {/* Quick stats */}
         <div className="grid grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-8">
-          <div className="bg-white rounded-xl sm:rounded-2xl p-2 sm:p-5 shadow-sm border border-primary-100 text-center sm:text-left">
+          <div className="app-panel p-2 text-center sm:p-5 sm:text-left">
             <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-1 sm:gap-0">
               <div>
                 <p className="text-primary-500 text-[10px] sm:text-sm leading-tight">À venir</p>
@@ -702,7 +702,7 @@ function ClientDashboard() {
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-xl sm:rounded-2xl p-2 sm:p-5 shadow-sm border border-primary-100 text-center sm:text-left">
+          <div className="app-panel p-2 text-center sm:p-5 sm:text-left">
             <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-1 sm:gap-0">
               <div>
                 <p className="text-primary-500 text-[10px] sm:text-sm leading-tight">Passées</p>
@@ -713,7 +713,7 @@ function ClientDashboard() {
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-xl sm:rounded-2xl p-2 sm:p-5 shadow-sm border border-primary-100 text-center sm:text-left">
+          <div className="app-panel p-2 text-center sm:p-5 sm:text-left">
             <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-1 sm:gap-0">
               <div>
                 <p className="text-primary-500 text-[10px] sm:text-sm leading-tight">Favoris</p>
@@ -742,35 +742,35 @@ function ClientDashboard() {
         </div>
 
         {/* Tabs */}
-        <div className="sm:bg-white sm:rounded-2xl sm:shadow-sm sm:border sm:border-primary-100">
-          <div className="sticky top-14 z-20 bg-white border-b border-primary-200"> 
+        <div className="sm:app-panel">
+          <div className="app-panel-header sticky top-14 z-20 border-b"> 
             <div className="flex overflow-x-auto"> 
               <button 
                 onClick={() => handleTabChange('upcoming')} 
-                className={`min-w-[92px] flex-1 py-2.5 sm:py-3 text-center text-xs sm:text-sm font-medium transition-colors ${ 
+                className={`app-tab min-w-[92px] flex-1 py-2.5 text-center text-xs font-medium transition-colors sm:py-3 sm:text-sm ${ 
                   activeTab === 'upcoming'
-                    ? 'text-primary-600 border-b-2 border-primary-600'
-                    : 'text-primary-500 hover:text-primary-700'
+                    ? 'app-tab-active'
+                    : ''
                 }`}
               >
                 À venir ({upcomingBookings.length})
               </button>
               <button 
                 onClick={() => handleTabChange('past')} 
-                className={`min-w-[92px] flex-1 py-2.5 sm:py-3 text-center text-xs sm:text-sm font-medium transition-colors ${ 
+                className={`app-tab min-w-[92px] flex-1 py-2.5 text-center text-xs font-medium transition-colors sm:py-3 sm:text-sm ${ 
                   activeTab === 'past'
-                    ? 'text-primary-600 border-b-2 border-primary-600'
-                    : 'text-primary-500 hover:text-primary-700'
+                    ? 'app-tab-active'
+                    : ''
                 }`}
               >
                 Historique ({pastBookings.length})
               </button>
               <button 
                 onClick={() => handleTabChange('orders')} 
-                className={`min-w-[104px] flex-1 py-2.5 sm:py-3 text-center text-xs sm:text-sm font-medium transition-colors flex items-center justify-center gap-1 ${ 
+                className={`app-tab min-w-[104px] flex-1 py-2.5 text-center text-xs font-medium transition-colors flex items-center justify-center gap-1 sm:py-3 sm:text-sm ${ 
                   activeTab === 'orders'
-                    ? 'text-primary-600 border-b-2 border-primary-600'
-                    : 'text-primary-500 hover:text-primary-700'
+                    ? 'app-tab-active'
+                    : ''
                 }`}
               >
                 <FiShoppingBag className="w-3.5 h-3.5" /> 
@@ -778,10 +778,10 @@ function ClientDashboard() {
               </button> 
               <button 
                 onClick={() => handleTabChange('notifications')} 
-                className={`min-w-[116px] flex-1 py-2.5 sm:py-3 text-center text-xs sm:text-sm font-medium transition-colors flex items-center justify-center gap-1 ${ 
+                className={`app-tab min-w-[116px] flex-1 py-2.5 text-center text-xs font-medium transition-colors flex items-center justify-center gap-1 sm:py-3 sm:text-sm ${ 
                   activeTab === 'notifications' 
-                    ? 'text-primary-600 border-b-2 border-primary-600' 
-                    : 'text-primary-500 hover:text-primary-700' 
+                    ? 'app-tab-active' 
+                    : '' 
                 }`} 
               > 
                 <FiBell className="w-3.5 h-3.5" /> 
@@ -789,10 +789,10 @@ function ClientDashboard() {
               </button> 
               <button 
                 onClick={() => handleTabChange('favorites')} 
-                className={`min-w-[96px] flex-1 py-2.5 sm:py-3 text-center text-xs sm:text-sm font-medium transition-colors flex items-center justify-center gap-1 ${ 
+                className={`app-tab min-w-[96px] flex-1 py-2.5 text-center text-xs font-medium transition-colors flex items-center justify-center gap-1 sm:py-3 sm:text-sm ${ 
                   activeTab === 'favorites'
-                    ? 'text-red-600 border-b-2 border-red-500'
-                    : 'text-primary-500 hover:text-primary-700'
+                    ? 'app-tab-active'
+                    : ''
                 }`}
               >
                 <FiHeart className="w-3.5 h-3.5" />

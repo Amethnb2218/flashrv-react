@@ -1,0 +1,58 @@
+export const heroShowcaseItems = [
+{
+id: 'barber-afro',
+kind: 'Barber',
+title: 'Barbershop homme',
+query: 'Coupes degrade, barbe et styles modernes pour homme',
+image: 'https://x-barber.es/images/img_2.jpg',
+},
+{
+id: 'salon-homme',
+kind: 'Salon',
+title: 'Coiffure homme',
+query: 'Coupe tendance, coiffage et finitions professionnelles',
+image: 'https://i.pinimg.com/736x/3b/f1/31/3bf13128d8bb3df244cb056b8743eec1.jpg',
+},
+{
+id: 'boutique-beaute',
+kind: 'Boutique',
+title: 'Boutique Vetements traditionnels homme',
+query: 'Boubou, bazin et tenues africaines elegantes pour homme',
+image: 'https://i.pinimg.com/1200x/4b/72/25/4b72253981951409d2266b2c40d4d368.jpg',
+},
+{
+id: 'boutique-vetements',
+kind: 'Boutique',
+title: 'Vetements et Chaussures',
+query: 'Vetements modernes, chaussures et accessoires pour tous styles',
+image: 'https://i.pinimg.com/1200x/53/10/56/53105638f1c5e2b776f6249062d7900e.jpg',
+},
+{
+id: 'maillot-foot',
+kind: 'Boutique',
+title: 'Maillots de football',
+query: 'Maillots de clubs, selections et equipements de football',
+image: 'https://www.afrik-foot.com/app/uploads/2024/11/Le-maillot-exterieur-du-Senegal.jpeg',
+},
+{
+id: 'barber-classique',
+kind: 'Barber',
+title: 'Coupe barber premium',
+query: 'Service barber haut de gamme avec precision et style',
+image: 'https://images.pexels.com/photos/7518736/pexels-photo-7518736.jpeg?auto=compress&cs=tinysrgb&w=1200',
+},
+{
+id: 'shooting-photo',
+kind: 'Studio',
+title: 'Shooting photo',
+query: 'Seances photo professionnelles en studio ou en exterieur',
+image: 'https://images.squarespace-cdn.com/content/v1/58b6c5e186e6c03c6630b232/1525816734442-F8MT9VKGBWZZXA0J6K8V/Yoff_25_Ngor.jpg',
+},
+{
+id: 'vetement-trad-femme',
+kind: 'Boutique',
+title: 'Voiles Pashmina',
+query: 'Voiles elegants, pashmina et accessoires pour femme',
+image: 'https://i.pinimg.com/736x/44/77/30/44773031fe35fcb0eec2d8bb9fe145e0.jpg',
+},
+]

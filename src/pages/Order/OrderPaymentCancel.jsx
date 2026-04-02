@@ -115,12 +115,12 @@ function OrderPaymentCancel() {
   const receiptLabel = isConfirmed ? 'Voir le recu' : 'Voir la commande'
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gold-50 via-white to-rose-50/20 py-10 px-4">
+    <div className="app-page min-h-screen px-4 py-10">
       <div className="max-w-xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-3xl shadow-xl border border-gold-100 overflow-hidden"
+          className="app-panel overflow-hidden shadow-xl"
         >
           <div className="px-6 py-8 bg-gradient-to-r from-gold-500 to-orange-500 text-white text-center">
             <FiAlertCircle className="w-14 h-14 mx-auto mb-4" />
@@ -133,13 +133,13 @@ function OrderPaymentCancel() {
           </div>
 
           <div className="p-6 space-y-5">
-            <div className="rounded-2xl bg-primary-50 border border-primary-100 p-4">
+            <div className="app-panel-muted p-4">
               <p className="text-xs uppercase tracking-[0.2em] text-primary-500 mb-1">Commande</p>
               <p className="text-lg font-bold text-primary-900">{orderId || 'Reference indisponible'}</p>
             </div>
 
             {error ? (
-              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              <div className="border border-[#e7cfaf] bg-[#fff0ea] px-4 py-3 text-sm text-[#9d4f0d]">
                 {error}
               </div>
             ) : null}
@@ -149,7 +149,7 @@ function OrderPaymentCancel() {
                 <Link
                   to={`/order/receipt?orderId=${encodeURIComponent(orderId || sessionData?.order?.id || '')}`}
                   state={sessionData || undefined}
-                  className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary-900 text-white font-semibold hover:bg-primary-800 transition"
+                  className="btn-primary inline-flex items-center justify-center gap-2 px-4 py-3 font-semibold"
                 >
                   {receiptLabel}
                 </Link>
@@ -157,7 +157,7 @@ function OrderPaymentCancel() {
                 <button
                   onClick={handleRetry}
                   disabled={loading}
-                  className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary-900 text-white font-semibold hover:bg-primary-800 transition disabled:opacity-60"
+                  className="btn-primary inline-flex items-center justify-center gap-2 px-4 py-3 font-semibold disabled:opacity-60"
                 >
                   <FiRefreshCw className="w-4 h-4" />
                   {loading ? 'Redirection...' : 'Relancer DexPay'}
@@ -166,7 +166,7 @@ function OrderPaymentCancel() {
               <Link
                 to={`/order/receipt?orderId=${encodeURIComponent(orderId || sessionData?.order?.id || '')}`}
                 state={sessionData || undefined}
-                className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-primary-300 text-primary-700 font-semibold hover:bg-primary-50 transition"
+                className="btn-secondary inline-flex items-center justify-center gap-2 px-4 py-3 font-semibold"
               >
                 {receiptLabel}
               </Link>

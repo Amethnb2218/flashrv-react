@@ -52,6 +52,7 @@ FiMapPin,
 import AppointmentChatModal from "../../components/Chat/AppointmentChatModal";
 import QuartierSelector from "../../components/UI/QuartierSelector";
 import { parseOptionList, listToInput } from "../../utils/productMeta";
+import { boutiqueCategoryOptions } from "../../utils/boutiqueCategories";
 
 /* ----------------------------
 Constants
@@ -283,7 +284,7 @@ function Card({ className = "", children }) {
 return (
 <div
 className={cx(
-"bg-white rounded-2xl border border-primary-100 shadow-sm",
+"app-panel",
 className
 )}
 >
@@ -294,20 +295,20 @@ className
 
 function CardHeader({ icon, title, subtitle, right }) {
 return (
-<div className="px-4 py-3 sm:p-5 border-b border-primary-100">
+<div className="app-panel-header border-b px-4 py-3 sm:p-5">
 <div className="flex items-center justify-between gap-3">
 <div className="flex items-center gap-2.5">
 {icon ? (
-<div className="w-9 h-9 rounded-xl bg-gold-100 text-gold-800 flex items-center justify-center shrink-0">
+<div className="flex h-9 w-9 shrink-0 items-center justify-center border border-[#e7cfaf] bg-[#fff2df] text-[#9d4f0d]">
 <span className="text-base">{icon}</span>
 </div>
 ) : null}
 <div className="min-w-0">
-<h2 className="text-sm sm:text-base font-extrabold text-primary-900 truncate">
+<h2 className="truncate text-sm font-extrabold text-[#2a1808] sm:text-base">
 {title}
 </h2>
 {subtitle ? (
-<p className="text-xs text-primary-500 hidden sm:block">{subtitle}</p>
+<p className="hidden text-xs text-[#7a6148] sm:block">{subtitle}</p>
 ) : null}
 </div>
 </div>
@@ -320,16 +321,16 @@ return (
 function Button({ variant = "primary", className = "", ...props }) {
 const styles =
 variant === "primary"
-? "bg-primary-900 text-white hover:bg-primary-800"
+? "btn-primary"
 : variant === "danger"
 ? "bg-red-600 text-white hover:bg-red-700"
-: "border border-primary-200 bg-white text-primary-800 hover:bg-primary-50";
+: "btn-secondary";
 
 return (
 <button
 {...props}
 className={cx(
-"inline-flex items-center justify-center px-5 py-2.5 rounded-2xl font-semibold transition-colors",
+"inline-flex items-center justify-center rounded-none px-5 py-2.5 font-semibold transition-colors",
 "disabled:opacity-50 disabled:cursor-not-allowed",
 "active:translate-y-[1px]",
 styles,
@@ -346,7 +347,7 @@ return (
 title={title}
 className={cx(
 "inline-flex items-center justify-center w-10 h-10 rounded-2xl",
-"border border-primary-200 bg-white text-primary-800 hover:bg-primary-50 transition-colors",
+"border border-[var(--line)] bg-[#fff8ee] text-[#2a1808] hover:bg-[#fff2df] transition-colors",
 "active:translate-y-[1px]",
 className
 )}
@@ -357,11 +358,11 @@ className
 function Badge({ tone = "gray", children }) {
 const toneClasses = {
 gray: "bg-primary-100 text-primary-800",
-amber: "bg-gold-100 text-gold-800",
+amber: "bg-[#fff2df] text-[#9d4f0d]",
 green: "bg-green-100 text-green-800",
 red: "bg-red-100 text-red-800",
-blue: "bg-blue-100 text-blue-800",
-purple: "bg-purple-100 text-purple-800",
+blue: "bg-[#f3eadc] text-[#5f4630]",
+purple: "bg-[#f6eee2] text-[#6b523c]",
 };
 
 return (
@@ -379,14 +380,14 @@ toneClasses[tone] || toneClasses.gray
 function StatCard({ icon, label, value, color }) {
 	const toneClasses = {
 		amber: "bg-gold-50 text-gold-800 border-gold-100",
-		blue: "bg-blue-50 text-blue-800 border-blue-100",
+		blue: "bg-[#f3eadc] text-[#5f4630] border-[#e7cfaf]",
 		green: "bg-green-50 text-green-800 border-green-100",
 		red: "bg-red-50 text-red-800 border-red-100",
-		gray: "bg-primary-50 text-primary-800 border-primary-100",
+		gray: "bg-[#fff8ee] text-[#2a1808] border-[#e7cfaf]",
 	};
 	return (
-		<div className={`rounded-xl p-2.5 sm:p-4 flex items-center gap-2.5 sm:gap-3 border ${toneClasses[color] || toneClasses.gray}`}>
-			<div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-lg bg-white/70 shrink-0">
+		<div className={`flex items-center gap-2.5 border p-2.5 sm:gap-3 sm:p-4 ${toneClasses[color] || toneClasses.gray}`}>
+			<div className="flex h-8 w-8 shrink-0 items-center justify-center bg-white/70 sm:h-10 sm:w-10">
 				{icon}
 			</div>
 			<div className="min-w-0">
@@ -401,18 +402,17 @@ function Input({ label, className = "", hint, ...props }) {
 return (
 <div className={className}>
 {label ? (
-<label className="block text-sm font-semibold text-primary-700 mb-1">
+<label className="mb-1 block text-sm font-semibold text-[#5f4630]">
 {label}
 </label>
 ) : null}
 <input
 {...props}
 className={cx(
-"w-full px-4 py-2.5 border border-primary-200 rounded-2xl bg-white",
-"focus:ring-2 focus:ring-gold-500 focus:border-transparent outline-none"
+"app-input"
 )}
 />
-{hint ? <p className="text-xs text-primary-500 mt-1">{hint}</p> : null}
+{hint ? <p className="mt-1 text-xs text-[#7a6148]">{hint}</p> : null}
 </div>
 );
 }
@@ -421,15 +421,14 @@ function Textarea({ label, className = "", ...props }) {
 return (
 <div className={className}>
 {label ? (
-<label className="block text-sm font-semibold text-primary-700 mb-1">
+<label className="mb-1 block text-sm font-semibold text-[#5f4630]">
 {label}
 </label>
 ) : null}
 <textarea
 {...props}
 className={cx(
-"w-full px-4 py-2.5 border border-primary-200 rounded-2xl bg-white",
-"focus:ring-2 focus:ring-gold-500 focus:border-transparent outline-none"
+"app-input"
 )}
 />
 </div>
@@ -3165,7 +3164,7 @@ active
         </div>
         <div>
           <label className="block text-sm font-medium text-primary-700 mb-1">Categorie</label>
-          <input
+          <select
             value={(editingProduct || newProduct).category}
             onChange={(e) => {
               const val = e.target.value;
@@ -3174,8 +3173,20 @@ active
                 : setNewProduct((p) => ({ ...p, category: val }));
             }}
             className="w-full px-4 py-2.5 border border-primary-200 rounded-xl focus:ring-2 focus:ring-gold-500 outline-none"
-            placeholder="ex: Accessoires, Vetements"
-          />
+          >
+            <option value="">Choisir une categorie</option>
+            {!!(editingProduct || newProduct).category &&
+              !boutiqueCategoryOptions.some((option) => option.label === (editingProduct || newProduct).category) && (
+                <option value={(editingProduct || newProduct).category}>
+                  {(editingProduct || newProduct).category}
+                </option>
+              )}
+            {boutiqueCategoryOptions.map((option) => (
+              <option key={option.id} value={option.label}>
+                {option.label}
+              </option>
+            ))}
+          </select>
         </div>
         <div>
           <label className="block text-sm font-medium text-primary-700 mb-1">Tailles (optionnel)</label>

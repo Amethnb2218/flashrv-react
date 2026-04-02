@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { GoogleLogin } from '@react-oauth/google'
 import { motion } from 'framer-motion'
-import { FiEye, FiEyeOff, FiArrowRight } from 'react-icons/fi'
+import { FiEye, FiEyeOff, FiArrowRight, FiCalendar, FiCheckSquare, FiScissors, FiShoppingBag, FiStar } from 'react-icons/fi'
 import toast from 'react-hot-toast'
 import { getProRedirectPath, isProUser } from '../../utils/proOnboarding'
 import { ADMIN_PATH } from '../../utils/adminPath'
@@ -97,28 +97,55 @@ function Login() {
     />
   ), [handleGoogleError, handleGoogleSuccess])
 
+  const sideHighlights = [
+    'Réservez un salon sans appels inutiles',
+    'Retrouvez aussi des boutiques et des produits',
+    'Gardez un suivi plus simple de votre compte',
+  ]
+
+  const sidePreviewStats = [
+    { label: 'Salons', value: 'Reservation rapide', icon: <FiScissors className="h-5 w-5" /> },
+    { label: 'Boutiques', value: 'Produits et commandes', icon: <FiShoppingBag className="h-5 w-5" /> },
+    { label: 'Suivi', value: 'Compte et historique', icon: <FiCalendar className="h-5 w-5" /> },
+  ]
+
+  const sideFeatureCards = [
+    {
+      eyebrow: 'Reservation',
+      title: 'Choix, horaire, confirmation.',
+      text: 'Une lecture plus claire pour trouver un salon, choisir un service et confirmer sans friction.',
+      icon: <FiCalendar className="h-5 w-5" />,
+    },
+    {
+      eyebrow: 'Boutique',
+      title: 'Produits, marques, panier.',
+      text: 'Le meme compte vous sert aussi a retrouver des boutiques, des articles et vos commandes.',
+      icon: <FiShoppingBag className="h-5 w-5" />,
+    },
+  ]
+
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex bg-[#fff7ec] dark:bg-[#1a120b]">
       {/* Left side - Form */}
-      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-8 relative overflow-hidden">
+      <div className="relative flex flex-1 items-start justify-center overflow-hidden px-4 pb-8 pt-10 sm:px-6 lg:px-8 lg:pt-10">
         {/* Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary-50 via-white to-gold-50/30 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800"></div>
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gold-100/50 dark:bg-gold-900/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-gold-100/40 dark:bg-gold-900/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,#fffdf8_0%,#fff0dd_100%)] dark:bg-[linear-gradient(180deg,#21170d_0%,#1a120b_100%)]"></div>
+        <div className="absolute right-0 top-0 h-96 w-96 -translate-y-1/2 translate-x-1/2 rounded-full bg-[#f5a133]/[0.08] blur-3xl dark:bg-[#ffcb45]/[0.08]"></div>
+        <div className="absolute bottom-0 left-0 h-80 w-80 translate-y-1/2 -translate-x-1/2 rounded-full bg-[#e78514]/[0.06] blur-3xl dark:bg-[#f5a133]/[0.06]"></div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="max-w-md w-full relative z-10"
+          className="relative z-10 w-full max-w-md"
         >
-          <div className="text-center mb-8">
+          <div className="mb-8 text-center">
             <Link to="/" className="inline-flex items-center space-x-2 mb-6">
-              <div className="w-12 h-12 bg-gradient-to-br from-primary-600 to-accent-500 rounded-full flex items-center justify-center shadow-lg">
-                <span className="text-white font-bold text-2xl" style={{ fontFamily: "'Poppins', sans-serif" }}>J</span>
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#9d4f0d] shadow-[0_18px_40px_-28px_rgba(157,79,13,0.28)] dark:bg-[#ffd978]">
+                <span className="text-2xl font-bold text-[#fff4e3] dark:text-[#2a1808]" style={{ fontFamily: "'Poppins', sans-serif" }}>J</span>
               </div>
             </Link>
-            <h1 className="text-3xl font-bold text-primary-900 dark:text-white">Bon retour !</h1>
-            <p className="mt-2 text-primary-600 dark:text-gray-400">
+            <h1 className="text-3xl font-bold text-[#2a1808] dark:text-[#fff4e3]">Bon retour !</h1>
+            <p className="mt-2 text-[#7a6148] dark:text-[#d6b081]">
               Connectez-vous pour accéder à votre compte
             </p>
           </div>
@@ -126,14 +153,14 @@ function Login() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Identifier */}
             <div>
-              <label className="block text-sm font-medium text-primary-700 dark:text-gray-300 mb-2">
+              <label className="mb-2 block text-sm font-medium text-[#4f3821] dark:text-[#f1d3aa]">
                 Email, téléphone ou identifiant
               </label>
               <input
                 type="text"
                 value={formData.identifier}
                 onChange={(e) => setFormData({ ...formData, identifier: e.target.value })}
-                className={`input-field dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-500 ${errors.identifier ? 'border-red-500' : ''}`}
+                className={`input-field border-[#e7cfaf] bg-[#fff8ee] text-[#2a1808] placeholder:text-[#a47e51] dark:border-[#7a5932] dark:bg-[#2b1b0f] dark:text-[#fff4e3] dark:placeholder:text-[#cda675] ${errors.identifier ? 'border-red-500' : ''}`}
                 placeholder="email@example.com ou 77 123 45 67"
                 autoComplete="off"
               />
@@ -142,7 +169,7 @@ function Login() {
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-primary-700 dark:text-gray-300 mb-2">
+              <label className="mb-2 block text-sm font-medium text-[#4f3821] dark:text-[#f1d3aa]">
                 Mot de passe
               </label>
               <div className="relative">
@@ -150,14 +177,14 @@ function Login() {
                   type={showPassword ? 'text' : 'password'}
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className={`input-field pr-12 dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-500 ${errors.password ? 'border-red-500' : ''}`}
+                  className={`input-field pr-12 border-[#e7cfaf] bg-[#fff8ee] text-[#2a1808] placeholder:text-[#a47e51] dark:border-[#7a5932] dark:bg-[#2b1b0f] dark:text-[#fff4e3] dark:placeholder:text-[#cda675] ${errors.password ? 'border-red-500' : ''}`}
                   placeholder="Votre mot de passe"
                   autoComplete="off"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-primary-400 dark:text-gray-500 hover:text-primary-600 dark:hover:text-gray-300"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#a47e51] hover:text-[#2a1808] dark:text-[#cda675] dark:hover:text-[#fff4e3]"
                 >
                   {showPassword ? <FiEyeOff className="w-5 h-5" /> : <FiEye className="w-5 h-5" />}
                 </button>
@@ -168,10 +195,10 @@ function Login() {
             {/* Remember & Forgot */}
             <div className="flex items-center justify-between">
               <label className="flex items-center cursor-pointer">
-                <input type="checkbox" className="rounded border-primary-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500" />
-                <span className="ml-2 text-sm text-primary-600 dark:text-gray-400">Se souvenir de moi</span>
+                <input type="checkbox" className="rounded border-[#dec7a4] text-[#9d4f0d] focus:ring-[#f5a133]/20 dark:border-[#7a5932]" />
+                <span className="ml-2 text-sm text-[#7a6148] dark:text-[#d6b081]">Se souvenir de moi</span>
               </label>
-              <Link to="/forgot-password" className="text-sm text-primary-600 dark:text-gray-400 hover:text-primary-700 dark:hover:text-white">
+              <Link to="/forgot-password" className="text-sm text-[#7a6148] hover:text-[#2a1808] dark:text-[#d6b081] dark:hover:text-[#fff4e3]">
                 Mot de passe oublié ?
               </Link>
             </div>
@@ -195,10 +222,10 @@ function Login() {
             {/* Divider */}
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-primary-300 dark:border-gray-700"></div>
+                <div className="w-full border-t border-[#e7cfaf] dark:border-[#7a5932]"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-white dark:bg-gray-900 text-primary-500 dark:text-gray-400">Ou continuer avec</span>
+                <span className="bg-[#fff7ec] px-4 text-[#a47e51] dark:bg-[#1a120b] dark:text-[#cda675]">Ou continuer avec</span>
               </div>
             </div>
 
@@ -208,27 +235,89 @@ function Login() {
             </div>
           </form>
 
-          <p className="mt-8 text-center text-primary-600 dark:text-gray-400">
+          <p className="mt-8 text-center text-[#7a6148] dark:text-[#d6b081]">
             Pas encore de compte ?{' '}
-            <Link to="/register" className="text-primary-600 dark:text-gold-400 font-medium hover:text-primary-700 dark:hover:text-gold-300">
+            <Link to="/register" className="font-medium text-[#9d4f0d] hover:text-[#7b3f10] dark:text-[#ffd978] dark:hover:text-[#fff4e3]">
               Créer un compte
             </Link>
           </p>
         </motion.div>
       </div>
 
-      {/* Right side - Image */}
-      <div className="hidden lg:block lg:w-1/2 relative">
-        <img
-          src="https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1000"
-          alt="Salon"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-br from-dark-900/80 to-accent-700/80" />
-        <div className="absolute inset-0 flex items-center justify-center p-12">
-          <div className="text-center text-white">
-            <h2 className="text-4xl font-bold mb-4">Jolof'Era</h2>
-            <p className="text-xl text-primary-100">La beauté à portée de clic</p>
+      {/* Right side - Editorial panel */}
+      <div className="relative hidden overflow-hidden border-l border-[#e7cfaf] bg-[linear-gradient(180deg,#fffdf8_0%,#fff2df_100%)] text-[#2a1808] xl:block xl:w-1/2">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(231,133,20,0.08),transparent_28%),linear-gradient(135deg,rgba(255,203,69,0.08)_0%,transparent_42%),linear-gradient(180deg,rgba(255,255,255,0.3)_0%,transparent_100%)]" />
+        <div className="absolute inset-y-0 right-16 w-px bg-[#ead7ba]" />
+        <div className="absolute bottom-16 left-14 h-40 w-40 border border-[#ead7ba]" />
+        <div className="absolute top-16 right-14 h-48 w-48 rounded-full bg-[radial-gradient(circle,rgba(231,133,20,0.08),transparent_68%)]" />
+
+        <div className="relative flex h-full flex-col justify-start gap-10 px-12 pb-12 pt-12 xl:px-16 xl:pb-16">
+          <div className="max-w-[44rem]">
+            <div className="grid gap-8 xl:grid-cols-[minmax(0,1.2fr)_196px] xl:items-start">
+              <div className="min-w-0">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#a47e51]">
+                  Espace compte
+                </p>
+                <h2 className="mt-4 max-w-[10ch] text-5xl font-bold leading-[0.92] tracking-[-0.05em] text-[#2a1808] xl:text-[3.45rem] 2xl:text-[3.9rem]">
+                  Retrouvez salons et boutiques sans interface lourde.
+                </h2>
+                <p className="mt-6 max-w-xl text-[1.12rem] leading-8 text-[#7a6148]">
+                  Une connexion plus nette pour réserver, suivre vos rendez-vous et accéder aussi à vos achats au même endroit.
+                </p>
+
+                <ul className="mt-8 grid gap-3 text-base text-[#4f3821]">
+                  {sideHighlights.map((item) => (
+                    <li key={item} className="flex items-start gap-3">
+                      <span className="mt-1.5 inline-flex h-6 w-6 items-center justify-center border border-[#ead7ba] bg-[#fff8ee]">
+                        <FiCheckSquare className="h-3.5 w-3.5 text-[#9d4f0d]" />
+                      </span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="border border-[#9d4f0d] bg-[#2a1808] p-4 text-[#fff4e3] shadow-[0_22px_50px_-36px_rgba(95,50,15,0.32)]">
+                <div className="flex items-center justify-between border-b border-white/12 pb-3">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-[0.28em] text-[#cda675]">Aperçu</p>
+                    <p className="mt-1 text-lg font-semibold">Parcours client</p>
+                  </div>
+                  <span className="inline-flex h-10 w-10 items-center justify-center border border-white/12 bg-white/[0.04]">
+                    <FiStar className="h-5 w-5" />
+                  </span>
+                </div>
+
+                <div className="mt-4 grid gap-2">
+                  {sidePreviewStats.map((item) => (
+                    <div key={item.label} className="border border-white/10 bg-white/[0.03] px-3 py-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-[10px] uppercase tracking-[0.24em] text-[#cda675]">{item.label}</p>
+                        <span className="text-[#f5d7ad]">{item.icon}</span>
+                      </div>
+                      <p className="mt-1.5 text-sm font-medium text-[#fff4e3]">{item.value}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid gap-4 xl:grid-cols-2">
+            {sideFeatureCards.map((card) => (
+              <div key={card.title} className="border border-[#e7cfaf] bg-[#fff8ee] p-5 shadow-[0_18px_44px_-38px_rgba(157,79,13,0.18)]">
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[#a47e51]">{card.eyebrow}</p>
+                  <span className="inline-flex h-10 w-10 items-center justify-center border border-[#e7cfaf] bg-[#fff0de] text-[#9d4f0d]">
+                    {card.icon}
+                  </span>
+                </div>
+                <p className="mt-4 max-w-[14ch] text-[1.55rem] font-semibold leading-[1.08] tracking-[-0.04em] text-[#2a1808]">{card.title}</p>
+                <p className="mt-3 text-[15px] leading-7 text-[#7a6148]">
+                  {card.text}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </div>

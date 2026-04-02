@@ -251,7 +251,7 @@ function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-gold-50/20 py-8 relative overflow-hidden">
+    <div className="app-page relative min-h-screen overflow-hidden py-8">
       {/* Decorative background elements */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-gold-100/30 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
       <div className="absolute bottom-0 left-0 w-80 h-80 bg-gold-100/30 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4"></div>
@@ -267,7 +267,7 @@ function Profile() {
         <div className="grid md:grid-cols-4 gap-6">
           {/* Sidebar */}
           <div className="md:col-span-1">
-            <div className="bg-white rounded-2xl shadow-sm border border-primary-100 p-4">
+            <div className="app-panel p-4">
               {/* Avatar with upload/delete */}
               <div className="text-center mb-6">
                 <div className="relative inline-block">
@@ -306,31 +306,31 @@ function Profile() {
                   <button 
                     onClick={() => setShowPhotoMenu(!showPhotoMenu)}
                     disabled={uploadingPhoto}
-                    className="absolute bottom-0 right-0 w-8 h-8 bg-primary-600 text-white rounded-full flex items-center justify-center hover:bg-primary-700 transition-colors disabled:opacity-50"
+                    className="btn-primary absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center !rounded-full p-0 disabled:opacity-50"
                   >
                     <FiCamera className="w-4 h-4" />
                   </button>
                   
                   {/* Photo menu dropdown */}
                   {showPhotoMenu && (
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 bg-white rounded-xl shadow-lg border border-primary-100 py-2 z-10">
+                    <div className="app-panel absolute left-1/2 top-full z-10 mt-2 w-48 -translate-x-1/2 py-2">
                       <button
                         onClick={() => fileInputRef.current?.click()}
-                        className="w-full flex items-center px-4 py-2 text-primary-700 hover:bg-primary-50 hover:text-primary-600"
+                        className="w-full px-4 py-2 text-left text-[#5f4630] hover:bg-[#fff2df] hover:text-[#2a1808]"
                       >
                         <FiUpload className="w-4 h-4 mr-3" />
                         Changer la photo
                       </button>
                       <button
                         onClick={handlePhotoDelete}
-                        className="w-full flex items-center px-4 py-2 text-red-600 hover:bg-red-50"
+                        className="w-full px-4 py-2 text-left text-red-600 hover:bg-red-50"
                       >
                         <FiTrash2 className="w-4 h-4 mr-3" />
                         Supprimer
                       </button>
                       <button
                         onClick={() => setShowPhotoMenu(false)}
-                        className="w-full flex items-center px-4 py-2 text-primary-500 hover:bg-primary-50"
+                        className="w-full px-4 py-2 text-left text-[#7a6148] hover:bg-[#fff2df]"
                       >
                         <FiX className="w-4 h-4 mr-3" />
                         Annuler
@@ -350,10 +350,10 @@ function Profile() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`w-full flex items-center px-4 py-3 rounded-xl transition-colors ${
+                    className={`w-full flex items-center px-4 py-3 transition-colors ${
                       activeTab === tab.id
-                        ? 'bg-primary-50 text-primary-600'
-                        : 'text-primary-600 hover:bg-primary-50'
+                        ? 'border border-[#e7cfaf] bg-[#fff2df] text-[#2a1808]'
+                        : 'text-[#7a6148] hover:bg-[#fff8ee]'
                     }`}
                   >
                     <tab.icon className="w-5 h-5 mr-3" />
@@ -370,7 +370,7 @@ function Profile() {
               key={activeTab}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-2xl shadow-sm border border-primary-100 p-6"
+              className="app-panel p-6"
             >
               {/* Success Message */}
               {success && (
@@ -398,7 +398,7 @@ function Profile() {
                         name="name"
                         value={formData.name}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 border border-blue-800 bg-blue-900/80 text-blue-100 placeholder:text-blue-300 rounded-xl focus:bg-blue-900/90 focus:text-blue-100 focus:border-blue-700 transition-colors duration-200"
+                        className="app-input"
                       />
                     </div>
 
@@ -412,7 +412,7 @@ function Profile() {
                         name="email"
                         value={formData.email}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 border border-blue-800 bg-blue-900/80 text-blue-100 placeholder:text-blue-300 rounded-xl focus:bg-blue-900/90 focus:text-blue-100 focus:border-blue-700 transition-colors duration-200"
+                        className="app-input"
                       />
                     </div>
 
@@ -426,7 +426,7 @@ function Profile() {
                         name="phoneNumber"
                         value={formData.phoneNumber}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 border border-blue-800 bg-blue-900/80 text-blue-100 placeholder:text-blue-300 rounded-xl focus:bg-blue-900/90 focus:text-blue-100 focus:border-blue-700 transition-colors duration-200"
+                        className="app-input"
                       />
                     </div>
 
@@ -441,7 +441,7 @@ function Profile() {
                         value={formData.address}
                         onChange={handleInputChange}
                         placeholder="Quartier, ville"
-                        className="w-full px-4 py-3 border border-blue-800 bg-blue-900/80 text-blue-100 placeholder:text-blue-300 rounded-xl focus:bg-blue-900/90 focus:text-blue-100 focus:border-blue-700 transition-colors duration-200"
+                        className="app-input"
                       />
                     </div>
                   </div>
@@ -450,7 +450,7 @@ function Profile() {
                     <button
                       type="submit"
                       disabled={loading}
-                      className="px-6 py-3 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-colors disabled:opacity-50 flex items-center"
+                      className="btn-primary flex items-center px-6 py-3 disabled:opacity-50"
                     >
                       <FiSave className="w-5 h-5 mr-2" />
                       {loading ? 'Enregistrement...' : 'Enregistrer'}
@@ -476,7 +476,7 @@ function Profile() {
                         name="currentPassword"
                         value={passwordData.currentPassword}
                         onChange={handlePasswordChange}
-                        className="w-full px-4 py-3 border border-blue-800 bg-blue-900/80 text-blue-100 placeholder:text-blue-300 rounded-xl focus:bg-blue-900/90 focus:text-blue-100 focus:border-blue-700 transition-colors duration-200"
+                        className="app-input"
                       />
                     </div>
 
@@ -489,7 +489,7 @@ function Profile() {
                         name="newPassword"
                         value={passwordData.newPassword}
                         onChange={handlePasswordChange}
-                        className="w-full px-4 py-3 border border-blue-800 bg-blue-900/80 text-blue-100 placeholder:text-blue-300 rounded-xl focus:bg-blue-900/90 focus:text-blue-100 focus:border-blue-700 transition-colors duration-200"
+                        className="app-input"
                       />
                     </div>
 
@@ -502,7 +502,7 @@ function Profile() {
                         name="confirmPassword"
                         value={passwordData.confirmPassword}
                         onChange={handlePasswordChange}
-                        className="w-full px-4 py-3 border border-primary-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        className="app-input"
                       />
                     </div>
                   </div>
@@ -511,7 +511,7 @@ function Profile() {
                     <button
                       type="submit"
                       disabled={loading}
-                      className="px-6 py-3 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-colors disabled:opacity-50"
+                      className="btn-primary px-6 py-3 disabled:opacity-50"
                     >
                       {loading ? 'Modification...' : 'Modifier le mot de passe'}
                     </button>
@@ -554,7 +554,7 @@ function Profile() {
                     ].map(item => (
                       <div 
                         key={item.key}
-                        className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-primary-50 rounded-xl gap-3"
+                        className="app-panel-muted flex flex-col justify-between gap-3 p-4 sm:flex-row sm:items-center"
                       >
                         <div>
                           <p className="font-medium text-primary-900">{item.label}</p>
@@ -562,8 +562,8 @@ function Profile() {
                         </div>
                         <button
                           onClick={() => handleNotificationChange(item.key)}
-                          className={`relative w-14 h-8 rounded-full transition-colors ${
-                            notifications[item.key] ? 'bg-primary-600' : 'bg-primary-300'
+                          className={`relative h-8 w-14 transition-colors ${
+                            notifications[item.key] ? 'bg-[#2a1808]' : 'bg-[#d6b081]'
                           }`}
                         >
                           <span
@@ -593,7 +593,7 @@ function Profile() {
                         setTimeout(() => setSuccess(false), 3000)
                       }}
                       disabled={loading}
-                      className="px-6 py-3 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-colors disabled:opacity-50"
+                      className="btn-primary px-6 py-3 disabled:opacity-50"
                     >
                       {loading ? 'Enregistrement...' : 'Enregistrer les préférences'}
                     </button>
