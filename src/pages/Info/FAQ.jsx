@@ -5,23 +5,43 @@ import { FiArrowRight, FiMinus, FiPlus } from 'react-icons/fi'
 const FAQ_ITEMS = [
   {
     q: 'Comment reserver un salon sur Jolof Era ?',
-    a: 'Parcourez les salons, choisissez une prestation, verifiez les disponibilites puis confirmez votre reservation en quelques etapes.',
+    a: 'Choisissez un salon, consultez les prestations disponibles, selectionnez un creneau puis confirmez votre reservation depuis votre espace client. Si le professionnel active le paiement en ligne, vous pouvez regler directement pendant le parcours.',
   },
   {
     q: 'Comment commander dans une boutique ?',
-    a: 'Ajoutez les articles a votre panier, choisissez votre mode de recuperation ou de livraison, puis finalisez la commande depuis le checkout.',
+    a: 'Ajoutez les articles a votre panier, ouvrez le checkout, verifiez le mode de retrait ou de livraison propose puis validez la commande. Les boutiques visibles sur la plateforme gerent ensuite la preparation et la remise des articles.',
   },
   {
     q: 'Puis-je annuler ou modifier une reservation ?',
-    a: 'Oui, selon la politique du professionnel. Toutes les informations utiles restent accessibles depuis votre espace client.',
+    a: 'Oui, selon la politique du professionnel et le stade de la reservation. Depuis votre compte, vous pouvez consulter le detail, verifier le statut et contacter le salon si un ajustement est encore possible.',
+  },
+  {
+    q: 'Comment retrouver une boutique ou un article precis ?',
+    a: 'Utilisez la recherche par nom, categorie ou quartier. Si vous tapez un article, Jolof Era peut faire remonter les boutiques qui vendent ce produit ainsi que les references proches selon le catalogue publie par les pros.',
+  },
+  {
+    q: 'Quels moyens de paiement sont proposes ?',
+    a: 'Cela depend du professionnel et du parcours. Certaines reservations ou commandes peuvent etre payees en ligne, d autres au retrait, sur place ou via un partenaire de paiement. Le recapitulatif affiche toujours la methode disponible avant validation.',
+  },
+  {
+    q: 'Pourquoi des frais plateforme peuvent apparaitre au paiement ?',
+    a: 'Quand un paiement passe par DexPay, des frais plateforme de 2 pour cent peuvent etre ajoutes au montant de base. Le total final affiche ces frais avant confirmation pour rester transparent.',
   },
   {
     q: 'Comment devenir professionnel partenaire ?',
-    a: 'Utilisez le parcours professionnel, completez votre profil, ajoutez vos services et soumettez votre demande pour validation.',
+    a: 'Utilisez le parcours professionnel, completez votre profil, ajoutez vos services ou articles, vos horaires et vos informations de contact, puis soumettez votre demande pour validation par Jolof Era.',
   },
   {
-    q: 'Le paiement est-il securise ?',
-    a: 'Oui. Le site encadre les parcours de paiement et de commande afin de proposer une experience fiable et professionnelle.',
+    q: 'Que voit le client apres reservation ou commande ?',
+    a: 'Le compte client centralise les reservations, commandes, notifications, favoris et statuts de paiement. Vous pouvez retrouver le recapitulatif, suivre l evolution du dossier et revenir facilement vers le professionnel concerne.',
+  },
+  {
+    q: 'Comment fonctionnent la livraison et le retrait boutique ?',
+    a: 'Chaque boutique peut proposer ses propres modalites. Selon le catalogue, vous verrez si le retrait en boutique, la livraison ou un autre mode de remise est disponible avant la validation finale.',
+  },
+  {
+    q: 'Comment contacter le support Jolof Era ?',
+    a: 'Pour une question generale, un signalement ou un besoin d assistance sur une reservation, une commande ou un compte, vous pouvez utiliser les pages d aide et les informations de contact presentes sur le site.',
   },
 ]
 
@@ -111,7 +131,7 @@ function FAQ() {
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-white/55">Besoin d&apos;aller plus loin</p>
             <p className="mt-2 max-w-xl text-sm leading-6 text-white/78 sm:text-base">
-              Consulte le parcours de reservation et de commande pour voir comment le site guide chaque etape.
+              Consulte le guide pour voir le parcours client, le fonctionnement boutique et les etapes cote professionnel.
             </p>
           </div>
           <Link

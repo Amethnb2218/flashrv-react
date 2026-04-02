@@ -3,15 +3,61 @@ import { Link } from 'react-router-dom'
 import { FiSearch, FiCalendar, FiStar, FiShoppingBag, FiArrowRight } from 'react-icons/fi'
 
 const CLIENT_STEPS = [
-  { icon: FiSearch, title: 'Rechercher', text: 'Trouvez un salon ou une boutique par quartier, type et disponibilite.' },
-  { icon: FiCalendar, title: 'Reserver / Commander', text: 'Choisissez vos services ou articles et confirmez en quelques clics.' },
-  { icon: FiStar, title: 'Profiter', text: 'Suivez votre reservation/commande puis laissez votre avis.' },
+  {
+    icon: FiSearch,
+    title: 'Rechercher',
+    text: 'Trouvez un salon, une boutique ou un article par quartier, type de prestation, categorie ou nom de produit.',
+  },
+  {
+    icon: FiCalendar,
+    title: 'Choisir et confirmer',
+    text: 'Selectionnez un service, un creneau ou un article, verifiez le recapitulatif puis confirmez la reservation ou la commande.',
+  },
+  {
+    icon: FiShoppingBag,
+    title: 'Suivre',
+    text: 'Consultez votre espace client pour voir vos reservations, commandes, notifications, favoris et statuts de paiement.',
+  },
+  {
+    icon: FiStar,
+    title: 'Revenir et noter',
+    text: 'Apres la visite ou la commande, laissez un avis et retrouvez rapidement les professionnels que vous aimez.',
+  },
 ]
 
 const PRO_STEPS = [
-  { icon: FiShoppingBag, title: 'Creer votre espace', text: 'Inscription pro puis validation par l equipe Jolof Era.' },
-  { icon: FiCalendar, title: 'Configurer vos offres', text: 'Ajoutez services, horaires, produits et moyens de paiement.' },
-  { icon: FiStar, title: 'Developper votre activite', text: 'Recevez des clients et commande en ligne via votre dashboard.' },
+  {
+    icon: FiShoppingBag,
+    title: 'Creer votre espace',
+    text: 'Inscrivez votre salon ou votre boutique, completez votre profil et soumettez votre dossier pour validation.',
+  },
+  {
+    icon: FiCalendar,
+    title: 'Configurer vos offres',
+    text: 'Ajoutez vos services, articles, horaires, categories, tarifs, zones et modes de paiement depuis le dashboard pro.',
+  },
+  {
+    icon: FiSearch,
+    title: 'Publier une vitrine claire',
+    text: 'Votre fiche permet aux clients de rechercher vos prestations, vos produits et vos disponibilites sur un seul parcours.',
+  },
+  {
+    icon: FiStar,
+    title: 'Piloter l activite',
+    text: 'Suivez les reservations, commandes, paiements, rappels et retours clients depuis une interface centralisee.',
+  },
+]
+
+const CLIENT_POINTS = [
+  'Une seule recherche pour salons, boutiques et produits.',
+  'Des fiches plus lisibles avec prix, horaires et categories.',
+  'Un espace client pour suivre reservations, commandes et favoris.',
+]
+
+const PRO_POINTS = [
+  'Un tableau de bord pour services, produits, paiements et statuts.',
+  'Une meilleure visibilite locale grace aux categories et a la recherche.',
+  'Un parcours plus propre pour presenter l activite sans friction.',
 ]
 
 function StepCard({ step }) {
@@ -79,15 +125,35 @@ function HowItWorks() {
 
         <div className="mt-7">
           <h2 className="text-lg font-bold text-primary-900 dark:text-[#f3e8d9]">Pour les clients</h2>
-          <div className="mt-3 grid gap-3 sm:grid-cols-3">
+          <p className="mt-2 max-w-3xl text-sm text-primary-600 dark:text-[#cfbca4]">
+            Le parcours client est pense pour retrouver rapidement un salon, une boutique ou un produit, puis confirmer l action sans passer par plusieurs interfaces.
+          </p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             {CLIENT_STEPS.map((step) => <StepCard key={step.title} step={step} />)}
+          </div>
+          <div className="mt-4 rounded-2xl border border-primary-200 dark:border-[#46382a] bg-white/80 dark:bg-[#1d1712] p-4">
+            <ul className="grid gap-2 text-sm text-primary-700 dark:text-[#cfbca4] sm:grid-cols-3">
+              {CLIENT_POINTS.map((point) => (
+                <li key={point}>{point}</li>
+              ))}
+            </ul>
           </div>
         </div>
 
         <div className="mt-7">
           <h2 className="text-lg font-bold text-primary-900 dark:text-[#f3e8d9]">Pour les professionnels</h2>
-          <div className="mt-3 grid gap-3 sm:grid-cols-3">
+          <p className="mt-2 max-w-3xl text-sm text-primary-600 dark:text-[#cfbca4]">
+            Le parcours pro rassemble la presentation de l activite, la gestion des offres et le suivi des demandes dans un seul dashboard.
+          </p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             {PRO_STEPS.map((step) => <StepCard key={step.title} step={step} />)}
+          </div>
+          <div className="mt-4 rounded-2xl border border-primary-200 dark:border-[#46382a] bg-white/80 dark:bg-[#1d1712] p-4">
+            <ul className="grid gap-2 text-sm text-primary-700 dark:text-[#cfbca4] sm:grid-cols-3">
+              {PRO_POINTS.map((point) => (
+                <li key={point}>{point}</li>
+              ))}
+            </ul>
           </div>
         </div>
 
