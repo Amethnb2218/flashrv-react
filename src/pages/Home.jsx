@@ -753,63 +753,70 @@ function HeroShowcase() {
 function HeroShowcaseTile({ item, large = false }) {
   if (!item) return null
 
+  const target = item.to || '/salons'
+
   return (
-    <AnimatePresence initial={false} mode="sync">
-      <motion.div
-        key={`${item.id}-${large ? 'large' : 'small'}`}
-        initial={{ opacity: 0, y: 8, scale: 0.992 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: -8, scale: 0.992 }}
-        transition={{ duration: 0.2, ease: 'easeOut' }}
-        className={`group relative overflow-hidden border border-[#ead7ba] bg-[#fff0de] dark:border-[#7a5932] dark:bg-[#352214] ${
-          large ? 'min-h-[236px] sm:min-h-[320px] lg:min-h-[420px]' : 'min-h-[124px] sm:min-h-[152px] lg:min-h-[204px]'
-        }`}
-      >
-        <motion.img
-          key={`${item.id}-image-${large ? 'large' : 'small'}`}
-          src={item.image}
-          alt={item.title}
-          className="h-full w-full object-cover"
-          loading="eager"
-          decoding="async"
-          referrerPolicy="no-referrer"
-          initial={{ scale: 1.03, x: 0, y: 0 }}
-          animate={{
-            scale: [1.03, 1.08, 1.05],
-            x: [0, large ? -8 : -4, large ? 6 : 3],
-            y: [0, large ? -6 : -3, large ? 4 : 2],
-          }}
-          transition={{
-            duration: large ? 5.8 : 5.2,
-            ease: 'easeInOut',
-            repeat: Infinity,
-            repeatType: 'mirror',
-          }}
-        />
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(42,24,8,0.04)_0%,rgba(42,24,8,0.16)_45%,rgba(42,24,8,0.84)_100%)]" />
+    <Link
+      to={target}
+      aria-label={item.title}
+      className="block h-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[#d3a96f] focus-visible:ring-offset-2"
+    >
+      <AnimatePresence initial={false} mode="sync">
         <motion.div
-          className="absolute inset-x-0 bottom-0 p-4"
-          initial={{ opacity: 0.94, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.18, ease: 'easeOut' }}
+          key={`${item.id}-${large ? 'large' : 'small'}`}
+          initial={{ opacity: 0, y: 8, scale: 0.992 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -8, scale: 0.992 }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+          className={`group relative h-full overflow-hidden border border-[#ead7ba] bg-[#fff0de] transition-transform hover:-translate-y-0.5 dark:border-[#7a5932] dark:bg-[#352214] ${
+            large ? 'min-h-[236px] sm:min-h-[320px] lg:min-h-[420px]' : 'min-h-[124px] sm:min-h-[152px] lg:min-h-[204px]'
+          }`}
         >
-          <span className="inline-flex items-center border border-white/35 bg-white/12 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-white backdrop-blur-sm">
-            {item.kind}
-          </span>
-          <Link
-            to={item.to || '/salons'}
-            className={`mt-3 inline-block font-bold leading-tight text-white transition-opacity hover:opacity-80 ${
-              large ? 'text-[1.15rem] sm:text-[1.35rem] lg:text-[1.65rem]' : 'text-sm sm:text-base lg:text-lg'
-            }`}
+          <motion.img
+            key={`${item.id}-image-${large ? 'large' : 'small'}`}
+            src={item.image}
+            alt={item.title}
+            className="h-full w-full object-cover"
+            loading="eager"
+            decoding="async"
+            referrerPolicy="no-referrer"
+            initial={{ scale: 1.03, x: 0, y: 0 }}
+            animate={{
+              scale: [1.03, 1.08, 1.05],
+              x: [0, large ? -8 : -4, large ? 6 : 3],
+              y: [0, large ? -6 : -3, large ? 4 : 2],
+            }}
+            transition={{
+              duration: large ? 5.8 : 5.2,
+              ease: 'easeInOut',
+              repeat: Infinity,
+              repeatType: 'mirror',
+            }}
+          />
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(42,24,8,0.04)_0%,rgba(42,24,8,0.16)_45%,rgba(42,24,8,0.84)_100%)]" />
+          <motion.div
+            className="absolute inset-x-0 bottom-0 p-4"
+            initial={{ opacity: 0.94, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.18, ease: 'easeOut' }}
           >
-            {item.title}
-          </Link>
-          <p className={`mt-1 text-white/80 ${large ? 'text-[12px] sm:text-sm' : 'text-[11px] sm:text-[12px] lg:text-[13px]'}`}>
-            {item.query}
-          </p>
+            <span className="inline-flex items-center border border-white/35 bg-white/12 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-white backdrop-blur-sm">
+              {item.kind}
+            </span>
+            <span
+              className={`mt-3 inline-block font-bold leading-tight text-white transition-opacity group-hover:opacity-80 ${
+                large ? 'text-[1.15rem] sm:text-[1.35rem] lg:text-[1.65rem]' : 'text-sm sm:text-base lg:text-lg'
+              }`}
+            >
+              {item.title}
+            </span>
+            <p className={`mt-1 text-white/80 ${large ? 'text-[12px] sm:text-sm' : 'text-[11px] sm:text-[12px] lg:text-[13px]'}`}>
+              {item.query}
+            </p>
+          </motion.div>
         </motion.div>
-      </motion.div>
-    </AnimatePresence>
+      </AnimatePresence>
+    </Link>
   )
 }
 
