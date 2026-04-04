@@ -170,6 +170,20 @@ function SalonDetail() {
   const addToCart = (product, size, color) => {
     const selSize = size || variantSelections[product.id]?.size || null
     const selColor = color || variantSelections[product.id]?.color || null
+    const {
+      sizeRequired,
+      colorRequired,
+    } = getProductPurchaseState(product, { includeFallback: true })
+
+    if ((sizeRequired && !selSize) || (colorRequired && !selColor)) {
+      const missingParts = [
+        sizeRequired && !selSize ? 'la taille' : null,
+        colorRequired && !selColor ? 'la couleur' : null,
+      ].filter(Boolean)
+      toast.error(`Choisissez ${missingParts.join(' et ')} avant d'ajouter au panier.`)
+      return false
+    }
+
     const cartSalon = {
       id: salonData?.id || id,
       name: salonData?.name,
@@ -185,6 +199,7 @@ function SalonDetail() {
       selectedColor: selColor,
     })
     setCart(next.items || [])
+    return true
   }
 
   const removeFromCart = (productId, size, color) => {
@@ -346,6 +361,48 @@ function SalonDetail() {
     }
   }
 
+  const getProductPurchaseState = (product, { includeFallback = false } = {}) => {
+    const resolved = getResolvedVariantOptions(product, { includeFallback })
+    const hasSizes = Array.isArray(resolved.resolvedSizes) && resolved.resolvedSizes.length > 0
+    const hasColors = Array.isArray(resolved.resolvedColors) && resolved.resolvedColors.length > 0
+    const sizeRequired = hasSizes && !resolved.usesFallbackSizes
+    const colorRequired = hasColors && !resolved.usesFallbackColors
+
+    return {
+      ...resolved,
+      hasSizes,
+      hasColors,
+      sizeRequired,
+      colorRequired,
+      needsVariant: sizeRequired || colorRequired,
+    }
+  }
+
+  const isSizeAvailableForSelection = (variantEntries, sizeValue, selectedColor) => {
+    if (variantEntries.length === 0) return true
+    return variantEntries.some((v) =>
+      v.isAvailable &&
+      v.size === sizeValue &&
+      (!selectedColor || !v.color || v.color === selectedColor)
+    )
+  }
+
+  const isColorAvailableForSelection = (variantEntries, colorValue, selectedSize, availableColors = []) => {
+    if (variantEntries.length === 0) {
+      if (Array.isArray(availableColors) && availableColors.length > 0) {
+        return availableColors.includes(colorValue)
+      }
+      return true
+    }
+    return variantEntries.some((v) =>
+      v.isAvailable &&
+      v.color === colorValue &&
+      (!selectedSize || !v.size || v.size === selectedSize)
+    )
+  }
+
+  const getCardActionLabel = () => 'Ajouter'
+
   const getProductImages = (product) => {
     if (!product) return []
     const raw = [
@@ -365,6 +422,16 @@ function SalonDetail() {
     setLikedProducts((prev) =>
       prev.includes(key) ? prev.filter((idValue) => idValue !== key) : [...prev, key]
     )
+  }
+
+  const toggleVariantSelection = (productId, optionKey, optionValue) => {
+    setVariantSelections((prev) => ({
+      ...prev,
+      [productId]: {
+        ...prev[productId],
+        [optionKey]: prev[productId]?.[optionKey] === optionValue ? null : optionValue,
+      },
+    }))
   }
 
   const shareProduct = async (product) => {
@@ -393,7 +460,8 @@ function SalonDetail() {
   }
 
   const buyNow = (product, size, color) => {
-    addToCart(product, size, color)
+    const added = addToCart(product, size, color)
+    if (!added) return
     const cartState = readCart()
     const items = Array.isArray(cartState?.items) ? cartState.items : []
     if (!cartState?.salon?.id || items.length === 0) return
@@ -840,12 +908,34 @@ function SalonDetail() {
                           const img = resolveMediaUrl(product.imageUrl || product.image)
                           const inCartItems = getCartItemForProduct(product.id)
                           const inCartTotal = inCartItems.reduce((s, c) => s + c.quantity, 0)
-                          const { resolvedSizes, resolvedColors, deliveryMeta } = getResolvedVariantOptions(product)
-                          const hasSizes = Array.isArray(resolvedSizes) && resolvedSizes.length > 0
-                          const hasColors = Array.isArray(resolvedColors) && resolvedColors.length > 0
-                          const needsVariant = (hasSizes || hasColors)
+                          const {
+                            variantEntries,
+                            resolvedSizes,
+                            resolvedColors,
+                            resolvedAvailableColors,
+                            deliveryMeta,
+                            hasSizes,
+                            hasColors,
+                            sizeRequired,
+                            colorRequired,
+                            needsVariant,
+                          } = getProductPurchaseState(product)
+                          const selSize = variantSelections[product.id]?.size || (sizeRequired && resolvedSizes.length === 1 ? String(resolvedSizes[0]) : null)
+                          const selColor = variantSelections[product.id]?.color || (colorRequired && resolvedColors.length === 1 ? String(resolvedColors[0]) : null)
+                          const variantChosen = (!sizeRequired || selSize) && (!colorRequired || selColor)
+                          const selectedCartItems = needsVariant
+                            ? inCartItems.filter((c) => c.selectedSize === selSize && c.selectedColor === selColor)
+                            : inCartItems
+                          const selectedInCartTotal = selectedCartItems.reduce((s, c) => s + c.quantity, 0)
+                          const actionLabel = getCardActionLabel({ sizeRequired, colorRequired, variantChosen })
                           const isNew = product.createdAt && (Date.now() - new Date(product.createdAt).getTime()) < 7 * 86400000
                           const isLowStock = product.stock > 0 && product.stock <= 5
+                          const isSizeAvailable = (sizeValue) => {
+                            return isSizeAvailableForSelection(variantEntries, sizeValue, selColor)
+                          }
+                          const isColorAvailable = (colorValue) => {
+                            return isColorAvailableForSelection(variantEntries, colorValue, selSize, resolvedAvailableColors)
+                          }
 
                           return (
                             <div
@@ -854,10 +944,10 @@ function SalonDetail() {
                               tabIndex={0}
                               onClick={() => openProductDetail(product)}
                               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openProductDetail(product) } }}
-                              className="group cursor-pointer overflow-hidden border border-[#ead7ba] bg-[#fffdf8] shadow-[0_20px_42px_-36px_rgba(95,50,15,0.18)] transition-all hover:-translate-y-1 hover:border-[#d8b184] hover:shadow-[0_26px_48px_-34px_rgba(95,50,15,0.24)]"
+                              className="group cursor-pointer overflow-hidden border border-[#ead7ba] bg-[linear-gradient(180deg,#fffdf8_0%,#fff5e8_100%)] shadow-[0_22px_44px_-34px_rgba(95,50,15,0.2)] transition-all hover:-translate-y-1 hover:border-[#d8b184] hover:shadow-[0_28px_52px_-34px_rgba(95,50,15,0.26)]"
                             >
                               {/* Image + badges overlay */}
-                              <div className="relative w-full aspect-[4/4.15] bg-[linear-gradient(180deg,#fbf4e8_0%,#f4e7d4_100%)]">
+                              <div className="relative w-full aspect-[4/3.6] bg-[radial-gradient(circle_at_top,#fff8ef_0%,#f2e2c7_100%)]">
                                 {img ? (
                                   <img src={img} alt={product.name} className="w-full h-full object-cover" loading="lazy" />
                                 ) : (
@@ -865,7 +955,7 @@ function SalonDetail() {
                                     <FiBox className="w-8 h-8 text-primary-300" />
                                   </div>
                                 )}
-                                <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/25 via-black/5 to-transparent" />
+                                <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/20 via-black/5 to-transparent" />
                                 {/* Badges */}
                                 <div className="absolute left-2 top-2 flex flex-col gap-1.5">
                                   {isNew && <span className="rounded-full bg-emerald-500 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.18em] text-white shadow-sm">Nouveau</span>}
@@ -891,7 +981,12 @@ function SalonDetail() {
                                 <div className="flex items-start justify-between gap-2">
                                   <div className="min-w-0">
                                     <h4 className="line-clamp-2 text-[0.98rem] font-semibold leading-tight text-[#2a1808]">{product.name}</h4>
-                                    {product.category && <p className="mt-1 line-clamp-1 text-[10px] uppercase tracking-[0.18em] text-[#b38a61]">{product.category}</p>}
+                                    <div className="mt-1 flex flex-wrap items-center gap-2">
+                                      {product.category && <p className="line-clamp-1 text-[10px] uppercase tracking-[0.18em] text-[#b38a61]">{product.category}</p>}
+                                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${product.stock > 0 ? 'bg-[#edf8ef] text-[#18813c]' : 'bg-red-50 text-red-500'}`}>
+                                        {product.stock > 0 ? `${product.stock} en stock` : 'Rupture'}
+                                      </span>
+                                    </div>
                                   </div>
                                   {needsVariant && (
                                     <span className="inline-flex shrink-0 items-center border border-[#ead7ba] bg-[#fff4e4] px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-[#7b4517]">
@@ -900,7 +995,7 @@ function SalonDetail() {
                                   )}
                                 </div>
 
-                                <div className="border border-[#ead7ba] bg-[#fff8ee] px-3 py-2.5 shadow-[0_14px_30px_-26px_rgba(95,50,15,0.12)]">
+                                <div className="space-y-3 rounded-[22px] border border-[#ead7ba] bg-[#fff8ee] p-3 shadow-[0_16px_30px_-28px_rgba(95,50,15,0.16)]">
                                   <div className="flex items-end justify-between gap-2">
                                     <div>
                                       <span className="text-lg font-extrabold text-[#5b3411]">{formatPrice(product.price)}</span>
@@ -908,36 +1003,148 @@ function SalonDetail() {
                                         {deliveryMeta?.isDeliverable ? 'Livraison possible' : 'Retrait boutique'}
                                       </p>
                                     </div>
-                                    {product.stock > 0 ? (
-                                      inCartTotal > 0 ? (
-                                        <div className="inline-flex items-center border border-[#ead7ba] bg-[#fffdf8] p-1 shadow-sm" onClick={(e) => e.stopPropagation()}>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => { e.stopPropagation(); openProductDetail(product) }}
+                                      className="inline-flex items-center gap-1 rounded-full border border-[#e2c39c] bg-white px-2.5 py-1 text-[10px] font-semibold text-[#7b4517] transition hover:bg-[#fff4e4]"
+                                    >
+                                      Voir
+                                    </button>
+                                  </div>
+
+                                  {hasSizes && (
+                                    <div className="space-y-2">
+                                      <div className="flex items-center justify-between gap-2">
+                                        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#9d6b35]">Taille</p>
+                                        {selSize && <span className="text-[10px] font-semibold text-[#7b4517]">Choisie : {selSize}</span>}
+                                      </div>
+                                      <div className="flex flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
+                                        {resolvedSizes.map((sizeOption) => {
+                                          const sizeValue = String(sizeOption)
+                                          const available = isSizeAvailable(sizeValue)
+                                          return (
+                                            <button
+                                              key={sizeValue}
+                                              type="button"
+                                              onClick={(e) => {
+                                                e.stopPropagation()
+                                                toggleVariantSelection(product.id, 'size', sizeValue)
+                                              }}
+                                              disabled={!available}
+                                              className={`min-w-[42px] rounded-xl border px-3 py-2 text-xs font-semibold transition ${
+                                                !available
+                                                  ? 'cursor-not-allowed border-[#ead7ba] bg-[#f8efe3] text-[#d0b089] opacity-60'
+                                                  : selSize === sizeValue
+                                                    ? 'border-[#7b4517] bg-[#7b4517] text-white'
+                                                    : 'border-[#ead7ba] bg-white text-[#7b4517] hover:border-[#c98d56] hover:bg-[#fff4e4]'
+                                              }`}
+                                            >
+                                              {sizeValue}
+                                            </button>
+                                          )
+                                        })}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {hasColors && (
+                                    <div className="space-y-2">
+                                      <div className="flex items-center justify-between gap-2">
+                                        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#9d6b35]">Couleur</p>
+                                        {selColor && <span className="text-[10px] font-semibold text-[#7b4517]">Choisie : {selColor}</span>}
+                                      </div>
+                                      <div className="flex flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
+                                        {resolvedColors.map((colorOption) => {
+                                          const colorValue = String(colorOption)
+                                          const available = isColorAvailable(colorValue)
+                                          return (
+                                            <button
+                                              key={colorValue}
+                                              type="button"
+                                              onClick={(e) => {
+                                                e.stopPropagation()
+                                                toggleVariantSelection(product.id, 'color', colorValue)
+                                              }}
+                                              disabled={!available}
+                                              className={`rounded-xl border px-3 py-2 text-xs font-semibold transition ${
+                                                !available
+                                                  ? 'cursor-not-allowed border-[#ead7ba] bg-[#f8efe3] text-[#d0b089] opacity-60'
+                                                  : selColor === colorValue
+                                                    ? 'border-[#7b4517] bg-[#7b4517] text-white'
+                                                    : 'border-[#ead7ba] bg-white text-[#7b4517] hover:border-[#c98d56] hover:bg-[#fff4e4]'
+                                              }`}
+                                            >
+                                              {colorValue}
+                                            </button>
+                                          )
+                                        })}
+                                      </div>
+                                    </div>
+                                  )}
+
+                                  {product.stock > 0 ? (
+                                    selectedInCartTotal > 0 ? (
+                                      <div className="flex items-center justify-between gap-3" onClick={(e) => e.stopPropagation()}>
+                                        <div>
+                                          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#9d6b35]">Panier</p>
+                                          <p className="mt-1 text-xs text-[#7b5d3d]">
+                                            {needsVariant
+                                              ? variantChosen
+                                                ? `${selectedInCartTotal} exemplaire${selectedInCartTotal > 1 ? 's' : ''} pour cette configuration`
+                                                : `${inCartTotal} article${inCartTotal > 1 ? 's' : ''} deja au panier`
+                                              : `${selectedInCartTotal} article${selectedInCartTotal > 1 ? 's' : ''} dans le panier`}
+                                          </p>
+                                        </div>
+                                        <div className="inline-flex items-center overflow-hidden rounded-full border border-[#ead7ba] bg-white p-1 shadow-sm">
                                           <button
-                                            onClick={(e) => { e.stopPropagation(); removeFromCart(product.id) }}
-                                            className="flex h-7 w-7 items-center justify-center border border-[#ead7ba] bg-white text-[#7b4517] transition hover:bg-[#fff4e4]"
+                                            onClick={(e) => {
+                                              e.stopPropagation()
+                                              removeFromCart(product.id, needsVariant ? selSize : null, needsVariant ? selColor : null)
+                                            }}
+                                            disabled={needsVariant && !variantChosen}
+                                            className="flex h-8 w-8 items-center justify-center rounded-full border border-[#ead7ba] bg-white text-[#7b4517] transition hover:bg-[#fff4e4] disabled:cursor-not-allowed disabled:opacity-50"
                                           >
                                             <FiMinus className="w-3 h-3" />
                                           </button>
-                                          <span className="min-w-[22px] px-2 text-center text-xs font-bold text-[#5b3411]">{inCartTotal}</span>
+                                          <span className="min-w-[28px] px-2 text-center text-sm font-bold text-[#5b3411]">
+                                            {needsVariant ? (variantChosen ? selectedInCartTotal : inCartTotal) : selectedInCartTotal}
+                                          </span>
                                           <button
-                                            onClick={(e) => { e.stopPropagation(); if (needsVariant) { openProductDetail(product) } else { addToCart(product) } }}
-                                            className="flex h-7 w-7 items-center justify-center bg-[#7b4517] text-white transition hover:bg-[#5f340f]"
+                                            onClick={(e) => {
+                                              e.stopPropagation()
+                                              addToCart(product, selSize, selColor)
+                                            }}
+                                            disabled={needsVariant && !variantChosen}
+                                            className="flex h-8 w-8 items-center justify-center rounded-full bg-[#7b4517] text-white transition hover:bg-[#5f340f] disabled:cursor-not-allowed disabled:opacity-50"
                                           >
                                             <FiPlus className="w-3 h-3" />
                                           </button>
                                         </div>
-                                      ) : (
-                                        <button
-                                          onClick={(e) => { e.stopPropagation(); if (needsVariant) { openProductDetail(product) } else { addToCart(product) } }}
-                                          className="inline-flex items-center gap-1.5 bg-[#7b4517] px-3 py-2 text-[11px] font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[#5f340f]"
-                                        >
-                                          <span>{needsVariant ? 'Choisir' : 'Ajouter'}</span>
-                                          <FiPlus className="w-3.5 h-3.5" />
-                                        </button>
-                                      )
+                                      </div>
                                     ) : (
-                                      <span className="bg-red-50 px-2.5 py-1 text-[10px] font-semibold text-red-500">Rupture</span>
-                                    )}
-                                  </div>
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation()
+                                          if (needsVariant && !variantChosen) {
+                                            openProductDetail(product)
+                                            return
+                                          }
+                                          addToCart(product, selSize, selColor)
+                                        }}
+                                        className={`flex w-full items-center justify-center gap-2 rounded-[18px] px-4 py-3 text-sm font-semibold text-white transition ${
+                                          needsVariant && !variantChosen
+                                            ? 'bg-[#a06d39] hover:bg-[#8c5b28]'
+                                            : 'bg-[#7b4517] hover:-translate-y-0.5 hover:bg-[#5f340f]'
+                                        }`}
+                                      >
+                                        <span>{actionLabel}</span>
+                                        <FiPlus className="w-3.5 h-3.5" />
+                                      </button>
+                                    )
+                                  ) : (
+                                    <span className="inline-flex bg-red-50 px-2.5 py-1 text-[10px] font-semibold text-red-500">Rupture</span>
+                                  )}
                                 </div>
 
                                 {deliveryMeta?.isDeliverable && (
@@ -945,9 +1152,9 @@ function SalonDetail() {
                                     <FiBox className="w-2.5 h-2.5" /> Livraison dispo
                                   </p>
                                 )}
-                                {needsVariant && product.stock > 0 && (
+                                {needsVariant && product.stock > 0 && !variantChosen && (
                                   <p className="text-[10px] text-[#b38a61]">
-                                    Ouvrez la fiche pour choisir taille ou couleur.
+                                    Choisissez votre taille ici pour ajouter directement, ou ouvrez la fiche pour plus de details.
                                   </p>
                                 )}
                               </div>
@@ -1442,42 +1649,27 @@ function SalonDetail() {
                 resolvedSizes,
                 resolvedColors,
                 resolvedAvailableColors,
+                hasSizes,
+                hasColors,
                 usesFallbackSizes,
                 usesFallbackColors,
+                sizeRequired,
+                colorRequired,
+                needsVariant,
                 deliveryMeta,
-              } = getResolvedVariantOptions(product, { includeFallback: true })
-              const hasSizes = Array.isArray(resolvedSizes) && resolvedSizes.length > 0
-              const hasColors = Array.isArray(resolvedColors) && resolvedColors.length > 0
+              } = getProductPurchaseState(product, { includeFallback: true })
               const selSize = variantSelections[product.id]?.size || null
               const selColor = variantSelections[product.id]?.color || null
-              const sizeRequired = hasSizes && !usesFallbackSizes ? true : usesFallbackSizes
-              const colorRequired = hasColors && !usesFallbackColors
-              const needsVariant = sizeRequired || colorRequired
               const variantChosen = (!sizeRequired || selSize) && (!colorRequired || selColor)
               const inCartItems = getCartItemForProduct(product.id).filter((c) => c.selectedSize === selSize && c.selectedColor === selColor)
               const inCartTotal = inCartItems.reduce((s, c) => s + c.quantity, 0)
               const selectedVariantParts = [selSize, selColor].filter(Boolean)
 
               const isSizeAvailable = (sizeValue) => {
-                if (variantEntries.length === 0) return true
-                return variantEntries.some((v) =>
-                  v.isAvailable &&
-                  v.size === sizeValue &&
-                  (!selColor || !v.color || v.color === selColor)
-                )
+                return isSizeAvailableForSelection(variantEntries, sizeValue, selColor)
               }
               const isColorAvailable = (colorValue) => {
-                if (variantEntries.length === 0) {
-                  if (Array.isArray(resolvedAvailableColors) && resolvedAvailableColors.length > 0) {
-                    return resolvedAvailableColors.includes(colorValue)
-                  }
-                  return true
-                }
-                return variantEntries.some((v) =>
-                  v.isAvailable &&
-                  v.color === colorValue &&
-                  (!selSize || !v.size || v.size === selSize)
-                )
+                return isColorAvailableForSelection(variantEntries, colorValue, selSize, resolvedAvailableColors)
               }
 
               return (
@@ -1622,7 +1814,7 @@ function SalonDetail() {
                       <div>
                         <div className="flex items-center justify-between mb-2">
                           <p className="text-sm font-semibold text-primary-900">
-                            Taille {usesFallbackSizes ? <span className="text-primary-500 font-medium">(a choisir)</span> : null}
+                            Taille {usesFallbackSizes ? <span className="text-primary-500 font-medium">(optionnel)</span> : null}
                           </p>
                         </div>
                         <div className="flex flex-wrap gap-2">
@@ -1632,7 +1824,7 @@ function SalonDetail() {
                             return (
                               <button
                                 key={sizeValue}
-                                onClick={() => setVariantSelections(prev => ({ ...prev, [product.id]: { ...prev[product.id], size: prev[product.id]?.size === sizeValue ? null : sizeValue } }))}
+                                onClick={() => toggleVariantSelection(product.id, 'size', sizeValue)}
                                 disabled={!available}
                                 className={`px-4 py-2.5 rounded-xl text-sm font-semibold border transition ${
                                   !available
@@ -1662,7 +1854,7 @@ function SalonDetail() {
                             return (
                               <button
                                 key={colorValue}
-                                onClick={() => setVariantSelections(prev => ({ ...prev, [product.id]: { ...prev[product.id], color: prev[product.id]?.color === colorValue ? null : colorValue } }))}
+                                onClick={() => toggleVariantSelection(product.id, 'color', colorValue)}
                                 disabled={!available}
                                 className={`px-3 py-2 rounded-lg text-sm font-medium border transition ${
                                   !available
