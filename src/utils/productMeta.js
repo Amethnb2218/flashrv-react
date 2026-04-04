@@ -46,17 +46,35 @@ export function listToInput(value) {
 export function parseProductMeta(product) {
   const colors = uniqueOptionList([
     ...parseOptionList(product?.colors),
+    ...parseOptionList(product?.color),
+    ...parseOptionList(product?.couleur),
+    ...parseOptionList(product?.couleurs),
     ...parseOptionList(product?.colorOptions),
+    ...parseOptionList(product?.options?.color),
+    ...parseOptionList(product?.options?.colors),
     ...parseOptionList(product?.variants?.colors),
+    ...parseOptionList(product?.variants?.color),
   ])
   const availableColors = uniqueOptionList([
     ...parseOptionList(product?.availableColors),
+    ...parseOptionList(product?.availableColor),
+    ...parseOptionList(product?.availableColorOptions),
     ...parseOptionList(product?.availableColorOptions),
   ])
   const sizes = uniqueOptionList([
     ...parseOptionList(product?.sizes),
+    ...parseOptionList(product?.size),
+    ...parseOptionList(product?.taille),
+    ...parseOptionList(product?.tailles),
+    ...parseOptionList(product?.sizeText),
+    ...parseOptionList(product?.sizesText),
     ...parseOptionList(product?.sizeOptions),
+    ...parseOptionList(product?.options?.size),
+    ...parseOptionList(product?.options?.sizes),
+    ...parseOptionList(product?.options?.taille),
+    ...parseOptionList(product?.options?.tailles),
     ...parseOptionList(product?.variants?.sizes),
+    ...parseOptionList(product?.variants?.size),
   ])
   const deliveryZones = uniqueOptionList(product?.deliveryZones)
   const deliveryFee = Number(product?.deliveryFee || 0)

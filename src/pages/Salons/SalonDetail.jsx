@@ -919,7 +919,7 @@ function SalonDetail() {
                             sizeRequired,
                             colorRequired,
                             needsVariant,
-                          } = getProductPurchaseState(product)
+                          } = getProductPurchaseState(product, { includeFallback: true })
                           const selSize = variantSelections[product.id]?.size || (sizeRequired && resolvedSizes.length === 1 ? String(resolvedSizes[0]) : null)
                           const selColor = variantSelections[product.id]?.color || (colorRequired && resolvedColors.length === 1 ? String(resolvedColors[0]) : null)
                           const variantChosen = (!sizeRequired || selSize) && (!colorRequired || selColor)
