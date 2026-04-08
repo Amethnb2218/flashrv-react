@@ -12,6 +12,12 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+const WELCOME_FROM_EMAIL = String(
+  process.env.WELCOME_FROM_EMAIL ||
+  process.env.SMTP_FROM_EMAIL ||
+  'contact@jolofera.com'
+).trim();
+
 const getFrontendBaseUrl = () => {
   return (
     resolvePublicBaseUrl(
@@ -43,15 +49,26 @@ const formatMoney = (value) => Number(value || 0).toLocaleString('fr-FR');
 
 const isSmtpConfigured = () => Boolean(process.env.SMTP_USER && process.env.SMTP_PASS);
 
-async function deliverEmail({ to, subject, text, html, label, fromName = "Jolof'Era" }) {
+async function deliverEmail({
+  to,
+  subject,
+  text,
+  html,
+  label,
+  fromName = "Jolof'Era",
+  fromEmail = process.env.SMTP_USER,
+  replyTo,
+}) {
   if (!isSmtpConfigured()) {
     console.warn(`SMTP not configured - skipping ${label}`);
     return;
   }
 
   try {
+    const senderEmail = String(fromEmail || process.env.SMTP_USER || '').trim();
     await transporter.sendMail({
-      from: `"${fromName}" <${process.env.SMTP_USER}>`,
+      from: `"${fromName}" <${senderEmail}>`,
+      ...(replyTo ? { replyTo } : {}),
       to,
       subject,
       text,
@@ -101,6 +118,8 @@ async function sendWelcomeEmail({ to, name }) {
     text: `Bonjour ${name || 'client'},\n\nVotre compte Jolof'Era a bien ete cree et votre espace est actif.\nAccedez a votre espace ici: ${getFrontendBaseUrl()}\n\nSi vous n'etes pas a l'origine de cette inscription, ignorez simplement cet email.`,
     html,
     label: 'welcome email',
+    fromEmail: WELCOME_FROM_EMAIL,
+    replyTo: WELCOME_FROM_EMAIL,
   });
 }
 
