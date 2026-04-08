@@ -878,16 +878,21 @@ router.delete('/:id', authenticate, async (req, res, next) => {
     }
 
     const isClient = order.clientId === req.user.id;
+    const isOwner = order.salon?.ownerId === req.user.id;
     const isAdmin = req.user.role === 'ADMIN' || req.user.role === 'SUPER_ADMIN';
-    if (!isClient && !isAdmin) {
+    if (!isClient && !isOwner && !isAdmin) {
       return res.status(403).json({ status: 'error', message: 'Acces interdit' });
     }
 
     const status = String(order.status || '').toUpperCase();
-    if (!['CANCELLED', 'DELIVERED'].includes(status)) {
+    const ownerDeletingOwnSalonOrder = isOwner && !isClient && !isAdmin;
+    const allowedStatuses = ownerDeletingOwnSalonOrder ? ['CANCELLED'] : ['CANCELLED', 'DELIVERED'];
+    if (!allowedStatuses.includes(status)) {
       return res.status(400).json({
         status: 'error',
-        message: 'Seules les commandes annulees ou livrees peuvent etre supprimees.',
+        message: ownerDeletingOwnSalonOrder
+          ? 'Seules les commandes annulees peuvent etre supprimees depuis le dashboard pro.'
+          : 'Seules les commandes annulees ou livrees peuvent etre supprimees.',
       });
     }
 

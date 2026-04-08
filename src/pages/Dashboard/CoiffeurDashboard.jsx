@@ -577,6 +577,8 @@ const [expandedOrderId, setExpandedOrderId] = useState(null);
 const [visibleOrders, setVisibleOrders] = useState(6);
 const [expandedApptId, setExpandedApptId] = useState(null);
 const [visibleAppts, setVisibleAppts] = useState(6);
+const [deletingOrderId, setDeletingOrderId] = useState(null);
+const [deletingAppointmentId, setDeletingAppointmentId] = useState(null);
 
 // Boutique state
 const [businessType, setBusinessType] = useState("SALON");
@@ -2274,6 +2276,44 @@ const reviewOrderPaymentProof = async (orderId, decision) => {
   }
 };
 
+const handleDeleteOrder = async (orderId) => {
+  if (!orderId) return;
+  const confirmed = window.confirm("Supprimer définitivement cette commande annulée du dashboard pro ?");
+  if (!confirmed) return;
+  try {
+    setDeletingOrderId(orderId);
+    await apiFetch(`/orders/${orderId}`, { method: "DELETE" });
+    setOrders((prev) => prev.filter((order) => order.id !== orderId));
+    setExpandedOrderId((prev) => (prev === orderId ? null : prev));
+    toast.success("Commande supprimée du dashboard.");
+  } catch (e) {
+    toast.error(e.message || "Impossible de supprimer cette commande");
+  } finally {
+    setDeletingOrderId(null);
+  }
+};
+
+const handleDeleteAppointment = async (appointmentId) => {
+  if (!appointmentId) return;
+  const confirmed = window.confirm("Supprimer définitivement cette réservation annulée du dashboard pro ?");
+  if (!confirmed) return;
+  try {
+    setDeletingAppointmentId(appointmentId);
+    await apiFetch(`/appointments/${appointmentId}/history`, { method: "DELETE" });
+    setAppointments((prev) => prev.filter((appointment) => appointment.id !== appointmentId));
+    setExpandedApptId((prev) => (prev === appointmentId ? null : prev));
+    setChatAppointment((prev) => (prev?.id === appointmentId ? null : prev));
+    if (chatAppointment?.id === appointmentId) {
+      setShowChatModal(false);
+    }
+    toast.success("Réservation supprimée du dashboard.");
+  } catch (e) {
+    toast.error(e.message || "Impossible de supprimer cette réservation");
+  } finally {
+    setDeletingAppointmentId(null);
+  }
+};
+
 const filteredProducts = useMemo(() => {
   let list = products;
   if (productQuery) {
@@ -2756,6 +2796,8 @@ active
         const hasReviewablePayment = isDirectMobileOrder && !!order.payment;
         const canReviewProof = hasReviewablePayment && (!proofStatusKey || proofStatusKey === "PENDING");
         const isExpanded = expandedOrderId === order.id;
+        const canDeleteOrder = statusKey === "CANCELLED";
+        const isDeletingOrder = deletingOrderId === order.id;
         const firstItemLabel = order.items?.[0]?.product?.name || "Article";
         const extraItemsLabel = itemCount > 1 ? ` +${itemCount - 1}` : "";
 
@@ -2958,6 +3000,13 @@ active
                         )}
                         <Button variant="secondary" className="px-3 py-1.5 text-sm text-red-600" onClick={() => handleOrderStatus(order.id, "CANCELLED")}>
                           <FiX className="mr-1" /> Annuler
+                        </Button>
+                      </div>
+                    )}
+                    {canDeleteOrder && (
+                      <div className="pt-1">
+                        <Button variant="danger" className="px-3 py-1.5 text-sm" onClick={() => handleDeleteOrder(order.id)} disabled={isDeletingOrder}>
+                          <FiTrash2 className="mr-1" /> {isDeletingOrder ? "Suppression..." : "Supprimer"}
                         </Button>
                       </div>
                     )}
@@ -3487,6 +3536,8 @@ subtitle="Les réservations apparaîtront ici."
     const isExpanded = expandedApptId === row.id;
     const isCancelled = row.status === "cancelled";
     const isCompleted = row.status === "completed";
+    const canDeleteAppointment = isCancelled;
+    const isDeletingAppointment = deletingAppointmentId === row.id;
 
     return (
       <div
@@ -3570,6 +3621,11 @@ subtitle="Les réservations apparaîtront ici."
                   <Button variant="secondary" className="px-3 py-1.5 text-sm" onClick={() => { setChatAppointment(row); setShowChatModal(true); }}>
                     <FiMessageCircle className="mr-1" /> Chat
                   </Button>
+                  {canDeleteAppointment && (
+                    <Button variant="danger" className="px-3 py-1.5 text-sm" onClick={() => handleDeleteAppointment(row.id)} disabled={isDeletingAppointment}>
+                      <FiTrash2 className="mr-1" /> {isDeletingAppointment ? "Suppression..." : "Supprimer"}
+                    </Button>
+                  )}
                 </div>
               </div>
             </motion.div>

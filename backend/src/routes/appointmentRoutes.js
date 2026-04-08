@@ -1002,6 +1002,75 @@ router.delete('/:id', authenticate, async (req, res, next) => {
 });
 
 /**
+ * Remove a cancelled appointment from history
+ * DELETE /api/appointments/:id/history
+ */
+router.delete('/:id/history', authenticate, async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const appointment = await prisma.appointment.findUnique({
+      where: { id },
+      include: {
+        salon: { select: { ownerId: true } },
+        payment: { select: { id: true } },
+      },
+    });
+
+    if (!appointment) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Reservation introuvable',
+      });
+    }
+
+    const isClient = appointment.clientId === req.user.id;
+    const isOwner =
+      (req.user.role === 'PRO' || req.user.role === 'SALON_OWNER') &&
+      appointment.salon?.ownerId === req.user.id;
+    const isAdmin = req.user.role === 'ADMIN' || req.user.role === 'SUPER_ADMIN';
+
+    if (!isClient && !isOwner && !isAdmin) {
+      return res.status(403).json({
+        status: 'error',
+        message: 'Acces interdit',
+      });
+    }
+
+    const status = String(appointment.status || '').toUpperCase();
+    if (status !== 'CANCELLED') {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Seules les reservations annulees peuvent etre supprimees.',
+      });
+    }
+
+    await prisma.$transaction(async (tx) => {
+      if (appointment.payment?.id) {
+        await tx.payment.delete({
+          where: { id: appointment.payment.id },
+        }).catch(() => {});
+      }
+
+      await tx.chatMessage.deleteMany({
+        where: { appointmentId: id },
+      });
+
+      await tx.appointment.delete({
+        where: { id },
+      });
+    });
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'Reservation supprimee de l historique.',
+    });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+/**
  * Get available time slots for a coiffeur on a specific date
  * GET /api/appointments/availability/:coiffeurId
  * Query: date
