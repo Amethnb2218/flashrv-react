@@ -11,10 +11,7 @@ import {
 import { clearProOnboardingDraft, isProUser } from '../utils/proOnboarding'
 import {
   buildAuthHeaders,
-  clearAuthToken,
   clearCsrfToken,
-  readAuthToken,
-  writeAuthToken,
   writeCsrfToken,
 } from '../utils/authToken'
 import { resolveApiBase } from '../utils/apiBase'
@@ -78,12 +75,11 @@ const clearStoredUser = () => {
 }
 
 const initialUser = readStoredUser()
-const initialToken = readAuthToken()
 
 const initialState = {
   user: initialUser,
-  token: initialToken,
-  isAuthenticated: Boolean(initialUser && initialToken),
+  token: null,
+  isAuthenticated: Boolean(initialUser),
   isLoading: true,
 }
 
@@ -127,23 +123,7 @@ export function AuthProvider({ children }) {
   const API_BASE = resolveApiBase()
   const authHeaders = (headers = {}, method = 'GET') => buildAuthHeaders(headers, method)
 
-  const restoreCachedSession = () => {
-    const cachedUser = readStoredUser()
-    const cachedToken = readAuthToken()
-
-    if (!cachedUser || !cachedToken) {
-      return false
-    }
-
-    dispatch({
-      type: 'LOGIN',
-      payload: { user: cachedUser, token: cachedToken }
-    })
-
-    return true
-  }
-
-  const hydrateProAccountState = async (user, tokenOverride = null) => {
+  const hydrateProAccountState = async (user) => {
     const normalizedUser = normalizeUserShape(user)
 
     if (!isProUser(normalizedUser)) {
@@ -153,9 +133,7 @@ export function AuthProvider({ children }) {
     try {
       const response = await fetch(`${API_BASE}/salons/me`, {
         method: 'GET',
-        headers: tokenOverride
-          ? buildAuthHeaders({ Authorization: `Bearer ${tokenOverride}` }, 'GET')
-          : authHeaders({}, 'GET'),
+        headers: authHeaders({}, 'GET'),
         credentials: 'include',
         cache: 'no-store',
       })
@@ -226,30 +204,26 @@ export function AuthProvider({ children }) {
     return normalizedUser
   }
 
-  const persistAuthenticatedUser = async (apiUser, apiToken = null, apiCsrfToken = null) => {
+  const persistAuthenticatedUser = async (apiUser, apiCsrfToken = null) => {
     const restoredUser = restorePendingDeletionIfNeeded(apiUser)
-    if (apiToken) {
-      writeAuthToken(apiToken)
-    }
     if (apiCsrfToken) {
       writeCsrfToken(apiCsrfToken)
     }
-    const hydratedUser = await hydrateProAccountState(restoredUser, apiToken)
+    const hydratedUser = await hydrateProAccountState(restoredUser)
     const normalizedUser = normalizeUserShape(hydratedUser)
 
     writeStoredUser(normalizedUser)
-    const activeToken = apiToken || readAuthToken()
 
     dispatch({
       type: 'LOGIN',
-      payload: { user: normalizedUser, token: activeToken }
+      payload: { user: normalizedUser, token: null }
     })
 
     subscribeToPush().catch(() => {})
     return normalizedUser
   }
 
-  // Check for saved auth on mount et synchronise le cookie "token"
+  // Check for saved auth on mount using the httpOnly cookie as the source of truth.
   useEffect(() => {
     const restoreAuth = async () => {
       try {
@@ -261,11 +235,7 @@ export function AuthProvider({ children }) {
         })
 
         if (!response.ok) {
-          if (restoreCachedSession()) {
-            return
-          }
           clearStoredUser()
-          clearAuthToken()
           clearCsrfToken()
           dispatch({ type: 'SET_LOADING', payload: false })
           return
@@ -275,7 +245,6 @@ export function AuthProvider({ children }) {
         const apiUser = data?.data?.user
         if (!apiUser) {
           clearStoredUser()
-          clearAuthToken()
           clearCsrfToken()
           dispatch({ type: 'SET_LOADING', payload: false })
           return
@@ -283,16 +252,19 @@ export function AuthProvider({ children }) {
 
         await persistAuthenticatedUser(
           apiUser,
-          data?.data?.token || null,
           data?.data?.csrfToken || null
         )
       } catch (error) {
         console.error('Error parsing saved user:', error)
-        if (restoreCachedSession()) {
+        if (initialUser) {
+          dispatch({
+            type: 'LOGIN',
+            payload: { user: initialUser, token: null }
+          })
+          dispatch({ type: 'SET_LOADING', payload: false })
           return
         }
         clearStoredUser()
-        clearAuthToken()
         clearCsrfToken()
         dispatch({ type: 'SET_LOADING', payload: false })
       }
@@ -315,10 +287,9 @@ export function AuthProvider({ children }) {
         throw new Error(data.message || 'Identifiants incorrects');
       }
       const user = data.data?.user;
-      const token = data.data?.token || null;
       const csrfToken = data.data?.csrfToken || null;
       if (user) {
-        return await persistAuthenticatedUser(user, token, csrfToken);
+        return await persistAuthenticatedUser(user, csrfToken);
       } else {
         throw new Error('Utilisateur manquant');
       }
@@ -326,32 +297,6 @@ export function AuthProvider({ children }) {
       throw err;
     }
   };
-
-  // Login via Google OAuth uniquement (backend /api/auth/google)
-  const loginGoogle = async ({ credential, customName, accountType }) => {
-    try {
-      const res = await fetch(`${API_BASE}/auth/google`, {
-        method: 'POST',
-        headers: authHeaders({ 'Content-Type': 'application/json' }, 'POST'),
-        credentials: 'include',
-        body: JSON.stringify({ credential, customName, accountType }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.message || 'Erreur de connexion Google');
-      }
-      let user = data.data?.user;
-      const token = data.data?.token || null;
-      const csrfToken = data.data?.csrfToken || null;
-      if (user) {
-        return await persistAuthenticatedUser(user, token, csrfToken);
-      } else {
-        throw new Error('Utilisateur Google manquant');
-      }
-    } catch (err) {
-      throw err;
-    }
-  }
 
   const register = async (userData) => {
     // Appel API backend pour créer un vrai utilisateur
@@ -366,10 +311,9 @@ export function AuthProvider({ children }) {
       throw new Error(data.message || 'Erreur lors de l\'inscription');
     }
     const user = data.data?.user;
-    const token = data.data?.token || null;
     const csrfToken = data.data?.csrfToken || null;
     if (user) {
-      return await persistAuthenticatedUser(user, token, csrfToken);
+      return await persistAuthenticatedUser(user, csrfToken);
     } else {
       throw new Error('Utilisateur manquant');
     }
@@ -386,7 +330,6 @@ export function AuthProvider({ children }) {
     } catch (error) {
       console.error('Logout error:', error)
     }
-    clearAuthToken()
     clearCsrfToken()
     clearStoredUser()
     sessionStorage.removeItem('flashrv_booking')
@@ -410,12 +353,11 @@ export function AuthProvider({ children }) {
         throw new Error(data.message || 'Erreur de connexion Google');
       }
       const user = data.data?.user;
-      const token = data.data?.token || null;
       const csrfToken = data.data?.csrfToken || null;
       if (!user) {
         throw new Error('Utilisateur Google manquant');
       }
-      return await persistAuthenticatedUser(user, token, csrfToken);
+      return await persistAuthenticatedUser(user, csrfToken);
     } catch (error) {
       console.error('Google login error:', error);
       throw error;
@@ -425,7 +367,7 @@ export function AuthProvider({ children }) {
 
   // Basic checkAuth implementation
   const checkAuth = () => {
-    return Boolean(readStoredUser() && readAuthToken())
+    return Boolean(readStoredUser())
   }
 
   const updateUser = (userData) => {

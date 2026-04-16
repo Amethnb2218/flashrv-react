@@ -1,4 +1,4 @@
-import { buildAuthHeaders } from '../utils/authToken'
+import { buildAuthHeaders, writeCsrfToken } from '../utils/authToken'
 
 const BASE_URL = import.meta.env.VITE_API_URL || '/api'
 const DEFAULT_TIMEOUT_MS = Number(import.meta.env.VITE_API_TIMEOUT_MS || 15000)
@@ -108,6 +108,25 @@ async function apiFetch(path, { method = 'GET', body, headers = {}, timeoutMs = 
     } else {
       data = null
     }
+  }
+
+  // Auto-refresh on 401 (token expired) - retry once
+  if (res.status === 401 && !options._retried) {
+    try {
+      const refreshRes = await fetch(`${BASE_URL}/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: buildAuthHeaders({ 'Content-Type': 'application/json' }, 'POST'),
+      })
+      if (refreshRes.ok) {
+        const refreshData = await refreshRes.json().catch(() => null)
+        const nextCsrfToken = refreshData?.data?.csrfToken || null
+        if (nextCsrfToken) {
+          writeCsrfToken(nextCsrfToken)
+        }
+        return apiFetch(path, { method, body, headers, timeoutMs, ...options, _retried: true })
+      }
+    } catch (_) {}
   }
 
   if (!res.ok) {

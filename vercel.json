@@ -23,7 +23,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; script-src 'self' https://accounts.google.com https://apis.google.com https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://jolofera.com https://www.jolofera.com https://api.jolofera.com https://flashrv-react-backend-xtlu2.ondigitalocean.app https://*.ondigitalocean.app https://oauth2.googleapis.com https://www.googleapis.com https://accounts.google.com wss: ws:; frame-src 'self' https://accounts.google.com https://www.google.com; worker-src 'self' blob:; manifest-src 'self'; form-action 'self'; upgrade-insecure-requests"
+          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; script-src 'self' https://accounts.google.com https://apis.google.com https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://jolofera.com https://www.jolofera.com https://api.jolofera.com https://oauth2.googleapis.com https://www.googleapis.com https://accounts.google.com wss://api.jolofera.com; frame-src 'self' https://accounts.google.com https://www.google.com; worker-src 'self' blob:; manifest-src 'self'; form-action 'self'; upgrade-insecure-requests"
         },
         { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains; preload" },
         { "key": "Cross-Origin-Opener-Policy", "value": "same-origin-allow-popups" },
@@ -32,6 +32,12 @@
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
         { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=(), payment=(self)" },
         { "key": "X-Permitted-Cross-Domain-Policies", "value": "none" }
+      ]
+    },
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
     },
     {
@@ -78,6 +84,12 @@
       ]
     },
     {
+      "source": "/sw-push.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate" }
+      ]
+    },
+    {
       "source": "/robots.txt",
       "headers": [
         { "key": "Content-Type", "value": "text/plain" },
@@ -96,4 +108,3 @@
     { "source": "/((?!assets|favicon|icons|manifest\\.json|sw\\.js|robots\\.txt|sitemap\\.xml|4c4ea7c6-9a91-49be-8fd0-2ca80a88d1f8\\.txt).*)", "destination": "/index.html" }
   ]
 }
-

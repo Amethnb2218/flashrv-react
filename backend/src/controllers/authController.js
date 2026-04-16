@@ -5,7 +5,7 @@
  */
 async function register(req, res, next) {
   try {
-    const { name, email, phone, password, role, googleSub } = req.body || {};
+    const { name, email, phone, password, role } = req.body || {};
     if (!name || !email || !password || !role) {
       return res.status(400).json({ status: 'error', message: 'Missing required fields' });
     }
@@ -39,7 +39,6 @@ async function register(req, res, next) {
       phoneNumber: phone,
       role: normalizedRole,
       status: userStatus,
-      googleSub: googleSub || null,
       password: hashedPassword,
     };
     const user = await prisma.user.create({
@@ -51,15 +50,16 @@ async function register(req, res, next) {
     if (normalizedRole === 'PRO') {
       sendProPendingNotification({ proName: user.name, proEmail: user.email });
     }
-    // Générer un token (mock, à sécuriser en prod)
     const token = generateToken({ userId: user.id, email: user.email, role: user.role });
+    const refreshToken = generateRefreshToken({ userId: user.id });
     const csrfToken = buildCsrfToken(token);
     setTokenCookie(res, token);
+    setRefreshTokenCookie(res, refreshToken);
     const { password: _pw, ...safeUser } = user;
     return res.status(201).json({
       status: 'success',
       message: 'Votre compte a ete cree avec succes.',
-      data: { user: safeUser, token, csrfToken },
+      data: { user: safeUser, csrfToken },
     });
   } catch (error) {
     return next(error);
@@ -105,13 +105,15 @@ async function login(req, res, next) {
     }
     clearLoginFailures(normalizedIdentifier);
     const token = generateToken({ userId: user.id, email: user.email, role: user.role });
+    const refreshToken = generateRefreshToken({ userId: user.id });
     const csrfToken = buildCsrfToken(token);
     setTokenCookie(res, token);
+    setRefreshTokenCookie(res, refreshToken);
     const { password: _pw, ...safeUser } = user;
     return res.json({
       status: 'success',
       message: 'Connexion etablie avec succes.',
-      data: { user: safeUser, token, csrfToken },
+      data: { user: safeUser, csrfToken },
     });
   } catch (error) {
     // Prisma network/runtime errors should not surface as generic 500 auth failures.
@@ -125,7 +127,7 @@ async function login(req, res, next) {
 }
 const prisma = require("../lib/prisma");
 const { verifyGoogleToken } = require("../services/googleAuth");
-const { generateToken, setTokenCookie, clearTokenCookie } = require("../utils/jwt");
+const { generateToken, generateRefreshToken, setTokenCookie, setRefreshTokenCookie, clearTokenCookie, verifyRefreshToken } = require("../utils/jwt");
 const { buildCsrfToken } = require("../utils/csrf");
 const { ROLES, STATUS } = require("../middleware/auth");
 const { sendWelcomeEmail, sendProPendingNotification } = require("../services/emailService");
@@ -178,28 +180,16 @@ async function verifyPasswordWithLegacyMigration(user, rawPassword) {
 
   if (!stored || !plain) return false;
 
-  if (isBcryptHash(stored)) {
-    try {
-      return await bcrypt.compare(plain, stored);
-    } catch (_) {
-      return false;
-    }
+  if (!isBcryptHash(stored)) {
+    // Legacy non-bcrypt passwords are rejected. User must reset password.
+    return false;
   }
-
-  // Legacy fallback: some old accounts may still have non-bcrypt passwords.
-  if (stored !== plain) return false;
 
   try {
-    const hashed = await bcrypt.hash(plain, 10);
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { password: hashed },
-    });
+    return await bcrypt.compare(plain, stored);
   } catch (_) {
-    // Keep login successful even if migration fails; it can be retried next login.
+    return false;
   }
-
-  return true;
 }
 
 /**
@@ -267,9 +257,6 @@ async function googleAuth(req, res, next) {
           email: email,
         },
       });
-      console.log(
-        `✅ User logged in: ${user.email} (role: ${user.role}, status: ${user.status})`
-      );
     } else {
       // No user with this googleSub — check if email already exists (manual account)
       const existingByEmail = await prisma.user.findUnique({ where: { email } });
@@ -284,9 +271,6 @@ async function googleAuth(req, res, next) {
           },
         });
         accountLinked = true;
-        console.log(
-          `🔗 Google account linked to existing user: ${user.email} (role: ${user.role})`
-        );
       } else {
         // Create new user
         isNewUser = true;
@@ -304,9 +288,6 @@ async function googleAuth(req, res, next) {
             password: hashedPassword,
           },
         });
-        console.log(
-          `✅ New ${role} registered: ${user.email} (${user.name}) - Status: ${user.status}`
-        );
         // Email de confirmation (non-bloquant)
         sendWelcomeEmail({ to: user.email, name: user.name });
         // Notifier les admins si c'est un PRO (non-bloquant)
@@ -316,18 +297,13 @@ async function googleAuth(req, res, next) {
       }
     }
 
-    // Generate JWT token
-    const token = generateToken({
-      userId: user.id,
-      email: user.email,
-      role: user.role,
-    });
+    const token = generateToken({ userId: user.id, email: user.email, role: user.role });
+    const refreshToken = generateRefreshToken({ userId: user.id });
     const csrfToken = buildCsrfToken(token);
-
-    // Set token as httpOnly cookie
     setTokenCookie(res, token);
+    setRefreshTokenCookie(res, refreshToken);
 
-    // Return user info (without sensitive data) + token (comme /register)
+    // Return user info without exposing the access token to browser storage.
     return res.status(200).json({
       status: "success",
       message: accountLinked
@@ -346,14 +322,12 @@ async function googleAuth(req, res, next) {
           status: user.status,
           phoneNumber: user.phoneNumber,
         },
-        token,
         csrfToken,
         isNewUser,
         accountLinked,
       },
     });
   } catch (error) {
-    console.error("Google auth error:", error);
     return next(error);
   }
 }
@@ -495,6 +469,35 @@ async function deleteAccount(req, res, next) {
   }
 }
 
+async function refreshAccessToken(req, res, next) {
+  try {
+    const token = req.cookies?.refreshToken;
+    if (!token) {
+      return res.status(401).json({ status: 'error', message: 'Refresh token requis.' });
+    }
+    let payload;
+    try {
+      payload = verifyRefreshToken(token);
+    } catch (_) {
+      clearTokenCookie(res);
+      return res.status(401).json({ status: 'error', message: 'Refresh token invalide ou expire.' });
+    }
+    const user = await prisma.user.findUnique({ where: { id: payload.userId } });
+    if (!user) {
+      clearTokenCookie(res);
+      return res.status(401).json({ status: 'error', message: 'Utilisateur introuvable.' });
+    }
+    const newToken = generateToken({ userId: user.id, email: user.email, role: user.role });
+    const newRefreshToken = generateRefreshToken({ userId: user.id });
+    const csrfToken = buildCsrfToken(newToken);
+    setTokenCookie(res, newToken);
+    setRefreshTokenCookie(res, newRefreshToken);
+    return res.json({ status: 'success', data: { csrfToken } });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 module.exports = {
   googleAuth,
   getSession,
@@ -504,4 +507,5 @@ module.exports = {
   deleteAccount,
   register,
   login,
+  refreshAccessToken,
 };

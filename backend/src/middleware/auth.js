@@ -129,7 +129,7 @@ async function authenticate(req, res, next) {
     req.user = user;
     next();
   } catch (err) {
-    console.error('[AUTH] Erreur inattendue:', err);
+    if (process.env.NODE_ENV === 'development') console.error('[AUTH] Erreur inattendue:', err);
     return res.status(401).json({
       status: 'error',
       message: 'Authentication failed',
@@ -313,6 +313,18 @@ function requireSuperAdmin(req, res, next) {
   next();
 }
 
+function requireTrustedOrigin(req, res, next) {
+  const requestOrigin = getRequestOrigin(req);
+  if (!requestOrigin || !isOriginAllowed(requestOrigin, { allowNoOrigin: false })) {
+    return res.status(403).json({
+      status: 'error',
+      message: 'Origin not allowed',
+      code: 'ORIGIN_INVALID',
+    });
+  }
+  next();
+}
+
 module.exports = {
   authenticate,
   optionalAuth,
@@ -320,6 +332,7 @@ module.exports = {
   requireApprovedPro,
   requireAdmin,
   requireSuperAdmin,
+  requireTrustedOrigin,
   ROLES,
   STATUS,
 };

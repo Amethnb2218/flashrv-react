@@ -57,6 +57,12 @@ const generateReference = () => {
   return 'FRV-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
 };
 
+const normalizeCurrencyAmount = (value) => {
+  const amount = Number(value);
+  if (!Number.isFinite(amount) || amount < 0) return 0;
+  return Math.round(amount * 100) / 100;
+};
+
 const getBaseUrls = () => {
   const frontendBase =
     resolvePublicBaseUrl(process.env.BASE_URL, process.env.FRONTEND_URL, process.env.ALLOWED_ORIGINS) ||
@@ -965,51 +971,98 @@ router.post('/init', authenticate, async (req, res, next) => {
 router.post('/confirm-on-site', authenticate, async (req, res, next) => {
   try {
     const { bookingId, amount } = req.body;
+    if (!bookingId) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'bookingId requis',
+      });
+    }
+
     const reference = generateReference();
-    const appointment = bookingId
-      ? await prisma.appointment.findUnique({
-          where: { id: bookingId },
-          include: {
-            salon: { select: { name: true } },
-          },
-        })
-      : null;
+    const appointment = await prisma.appointment.findUnique({
+      where: { id: bookingId },
+      include: {
+        salon: { select: { id: true, name: true, ownerId: true } },
+        payment: { select: { id: true, status: true, amount: true, method: true } },
+      },
+    });
+
+    if (!appointment) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Reservation introuvable',
+      });
+    }
+
+    const isClient = appointment.clientId === req.user.id;
+    const isOwner = appointment.salon?.ownerId === req.user.id;
+    const isAdmin = ['ADMIN', 'SUPER_ADMIN'].includes(String(req.user?.role || '').toUpperCase());
+    if (!isClient && !isOwner && !isAdmin) {
+      return res.status(403).json({
+        status: 'error',
+        message: 'Acces interdit',
+      });
+    }
+
+    const currentStatus = String(appointment.status || '').toUpperCase();
+    if (['CANCELLED', 'NO_SHOW', 'COMPLETED'].includes(currentStatus)) {
+      return res.status(409).json({
+        status: 'error',
+        message: 'Cette reservation ne peut plus etre marquee en paiement sur place.',
+      });
+    }
+
+    if (appointment.payment && String(appointment.payment.status || '').toUpperCase() !== 'FAILED') {
+      return res.status(409).json({
+        status: 'error',
+        message: 'Un paiement existe deja pour cette reservation.',
+      });
+    }
+
+    const expectedAmount = normalizeCurrencyAmount(appointment.totalPrice);
+    const requestedAmount = normalizeCurrencyAmount(amount);
+    if (requestedAmount > 0 && requestedAmount !== expectedAmount) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Le montant fourni ne correspond pas au montant de la reservation.',
+      });
+    }
+
+    const amountToRecord = expectedAmount;
 
     const payment = await prisma.payment.create({
       data: {
         transactionId: `ONSITE-${Date.now()}`,
-        amount: amount || 0,
+        amount: amountToRecord,
         fees: 0,
-        totalAmount: amount || 0,
+        totalAmount: amountToRecord,
         currency: 'XOF',
         method: 'PAY_ON_SITE',
         status: 'ON_SITE',
         reference,
         phoneNumber: null,
-        appointmentId: bookingId || null,
+        appointmentId: bookingId,
         userId: req.user.id,
       },
     });
 
-    if (bookingId) {
-      await prisma.appointment.update({
-        where: { id: bookingId },
-        data: { status: 'CONFIRMED_ON_SITE' },
-      }).catch(() => {});
+    await prisma.appointment.update({
+      where: { id: bookingId },
+      data: { status: 'CONFIRMED_ON_SITE' },
+    }).catch(() => {});
 
-      if (appointment?.clientId === req.user.id) {
-        try {
-          const notification = await createBookingNotification({
-            userId: req.user.id,
-            salonName: appointment.salon?.name || 'le salon',
-            date: appointment.date,
-            startTime: appointment.startTime,
-            message: `Reservation confirmee chez ${appointment.salon?.name || 'le salon'} le ${new Date(appointment.date).toLocaleDateString('fr-FR')} a ${appointment.startTime}. Paiement au salon.`,
-          });
-          pushNotification(notification.userId, notification);
-        } catch (error) {
-          console.error('On-site booking notification error:', error.message);
-        }
+    if (appointment.clientId === req.user.id) {
+      try {
+        const notification = await createBookingNotification({
+          userId: req.user.id,
+          salonName: appointment.salon?.name || 'le salon',
+          date: appointment.date,
+          startTime: appointment.startTime,
+          message: `Reservation confirmee chez ${appointment.salon?.name || 'le salon'} le ${new Date(appointment.date).toLocaleDateString('fr-FR')} a ${appointment.startTime}. Paiement au salon.`,
+        });
+        pushNotification(notification.userId, notification);
+      } catch (error) {
+        console.error('On-site booking notification error:', error.message);
       }
     }
 
@@ -1217,4 +1270,3 @@ router.get('/me', authenticate, async (req, res, next) => {
 // until Wave API key is obtained and axios is added to dependencies.
 
 module.exports = router;
-

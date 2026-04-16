@@ -3,7 +3,7 @@ const rateLimit = require('express-rate-limit');
 const router = express.Router();
 
 const authController = require("../controllers/authController");
-const { authenticate, optionalAuth } = require("../middleware/auth");
+const { authenticate, optionalAuth, requireTrustedOrigin } = require("../middleware/auth");
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -39,28 +39,35 @@ const googleAuthLimiter = rateLimit({
  * @access  Public
  * @body    { token: string } - Token ID de Google
  */
-router.post("/google", googleAuthLimiter, authController.googleAuth);
+router.post("/google", requireTrustedOrigin, googleAuthLimiter, authController.googleAuth);
 
 /**
  * @route   POST /api/auth/register
  * @desc    Inscription classique (email/password)
  * @access  Public
  */
-router.post("/register", registerLimiter, authController.register);
+router.post("/register", requireTrustedOrigin, registerLimiter, authController.register);
 
 /**
  * @route   POST /api/auth/login
  * @desc    Connexion classique (email/password)
  * @access  Public
  */
-router.post("/login", loginLimiter, authController.login);
+router.post("/login", requireTrustedOrigin, loginLimiter, authController.login);
 
 /**
  * @route   POST /api/auth/logout
  * @desc    Déconnexion de l'utilisateur
  * @access  Public
  */
-router.post("/logout", authController.logout);
+router.post("/logout", requireTrustedOrigin, authController.logout);
+
+/**
+ * @route   POST /api/auth/refresh
+ * @desc    Renouveler le token d'acces via le refresh token
+ * @access  Public (cookie refreshToken requis)
+ */
+router.post("/refresh", requireTrustedOrigin, authController.refreshAccessToken);
 
 /* ===========================================
    PROTECTED ROUTES (authentification requise)

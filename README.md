@@ -177,6 +177,11 @@ The repository is structured for a split deployment model:
 Review [vercel.json](./vercel.json)
 for the frontend routing and security header configuration.
 
+For production handoff and redeploy instructions, see:
+
+- [docs/02-guide-deploiement-internet.md](./docs/02-guide-deploiement-internet.md)
+- [docs/03-deploiement-digitalocean-ionos-vercel.md](./docs/03-deploiement-digitalocean-ionos-vercel.md)
+
 ## Contribution Policy
 
 This repository is private and proprietary. Contributions, forks, reuse, and

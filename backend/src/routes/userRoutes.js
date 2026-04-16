@@ -287,25 +287,50 @@ router.put('/update-profile', authenticate, profileUpdateLimiter, async (req, re
 router.patch('/:id/role', authenticate, authorize('ADMIN'), async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { role } = req.body;
+    const requestedRole = String(req.body?.role || '').trim().toUpperCase();
+    const actorRole = String(req.user?.role || '').trim().toUpperCase();
 
     const validRoles = ['CLIENT', 'COIFFEUR', 'SALON_OWNER', 'ADMIN'];
-    if (!validRoles.includes(role)) {
+    if (!validRoles.includes(requestedRole)) {
       return res.status(400).json({
         status: 'error',
         message: `Invalid role. Must be one of: ${validRoles.join(', ')}`,
       });
     }
 
+    const targetUser = await prisma.user.findUnique({
+      where: { id },
+      select: { id: true, role: true, email: true, name: true },
+    });
+
+    if (!targetUser) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'User not found',
+      });
+    }
+
+    const targetRole = String(targetUser.role || '').trim().toUpperCase();
+    const isSuperAdmin = actorRole === 'SUPER_ADMIN';
+
+    if (requestedRole === 'ADMIN' && !isSuperAdmin) {
+      return res.status(403).json({
+        status: 'error',
+        message: 'Only SUPER_ADMIN can promote a user to ADMIN',
+      });
+    }
+
+    if (targetRole === 'ADMIN' && !isSuperAdmin) {
+      return res.status(403).json({
+        status: 'error',
+        message: 'Only SUPER_ADMIN can modify another ADMIN account',
+      });
+    }
+
     const user = await prisma.user.update({
       where: { id },
-      data: { role },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-      },
+      data: { role: requestedRole },
+      select: { id: true, email: true, name: true, role: true },
     });
 
     res.status(200).json({
