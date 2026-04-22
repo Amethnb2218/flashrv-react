@@ -355,7 +355,7 @@ className
 );
 }
 
-function Badge({ tone = "gray", children }) {
+function Badge({ tone = "gray", className = "", children }) {
 const toneClasses = {
 gray: "bg-primary-100 text-primary-800",
 amber: "bg-[#fff2df] text-[#9d4f0d]",
@@ -369,7 +369,8 @@ return (
 <span
 className={cx(
 "inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold",
-toneClasses[tone] || toneClasses.gray
+toneClasses[tone] || toneClasses.gray,
+className
 )}
 >
 {children}
@@ -3548,27 +3549,33 @@ subtitle="Les réservations apparaîtront ici."
         <button
           type="button"
           onClick={() => setExpandedApptId(isExpanded ? null : row.id)}
-          className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-primary-50 transition"
+          className="w-full px-4 py-3 text-left transition hover:bg-primary-50"
         >
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-3">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="font-semibold text-primary-900 text-sm truncate">{row.clientName || "Client"}</span>
               <span className="text-xs text-primary-500 truncate">{row.serviceName || "Service"}</span>
               {row.service?.duration && <span className="text-[10px] text-primary-400">{row.service.duration}min</span>}
             </div>
-            <div className="flex items-center gap-2 mt-1 flex-wrap">
-              <span className="text-xs text-primary-500 flex items-center gap-1"><FiCalendar className="w-3 h-3" /> {formatDate(row.date)}</span>
-              <span className="text-xs text-primary-500 flex items-center gap-1"><FiClock className="w-3 h-3" /> {toTime(row.time) || "—"}</span>
+            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+              <span className="min-w-0 text-xs text-primary-500 flex items-center gap-1"><FiCalendar className="w-3 h-3 shrink-0" /> {formatDate(row.date)}</span>
+              <span className="min-w-0 text-xs text-primary-500 flex items-center gap-1"><FiClock className="w-3 h-3 shrink-0" /> {toTime(row.time) || "—"}</span>
               <span className="font-bold text-gold-600 text-sm">{formatMoney(row.amount)}</span>
             </div>
           </div>
-          <Badge tone={statusTone}>{statusLabel}</Badge>
-          {!isCompleted && !isCancelled && (
-            <Button variant="primary" className="!px-2.5 !py-1.5 !text-xs hidden sm:flex" onClick={(e) => { e.stopPropagation(); setAppointmentStatus(row.id, "completed"); }}>
-              <FiCheck className="mr-1 w-3 h-3" /> Terminer
-            </Button>
-          )}
-          <FiChevronDown className={`w-4 h-4 text-primary-400 shrink-0 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+          <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:flex-none sm:justify-end">
+            <Badge tone={statusTone} className="max-w-full shrink min-w-0 whitespace-normal break-words text-left">
+              {statusLabel}
+            </Badge>
+            {!isCompleted && !isCancelled && (
+              <Button variant="primary" className="!hidden !px-2.5 !py-1.5 !text-xs sm:!inline-flex" onClick={(e) => { e.stopPropagation(); setAppointmentStatus(row.id, "completed"); }}>
+                <FiCheck className="mr-1 w-3 h-3" /> Terminer
+              </Button>
+            )}
+            <FiChevronDown className={`h-4 w-4 shrink-0 text-primary-400 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+          </div>
+          </div>
         </button>
 
         {/* Expanded details */}
@@ -3596,10 +3603,12 @@ subtitle="Les réservations apparaîtront ici."
                 </div>
 
                 {/* Payment info */}
-                <div className="flex items-center justify-between text-sm bg-primary-50 rounded-lg px-3 py-2">
-                  <div className="flex items-center gap-2">
+                <div className="flex flex-col gap-2 rounded-lg bg-primary-50 px-3 py-2 text-sm sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex min-w-0 items-center gap-2">
                     <FiCreditCard className="w-4 h-4 text-primary-400" />
-                    <Badge tone={paymentTone}>{paymentLabel}</Badge>
+                    <Badge tone={paymentTone} className="max-w-full min-w-0 whitespace-normal break-words">
+                      {paymentLabel}
+                    </Badge>
                   </div>
                   <span className="font-bold text-gold-600">{formatMoney(row.amount)}</span>
                 </div>

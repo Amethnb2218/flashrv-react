@@ -1,5 +1,27 @@
 const express = require('express');
 const router = express.Router();
+
+const normalizeClientName = (firstValue, lastValue, fallbackValue = '') => {
+  const submittedFullName = [firstValue, lastValue].filter(Boolean).join(' ').trim();
+  const normalizedFullName = String(submittedFullName || fallbackValue || '')
+    .trim()
+    .replace(/\s+/g, ' ');
+
+  if (!normalizedFullName) {
+    return {
+      firstName: '',
+      lastName: '',
+      fullName: '',
+    };
+  }
+
+  const parts = normalizedFullName.split(' ');
+  return {
+    firstName: parts[0] || '',
+    lastName: parts.slice(1).join(' '),
+    fullName: normalizedFullName,
+  };
+};
 const prisma = require('../lib/prisma');
 const { authenticate, authorize } = require('../middleware/auth');
 const { pushNotification, pushChatMessage } = require('../realtime/hub');
@@ -174,18 +196,24 @@ router.post('/', authenticate, async (req, res, next) => {
       });
     }
 
-    const firstName = String(clientFirstName || '').trim();
-    const lastName = String(clientLastName || '').trim();
+    const {
+      firstName,
+      lastName,
+      fullName,
+    } = normalizeClientName(
+      String(clientFirstName || '').trim(),
+      String(clientLastName || '').trim(),
+      String(req.user?.name || '').trim(),
+    );
     const phone = String(clientPhone || '').trim();
     const address = clientAddress == null ? '' : String(clientAddress).trim();
-    if (!firstName || !lastName || !phone) {
+    if (!fullName || !phone) {
       return res.status(400).json({
         status: 'error',
-        message: 'Client first name, last name, and phone are required',
+        message: 'Client name and phone are required',
       });
     }
 
-    const fullName = `${firstName} ${lastName}`.trim();
     await prisma.user.update({
       where: { id: req.user.id },
       data: {

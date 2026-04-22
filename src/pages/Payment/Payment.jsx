@@ -61,6 +61,28 @@ const DUPLICATE_CONFLICT_PATTERNS = [
   'duplicate',
 ]
 
+const normalizeClientName = (firstValue, lastValue, fallbackValue = '') => {
+  const submittedFullName = [firstValue, lastValue].filter(Boolean).join(' ').trim()
+  const normalizedFullName = String(submittedFullName || fallbackValue || '')
+    .trim()
+    .replace(/\s+/g, ' ')
+
+  if (!normalizedFullName) {
+    return {
+      firstName: '',
+      lastName: '',
+      fullName: '',
+    }
+  }
+
+  const parts = normalizedFullName.split(' ')
+  return {
+    firstName: parts[0] || '',
+    lastName: parts.slice(1).join(' '),
+    fullName: normalizedFullName,
+  }
+}
+
 const formatSlotLabel = (date, time) => {
   if (!date && !time) return 'ce créneau'
 
@@ -284,13 +306,21 @@ function Payment() {
       throw new Error('Date ou heure manquante')
     }
 
-    const clientFirstName = String(bookingState.clientFirstName || '').trim()
-    const clientLastName = String(bookingState.clientLastName || '').trim()
+    const fallbackClientName = String(user?.name || '').trim()
+    const {
+      firstName: clientFirstName,
+      lastName: clientLastName,
+      fullName: clientFullName,
+    } = normalizeClientName(
+      String(bookingState.clientFirstName || '').trim(),
+      String(bookingState.clientLastName || '').trim(),
+      fallbackClientName,
+    )
     const clientPhone = String(bookingState.clientPhone || user?.phoneNumber || user?.phone || '').trim()
     const clientAddress = String(bookingState.clientAddress || '').trim()
 
-    if (!clientFirstName || !clientLastName || !clientPhone) {
-      throw new Error('Prenom, nom et telephone sont obligatoires pour confirmer la reservation')
+    if (!clientFullName || !clientPhone) {
+      throw new Error('Le nom et le telephone sont obligatoires pour confirmer la reservation')
     }
 
     const payload = {

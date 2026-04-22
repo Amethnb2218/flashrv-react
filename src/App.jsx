@@ -14,6 +14,7 @@ import ClientDashboard from './pages/Dashboard/ClientDashboard'
 import CoiffeurDashboard from './pages/Dashboard/CoiffeurDashboard'
 import Profile from './pages/Profile/Profile'
 import QRCodes from './pages/Marketing/QRCodes'
+import ClientSocialDemo from './pages/Marketing/ClientSocialDemo'
 import ProPending from './pages/Pro/ProPending'
 import ProOnboarding from './pages/Auth/ProOnboarding'
 import AdminDashboard from './pages/Admin/AdminDashboard'
@@ -41,6 +42,19 @@ function App() {
     <InstallPrompt />
     <SiteVisitTracker />
     <Routes>
+      <Route
+        path="/demo/client-social"
+        element={
+          <>
+            <SEOHead
+              title="Demo client premium | Jolof'Era"
+              description="Demo verticale premium de 40 secondes pour Jolof'Era: accueil, inscription, connexion, reservation salon et achat article."
+              noindex
+            />
+            <ClientSocialDemo />
+          </>
+        }
+      />
       <Route path="/" element={<Layout />}>
         {/* Public routes */}
         <Route index element={<><SEOHead title="Jolof'Era | Reservation salon coiffure Dakar" description="Reservez un salon de coiffure, barbershop ou boutique a Dakar et au Senegal. Comparez les avis, tarifs et disponibilites avec Jolof'Era." canonical="https://www.jolofera.com/" /><Home /></>} />

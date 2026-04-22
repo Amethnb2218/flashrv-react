@@ -336,21 +336,21 @@ function Booking() {
                     <div className="app-panel mb-6 p-4">
                       <h3 className="font-semibold text-primary-900 mb-4">Vos informations de contact</h3>
                       <p className="text-sm text-primary-500 mb-4">
-                        Ces informations seront visibles par le salon pour confirmer le rendez-vous.
+                        Ces informations seront visibles par le salon pour confirmer le rendez-vous. Un nom complet et un telephone suffisent.
                       </p>
                     <div className="grid md:grid-cols-2 gap-3">
                         <input
                           type="text"
                           value={state.clientFirstName || ''}
                           onChange={(e) => dispatch({ type: 'SET_CLIENT_DETAILS', payload: { clientFirstName: e.target.value } })}
-                          placeholder="Prénom *"
+                          placeholder="Prenom ou nom complet *"
                           className="app-input"
                         />
                         <input
                           type="text"
                           value={state.clientLastName || ''}
                           onChange={(e) => dispatch({ type: 'SET_CLIENT_DETAILS', payload: { clientLastName: e.target.value } })}
-                          placeholder="Nom *"
+                          placeholder="Nom (optionnel)"
                           className="app-input"
                         />
                         <input
