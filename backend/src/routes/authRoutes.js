@@ -29,6 +29,14 @@ const googleAuthLimiter = rateLimit({
   message: { status: 'error', message: 'Trop de tentatives Google. Réessayez dans quelques minutes.' },
 });
 
+const passwordResetLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { status: 'error', message: 'Trop de demandes de reinitialisation. Reessayez dans quelques minutes.' },
+});
+
 /* ===========================================
    PUBLIC ROUTES (pas d'authentification requise)
    =========================================== */
@@ -54,6 +62,20 @@ router.post("/register", registerLimiter, authController.register);
  * @access  Public
  */
 router.post("/login", loginLimiter, authController.login);
+
+/**
+ * @route   POST /api/auth/forgot-password
+ * @desc    Demander un lien de reinitialisation de mot de passe
+ * @access  Public
+ */
+router.post("/forgot-password", passwordResetLimiter, authController.forgotPassword);
+
+/**
+ * @route   POST /api/auth/reset-password
+ * @desc    Reinitialiser le mot de passe avec un token
+ * @access  Public
+ */
+router.post("/reset-password", passwordResetLimiter, authController.resetPassword);
 
 /**
  * @route   POST /api/auth/logout

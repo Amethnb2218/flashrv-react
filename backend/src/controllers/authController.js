@@ -19,6 +19,9 @@ async function register(req, res, next) {
       });
     }
     const normalizedEmail = String(email).trim().toLowerCase();
+    if (!isValidEmailAddress(normalizedEmail)) {
+      return res.status(400).json({ status: 'error', message: 'Adresse email invalide.' });
+    }
     // Vérifier unicité email
     const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } });
     if (existing) {
@@ -45,11 +48,10 @@ async function register(req, res, next) {
     const user = await prisma.user.create({
       data: userData,
     });
-    // Email de confirmation (non-bloquant)
-    sendWelcomeEmail({ to: user.email, name: user.name });
-    // Notifier les admins si c'est un PRO (non-bloquant)
     if (normalizedRole === 'PRO') {
       sendProPendingNotification({ proName: user.name, proEmail: user.email });
+    } else {
+      sendWelcomeEmail({ to: user.email, name: user.name });
     }
     // Générer un token (mock, à sécuriser en prod)
     const token = generateToken({ userId: user.id, email: user.email, role: user.role });
@@ -124,14 +126,17 @@ async function login(req, res, next) {
   }
 }
 const prisma = require("../lib/prisma");
+const jwt = require("jsonwebtoken");
 const { verifyGoogleToken } = require("../services/googleAuth");
 const { generateToken, setTokenCookie, clearTokenCookie } = require("../utils/jwt");
 const { buildCsrfToken } = require("../utils/csrf");
+const { resolvePublicBaseUrl } = require("../utils/publicUrl");
 const { ROLES, STATUS } = require("../middleware/auth");
-const { sendWelcomeEmail, sendProPendingNotification } = require("../services/emailService");
+const { sendWelcomeEmail, sendProPendingNotification, sendPasswordResetEmail } = require("../services/emailService");
 
 const LOGIN_LOCK_WINDOW_MS = 15 * 60 * 1000;
 const LOGIN_MAX_FAILURES = 5;
+const PASSWORD_RESET_EXPIRES_IN = process.env.PASSWORD_RESET_EXPIRES_IN || '30m';
 const failedLoginMap = new Map();
 
 function isStrongPassword(password) {
@@ -165,6 +170,36 @@ function registerFailedLogin(identifier) {
 
 function clearLoginFailures(identifier) {
   failedLoginMap.delete(identifier);
+}
+
+function normalizeEmail(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function isValidEmailAddress(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim());
+}
+
+function getFrontendBaseUrl() {
+  return (
+    resolvePublicBaseUrl(
+      process.env.FRONTEND_URL,
+      process.env.BASE_URL,
+      process.env.ALLOWED_ORIGINS
+    ) || 'https://jolofera.com'
+  );
+}
+
+function getPasswordResetSecret(user) {
+  return `${process.env.JWT_SECRET}:${user.id}:${user.password}`;
+}
+
+function createPasswordResetToken(user) {
+  return jwt.sign(
+    { sub: user.id, purpose: 'password_reset' },
+    getPasswordResetSecret(user),
+    { algorithm: 'HS256', expiresIn: PASSWORD_RESET_EXPIRES_IN }
+  );
 }
 
 function isBcryptHash(value) {
@@ -307,11 +342,10 @@ async function googleAuth(req, res, next) {
         console.log(
           `✅ New ${role} registered: ${user.email} (${user.name}) - Status: ${user.status}`
         );
-        // Email de confirmation (non-bloquant)
-        sendWelcomeEmail({ to: user.email, name: user.name });
-        // Notifier les admins si c'est un PRO (non-bloquant)
         if (role === ROLES.PRO) {
           sendProPendingNotification({ proName: user.name, proEmail: user.email });
+        } else {
+          sendWelcomeEmail({ to: user.email, name: user.name });
         }
       }
     }
@@ -495,6 +529,109 @@ async function deleteAccount(req, res, next) {
   }
 }
 
+async function forgotPassword(req, res, next) {
+  try {
+    const email = normalizeEmail(req.body?.email);
+    if (!email || !isValidEmailAddress(email)) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Adresse email invalide.',
+      });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true, email: true, name: true, password: true },
+    });
+
+    if (user?.password) {
+      const token = createPasswordResetToken(user);
+      const resetUrl = `${getFrontendBaseUrl()}/reset-password?token=${encodeURIComponent(token)}`;
+      sendPasswordResetEmail({ to: user.email, name: user.name, resetUrl });
+    }
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'Si un compte existe avec cette adresse, un lien de reinitialisation a ete envoye.',
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+async function resetPassword(req, res, next) {
+  try {
+    const token = String(req.body?.token || '').trim();
+    const password = String(req.body?.password || '');
+
+    if (!token || !password) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Lien de reinitialisation et nouveau mot de passe requis.',
+      });
+    }
+
+    if (password.length < 8 || !isStrongPassword(password)) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Le mot de passe doit contenir au moins 8 caracteres, une majuscule, une minuscule et un chiffre.',
+      });
+    }
+
+    const decoded = jwt.decode(token);
+    const userId = typeof decoded?.sub === 'string' ? decoded.sub : '';
+    if (!userId || decoded?.purpose !== 'password_reset') {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Lien de reinitialisation invalide ou expire.',
+      });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, password: true },
+    });
+
+    if (!user?.password) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Lien de reinitialisation invalide ou expire.',
+      });
+    }
+
+    let verified;
+    try {
+      verified = jwt.verify(token, getPasswordResetSecret(user), { algorithms: ['HS256'] });
+    } catch (_) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Lien de reinitialisation invalide ou expire.',
+      });
+    }
+
+    if (verified?.purpose !== 'password_reset' || verified?.sub !== user.id) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Lien de reinitialisation invalide ou expire.',
+      });
+    }
+
+    const bcrypt = require('bcryptjs');
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashedPassword },
+    });
+
+    return res.status(200).json({
+      status: 'success',
+      message: 'Votre mot de passe a ete mis a jour.',
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 module.exports = {
   googleAuth,
   getSession,
@@ -504,4 +641,6 @@ module.exports = {
   deleteAccount,
   register,
   login,
+  forgotPassword,
+  resetPassword,
 };

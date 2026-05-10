@@ -20,6 +20,6 @@ Disallow: /admin/
 Disallow: /login
 Disallow: /register
 Disallow: /forgot-password
+Disallow: /reset-password
 
 Sitemap: https://www.jolofera.com/sitemap.xml
-

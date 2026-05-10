@@ -4,6 +4,7 @@ import Home from './pages/Home'
 import Login from './pages/Auth/Login'
 import Register from './pages/Auth/Register'
 import ForgotPassword from './pages/Auth/ForgotPassword'
+import ResetPassword from './pages/Auth/ResetPassword'
 import Salons from './pages/Salons/Salons'
 import SalonDetail from './pages/Salons/SalonDetail'
 import Booking from './pages/Booking/Booking'
@@ -61,6 +62,7 @@ function App() {
         <Route path="login" element={<><SEOHead title="Connexion — Jolof’Era" noindex /><Login /></>} />
         <Route path="register" element={<><SEOHead title="Inscription — Jolof’Era" noindex /><Register /></>} />
         <Route path="forgot-password" element={<><SEOHead title="Mot de passe oublié — Jolof’Era" noindex /><ForgotPassword /></>} />
+        <Route path="reset-password" element={<><SEOHead title="Reinitialisation mot de passe | Jolof'Era" noindex /><ResetPassword /></>} />
         <Route path="salons" element={<><SEOHead title="Salons coiffure et boutiques a Dakar | Jolof'Era" description="Trouvez un salon de coiffure, institut beaute, barbershop ou boutique a Dakar. Comparez les prix et reservez en ligne rapidement." /><Salons /></>} />
         <Route path="salon/:id" element={<SalonDetail />} />
         <Route path="qr-codes" element={<><SEOHead title="QR Codes — Jolof’Era" noindex /><QRCodes /></>} />

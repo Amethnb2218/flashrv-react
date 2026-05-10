@@ -12,9 +12,22 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+const SITE_CONTACT_EMAIL = String(
+  process.env.SITE_CONTACT_EMAIL ||
+  process.env.CONTACT_EMAIL ||
+  'contact@jolofera.com'
+).trim();
+
+const MAIL_FROM_EMAIL = String(
+  process.env.MAIL_FROM_EMAIL ||
+  process.env.SMTP_FROM_EMAIL ||
+  SITE_CONTACT_EMAIL ||
+  'contact@jolofera.com'
+).trim();
+
 const WELCOME_FROM_EMAIL = String(
   process.env.WELCOME_FROM_EMAIL ||
-  process.env.SMTP_FROM_EMAIL ||
+  MAIL_FROM_EMAIL ||
   'contact@jolofera.com'
 ).trim();
 
@@ -49,6 +62,20 @@ const formatMoney = (value) => Number(value || 0).toLocaleString('fr-FR');
 
 const isSmtpConfigured = () => Boolean(process.env.SMTP_USER && process.env.SMTP_PASS);
 
+const isValidEmailAddress = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim());
+
+function normalizeRecipients(to) {
+  const values = Array.isArray(to) ? to : [to];
+  return Array.from(
+    new Set(
+      values
+        .flatMap((value) => String(value || '').split(','))
+        .map((value) => value.trim().toLowerCase())
+        .filter(isValidEmailAddress)
+    )
+  );
+}
+
 async function deliverEmail({
   to,
   subject,
@@ -56,7 +83,7 @@ async function deliverEmail({
   html,
   label,
   fromName = "Jolof'Era",
-  fromEmail = process.env.SMTP_USER,
+  fromEmail = MAIL_FROM_EMAIL,
   replyTo,
 }) {
   if (!isSmtpConfigured()) {
@@ -65,16 +92,21 @@ async function deliverEmail({
   }
 
   try {
+    const recipients = normalizeRecipients(to);
+    if (!recipients.length) {
+      console.warn(`No valid recipient - skipping ${label}`);
+      return;
+    }
     const senderEmail = String(fromEmail || process.env.SMTP_USER || '').trim();
     await transporter.sendMail({
       from: `"${fromName}" <${senderEmail}>`,
-      ...(replyTo ? { replyTo } : {}),
-      to,
+      replyTo: replyTo || SITE_CONTACT_EMAIL,
+      to: recipients,
       subject,
       text,
       html,
     });
-    console.log(`${label} sent to ${Array.isArray(to) ? to.join(', ') : to}`);
+    console.log(`${label} sent to ${recipients.join(', ')}`);
   } catch (err) {
     console.error(`Failed to send ${label}:`, err.message);
   }
@@ -135,7 +167,10 @@ async function sendProPendingNotification({ proName, proEmail }) {
       select: { email: true },
     });
 
-    const adminEmails = admins.map((admin) => admin.email).filter(Boolean);
+    const adminEmails = normalizeRecipients([
+      SITE_CONTACT_EMAIL,
+      ...admins.map((admin) => admin.email).filter(Boolean),
+    ]);
     if (!adminEmails.length) return;
 
     const html = renderEmailShell({
@@ -187,6 +222,33 @@ async function sendProApprovedEmail({ to, name }) {
     text: `Bonjour ${name || 'partenaire'},\n\nVotre compte professionnel Jolof'Era a ete valide avec succes.\nAccedez a votre dashboard PRO: ${proDashboardUrl}`,
     html,
     label: 'PRO approved email',
+  });
+}
+
+async function sendPasswordResetEmail({ to, name, resetUrl }) {
+  const safeName = escapeHtml(name || 'utilisateur');
+  const html = renderEmailShell({
+    title: 'Reinitialisation du mot de passe',
+    accent: '#0f766e',
+    intro: `<p>Bonjour <strong>${safeName}</strong>,</p>`,
+    body: `
+      <p>Vous avez demande la reinitialisation de votre mot de passe Jolof&#39;Era.</p>
+      <p>Ce lien est valable pendant 30 minutes.</p>
+    `,
+    ctaLabel: 'Choisir un nouveau mot de passe',
+    ctaUrl: resetUrl,
+    footer: "Si vous n'etes pas a l'origine de cette demande, vous pouvez ignorer cet email.",
+  });
+
+  await deliverEmail({
+    to,
+    subject: "Reinitialisation de votre mot de passe Jolof'Era",
+    text:
+      `Bonjour ${name || 'utilisateur'},\n\n` +
+      `Cliquez sur ce lien pour choisir un nouveau mot de passe Jolof'Era:\n${resetUrl}\n\n` +
+      `Ce lien est valable pendant 30 minutes. Si vous n'etes pas a l'origine de cette demande, ignorez cet email.`,
+    html,
+    label: 'password reset email',
   });
 }
 
@@ -314,4 +376,5 @@ module.exports = {
   sendBookingConfirmationEmail,
   sendOrderConfirmationEmail,
   sendAdminPromotionEmail,
+  sendPasswordResetEmail,
 };

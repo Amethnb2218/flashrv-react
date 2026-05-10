@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { FiMail, FiArrowLeft, FiCheck } from 'react-icons/fi'
 import toast from 'react-hot-toast'
+import apiFetch from '@/api/client'
 
 function ForgotPassword() {
   const [email, setEmail] = useState('')
@@ -11,12 +12,24 @@ function ForgotPassword() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!email) { toast.error('Veuillez entrer votre email'); return }
+    if (!email) {
+      toast.error('Veuillez entrer votre email')
+      return
+    }
+
     setIsLoading(true)
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    setIsLoading(false)
-    setIsSent(true)
-    toast.success('Email envoyé avec succès !')
+    try {
+      await apiFetch('/auth/forgot-password', {
+        method: 'POST',
+        body: { email },
+      })
+      setIsSent(true)
+      toast.success('Si ce compte existe, le lien a ete envoye.')
+    } catch (err) {
+      toast.error(err.message || 'Impossible d envoyer le lien pour le moment.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   if (isSent) {
@@ -33,14 +46,14 @@ function ForgotPassword() {
           <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
             <FiCheck className="w-8 h-8 text-green-600 dark:text-green-400" />
           </div>
-          <h1 className="text-2xl font-bold text-primary-900 dark:text-white mb-2">Email envoyé !</h1>
+          <h1 className="text-2xl font-bold text-primary-900 dark:text-white mb-2">Email envoye !</h1>
           <p className="text-primary-600 dark:text-gray-400 mb-6">
             Si un compte existe avec l'adresse <strong className="dark:text-white">{email}</strong>,
-            vous recevrez un lien pour réinitialiser votre mot de passe.
+            vous recevrez un lien pour reinitialiser votre mot de passe.
           </p>
           <Link to="/login" className="btn-primary inline-flex items-center space-x-2">
             <FiArrowLeft className="w-5 h-5" />
-            <span>Retour à la connexion</span>
+            <span>Retour a la connexion</span>
           </Link>
         </motion.div>
       </div>
@@ -63,9 +76,9 @@ function ForgotPassword() {
         </Link>
 
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-primary-900 dark:text-white">Mot de passe oublié ?</h1>
+          <h1 className="text-3xl font-bold text-primary-900 dark:text-white">Mot de passe oublie ?</h1>
           <p className="mt-2 text-primary-600 dark:text-gray-400">
-            Entrez votre email pour recevoir un lien de réinitialisation
+            Entrez votre email pour recevoir un lien de reinitialisation
           </p>
         </div>
 
