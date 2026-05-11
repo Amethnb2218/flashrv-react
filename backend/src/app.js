@@ -31,6 +31,26 @@ const app = express();
 app.disable('x-powered-by');
 app.set('trust proxy', process.env.NODE_ENV === 'production' ? 1 : 'loopback');
 
+// Health check before CORS (needed for platform probes)
+app.get('/health', async (req, res) => {
+  const start = Date.now();
+  let dbOk = false;
+  let dbMs = 0;
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    dbMs = Date.now() - start;
+    dbOk = true;
+  } catch (e) {
+    dbMs = Date.now() - start;
+  }
+  res.status(200).json({
+    status: 'success',
+    message: "Jolof'Era backend is running",
+    timestamp: new Date().toISOString(),
+    db: { connected: dbOk, responseMs: dbMs },
+  });
+});
+
 function buildCspDirectives() {
   const configuredExtraConnectSources = parseOrigins(
     process.env.CSP_CONNECT_SRC,
@@ -210,29 +230,6 @@ if (process.env.NODE_ENV === 'development') {
     next();
   });
 }
-
-// ===========================================
-// HEALTH CHECK
-// ===========================================
-app.get('/health', async (req, res) => {
-  const start = Date.now();
-  let dbOk = false;
-  let dbMs = 0;
-  try {
-    await prisma.$queryRaw`SELECT 1`;
-    dbMs = Date.now() - start;
-    dbOk = true;
-  } catch (e) {
-    dbMs = Date.now() - start;
-  }
-
-  res.status(200).json({
-    status: 'success',
-    message: "Jolof'Era backend is running",
-    timestamp: new Date().toISOString(),
-    db: { connected: dbOk, responseMs: dbMs },
-  });
-});
 
 // ===========================================
 // ROUTES API
