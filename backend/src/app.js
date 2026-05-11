@@ -44,7 +44,6 @@ function buildCspDirectives() {
     'https://www.jolofera.com',
     'https://api.jolofera.com',
     'https://flashrv-react-backend-xtlu2.ondigitalocean.app',
-    'https://*.ondigitalocean.app',
     'https://oauth2.googleapis.com',
     'https://www.googleapis.com',
     'https://accounts.google.com',
@@ -82,9 +81,10 @@ function buildCspDirectives() {
 // CORS CONFIGURATION (must be BEFORE helmet and other middleware)
 // ===========================================
 // Handle preflight OPTIONS requests explicitly
+const isProd = process.env.NODE_ENV === 'production';
 app.options('*', cors({
   origin: (origin, cb) => {
-    if (isOriginAllowed(origin, { allowNoOrigin: true })) return cb(null, true);
+    if (isOriginAllowed(origin, { allowNoOrigin: !isProd })) return cb(null, true);
     cb(new Error('Not allowed by CORS'));
   },
   credentials: true,
@@ -95,7 +95,7 @@ app.options('*', cors({
 
 app.use(cors({
   origin: (origin, cb) => {
-    if (isOriginAllowed(origin, { allowNoOrigin: true })) return cb(null, true);
+    if (isOriginAllowed(origin, { allowNoOrigin: !isProd })) return cb(null, true);
     cb(new Error('Not allowed by CORS'));
   },
   credentials: true,
@@ -170,9 +170,15 @@ app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 app.use(cookieParser());
 
-// Sert les fichiers statiques du dossier uploads
+// Sert les fichiers statiques du dossier uploads (authentification requise)
 const { uploadsDir } = require('./utils/paths');
-app.use('/uploads', express.static(uploadsDir));
+const { optionalAuth } = require('./middleware/auth');
+app.use('/uploads', optionalAuth, (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ status: 'error', message: 'Authentication required' });
+  }
+  next();
+}, express.static(uploadsDir));
 
 // ===========================================
 // LOGGING (développement uniquement)
@@ -208,23 +214,11 @@ app.get('/health', async (req, res) => {
     dbMs = Date.now() - start;
   }
 
-  const dexpayConfigured = Boolean(
-    process.env.DEXPAY_API_KEY &&
-    process.env.DEXPAY_API_SECRET
-  );
-
-  const isProd = process.env.NODE_ENV === 'production';
   res.status(200).json({
     status: 'success',
     message: "Jolof'Era backend is running",
     timestamp: new Date().toISOString(),
     db: { connected: dbOk, responseMs: dbMs },
-    ...(isProd
-      ? {}
-      : {
-          environment: process.env.NODE_ENV || 'development',
-          dexpay: { configured: dexpayConfigured, sandbox: process.env.DEXPAY_SANDBOX || 'not set' },
-        }),
   });
 });
 

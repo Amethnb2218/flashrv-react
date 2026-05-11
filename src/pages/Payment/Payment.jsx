@@ -477,6 +477,17 @@ function Payment() {
         throw new Error('Erreur lors de la creation de la session DexPay')
       }
 
+      const ALLOWED_PAYMENT_HOSTS = ['dexchangepay.com', 'www.dexchangepay.com', 'checkout.dexchangepay.com', 'pay.dexchangepay.com']
+      try {
+        const invoiceHost = new URL(payload.invoiceUrl).hostname
+        if (!ALLOWED_PAYMENT_HOSTS.some(h => invoiceHost === h || invoiceHost.endsWith('.' + h))) {
+          throw new Error('URL de paiement non autorisee')
+        }
+      } catch (urlErr) {
+        if (urlErr.message === 'URL de paiement non autorisee') throw urlErr
+        throw new Error('URL de paiement invalide')
+      }
+
       setPaymentStatus('pending_confirmation')
       window.location.href = payload.invoiceUrl
     } catch (err) {

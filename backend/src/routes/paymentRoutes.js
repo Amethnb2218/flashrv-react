@@ -55,7 +55,8 @@ const withRouteTimeout = (promise, label = 'operation') => {
 };
 
 const generateReference = () => {
-  return 'FRV-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+  const crypto = require('crypto');
+  return 'FRV-' + Date.now().toString(36).toUpperCase() + '-' + crypto.randomBytes(4).toString('hex').toUpperCase();
 };
 
 const calculateDexPayPlatformFee = (amount) => {
@@ -139,9 +140,7 @@ const toOperationalDexPayError = (error, phase = 'create') => {
 };
 
 const buildDexPayWebhookUrl = (backendBase) => {
-  const token = String(getDexPayConfig().webhookToken || '').trim();
-  if (!token) return `${backendBase}/api/dexpay/webhook`;
-  return `${backendBase}/api/dexpay/webhook?token=${encodeURIComponent(token)}`;
+  return `${backendBase}/api/dexpay/webhook`;
 };
 
 const normalizeProviderStatus = (value, fallback = 'PENDING') =>
@@ -831,14 +830,26 @@ router.get('/', authenticate, requireApprovedPro, async (req, res, next) => {
 router.post('/create', authenticate, async (req, res, next) => {
   try {
     const { bookingId, orderId, amount, customerName, customerEmail, successUrl, cancelUrl } = req.body;
-    console.info('POST /api/payments/create received', {
-      bookingId: String(bookingId || '').trim() || null,
-      orderId: String(orderId || '').trim() || null,
-      userId: req.user?.id || null,
-    });
 
     if (!bookingId && !orderId) {
       return res.status(400).json({ status: 'error', message: 'bookingId ou orderId requis' });
+    }
+
+    const { frontendBase } = getBaseUrls();
+    const allowedUrlHosts = [];
+    try { allowedUrlHosts.push(new URL(frontendBase).hostname); } catch (_) {}
+    ['jolofera.com', 'www.jolofera.com'].forEach(h => { if (!allowedUrlHosts.includes(h)) allowedUrlHosts.push(h); });
+
+    const validateRedirectUrl = (url) => {
+      if (!url) return true;
+      try {
+        const parsed = new URL(url);
+        return allowedUrlHosts.includes(parsed.hostname);
+      } catch (_) { return false; }
+    };
+
+    if (!validateRedirectUrl(successUrl) || !validateRedirectUrl(cancelUrl)) {
+      return res.status(400).json({ status: 'error', message: 'URL de redirection non autorisee.' });
     }
 
     const result = await withRouteTimeout((async () => {

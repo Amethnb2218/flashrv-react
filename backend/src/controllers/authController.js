@@ -35,7 +35,7 @@ async function register(req, res, next) {
     }
     const userStatus = normalizedRole === 'PRO' ? STATUS.PENDING : STATUS.APPROVED;
     const bcrypt = require('bcryptjs');
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 12);
     const userData = {
       name: String(name).trim(),
       email: normalizedEmail,
@@ -61,7 +61,7 @@ async function register(req, res, next) {
     return res.status(201).json({
       status: 'success',
       message: 'Votre compte a ete cree avec succes.',
-      data: { user: safeUser, token, csrfToken },
+      data: { user: safeUser, csrfToken },
     });
   } catch (error) {
     return next(error);
@@ -113,7 +113,7 @@ async function login(req, res, next) {
     return res.json({
       status: 'success',
       message: 'Connexion etablie avec succes.',
-      data: { user: safeUser, token, csrfToken },
+      data: { user: safeUser, csrfToken },
     });
   } catch (error) {
     // Prisma network/runtime errors should not surface as generic 500 auth failures.
@@ -213,28 +213,15 @@ async function verifyPasswordWithLegacyMigration(user, rawPassword) {
 
   if (!stored || !plain) return false;
 
-  if (isBcryptHash(stored)) {
-    try {
-      return await bcrypt.compare(plain, stored);
-    } catch (_) {
-      return false;
-    }
+  if (!isBcryptHash(stored)) {
+    return false;
   }
-
-  // Legacy fallback: some old accounts may still have non-bcrypt passwords.
-  if (stored !== plain) return false;
 
   try {
-    const hashed = await bcrypt.hash(plain, 10);
-    await prisma.user.update({
-      where: { id: user.id },
-      data: { password: hashed },
-    });
+    return await bcrypt.compare(plain, stored);
   } catch (_) {
-    // Keep login successful even if migration fails; it can be retried next login.
+    return false;
   }
-
-  return true;
 }
 
 /**
@@ -302,15 +289,21 @@ async function googleAuth(req, res, next) {
           email: email,
         },
       });
-      console.log(
-        `✅ User logged in: ${user.email} (role: ${user.role}, status: ${user.status})`
-      );
     } else {
       // No user with this googleSub — check if email already exists (manual account)
-      const existingByEmail = await prisma.user.findUnique({ where: { email } });
+      const existingByEmail = await prisma.user.findUnique({
+        where: { email },
+        select: { id: true, email: true, name: true, role: true, status: true, password: true, googleSub: true, phoneNumber: true, username: true, picture: true },
+      });
 
       if (existingByEmail) {
-        // Link Google account to existing manual account
+        if (existingByEmail.password && !existingByEmail.googleSub) {
+          return res.status(409).json({
+            status: 'error',
+            message: 'Un compte existe deja avec cet email. Connectez-vous avec votre mot de passe pour lier Google.',
+            code: 'ACCOUNT_EXISTS_LINK_REQUIRED',
+          });
+        }
         user = await prisma.user.update({
           where: { id: existingByEmail.id },
           data: {
@@ -319,15 +312,12 @@ async function googleAuth(req, res, next) {
           },
         });
         accountLinked = true;
-        console.log(
-          `🔗 Google account linked to existing user: ${user.email} (role: ${user.role})`
-        );
       } else {
         // Create new user
         isNewUser = true;
         const bcrypt = require('bcryptjs');
         const randomPassword = require('crypto').randomBytes(16).toString('hex');
-        const hashedPassword = await bcrypt.hash(randomPassword, 10);
+        const hashedPassword = await bcrypt.hash(randomPassword, 12);
         user = await prisma.user.create({
           data: {
             email: email,
@@ -339,9 +329,6 @@ async function googleAuth(req, res, next) {
             password: hashedPassword,
           },
         });
-        console.log(
-          `✅ New ${role} registered: ${user.email} (${user.name}) - Status: ${user.status}`
-        );
         if (role === ROLES.PRO) {
           sendProPendingNotification({ proName: user.name, proEmail: user.email });
         } else {
@@ -380,7 +367,6 @@ async function googleAuth(req, res, next) {
           status: user.status,
           phoneNumber: user.phoneNumber,
         },
-        token,
         csrfToken,
         isNewUser,
         accountLinked,
@@ -460,6 +446,16 @@ async function updateProfile(req, res, next) {
     const { username, phoneNumber, name } = req.body || {};
     const userId = req.user.id;
 
+    if (username && (String(username).trim().length < 3 || String(username).trim().length > 30)) {
+      return res.status(400).json({ status: 'error', message: 'Le nom d utilisateur doit contenir entre 3 et 30 caracteres.' });
+    }
+    if (phoneNumber && !/^\+?[0-9\s\-]{7,20}$/.test(String(phoneNumber).trim())) {
+      return res.status(400).json({ status: 'error', message: 'Numero de telephone invalide.' });
+    }
+    if (name && (String(name).trim().length < 2 || String(name).trim().length > 60)) {
+      return res.status(400).json({ status: 'error', message: 'Le nom doit contenir entre 2 et 60 caracteres.' });
+    }
+
     // Validate username uniqueness if provided
     if (username) {
       const existingUser = await prisma.user.findUnique({
@@ -514,8 +510,11 @@ async function deleteAccount(req, res, next) {
 
     const userId = req.user.id;
 
-    await prisma.user.delete({
-      where: { id: userId },
+    await prisma.$transaction(async (tx) => {
+      await tx.appointment.deleteMany({ where: { clientId: userId } });
+      await tx.appointment.deleteMany({ where: { coiffeurId: userId } });
+      await tx.notification.deleteMany({ where: { userId } });
+      await tx.user.delete({ where: { id: userId } });
     });
 
     clearTokenCookie(res);
@@ -617,7 +616,7 @@ async function resetPassword(req, res, next) {
     }
 
     const bcrypt = require('bcryptjs');
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 12);
     await prisma.user.update({
       where: { id: user.id },
       data: { password: hashedPassword },

@@ -189,8 +189,16 @@ router.post('/', authenticate, async (req, res, next) => {
       }
     }
 
-    // Create order + items + decrement stock in a transaction
+    // Create order + items + decrement stock in a transaction (stock re-checked inside)
     const order = await prisma.$transaction(async (tx) => {
+      // Re-check stock inside transaction to prevent race conditions
+      for (const item of orderItems) {
+        const freshProduct = await tx.product.findUnique({ where: { id: item.productId }, select: { id: true, stock: true, name: true } });
+        if (!freshProduct || freshProduct.stock < item.quantity) {
+          throw Object.assign(new Error(`Stock insuffisant pour "${freshProduct?.name || item.productId}"`), { statusCode: 409, expose: true });
+        }
+      }
+
       const newOrder = await tx.order.create({
         data: {
           clientId: req.user.id,
@@ -229,13 +237,14 @@ router.post('/', authenticate, async (req, res, next) => {
     // Notify boutique owner
     if (order.salon?.ownerId && order.salon.ownerId !== req.user.id) {
       try {
+        const safeClientName = String(order.clientName || 'un client').replace(/[<>&"']/g, '').substring(0, 50);
         const notification = await prisma.notification.create({
           data: {
             userId: order.salon.ownerId,
             type: 'order',
             message: requiresClientPayment
-              ? `Nouvelle commande de ${order.clientName || 'un client'} en attente de paiement - ${totalPrice} FCFA.`
-              : `Nouvelle commande de ${order.clientName || 'un client'} - ${totalPrice} FCFA.`,
+              ? `Nouvelle commande de ${safeClientName} en attente de paiement - ${totalPrice} FCFA.`
+              : `Nouvelle commande de ${safeClientName} - ${totalPrice} FCFA.`,
           },
         });
         pushNotification(notification.userId, notification);

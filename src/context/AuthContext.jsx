@@ -13,8 +13,6 @@ import {
   buildAuthHeaders,
   clearAuthToken,
   clearCsrfToken,
-  readAuthToken,
-  writeAuthToken,
   writeCsrfToken,
 } from '../utils/authToken'
 import { resolveApiBase } from '../utils/apiBase'
@@ -67,10 +65,16 @@ const readStoredUser = () => {
   return normalizeUserShape(fromSessionStorage)
 }
 
+const sanitizeUserForStorage = (user) => {
+  if (!user || typeof user !== 'object') return null
+  return { id: user.id, role: user.role, status: user.status, name: user.name }
+}
+
 const writeStoredUser = (user) => {
   if (typeof window === 'undefined') return
-  writeStorageValue(window.localStorage, USER_STORAGE_KEY, user)
-  writeStorageValue(window.sessionStorage, USER_STORAGE_KEY, user)
+  const minimal = sanitizeUserForStorage(user)
+  writeStorageValue(window.localStorage, USER_STORAGE_KEY, minimal)
+  writeStorageValue(window.sessionStorage, USER_STORAGE_KEY, minimal)
 }
 
 const clearStoredUser = () => {
@@ -78,12 +82,11 @@ const clearStoredUser = () => {
 }
 
 const initialUser = readStoredUser()
-const initialToken = readAuthToken()
 
 const initialState = {
   user: initialUser,
-  token: initialToken,
-  isAuthenticated: Boolean(initialUser && initialToken),
+  token: null,
+  isAuthenticated: Boolean(initialUser),
   isLoading: true,
 }
 
@@ -129,21 +132,20 @@ export function AuthProvider({ children }) {
 
   const restoreCachedSession = () => {
     const cachedUser = readStoredUser()
-    const cachedToken = readAuthToken()
 
-    if (!cachedUser || !cachedToken) {
+    if (!cachedUser) {
       return false
     }
 
     dispatch({
       type: 'LOGIN',
-      payload: { user: cachedUser, token: cachedToken }
+      payload: { user: cachedUser, token: null }
     })
 
     return true
   }
 
-  const hydrateProAccountState = async (user, tokenOverride = null) => {
+  const hydrateProAccountState = async (user) => {
     const normalizedUser = normalizeUserShape(user)
 
     if (!isProUser(normalizedUser)) {
@@ -153,9 +155,7 @@ export function AuthProvider({ children }) {
     try {
       const response = await fetch(`${API_BASE}/salons/me`, {
         method: 'GET',
-        headers: tokenOverride
-          ? buildAuthHeaders({ Authorization: `Bearer ${tokenOverride}` }, 'GET')
-          : authHeaders({}, 'GET'),
+        headers: authHeaders({}, 'GET'),
         credentials: 'include',
         cache: 'no-store',
       })
@@ -228,21 +228,17 @@ export function AuthProvider({ children }) {
 
   const persistAuthenticatedUser = async (apiUser, apiToken = null, apiCsrfToken = null) => {
     const restoredUser = restorePendingDeletionIfNeeded(apiUser)
-    if (apiToken) {
-      writeAuthToken(apiToken)
-    }
     if (apiCsrfToken) {
       writeCsrfToken(apiCsrfToken)
     }
-    const hydratedUser = await hydrateProAccountState(restoredUser, apiToken)
+    const hydratedUser = await hydrateProAccountState(restoredUser)
     const normalizedUser = normalizeUserShape(hydratedUser)
 
     writeStoredUser(normalizedUser)
-    const activeToken = apiToken || readAuthToken()
 
     dispatch({
       type: 'LOGIN',
-      payload: { user: normalizedUser, token: activeToken }
+      payload: { user: normalizedUser, token: null }
     })
 
     subscribeToPush().catch(() => {})
@@ -425,7 +421,7 @@ export function AuthProvider({ children }) {
 
   // Basic checkAuth implementation
   const checkAuth = () => {
-    return Boolean(readStoredUser() && readAuthToken())
+    return Boolean(readStoredUser())
   }
 
   const updateUser = (userData) => {

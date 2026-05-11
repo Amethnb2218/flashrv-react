@@ -42,6 +42,7 @@ function Register() {
 
     if (!formData.password) newErrors.password = 'Le mot de passe est requis'
     else if (formData.password.length < 8) newErrors.password = 'Le mot de passe doit avoir au moins 8 caracteres'
+    else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(formData.password)) newErrors.password = 'Le mot de passe doit contenir majuscule, minuscule et chiffre'
 
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Les mots de passe ne correspondent pas'

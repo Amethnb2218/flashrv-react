@@ -7,7 +7,7 @@ export default defineConfig({
     host: true,
     port: 3000,
     open: true,
-    allowedHosts: ['localhost', '127.0.0.1', '.sslip.io'],
+    allowedHosts: ['localhost', '127.0.0.1'],
     proxy: {
       '/api': {
         target: 'http://127.0.0.1:4000',

@@ -11,10 +11,15 @@ const router = express.Router();
 const normalizeStatus = (value) => String(value || '').trim().toUpperCase();
 
 const isWebhookAuthorized = (req) => {
+  const crypto = require('crypto');
   const expected = String(getDexPayConfig().webhookToken || '').trim();
   if (!expected) return true;
-  const provided = String(req.query?.token || req.get('x-webhook-token') || '').trim();
-  return Boolean(provided && provided === expected);
+  const provided = String(req.get('x-webhook-token') || '').trim();
+  if (!provided) return false;
+  const expectedBuf = Buffer.from(expected, 'utf8');
+  const providedBuf = Buffer.from(provided, 'utf8');
+  if (expectedBuf.length !== providedBuf.length) return false;
+  return crypto.timingSafeEqual(expectedBuf, providedBuf);
 };
 
 const buildWebhookResponse = (message) => ({ status: 'success', message });
