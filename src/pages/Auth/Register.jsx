@@ -333,7 +333,7 @@ function Register() {
                 onChange={(e) => handleChange('name', e.target.value)}
                 className={`input-field border-[#e7cfaf] bg-[#fff8ee] text-[#2a1808] placeholder:text-[#a47e51] dark:border-[#7a5932] dark:bg-[#2b1b0f] dark:text-[#fff4e3] dark:placeholder:text-[#cda675] ${errors.name ? 'border-red-500' : ''}`}
                 placeholder="Votre nom complet"
-                autoComplete="off"
+                autoComplete="name"
               />
               {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
             </div>
@@ -346,7 +346,7 @@ function Register() {
                 onChange={(e) => handleChange('email', e.target.value)}
                 className={`input-field border-[#e7cfaf] bg-[#fff8ee] text-[#2a1808] placeholder:text-[#a47e51] dark:border-[#7a5932] dark:bg-[#2b1b0f] dark:text-[#fff4e3] dark:placeholder:text-[#cda675] ${errors.email ? 'border-red-500' : ''}`}
                 placeholder="votre@email.com"
-                autoComplete="off"
+                autoComplete="email"
               />
               {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email}</p>}
             </div>
@@ -359,7 +359,7 @@ function Register() {
                 onChange={(e) => handleChange('phone', e.target.value)}
                 className={`input-field border-[#e7cfaf] bg-[#fff8ee] text-[#2a1808] placeholder:text-[#a47e51] dark:border-[#7a5932] dark:bg-[#2b1b0f] dark:text-[#fff4e3] dark:placeholder:text-[#cda675] ${errors.phone ? 'border-red-500' : ''}`}
                 placeholder="77 123 45 67"
-                autoComplete="off"
+                autoComplete="tel"
               />
               {errors.phone && <p className="mt-1 text-sm text-red-500">{errors.phone}</p>}
             </div>
@@ -373,7 +373,7 @@ function Register() {
                   onChange={(e) => handleChange('password', e.target.value)}
                   className={`input-field pr-12 border-[#e7cfaf] bg-[#fff8ee] text-[#2a1808] placeholder:text-[#a47e51] dark:border-[#7a5932] dark:bg-[#2b1b0f] dark:text-[#fff4e3] dark:placeholder:text-[#cda675] ${errors.password ? 'border-red-500' : ''}`}
                   placeholder="Minimum 8 caracteres"
-                  autoComplete="off"
+                  autoComplete="new-password"
                 />
                 <button
                   type="button"
@@ -394,7 +394,7 @@ function Register() {
                 onChange={(e) => handleChange('confirmPassword', e.target.value)}
                 className={`input-field border-[#e7cfaf] bg-[#fff8ee] text-[#2a1808] placeholder:text-[#a47e51] dark:border-[#7a5932] dark:bg-[#2b1b0f] dark:text-[#fff4e3] dark:placeholder:text-[#cda675] ${errors.confirmPassword ? 'border-red-500' : ''}`}
                 placeholder="Confirmez votre mot de passe"
-                autoComplete="off"
+                autoComplete="new-password"
               />
               {errors.confirmPassword && <p className="mt-1 text-sm text-red-500">{errors.confirmPassword}</p>}
             </div>

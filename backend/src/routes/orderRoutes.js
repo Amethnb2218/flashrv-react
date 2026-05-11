@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const prisma = require('../lib/prisma');
 const { authenticate } = require('../middleware/auth');
+const { validate } = require('../middleware/validate');
+const { createOrderSchema } = require('../schemas/order');
 const { pushNotification } = require('../realtime/hub');
 const { sendOrderConfirmationEmail } = require('../services/emailService');
 const { uploadPaymentProof } = require('../config/cloudinary');
@@ -57,7 +59,7 @@ const toFriendlyPaymentMethodLabel = (method) => {
  * POST /api/orders
  * Create an order (client purchasing from a boutique)
  */
-router.post('/', authenticate, async (req, res, next) => {
+router.post('/', authenticate, validate(createOrderSchema), async (req, res, next) => {
   try {
     const {
       salonId,

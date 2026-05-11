@@ -177,7 +177,9 @@ function normalizeEmail(value) {
 }
 
 function isValidEmailAddress(value) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim());
+  const email = String(value || '').trim().toLowerCase();
+  if (email.length > 254) return false;
+  return /^[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/.test(email);
 }
 
 function getFrontendBaseUrl() {
@@ -465,7 +467,7 @@ async function updateProfile(req, res, next) {
       if (existingUser && existingUser.id !== userId) {
         return res.status(400).json({
           status: "error",
-          message: "This username is already taken",
+          message: "Ce nom d utilisateur est deja pris.",
         });
       }
     }
@@ -492,7 +494,7 @@ async function updateProfile(req, res, next) {
 
     return res.status(200).json({
       status: "success",
-      message: "Profile updated successfully",
+      message: "Profil mis a jour avec succes.",
       data: { user: updatedUser },
     });
   } catch (error) {
@@ -521,7 +523,7 @@ async function deleteAccount(req, res, next) {
 
     return res.status(200).json({
       status: "success",
-      message: "Account deleted successfully",
+      message: "Compte supprime avec succes.",
     });
   } catch (error) {
     return next(error);

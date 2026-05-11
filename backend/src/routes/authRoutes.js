@@ -4,6 +4,15 @@ const router = express.Router();
 
 const authController = require("../controllers/authController");
 const { authenticate, optionalAuth } = require("../middleware/auth");
+const { validate } = require("../middleware/validate");
+const {
+  registerSchema,
+  loginSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+  googleAuthSchema,
+  updateProfileSchema,
+} = require("../schemas/auth");
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -47,35 +56,35 @@ const passwordResetLimiter = rateLimit({
  * @access  Public
  * @body    { token: string } - Token ID de Google
  */
-router.post("/google", googleAuthLimiter, authController.googleAuth);
+router.post("/google", googleAuthLimiter, validate(googleAuthSchema), authController.googleAuth);
 
 /**
  * @route   POST /api/auth/register
  * @desc    Inscription classique (email/password)
  * @access  Public
  */
-router.post("/register", registerLimiter, authController.register);
+router.post("/register", registerLimiter, validate(registerSchema), authController.register);
 
 /**
  * @route   POST /api/auth/login
  * @desc    Connexion classique (email/password)
  * @access  Public
  */
-router.post("/login", loginLimiter, authController.login);
+router.post("/login", loginLimiter, validate(loginSchema), authController.login);
 
 /**
  * @route   POST /api/auth/forgot-password
  * @desc    Demander un lien de reinitialisation de mot de passe
  * @access  Public
  */
-router.post("/forgot-password", passwordResetLimiter, authController.forgotPassword);
+router.post("/forgot-password", passwordResetLimiter, validate(forgotPasswordSchema), authController.forgotPassword);
 
 /**
  * @route   POST /api/auth/reset-password
  * @desc    Reinitialiser le mot de passe avec un token
  * @access  Public
  */
-router.post("/reset-password", passwordResetLimiter, authController.resetPassword);
+router.post("/reset-password", passwordResetLimiter, validate(resetPasswordSchema), authController.resetPassword);
 
 /**
  * @route   POST /api/auth/logout
@@ -108,7 +117,7 @@ router.get("/me", authenticate, authController.getCurrentUser);
  * @access  Private
  * @body    { name?: string, email?: string, phone?: string, avatar?: string }
  */
-router.patch("/profile", authenticate, authController.updateProfile);
+router.patch("/profile", authenticate, validate(updateProfileSchema), authController.updateProfile);
 
 /**
  * @route   DELETE /api/auth/account

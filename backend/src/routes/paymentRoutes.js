@@ -409,14 +409,25 @@ const createDexPayPaymentForBooking = async ({
     throw err;
   }
 
-  const value = Number(amount);
-  if (!Number.isFinite(value) || value <= 0) {
-    const err = new Error('Montant invalide');
+  const dbAmount = Number(booking.totalPrice || booking.service?.price || 0);
+  if (!Number.isFinite(dbAmount) || dbAmount <= 0) {
+    const err = new Error('Impossible de determiner le montant de la reservation depuis la base de donnees');
     err.statusCode = 400;
     throw err;
   }
 
-  const baseAmount = Number(booking.totalPrice || booking.service?.price || value);
+  // Reject if client-provided amount differs from the DB amount (prevent price tampering)
+  if (amount !== undefined && amount !== null) {
+    const clientAmount = Number(amount);
+    if (Number.isFinite(clientAmount) && clientAmount !== dbAmount) {
+      const err = new Error('Le montant fourni ne correspond pas au prix de la reservation');
+      err.statusCode = 400;
+      err.expose = true;
+      throw err;
+    }
+  }
+
+  const baseAmount = dbAmount;
   const platformFeeAmount = calculateDexPayPlatformFee(baseAmount);
   const grossAmount = calculateDexPayGrossAmount(baseAmount);
   if (baseAmount < DEXPAY_MIN_BOOKING_AMOUNT) {
@@ -527,14 +538,25 @@ const createDexPayPaymentForOrder = async ({
     throw err;
   }
 
-  const value = Number(amount);
-  if (!Number.isFinite(value) || value <= 0) {
-    const err = new Error('Montant invalide');
+  const dbAmount = Number(order.totalPrice || 0);
+  if (!Number.isFinite(dbAmount) || dbAmount <= 0) {
+    const err = new Error('Impossible de determiner le montant de la commande depuis la base de donnees');
     err.statusCode = 400;
     throw err;
   }
 
-  const baseAmount = Number(order.totalPrice || value);
+  // Reject if client-provided amount differs from the DB amount (prevent price tampering)
+  if (amount !== undefined && amount !== null) {
+    const clientAmount = Number(amount);
+    if (Number.isFinite(clientAmount) && clientAmount !== dbAmount) {
+      const err = new Error('Le montant fourni ne correspond pas au prix de la commande');
+      err.statusCode = 400;
+      err.expose = true;
+      throw err;
+    }
+  }
+
+  const baseAmount = dbAmount;
   const platformFeeAmount = calculateDexPayPlatformFee(baseAmount);
   const grossAmount = calculateDexPayGrossAmount(baseAmount);
   if (baseAmount < DEXPAY_MIN_ORDER_AMOUNT) {

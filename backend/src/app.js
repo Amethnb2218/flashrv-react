@@ -1,6 +1,8 @@
 const express = require('express');
+const crypto = require('crypto');
 const cors = require('cors');
 const helmet = require('helmet');
+const compression = require('compression');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const prisma = require('./lib/prisma');
@@ -103,6 +105,16 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token', 'X-XSRF-Token'],
   optionsSuccessStatus: 204,
 }));
+
+// ===========================================
+// REQUEST ID + COMPRESSION
+// ===========================================
+app.use((req, res, next) => {
+  req.id = crypto.randomUUID();
+  res.setHeader('X-Request-Id', req.id);
+  next();
+});
+app.use(compression());
 
 // ===========================================
 // SECURITY HEADERS (after CORS)

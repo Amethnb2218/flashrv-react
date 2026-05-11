@@ -162,7 +162,7 @@ function Login() {
                 onChange={(e) => setFormData({ ...formData, identifier: e.target.value })}
                 className={`input-field border-[#e7cfaf] bg-[#fff8ee] text-[#2a1808] placeholder:text-[#a47e51] dark:border-[#7a5932] dark:bg-[#2b1b0f] dark:text-[#fff4e3] dark:placeholder:text-[#cda675] ${errors.identifier ? 'border-red-500' : ''}`}
                 placeholder="email@example.com ou 77 123 45 67"
-                autoComplete="off"
+                autoComplete="email"
               />
               {errors.identifier && <p className="mt-1 text-sm text-red-500">{errors.identifier}</p>}
             </div>
@@ -179,7 +179,7 @@ function Login() {
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   className={`input-field pr-12 border-[#e7cfaf] bg-[#fff8ee] text-[#2a1808] placeholder:text-[#a47e51] dark:border-[#7a5932] dark:bg-[#2b1b0f] dark:text-[#fff4e3] dark:placeholder:text-[#cda675] ${errors.password ? 'border-red-500' : ''}`}
                   placeholder="Votre mot de passe"
-                  autoComplete="off"
+                  autoComplete="current-password"
                 />
                 <button
                   type="button"
@@ -192,12 +192,8 @@ function Login() {
               {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password}</p>}
             </div>
 
-            {/* Remember & Forgot */}
-            <div className="flex items-center justify-between">
-              <label className="flex items-center cursor-pointer">
-                <input type="checkbox" className="rounded border-[#dec7a4] text-[#9d4f0d] focus:ring-[#f5a133]/20 dark:border-[#7a5932]" />
-                <span className="ml-2 text-sm text-[#7a6148] dark:text-[#d6b081]">Se souvenir de moi</span>
-              </label>
+            {/* Forgot password */}
+            <div className="flex items-center justify-end">
               <Link to="/forgot-password" className="text-sm text-[#7a6148] hover:text-[#2a1808] dark:text-[#d6b081] dark:hover:text-[#fff4e3]">
                 Mot de passe oublié ?
               </Link>

@@ -107,7 +107,7 @@ router.patch('/pro/:id/restrict', authenticate, requireSuperAdmin, async (req, r
       },
       select: { id: true, email: true, name: true, role: true, canCreateService: true, canBook: true, isPublic: true },
     });
-    console.log(`🔒 PRO restricted: ${updatedUser.email} by ${req.user.email}`);
+    console.log(`🔒 PRO restricted: userId=${updatedUser.id} by adminId=${req.user.id}`);
     res.status(200).json({ status: 'success', data: { user: updatedUser } });
   } catch (error) {
     console.error('Error restricting PRO:', error);
@@ -137,7 +137,7 @@ router.patch('/admins/:id/restrict', authenticate, requireSuperAdmin, async (req
       },
       select: { id: true, email: true, name: true, role: true, adminType: true, isRestricted: true },
     });
-    console.log(`🔒 ADMIN restricted: ${updatedUser.email} by ${req.user.email}`);
+    console.log(`🔒 ADMIN restricted: userId=${updatedUser.id} by adminId=${req.user.id}`);
     res.status(200).json({ status: 'success', data: { user: updatedUser } });
   } catch (error) {
     console.error('Error restricting ADMIN:', error);
@@ -205,41 +205,50 @@ router.get('/pro/pending', authenticate, requireAdmin, async (req, res) => {
 router.get('/pro/all', authenticate, requireAdmin, async (req, res) => {
   try {
     const { status } = req.query;
-    
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 50));
+    const skip = (page - 1) * limit;
+
     const where = { role: ROLES.PRO };
     if (status && Object.values(STATUS).includes(status)) {
       where.status = status;
     }
 
-    const pros = await prisma.user.findMany({
-      where,
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        phoneNumber: true,
-        picture: true,
-        status: true,
-        createdAt: true,
-        updatedAt: true,
-        salon: {
-          select: {
-            id: true,
-            name: true,
-            city: true,
-            address: true,
-            phone: true,
-            email: true,
-            image: true,
+    const [pros, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          phoneNumber: true,
+          picture: true,
+          status: true,
+          createdAt: true,
+          updatedAt: true,
+          salon: {
+            select: {
+              id: true,
+              name: true,
+              city: true,
+              address: true,
+              phone: true,
+              email: true,
+              image: true,
+            },
           },
         },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.user.count({ where }),
+    ]);
 
     res.status(200).json({
       status: 'success',
       data: { pros, count: pros.length },
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     });
   } catch (error) {
     console.error('Error fetching PROs:', error);
@@ -569,7 +578,7 @@ router.patch('/pro/:id/approve', authenticate, requireAdmin, async (req, res) =>
       },
     });
 
-    console.log(`✅ PRO account approved: ${updatedUser.email} by ${req.user.email}`);
+    console.log(`✅ PRO account approved: userId=${updatedUser.id} by adminId=${req.user.id}`);
 
     // Notifier le PRO par email (non-bloquant)
     sendProApprovedEmail({ to: updatedUser.email, name: updatedUser.name });
@@ -629,7 +638,7 @@ router.patch('/pro/:id/reject', authenticate, requireAdmin, async (req, res) => 
       },
     });
 
-    console.log(`❌ PRO account rejected: ${updatedUser.email} by ${req.user.email}. Reason: ${reason || 'N/A'}`);
+    console.log(`❌ PRO account rejected: userId=${updatedUser.id} by adminId=${req.user.id}. Reason: ${reason || 'N/A'}`);
 
     res.status(200).json({
       status: 'success',
@@ -686,7 +695,7 @@ router.patch('/pro/:id/suspend', authenticate, requireAdmin, async (req, res) =>
       },
     });
 
-    console.log(`⏸️ PRO account suspended: ${updatedUser.email} by ${req.user.email}. Reason: ${reason || 'N/A'}`);
+    console.log(`⏸️ PRO account suspended: userId=${updatedUser.id} by adminId=${req.user.id}. Reason: ${reason || 'N/A'}`);
 
     res.status(200).json({
       status: 'success',
@@ -742,7 +751,7 @@ router.patch('/pro/:id/reactivate', authenticate, requireAdmin, async (req, res)
       },
     });
 
-    console.log(`🔄 PRO account reactivated: ${updatedUser.email} by ${req.user.email}`);
+    console.log(`🔄 PRO account reactivated: userId=${updatedUser.id} by adminId=${req.user.id}`);
 
     res.status(200).json({
       status: 'success',
@@ -838,7 +847,7 @@ router.delete('/pro/:id', authenticate, requireAdmin, async (req, res) => {
       await tx.user.delete({ where: { id } });
     });
 
-    console.log(`🗑️ PRO deleted: ${user.email} by ${req.user.email}`);
+    console.log(`🗑️ PRO deleted: userId=${user.id} by adminId=${req.user.id}`);
     res.status(200).json({
       status: 'success',
       message: 'PRO and salon deleted successfully',
@@ -860,25 +869,35 @@ router.delete('/pro/:id', authenticate, requireAdmin, async (req, res) => {
  */
 router.get('/clients', authenticate, requireAdmin, async (req, res) => {
   try {
-    const clients = await prisma.user.findMany({
-      where: { role: ROLES.CLIENT },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        phoneNumber: true,
-        picture: true,
-        createdAt: true,
-        _count: {
-          select: { appointments: true, reviews: true },
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 50));
+    const skip = (page - 1) * limit;
+
+    const [clients, total] = await Promise.all([
+      prisma.user.findMany({
+        where: { role: ROLES.CLIENT },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          phoneNumber: true,
+          picture: true,
+          createdAt: true,
+          _count: {
+            select: { appointments: true, reviews: true },
+          },
         },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.user.count({ where: { role: ROLES.CLIENT } }),
+    ]);
 
     res.status(200).json({
       status: 'success',
       data: { clients, count: clients.length },
+      pagination: { page, limit, total, totalPages: Math.ceil(total / limit) },
     });
   } catch (error) {
     console.error('Error fetching clients:', error);
@@ -937,7 +956,7 @@ router.delete('/clients/:id', authenticate, requireSuperAdmin, async (req, res) 
       await tx.user.delete({ where: { id } });
     });
 
-    console.log(`🗑️ CLIENT deleted: ${user.email} by ${req.user.email}`);
+    console.log(`🗑️ CLIENT deleted: userId=${user.id} by adminId=${req.user.id}`);
     res.status(200).json({
       status: 'success',
       message: 'Client deleted successfully',
@@ -1081,7 +1100,7 @@ router.post('/admins', authenticate, requireSuperAdmin, async (req, res) => {
       select: { id: true, email: true, name: true, role: true },
     });
 
-    console.log(`👑 User promoted to ADMIN by email: ${updatedUser.email} by ${req.user.email}`);
+    console.log(`👑 User promoted to ADMIN by email: userId=${updatedUser.id} by adminId=${req.user.id}`);
 
     // Send notification email to the new admin
     sendAdminPromotionEmail({ to: updatedUser.email, name: updatedUser.name }).catch(() => {});
@@ -1142,7 +1161,7 @@ router.post('/admins/create', authenticate, requireSuperAdmin, async (req, res) 
       },
     });
 
-    console.log(`👑 User promoted to ADMIN: ${updatedUser.email} by ${req.user.email}`);
+    console.log(`👑 User promoted to ADMIN: userId=${updatedUser.id} by adminId=${req.user.id}`);
 
     // Send notification email to the new admin
     sendAdminPromotionEmail({ to: updatedUser.email, name: updatedUser.name }).catch(() => {});
@@ -1199,7 +1218,7 @@ router.delete('/admins/:id', authenticate, requireSuperAdmin, async (req, res) =
       },
     });
 
-    console.log(`📉 ADMIN demoted to CLIENT: ${updatedUser.email} by ${req.user.email}`);
+    console.log(`📉 ADMIN demoted to CLIENT: userId=${updatedUser.id} by adminId=${req.user.id}`);
 
     res.status(200).json({
       status: 'success',
