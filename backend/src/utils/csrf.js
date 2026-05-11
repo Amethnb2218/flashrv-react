@@ -1,10 +1,17 @@
 const crypto = require('crypto');
 
 const CSRF_SECRET = String(process.env.CSRF_SECRET || '').trim();
+const JWT_SECRET = String(process.env.JWT_SECRET || '').trim();
 
-if (!CSRF_SECRET) {
-  console.error('FATAL: CSRF_SECRET environment variable is required (must be independent of JWT_SECRET)');
+const effectiveSecret = CSRF_SECRET || JWT_SECRET;
+
+if (!effectiveSecret) {
+  console.error('FATAL: CSRF_SECRET or JWT_SECRET environment variable is required');
   process.exit(1);
+}
+
+if (!CSRF_SECRET && JWT_SECRET) {
+  console.warn('WARNING: CSRF_SECRET not set — falling back to JWT_SECRET. Set an independent CSRF_SECRET in production.');
 }
 
 function normalize(value) {
@@ -15,7 +22,7 @@ function buildCsrfToken(authToken) {
   const token = normalize(authToken);
   if (!token) return '';
   const nonce = crypto.randomBytes(16).toString('hex');
-  const signature = crypto.createHmac('sha256', CSRF_SECRET).update(`${nonce}:${token}`).digest('hex');
+  const signature = crypto.createHmac('sha256', effectiveSecret).update(`${nonce}:${token}`).digest('hex');
   return `${nonce}.${signature}`;
 }
 
@@ -39,7 +46,7 @@ function verifyCsrfToken(authToken, providedCsrfToken) {
 
   const nonce = provided.substring(0, dotIndex);
   const signature = provided.substring(dotIndex + 1);
-  const expected = crypto.createHmac('sha256', CSRF_SECRET).update(`${nonce}:${token}`).digest('hex');
+  const expected = crypto.createHmac('sha256', effectiveSecret).update(`${nonce}:${token}`).digest('hex');
   return safeEqual(expected, signature);
 }
 
