@@ -13,6 +13,7 @@ import {
   buildAuthHeaders,
   clearAuthToken,
   clearCsrfToken,
+  writeAuthToken,
   writeCsrfToken,
 } from '../utils/authToken'
 import { resolveApiBase } from '../utils/apiBase'
@@ -228,6 +229,9 @@ export function AuthProvider({ children }) {
 
   const persistAuthenticatedUser = async (apiUser, apiToken = null, apiCsrfToken = null) => {
     const restoredUser = restorePendingDeletionIfNeeded(apiUser)
+    if (apiToken) {
+      writeAuthToken(apiToken)
+    }
     if (apiCsrfToken) {
       writeCsrfToken(apiCsrfToken)
     }
@@ -238,7 +242,7 @@ export function AuthProvider({ children }) {
 
     dispatch({
       type: 'LOGIN',
-      payload: { user: normalizedUser, token: null }
+      payload: { user: normalizedUser, token: apiToken }
     })
 
     subscribeToPush().catch(() => {})

@@ -34,20 +34,29 @@ function getSessionStorage() {
   return window.sessionStorage
 }
 
+const AUTH_TOKEN_KEY = 'flashrv_auth_token'
+
 export function readAuthToken() {
-  return null
+  return readStorageValue(getLocalStorage(), AUTH_TOKEN_KEY)
+    || readStorageValue(getSessionStorage(), AUTH_TOKEN_KEY)
+    || null
 }
 
 export function writeAuthToken(token) {
-  // Token is now managed exclusively via httpOnly cookie - no client-side storage
+  const nextToken = String(token || '').trim()
+  if (!nextToken) {
+    clearAuthToken()
+    return
+  }
+  writeStorageValue(getLocalStorage(), AUTH_TOKEN_KEY, nextToken)
+  writeStorageValue(getSessionStorage(), AUTH_TOKEN_KEY, nextToken)
 }
 
 export function clearAuthToken() {
-  // Clean up any legacy stored tokens
   const ls = getLocalStorage()
   const ss = getSessionStorage()
-  if (ls) ls.removeItem('flashrv_auth_token')
-  if (ss) ss.removeItem('flashrv_auth_token')
+  if (ls) ls.removeItem(AUTH_TOKEN_KEY)
+  if (ss) ss.removeItem(AUTH_TOKEN_KEY)
 }
 
 export function readCsrfToken() {
@@ -74,6 +83,11 @@ export function clearCsrfToken() {
 
 export function buildAuthHeaders(headers = {}, method = 'GET') {
   const normalized = { ...headers }
+
+  const token = readAuthToken()
+  if (token && !normalized['Authorization'] && !normalized['authorization']) {
+    normalized['Authorization'] = `Bearer ${token}`
+  }
 
   const normalizedMethod = String(method || 'GET').trim().toUpperCase()
   if (!SAFE_HTTP_METHODS.has(normalizedMethod) && !normalized['X-CSRF-Token'] && !normalized['x-csrf-token']) {

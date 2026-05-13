@@ -61,7 +61,7 @@ async function register(req, res, next) {
     return res.status(201).json({
       status: 'success',
       message: 'Votre compte a ete cree avec succes.',
-      data: { user: safeUser, csrfToken },
+      data: { user: safeUser, token, csrfToken },
     });
   } catch (error) {
     return next(error);
@@ -113,7 +113,7 @@ async function login(req, res, next) {
     return res.json({
       status: 'success',
       message: 'Connexion etablie avec succes.',
-      data: { user: safeUser, csrfToken },
+      data: { user: safeUser, token, csrfToken },
     });
   } catch (error) {
     // Prisma network/runtime errors should not surface as generic 500 auth failures.
@@ -369,6 +369,7 @@ async function googleAuth(req, res, next) {
           status: user.status,
           phoneNumber: user.phoneNumber,
         },
+        token,
         csrfToken,
         isNewUser,
         accountLinked,
@@ -392,6 +393,7 @@ async function getCurrentUser(req, res, next) {
       status: "success",
       data: {
         user: req.user,
+        token: req.authToken || null,
         csrfToken: req.authToken ? buildCsrfToken(req.authToken) : null,
       },
     });
@@ -410,6 +412,7 @@ async function getSession(req, res, next) {
       status: "success",
       data: {
         user: req.user || null,
+        token: req.authToken || null,
         csrfToken: req.authToken ? buildCsrfToken(req.authToken) : null,
       },
     });

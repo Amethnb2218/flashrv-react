@@ -129,6 +129,7 @@ export default function AdminDashboard() {
   }
 
   const isSuperAdmin = user?.role === 'SUPER_ADMIN'
+  const [fetchError, setFetchError] = useState(null)
   const feedbackTypeLabels = {
     bug: 'Bug',
     suggestion: 'Suggestion',
@@ -171,43 +172,47 @@ export default function AdminDashboard() {
     }
   }, [activeTab]);
 
+  // Pré-charger clients et admins au montage pour éviter les listes vides sur mobile
+  useEffect(() => {
+    fetchClients()
+    if (isSuperAdmin) fetchAdmins()
+  }, [])
+
   const fetchData = async () => {
     setIsLoading(true);
+    setFetchError(null);
     try {
       let pros = [];
       let stats = null;
       // Charger les stats toujours
-      try {
-        const statsRes = await fetch(`${API_URL}/admin/stats`, authFetchOpts());
-        if (statsRes.ok) {
-          const statsData = await statsRes.json();
-          stats = statsData.data || null;
-        }
-      } catch {}
+      const statsRes = await fetch(`${API_URL}/admin/stats`, authFetchOpts());
+      if (statsRes.ok) {
+        const statsData = await statsRes.json();
+        stats = statsData.data || null;
+      } else if (statsRes.status === 401 || statsRes.status === 403) {
+        setFetchError('Session expirée ou accès refusé. Reconnectez-vous.');
+      }
       setStats(stats);
 
       // Charger les PROs selon l'onglet
       if (activeTab === 'pending') {
-        try {
-          const pendingRes = await fetch(`${API_URL}/admin/pro/pending`, authFetchOpts());
-          if (pendingRes.ok) {
-            const pendingData = await pendingRes.json();
-            pros = pendingData.data?.pros || [];
-          }
-        } catch {}
+        const pendingRes = await fetch(`${API_URL}/admin/pro/pending`, authFetchOpts());
+        if (pendingRes.ok) {
+          const pendingData = await pendingRes.json();
+          pros = pendingData.data?.pros || [];
+        }
       } else if (activeTab === 'all') {
-        try {
-          const allRes = await fetch(`${API_URL}/admin/pro/all`, authFetchOpts());
-          if (allRes.ok) {
-            const allData = await allRes.json();
-            pros = allData.data?.pros || [];
-          }
-        } catch {}
+        const allRes = await fetch(`${API_URL}/admin/pro/all`, authFetchOpts());
+        if (allRes.ok) {
+          const allData = await allRes.json();
+          pros = allData.data?.pros || [];
+        }
       }
       setPros(pros);
     } catch (e) {
       setPros([]);
       setStats(null);
+      setFetchError('Erreur réseau. Vérifiez votre connexion.');
     } finally {
       setIsLoading(false);
     }
@@ -323,12 +328,16 @@ export default function AdminDashboard() {
       const res = await fetch(`${API_URL}/admin/admins`, authFetchOpts())
       if (res.ok) {
         const data = await res.json()
-        setAdmins(data.data.admins || [])
+        setAdmins(data.data?.admins || [])
+      } else if (res.status === 401 || res.status === 403) {
+        setAdmins([])
+        setFetchError('Session expirée ou accès refusé. Reconnectez-vous.')
       } else {
         setAdmins([])
       }
     } catch (error) {
       setAdmins([])
+      setFetchError('Erreur réseau lors du chargement des administrateurs.')
     }
   }
   const handleRestrictAdmin = async (adminId, flags) => {
@@ -353,12 +362,16 @@ export default function AdminDashboard() {
       const res = await fetch(`${API_URL}/admin/clients`, authFetchOpts())
       if (res.ok) {
         const data = await res.json()
-        setClients(data.data.clients || [])
+        setClients(data.data?.clients || [])
+      } else if (res.status === 401 || res.status === 403) {
+        setClients([])
+        setFetchError('Session expirée ou accès refusé. Reconnectez-vous.')
       } else {
         setClients([])
       }
     } catch (e) {
       setClients([])
+      setFetchError('Erreur réseau lors du chargement des clients.')
     }
     setClientsLoading(false)
   }
@@ -606,6 +619,19 @@ export default function AdminDashboard() {
           </div>
           <p className="ml-1 mt-2 text-sm font-normal text-[#7a6148] sm:text-base">Pilotage centralise des operations, comptes et paiements Jolof'Era</p>
         </header>
+
+        {/* Error banner */}
+        {fetchError && (
+          <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <FiAlertCircle className="w-4 h-4 shrink-0" />
+              <span>{fetchError}</span>
+            </div>
+            <button onClick={() => { setFetchError(null); fetchData(); fetchClients(); if (isSuperAdmin) fetchAdmins(); }} className="shrink-0 px-3 py-1 rounded-lg bg-red-100 text-red-800 text-xs font-semibold hover:bg-red-200 transition">
+              Réessayer
+            </button>
+          </div>
+        )}
 
         {/* Stats Cards */}
         {stats && (
