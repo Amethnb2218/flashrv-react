@@ -93,7 +93,8 @@ function ForgotPassword() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="input-field !pl-12 dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-500"
+                className="input-field dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-500"
+                style={{ paddingLeft: '3rem' }}
                 placeholder="votre@email.com"
                 autoComplete="email"
               />
