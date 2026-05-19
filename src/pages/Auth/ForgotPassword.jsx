@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { FiMail, FiArrowLeft, FiCheck } from 'react-icons/fi'
+import { FiArrowLeft, FiCheck } from 'react-icons/fi'
 import toast from 'react-hot-toast'
 import apiFetch from '@/api/client'
 
@@ -87,18 +87,14 @@ function ForgotPassword() {
             <label className="block text-sm font-medium text-primary-700 dark:text-gray-300 mb-2">
               Adresse email
             </label>
-            <div className="relative">
-              <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-primary-400 dark:text-gray-500 w-5 h-5" />
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="input-field dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-500"
-                style={{ paddingLeft: '3rem' }}
-                placeholder="votre@email.com"
-                autoComplete="email"
-              />
-            </div>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="input-field dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-500"
+              placeholder="votre@email.com"
+              autoComplete="email"
+            />
           </div>
 
           <button
