@@ -695,12 +695,12 @@ function SalonDetail() {
         canonical={`https://www.jolofera.com/salon/${id}`}
       />
       {/* Image Gallery — flush under navbar */}
-      <div className="relative z-10 -mt-14 h-[276px] sm:h-[396px] md:h-[420px] lg:h-[420px] max-h-[60vh] bg-primary-900 overflow-hidden">
+      <div className="relative z-10 -mt-14 h-[54vh] min-h-[320px] sm:h-[396px] md:h-[420px] lg:h-[420px] max-h-[60vh] bg-primary-900 overflow-hidden">
         {galleryImages.length > 0 ? (
           <img
             src={galleryImages[currentImageIndex]}
             alt={salonData.name}
-            className="w-full h-full object-cover object-center brightness-[0.98] contrast-[1.05] lg:brightness-100 lg:contrast-100"
+            className="w-full h-full object-cover object-top brightness-[0.98] contrast-[1.05] lg:brightness-100 lg:contrast-100 sm:object-center"
             loading="eager"
             decoding="async"
             onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.parentElement.querySelector('.img-fallback')?.classList?.remove('hidden'); }}
