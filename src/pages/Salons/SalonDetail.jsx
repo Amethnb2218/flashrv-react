@@ -700,7 +700,7 @@ function SalonDetail() {
           <img
             src={galleryImages[currentImageIndex]}
             alt={salonData.name}
-            className="w-full h-full object-cover object-top brightness-[0.98] contrast-[1.05] lg:brightness-100 lg:contrast-100 sm:object-center"
+            className="w-full h-full object-cover object-top brightness-[0.98] contrast-[1.05] lg:brightness-100 lg:contrast-100"
             loading="eager"
             decoding="async"
             onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.parentElement.querySelector('.img-fallback')?.classList?.remove('hidden'); }}
